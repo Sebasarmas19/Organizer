@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inicio · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  INICIO · con contenido
+  ---------------------------------------------------------------------------
+  La restriccion mas dura del proyecto: esto cabe en 844px sin scroll.
+  Presupuesto real  47 (estado) + 714 (pantalla) + 83 (pestanas + area segura).
+  El contenedor lleva screen--fixed: overflow oculto. Si algo no cabe, se ve.
+
+  Decision 35/41 · aqui van las tareas NO fijas del dia, lo que quedo de ayer
+  con triage de un toque, la banda de entregas proximas y la racha. Las clases
+  no aparecen: viven en Semana. No hay campo de captura: se captura por Siri.
+-->
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="15:42"></div>
+
+  <main class="screen screen--fixed flex flex-col">
+
+    <!-- ENCABEZADO ----------------------------------------------------------
+         La fecha es el elemento tipografico grande, no el nombre del modulo:
+         el nombre ya esta en la barra de pestanas. La racha es una linea de
+         texto en el acento. Sin insignia, sin llama, sin numero grande. -->
+    <header class="pagehead">
+      <div>
+        <h1 class="t-title">Jueves 17</h1>
+        <p class="t-meta c-muted">septiembre · semana 1</p>
+      </div>
+      <p class="t-label c-accent num">12 días seguidos</p>
+    </header>
+
+    <!-- DE AYER -------------------------------------------------------------
+         Nunca rojo, nunca reproche (decision 22). Bandeja neutra hundida, la
+         app pregunta y el usuario responde en un toque (decision 5). -->
+    <section class="mt-1 mb-5" aria-labelledby="h-ayer">
+      <div class="sectionhead">
+        <h2 id="h-ayer">De ayer</h2>
+      </div>
+
+      <div class="mx-gutter rounded bg-sunken px-4 py-3">
+        <p class="t-body font-medium">Terminar el modelo de datos</p>
+        <p class="t-meta c-muted num mt-0.5">miércoles · 7:00 pm</p>
+
+        <div class="triage mt-3" role="group" aria-label="Qué hacer con: Terminar el modelo de datos">
+          <button class="btn btn--primary">Hoy</button>
+          <button class="btn">Otro día</button>
+          <button class="btn">Quitar</button>
+        </div>
+      </div>
+
+      <p class="t-label c-faint gutter mt-2">Nada se pierde. Tú decides cuándo.</p>
+    </section>
+
+    <!-- HOY -----------------------------------------------------------------
+         "Se me corrió el día" vive en el encabezado de la seccion: visible,
+         de un toque, nunca dentro de un menu. -->
+    <section aria-labelledby="h-hoy">
+      <div class="sectionhead">
+        <h2 id="h-hoy">Hoy</h2>
+        <button class="c-accent flex items-center gap-1 font-medium" style="min-height:32px">
+          <span class="ico ico--sm" data-icon="arrow-down"></span>
+          Se me corrió el día
+        </button>
+      </div>
+
+      <ul class="list-none m-0 p-0">
+        <li class="row row--done">
+          <button class="check" role="checkbox" aria-checked="true" aria-label="Leer el paper de Anthropic, cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Leer el paper de Anthropic</p>
+            <p class="row__meta"><span class="num">9:00</span><span class="sep">·</span>
+              <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>Cursos</p>
+          </div>
+        </li>
+
+        <li class="row row--now">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Migrar el schema a Supabase, marcar cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Migrar el schema a Supabase</p>
+            <p class="row__meta"><span class="num c-accent font-medium">15:00 – 17:00</span><span class="sep">·</span>
+              <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>Proyecto IA</p>
+          </div>
+        </li>
+
+        <li class="row">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Comprar cuadernos, marcar cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Comprar cuadernos</p>
+            <p class="row__meta"><span class="ctxdot" style="--ctx:var(--ctx-6)"></span>Personal</p>
+          </div>
+        </li>
+
+        <li class="row">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Resumen de Cálculo, marcar cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Resumen de Cálculo</p>
+            <p class="row__meta"><span class="num">20:00</span><span class="sep">·</span>
+              <span class="ctxdot" style="--ctx:var(--ctx-1)"></span>Cálculo</p>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Desborde. Sin numero: un contador seria deuda acumulada. -->
+      <a href="tareas.html" class="flex items-center justify-between gutter py-2.5 t-meta c-muted no-underline">
+        El resto está en Tareas
+        <span class="ico ico--sm c-faint" data-icon="chevron-right"></span>
+      </a>
+    </section>
+
+    <!-- ESTA SEMANA ---------------------------------------------------------
+         Banda de entregas proximas (decision 41). Tenue a proposito: informa
+         sin competir con lo de hoy. -->
+    <section class="mt-auto pb-2" aria-labelledby="h-semana">
+      <div class="sectionhead">
+        <h2 id="h-semana">Esta semana</h2>
+      </div>
+      <ul class="list-none m-0 px-gutter grid gap-1.5">
+        <li class="flex items-baseline gap-2.5 t-meta c-faint">
+          <span class="num" style="min-width:44px">vie 18</span>
+          <span class="ctxdot self-center" style="--ctx:var(--ctx-3)"></span>
+          <span class="text-ink">Entrega parcial del proyecto de IA</span>
+        </li>
+        <li class="flex items-baseline gap-2.5 t-meta c-faint">
+          <span class="num" style="min-width:44px">lun 21</span>
+          <span class="ctxdot self-center" style="--ctx:var(--ctx-1)"></span>
+          <span>Quiz de Cálculo</span>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+
+  <nav data-tabbar="inicio"></nav>
+  <div data-homebar></div>
+</div>
+</body>
+</html>

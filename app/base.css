@@ -1,0 +1,509 @@
+/* ============================================================================
+   Organizer · Capa de componentes
+   Construida solo sobre tokens.css. Ni un color, ni un espacio, ni un radio
+   literal en este archivo.
+
+   En la app real esto vive en @layer components de Tailwind. Aqui va suelto
+   para que los comps abran sin build.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------ base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Superficies del navegador que no dibujamos pero que igual son diseno. */
+::selection { background: var(--accent-soft); color: var(--text); }
+:root { accent-color: var(--accent); caret-color: var(--accent); }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+:where(a) { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+:where(button, a, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* ---------------------------------------------------------- tipo (5 pasos) */
+
+.t-title   { font-size: var(--text-title);   line-height: var(--lh-title);   letter-spacing: var(--tracking-title); font-weight: var(--weight-bold); }
+.t-section { font-size: var(--text-section); line-height: var(--lh-section); letter-spacing: var(--tracking-title); font-weight: var(--weight-semibold); }
+.t-body    { font-size: var(--text-body);    line-height: var(--lh-body);    letter-spacing: var(--tracking-body); }
+.t-meta    { font-size: var(--text-meta);    line-height: var(--lh-meta);    letter-spacing: var(--tracking-body); }
+.t-label   { font-size: var(--text-label);   line-height: var(--lh-label);   letter-spacing: var(--tracking-label); }
+
+.c-muted { color: var(--text-muted); }
+.c-faint { color: var(--text-faint); }
+.c-accent { color: var(--accent); }
+
+/* ------------------------------------------------------- pagina de comp */
+
+body.comp {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+/* -------------------------------------------------------- marco de iPhone */
+
+.device {
+  width: 390px;
+  height: 844px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.statusbar {
+  height: 47px;
+  flex: 0 0 47px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 var(--space-8) var(--space-2);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0;
+  color: var(--text);
+  user-select: none;
+}
+.statusbar__glyphs { display: flex; align-items: center; gap: var(--space-1); opacity: .9; }
+.statusbar__glyphs svg { width: 17px; height: 11px; }
+
+.homebar {
+  height: 34px;
+  flex: 0 0 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+}
+.homebar::after {
+  content: "";
+  width: 134px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--text);
+  opacity: .28;
+}
+
+/* El cuerpo. Inicio usa .screen--fixed: prohibido el scroll. */
+.screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.screen--fixed { overflow: hidden; }
+
+.gutter { padding-inline: var(--gutter); }
+
+/* ------------------------------------------------------------ encabezados */
+
+.pagehead {
+  padding: var(--space-2) var(--gutter) var(--space-3);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--gutter) var(--space-2);
+  font-size: var(--text-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--tracking-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------- fila de tarea */
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--gutter);
+  background: transparent;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.row + .row { box-shadow: inset 0 1px 0 var(--line); }
+.row--now { background: var(--accent-soft); }
+.row--now + .row, .row + .row--now { box-shadow: none; }
+
+.row__body { flex: 1 1 auto; min-width: 0; }
+.row__title {
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-05);
+  font-size: var(--text-meta);
+  line-height: var(--lh-meta);
+  color: var(--text-muted);
+}
+.row__meta .sep { color: var(--line-strong); }
+
+.row--done .row__title { color: var(--text-faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+.row--done .row__meta { color: var(--text-faint); }
+
+/* Checkbox: 24px visibles, 44px de area tactil. Sin celebracion. */
+.check {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: -10px 0 -10px calc(var(--space-2) * -1.5);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--text-faint);
+}
+.check::before {
+  content: "";
+  width: 23px;
+  height: 23px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line-strong);
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+/* Cumplido es un cambio de estado tranquilo, no una celebracion — y no gasta
+   el acento, que esta reservado a accion primaria, bloque en curso y racha. */
+.check[aria-checked="true"]::before { background: var(--text-faint); border-color: var(--text-faint); }
+.check[aria-checked="true"] .ico {
+  position: absolute;
+  color: var(--bg);
+  width: 14px; height: 14px;
+}
+.check .ico { position: absolute; opacity: 0; width: 14px; height: 14px; transition: opacity var(--dur-fast) var(--ease-out); }
+.check[aria-checked="true"] .ico { opacity: 1; }
+
+/* Punto de contexto: superficie pequena, color desaturado. */
+.ctxdot {
+  width: 7px; height: 7px; border-radius: 999px;
+  flex: 0 0 auto;
+  background: var(--ctx, var(--text-faint));
+}
+
+/* ------------------------------------------------------------- controles */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-body);
+  color: var(--text);
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.btn:active { background: var(--line); }
+.btn--primary { background: var(--accent); color: var(--text-on-accent); }
+.btn--primary:active { background: var(--accent-press); }
+.btn--quiet { background: transparent; border-color: var(--line-strong); color: var(--text-muted); }
+.btn--quiet:active { background: var(--surface-sunken); }
+.btn--full { width: 100%; }
+.btn[disabled] { opacity: .42; pointer-events: none; }
+
+/* Control de solo icono. 44x44 reales aunque el icono mida 20. */
+.tapicon {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.tapicon:active { background: var(--surface-sunken); }
+
+/* Pastilla de triage: una accion, un toque. */
+.triage { display: flex; gap: var(--space-2); }
+.triage .btn { flex: 1 1 0; padding-inline: var(--space-2); min-height: 40px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.field--focus { border-color: var(--accent); background: var(--surface); }
+.field input {
+  flex: 1 1 auto; min-width: 0;
+  font: inherit; font-size: var(--text-body);
+  color: var(--text); background: none; border: 0; outline: none;
+}
+.field input::placeholder { color: var(--text-faint); }
+
+.caret {
+  width: 2px; height: 21px; background: var(--accent); border-radius: 1px;
+  animation: caret 1.06s steps(1) infinite;
+}
+@keyframes caret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+
+/* Deshacer: visible, en el sitio, sin dialogo que bloquee. */
+.undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--gutter);
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+}
+.undo button { color: var(--accent); font-weight: var(--weight-medium); min-height: 32px; padding-inline: var(--space-2); }
+
+/* ------------------------------------------------------------ iconografia */
+
+.ico { display: inline-block; width: 20px; height: 20px; vertical-align: -4px; flex: 0 0 auto; }
+.ico svg { display: block; width: 100%; height: 100%; }
+.ico--sm { width: 16px; height: 16px; }
+.ico--lg { width: 24px; height: 24px; }
+
+/* -------------------------------------------------------- barra de pestanas */
+
+.tabbar {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 var(--line);
+  padding-top: var(--space-1);
+}
+.tab {
+  min-height: 49px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-faint);
+  font-size: var(--text-label);
+  line-height: 1;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.tab[aria-current="page"] { color: var(--accent); }
+
+/* --------------------------------------------------------------- calendario */
+
+/* El aire lateral minimo (16px) se respeta tambien aqui: 16 a la izquierda
+   antes del gutter de horas, y 8 + 8 del inset del bloque a la derecha. */
+.cal { display: grid; grid-template-columns: 46px 1fr; position: relative; padding-left: var(--space-4); padding-right: var(--space-2); }
+.cal__hours { position: relative; }
+.cal__hour {
+  height: var(--hour, 56px);
+  padding-right: var(--space-2);
+  text-align: right;
+  font-size: var(--text-label);
+  color: var(--text-faint);
+  transform: translateY(-8px);
+}
+.cal__grid { position: relative; border-left: 1px solid var(--line); }
+.cal__line { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+
+.cal__now { position: absolute; left: 0; right: 0; height: 0; z-index: 3; pointer-events: none; }
+.cal__now::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px;
+  border-top: 1.5px solid var(--accent);
+}
+.cal__now::after {
+  content: ""; position: absolute; left: -4px; top: -4.5px;
+  width: 8px; height: 8px; border-radius: 999px; background: var(--accent);
+}
+
+.block {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+  font-size: var(--text-meta);
+  line-height: var(--lh-meta);
+}
+.block__title { font-size: var(--text-meta); font-weight: var(--weight-medium); color: var(--text); }
+.block__time { font-size: var(--text-label); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Las clases no compiten: fondo, sin borde de color, texto subordinado. */
+.block--class { background: var(--surface-class); z-index: 1; }
+.block--class .block__title { color: var(--text-muted); font-weight: var(--weight-regular); }
+
+/* Las tareas si: superficie propia, linea de 1px, borde izquierdo de contexto. */
+.block--task {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--ctx, var(--line-strong));
+  z-index: 2;
+}
+.block--now { background: var(--accent-soft); border-color: var(--accent); border-left-color: var(--accent); }
+.block--now .block__time { color: var(--accent); font-weight: var(--weight-medium); }
+
+/* Estado de arrastre: el bloque sigue al dedo, el destino se dibuja debajo. */
+.block--dragging { box-shadow: var(--shadow-float); transform: scale(1.02); z-index: 5; }
+.block--ghost {
+  background: transparent;
+  border: 1.5px dashed var(--accent);
+  z-index: 4;
+  display: flex; align-items: center;
+  color: var(--accent);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+}
+.block__grip {
+  position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
+  width: 28px; height: 3px; border-radius: 999px; background: var(--accent); opacity: .5;
+}
+
+/* Tira de dias */
+.daystrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); padding: 0 var(--gutter) var(--space-3); }
+.day {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-1);
+  padding: var(--space-2) 0 var(--space-1);
+  border-radius: var(--radius);
+  min-height: var(--tap-min);
+  color: var(--text-muted);
+}
+.day__dow { font-size: var(--text-label); line-height: 1; }
+.day__num { font-size: var(--text-meta); line-height: 1; font-weight: var(--weight-semibold); color: var(--text); font-variant-numeric: tabular-nums; }
+.day__load { display: flex; gap: 2px; height: 4px; margin-top: 1px; }
+.day__load i { width: 4px; height: 4px; border-radius: 999px; background: var(--line-strong); display: block; }
+.day[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.day[aria-selected="true"] .day__num { color: var(--accent); }
+.day[aria-selected="true"] .day__load i { background: var(--accent); opacity: .55; }
+.day--today .day__dow { color: var(--accent); font-weight: var(--weight-semibold); }
+
+/* ------------------------------------------------------------------ hoja */
+
+.sheet {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-sheet);
+  padding: var(--space-2) 0 var(--space-4);
+}
+.sheet__grab { width: 36px; height: 5px; border-radius: 999px; background: var(--line-strong); margin: 0 auto var(--space-3); }
+
+/* ------------------------------------------------ pantalla de bloqueo iOS */
+
+.lock {
+  width: 390px; height: 844px;
+  background: var(--lock-bg);
+  color: var(--lock-text);
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+.lock__clock { text-align: center; padding-top: 76px; }
+.lock__date { font-size: var(--text-body); font-weight: var(--weight-semibold); opacity: .85; }
+.lock__time { font-size: 84px; line-height: 1; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+.notif {
+  border-radius: var(--radius-lg);
+  background: var(--lock-material);
+  border: 1px solid var(--lock-material-line);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  padding: var(--space-3);
+  color: var(--lock-text);
+}
+.notif__head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
+.notif__app {
+  font-size: 11px; line-height: 1; letter-spacing: .06em; text-transform: uppercase;
+  font-weight: var(--weight-semibold); color: var(--lock-text-muted);
+}
+.notif__when { margin-left: auto; font-size: 12px; color: var(--lock-text-muted); }
+.notif__title { font-size: 15px; line-height: 20px; font-weight: var(--weight-semibold); }
+.notif__body { font-size: 15px; line-height: 20px; color: rgb(255 255 255 / 0.88); }
+.notif__icon {
+  width: 20px; height: 20px; border-radius: 5px; flex: 0 0 auto;
+  background: var(--accent); display: grid; place-items: center;
+}
+.notif__icon span { width: 9px; height: 9px; border: 1.6px solid var(--text-on-accent); border-radius: 999px; }
+
+/* Recorte a 2 lineas: asi la ve iOS sin desplegar. Es el limite real. */
+.clamp2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* --------------------------------------------------------------- teclado */
+
+.kb { background: var(--surface-sunken); padding: var(--space-2) var(--space-1) var(--space-1); }
+.kb__row { display: flex; justify-content: center; gap: 6px; margin-bottom: 8px; }
+.kb__key {
+  min-width: 30px; height: 40px; flex: 1 1 0;
+  display: grid; place-items: center;
+  border-radius: 5px; background: var(--surface);
+  box-shadow: 0 1px 0 var(--line-strong);
+  font-size: var(--text-section); font-weight: var(--weight-regular); color: var(--text);
+}
+.kb__key--wide { flex: 1.6 1 0; background: var(--line); font-size: var(--text-label); }
+.kb__key--space { flex: 5 1 0; }
+
+/* -------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .caret { animation: none; opacity: 1; }
+}

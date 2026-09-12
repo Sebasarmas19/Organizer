@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tareas · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  TAREAS · con carpetas
+  ---------------------------------------------------------------------------
+  Esto no es la lista de hoy. Son las cosas anotadas que todavia no son plan
+  (decision 30). Es el vertedero con nombre: el sitio donde caen las capturas
+  del Atajo de Siri antes de decidir nada.
+
+  "Entrada" va primero y abierta porque es lo unico que exige decision. Las
+  carpetas (decision 36) van debajo, cerradas, ordenables por el usuario.
+
+  Ni un contador en toda la pantalla. Una carpeta con 40 cosas y una con 2 se
+  ven igual: el numero solo sirve para sentir deuda.
+
+  Deslizar revela acciones, pero tocar la fila abre la misma hoja con todas.
+  El gesto nunca es la unica via.
+-->
+
+<style>
+  .swipe { position: relative; overflow: hidden; }
+  .swipe__actions { position: absolute; inset: 0 0 0 auto; display: flex; }
+  .swipe__act {
+    width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: var(--text-label); font-weight: var(--weight-medium);
+    background: var(--surface-sunken); color: var(--text-muted);
+  }
+  .swipe__act--go { background: var(--accent); color: var(--text-on-accent); }
+  /* Deslizada: el contenido cede el ancho de las acciones en vez de salirse
+     por la izquierda. Asi el titulo sigue legible a media gesto, que es
+     justo lo que hay que poder juzgar en un comp. */
+  .swipe__content { position: relative; background: var(--bg); width: calc(100% - 128px); }
+  .swipe__hint { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: var(--text-faint); }
+
+  .folder {
+    display: flex; align-items: center; gap: var(--space-3);
+    width: 100%; min-height: 52px; padding: var(--space-2) var(--gutter);
+    text-align: left; color: var(--text);
+  }
+  .folder + .folder, .folder + .subrow { box-shadow: inset 0 1px 0 var(--line); }
+  .folder__name { flex: 1 1 auto; font-size: var(--text-body); font-weight: var(--weight-medium); }
+  .folder__chev { color: var(--text-faint); transition: transform var(--dur-fast) var(--ease-out); }
+  .folder[aria-expanded="true"] .folder__chev { transform: rotate(90deg); }
+
+  .subrow {
+    display: flex; align-items: center; gap: var(--space-3);
+    min-height: 48px; padding: var(--space-2) var(--gutter) var(--space-2) 52px;
+    box-shadow: inset 0 1px 0 var(--line);
+  }
+</style>
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="15:42"></div>
+
+  <main class="screen flex flex-col">
+
+    <header class="pagehead">
+      <h1 class="t-title">Tareas</h1>
+      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+        <button class="tapicon" aria-label="Buscar en tareas"><span class="ico ico--lg" data-icon="search"></span></button>
+        <button class="tapicon" aria-label="Nueva tarea"><span class="ico ico--lg" data-icon="plus"></span></button>
+      </div>
+    </header>
+
+    <!-- ENTRADA --------------------------------------------------------------
+         Lo que llego por Siri y todavia no es nada. Sin campos obligatorios,
+         sin categoria, sin fecha: se clasifica despues o nunca. -->
+    <section aria-labelledby="h-entrada">
+      <div class="sectionhead">
+        <h2 id="h-entrada">Entrada</h2>
+        <button class="c-accent t-label font-medium" style="min-height:32px">Clasificar</button>
+      </div>
+
+      <ul class="list-none m-0 p-0">
+        <!-- Fila deslizada: asi se ve el gesto a medio camino -->
+        <li class="swipe" style="box-shadow: inset 0 1px 0 var(--line)">
+          <div class="swipe__actions" aria-hidden="true">
+            <span class="swipe__act swipe__act--go"><span class="ico ico--sm" data-icon="calendar"></span>Planificar</span>
+            <span class="swipe__act"><span class="ico ico--sm" data-icon="trash"></span>Quitar</span>
+          </div>
+          <div class="swipe__content row" style="box-shadow:none">
+            <div class="row__body" style="margin-left:var(--space-1)">
+              <p class="row__title">Probar Hermes</p>
+              <p class="row__meta">por Siri<span class="sep">·</span>hace 2 h</p>
+            </div>
+          </div>
+        </li>
+
+        <li class="row">
+          <div class="row__body" style="margin-left:var(--space-1)">
+            <p class="row__title">Pedir constancia de estudios</p>
+            <p class="row__meta">por Siri<span class="sep">·</span>ayer</p>
+          </div>
+          <span class="ico ico--sm swipe__hint" data-icon="chevron-right" style="position:static;align-self:center"></span>
+        </li>
+
+        <li class="row">
+          <div class="row__body" style="margin-left:var(--space-1)">
+            <p class="row__title">Curso de Anthropic — terminar módulo 3</p>
+            <p class="row__meta">desde Recursos<span class="sep">·</span>ayer</p>
+          </div>
+          <span class="ico ico--sm c-faint" data-icon="chevron-right" style="align-self:center"></span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- CARPETAS -------------------------------------------------------------
+         El usuario las crea, las nombra y las reordena (decision 36). -->
+    <section class="mt-5" aria-labelledby="h-carpetas">
+      <div class="sectionhead">
+        <h2 id="h-carpetas">Carpetas</h2>
+        <button class="c-accent t-label font-medium" style="min-height:32px">Editar</button>
+      </div>
+
+      <div>
+        <button class="folder" aria-expanded="false">
+          <span class="ctxdot" style="--ctx:var(--ctx-1)"></span>
+          <span class="folder__name">Cálculo III</span>
+          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+        </button>
+
+        <!-- Carpeta abierta: la jerarquia se ve, no se explica -->
+        <button class="folder" aria-expanded="true">
+          <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>
+          <span class="folder__name">Proyecto IA</span>
+          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+        </button>
+        <div class="subrow">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Escribir el README, marcar cumplido" style="margin-left:calc(var(--space-6) * -1)">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Escribir el README</p>
+            <p class="row__meta num">sin fecha</p>
+          </div>
+        </div>
+        <div class="subrow">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Conectar Web Push, marcar cumplido" style="margin-left:calc(var(--space-6) * -1)">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Conectar Web Push</p>
+            <p class="row__meta num">vie 18</p>
+          </div>
+        </div>
+
+        <button class="folder" aria-expanded="false">
+          <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>
+          <span class="folder__name">Cursos</span>
+          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+        </button>
+
+        <button class="folder" aria-expanded="false">
+          <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
+          <span class="folder__name">Personal</span>
+          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+        </button>
+
+        <!-- Biblioteca "algun dia" (decision 7): no caduca, no molesta, y el
+             domingo el ritual saca UNA cosa de aqui. Nunca la lista entera. -->
+        <button class="folder" aria-expanded="false">
+          <span class="ctxdot" style="--ctx:var(--ctx-5)"></span>
+          <span class="folder__name">Algún día</span>
+          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+        </button>
+      </div>
+
+      <button class="folder c-muted" style="box-shadow: inset 0 1px 0 var(--line)">
+        <span class="ico ico--sm" data-icon="plus" style="margin-left:2px"></span>
+        <span class="folder__name" style="font-weight:var(--weight-regular)">Nueva carpeta</span>
+      </button>
+    </section>
+
+    <div class="h-4"></div>
+
+  </main>
+
+  <nav data-tabbar="tareas"></nav>
+  <div data-homebar></div>
+</div>
+</body>
+</html>

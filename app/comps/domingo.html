@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ritual del domingo · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  RITUAL DEL DOMINGO · paso 1, triage de lo no cumplido
+  ---------------------------------------------------------------------------
+  El momento mas delicado de la app entera. Aqui es donde una app de tareas
+  normal pasa la factura de la semana, y donde esta app tiene prohibido
+  hacerlo (decision 22: la app nunca regana).
+
+  Lo que se hizo para conseguirlo:
+
+  - Cero rojo, cero iconos de alerta, cero "no cumpliste". El tono neutro no
+    es cobardia: es la diferencia entre volver el domingo siguiente o no.
+  - Cero recuento. No dice "quedaron 3". Un numero al abrir es una factura.
+  - Un toque por tarea. Tres botones visibles, ninguno destructivo sin
+    deshacer. Si el triage toma dos pasos, no se hace.
+  - Expectativa de tiempo explicita ("unos 10 minutos"): con TDAH "un rato" y
+    "una tarde" se sienten igual, y lo que no tiene tamano no se empieza.
+  - Salida sin castigo: "Seguir luego" no pierde nada y no insiste.
+
+  El ritual tiene 4 pasos. Este comp dibuja el primero completo y deja ver
+  que viene despues, que es lo que hace que se empiece.
+-->
+
+<style>
+  .steps { display: flex; gap: 4px; }
+  .steps i { flex: 1 1 0; height: 2px; border-radius: 999px; background: var(--line); display: block; }
+  .steps i.on { background: var(--accent); }
+
+  .tri {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
+  }
+  .tri + .tri { margin-top: var(--space-2); }
+  .tri--resolved { background: transparent; border: 1px solid var(--line); }
+</style>
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="19:02"></div>
+
+  <main class="screen flex flex-col">
+
+    <header class="pagehead" style="padding-bottom:var(--space-3)">
+      <div>
+        <h1 class="t-title">Domingo</h1>
+        <p class="t-meta c-muted">20 de septiembre · unos 10 minutos</p>
+      </div>
+      <button class="tapicon" aria-label="Seguir luego" style="margin-right:calc(var(--space-3) * -1)">
+        <span class="ico ico--lg" data-icon="xmark"></span>
+      </button>
+    </header>
+
+    <!-- PASOS · orientacion, no puntuacion -->
+    <div class="gutter pb-4">
+      <div class="steps" role="presentation"><i class="on"></i><i></i><i></i><i></i></div>
+      <p class="t-label c-muted mt-2">Paso 1 de 4 · Lo que quedó</p>
+    </div>
+
+    <section class="gutter" aria-labelledby="h-triage">
+      <h2 id="h-triage" class="t-section">Esto quedó de la semana</h2>
+      <p class="t-meta c-muted mt-1 mb-4" style="max-width:34ch">
+        Nada se borró solo. Dime qué hacer con cada una y seguimos.
+      </p>
+
+      <!-- Una tarea, un toque. Tres destinos, ninguno es un formulario. -->
+      <div class="tri">
+        <p class="t-body font-medium">Terminar el modelo de datos</p>
+        <p class="t-meta c-muted num mt-0.5">miércoles · 7:00 pm</p>
+        <div class="triage mt-3" role="group" aria-label="Qué hacer con: Terminar el modelo de datos">
+          <button class="btn btn--primary">Esta semana</button>
+          <button class="btn">Otro día</button>
+          <button class="btn">Quitar</button>
+        </div>
+      </div>
+
+      <div class="tri">
+        <p class="t-body font-medium">Ejercicios de Álgebra</p>
+        <p class="t-meta c-muted num mt-0.5">martes · 4:00 pm</p>
+        <div class="triage mt-3" role="group" aria-label="Qué hacer con: Ejercicios de Álgebra">
+          <button class="btn btn--primary">Esta semana</button>
+          <button class="btn">Otro día</button>
+          <button class="btn">Quitar</button>
+        </div>
+      </div>
+
+      <!-- Ya resuelta. Deshacer visible en el sitio, sin dialogo de
+           confirmacion que bloquee. Ninguna accion destructiva es definitiva. -->
+      <div class="tri tri--resolved">
+        <div class="flex items-center gap-3">
+          <span class="ico ico--sm c-faint" data-icon="check"></span>
+          <div class="flex-1 min-w-0">
+            <p class="t-body c-muted" style="text-decoration:line-through;text-decoration-thickness:1px">Comprar cuadernos</p>
+            <p class="t-label c-faint">Al lunes 21</p>
+          </div>
+          <button class="c-accent t-meta font-medium" style="min-height:44px;padding-inline:var(--space-2)">Deshacer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LO QUE VIENE · se ve, no se promete. Empezar es lo caro; saber que
+         son 3 pasos mas y cortos es lo que hace que se empiece. -->
+    <section class="gutter mt-6" aria-label="Pasos siguientes">
+      <ol class="list-none m-0 p-0 t-meta c-faint grid gap-2">
+        <li class="flex items-center gap-3">
+          <span class="ico ico--sm" data-icon="calendar"></span>
+          Después: las clases y entregas de la semana que viene
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="ico ico--sm" data-icon="bookmark"></span>
+          Y una cosa que anotaste y nunca planificaste
+        </li>
+      </ol>
+    </section>
+
+    <div class="flex-1"></div>
+
+    <!-- SALIDA -->
+    <footer class="gutter pt-4 pb-4" style="box-shadow: inset 0 1px 0 var(--line)">
+      <button class="btn btn--primary btn--full">
+        Siguiente
+        <span class="ico ico--sm" data-icon="arrow-right"></span>
+      </button>
+      <button class="btn btn--full mt-2" style="background:transparent;color:var(--text-muted)">Seguir luego</button>
+    </footer>
+
+  </main>
+
+  <div data-homebar></div>
+</div>
+</body>
+</html>

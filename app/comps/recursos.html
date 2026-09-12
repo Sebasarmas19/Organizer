@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recursos · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  RECURSOS · la pantalla de busqueda
+  ---------------------------------------------------------------------------
+  Modulo aparte (decision 20). No es una tarea: no se completa, se consulta.
+
+  Abre con el cursor dentro del campo, no con una lista (docs/06-recursos.md):
+  con 200 guardados, navegar no escala. Por eso el comp dibuja el teclado —
+  es lo que de verdad se ve al abrir, y responde la pregunta que importa:
+  cuantos resultados quedan visibles. Cuatro. La barra de pestanas queda
+  debajo del teclado; reaparece al cerrarlo.
+
+  "Nunca abierto" es un filtro visible a proposito. Es el unico sitio de la
+  app donde ver el dato incomoda, y ahi si tiene que incomodar: la biblioteca
+  de recursos es, por diseno, un vertedero con buena conciencia.
+-->
+
+<style>
+  .res { display: flex; gap: var(--space-3); padding: var(--space-3) var(--gutter); align-items: flex-start; }
+  .res + .res { box-shadow: inset 0 1px 0 var(--line); }
+  .res__kind {
+    width: 34px; height: 34px; flex: 0 0 auto; border-radius: 9px;
+    display: grid; place-items: center;
+    background: var(--surface-sunken); color: var(--text-muted);
+  }
+  .res__title { font-size: var(--text-body); line-height: var(--lh-body); font-weight: var(--weight-medium); }
+  .res__title mark { background: var(--accent-soft); color: inherit; border-radius: 3px; padding: 0 1px; }
+  .res__meta { display: flex; align-items: center; gap: var(--space-2); margin-top: 1px; font-size: var(--text-meta); color: var(--text-muted); }
+  .res__new { color: var(--text-faint); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0 var(--gutter) var(--space-3); }
+
+  .kb__sugg { display: flex; box-shadow: inset 0 -1px 0 var(--line-strong); }
+  .kb__sugg span { flex: 1 1 0; text-align: center; padding: var(--space-2) 0; font-size: var(--text-meta); }
+  .kb__sugg span + span { box-shadow: inset 1px 0 0 var(--line-strong); }
+</style>
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="15:42"></div>
+
+  <main class="screen screen--fixed flex flex-col">
+
+    <header class="pagehead" style="padding-bottom:var(--space-2)">
+      <h1 class="t-title">Recursos</h1>
+      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+        <button class="tapicon" aria-label="Guardar un recurso"><span class="ico ico--lg" data-icon="plus"></span></button>
+      </div>
+    </header>
+
+    <!-- CAMPO · enfocado al abrir. El caret parpadea de verdad (y se detiene
+         con prefers-reduced-motion). -->
+    <div class="gutter pb-3">
+      <label class="field field--focus" for="q">
+        <span class="ico ico--sm" data-icon="search" aria-hidden="true"></span>
+        <span class="flex-1 t-body text-ink">supabase<span class="caret inline-block align-middle ml-px"></span></span>
+        <input id="q" class="sr-only" type="search" value="supabase" aria-label="Buscar en recursos" autofocus>
+        <button class="tapicon" style="width:32px;height:32px;margin-right:-6px" aria-label="Borrar búsqueda">
+          <span class="ico ico--sm" data-icon="xmark"></span>
+        </button>
+      </label>
+    </div>
+
+    <!-- FILTROS · envuelven, nunca hacen scroll horizontal -->
+    <div class="chips" role="group" aria-label="Filtros">
+      <button class="chip" aria-pressed="true">Todos</button>
+      <button class="chip" aria-pressed="false">Herramientas</button>
+      <button class="chip" aria-pressed="false">Skills</button>
+      <button class="chip" aria-pressed="false">Artículos</button>
+      <button class="chip" aria-pressed="false">
+        <span class="ico ico--sm" data-icon="clock"></span>
+        Nunca abiertos
+      </button>
+    </div>
+
+    <!-- RESULTADOS -->
+    <ul class="list-none m-0 p-0 flex-1 min-h-0 overflow-y-auto" style="box-shadow: inset 0 1px 0 var(--line)">
+      <li class="res">
+        <span class="res__kind"><span class="ico ico--sm" data-icon="link"></span></span>
+        <div class="min-w-0 flex-1">
+          <p class="res__title">Row Level Security en <mark>Supabase</mark></p>
+          <p class="res__meta">supabase.com<span class="sep">·</span>artículo<span class="sep">·</span>abierto 3 veces</p>
+        </div>
+      </li>
+
+      <li class="res">
+        <span class="res__kind"><span class="ico ico--sm" data-icon="folder"></span></span>
+        <div class="min-w-0 flex-1">
+          <p class="res__title"><mark>supabase</mark>-js v2 — hoja de trucos</p>
+          <p class="res__meta">github.com<span class="sep">·</span>repo<span class="sep">·</span><span class="res__new">nunca abierto</span></p>
+        </div>
+      </li>
+
+      <li class="res">
+        <span class="res__kind"><span class="ico ico--sm" data-icon="bookmark"></span></span>
+        <div class="min-w-0 flex-1">
+          <p class="res__title">Magic link + RLS: el patrón de un solo usuario</p>
+          <p class="res__meta">Guardado por Siri<span class="sep">·</span>skill<span class="sep">·</span>hace 2 semanas</p>
+        </div>
+      </li>
+
+      <li class="res">
+        <span class="res__kind"><span class="ico ico--sm" data-icon="link"></span></span>
+        <div class="min-w-0 flex-1">
+          <p class="res__title">pg_cron para tareas programadas</p>
+          <p class="res__meta">supabase.com<span class="sep">·</span>artículo<span class="sep">·</span><span class="res__new">nunca abierto</span></p>
+        </div>
+      </li>
+    </ul>
+
+    <!-- TECLADO DE iOS · cromo del sistema, no de la app. Esta aqui para que
+         el presupuesto de altura sea honesto. -->
+    <div class="kb" aria-hidden="true">
+      <div class="kb__sugg c-muted">
+        <span>supabase</span><span class="text-ink font-medium">"supabase"</span><span>supabase auth</span>
+      </div>
+      <div style="height:var(--space-2)"></div>
+      <div id="keys"></div>
+    </div>
+  </main>
+
+  <div data-homebar></div>
+</div>
+
+<script>
+  (function () {
+    var ROWS = [
+      ['q','w','e','r','t','y','u','i','o','p'],
+      ['a','s','d','f','g','h','j','k','l','ñ'],
+      [{ w: 'shift', i: 'chevron-up' }, 'z','x','c','v','b','n','m', { w: 'shift', i: 'xmark' }],
+      [{ w: '123', k: '123' }, { w: 'es', k: 'ES' }, { w: 'space', k: 'espacio' }, { w: 'go', k: 'buscar' }]
+    ];
+    var host = document.getElementById('keys');
+    ROWS.forEach(function (row, i) {
+      var el = document.createElement('div');
+      el.className = 'kb__row';
+      if (i === 1) el.style.padding = '0 14px';
+      row.forEach(function (key) {
+        var b = document.createElement('span');
+        b.className = 'kb__key' + (typeof key === 'object' ? ' kb__key--wide' : '');
+        if (typeof key === 'object' && key.w === 'space') b.className += ' kb__key--space';
+        // Nada de glifos unicode haciendo de icono: tambien aqui salen del set.
+        if (typeof key === 'object' && key.i) {
+          b.innerHTML = '<span class="ico ico--sm" data-icon="' + key.i + '"></span>';
+        } else {
+          b.textContent = typeof key === 'string' ? key : key.k;
+        }
+        el.appendChild(b);
+      });
+      host.appendChild(el);
+    });
+  })();
+</script>
+</body>
+</html>

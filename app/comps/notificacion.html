@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notificación · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+</head>
+
+<!--
+  LA NOTIFICACION · pantalla de bloqueo de iOS
+  ---------------------------------------------------------------------------
+  Esto no es una pantalla de la app. Es el producto (docs/00-problema.md).
+  El cuello de botella del usuario no es escribir, es releer: si puede leer el
+  dia entero desde la pantalla de bloqueo sin desbloquear, el sistema gano.
+
+  EL LIMITE REAL, y es duro:
+  iOS muestra la notificacion PLEGADA. Titulo: 1 linea. Cuerpo: 2 lineas.
+  A 15px en una tarjeta de ~334px eso son unos 44 caracteres por linea:
+
+      titulo  <= 38 caracteres
+      cuerpo  <= 88 caracteres
+
+  Pasado eso, iOS corta con puntos suspensivos y la notificacion vuelve a ser
+  "tienes cosas, abre la app" — exactamente lo que el proyecto existe para no
+  hacer. Por eso el cuerpo se escribe en servidor con presupuesto de
+  caracteres, no truncando la lista: si el dia no cabe, se recortan ITEMS
+  (los de mas tarde), nunca palabras a la mitad.
+
+  Diferencia deliberada con Inicio: aqui SI entran las clases. Inicio es para
+  decidir (decision 35) y las clases no se deciden; la notificacion es para
+  saber que pasa hoy, y a las 8:00 lo que pasa es Calculo.
+-->
+
+<style>
+  .page { width: 390px; }
+  .spec { padding: var(--space-4) var(--gutter); }
+  .spec__label { font-size: var(--text-label); font-weight: var(--weight-semibold); color: var(--text-muted); }
+  .spec__when { font-size: var(--text-label); color: var(--text-faint); }
+  .spec__count { font-size: var(--text-label); color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .spec__why { font-size: var(--text-meta); color: var(--text-muted); margin-top: var(--space-2); }
+  .darkstrip { background: var(--lock-bg); padding: var(--space-3) var(--space-4); border-radius: var(--radius); }
+  .ruler { height: 1px; background: var(--line); margin: 0 var(--gutter); }
+</style>
+
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="page">
+
+  <!-- ======================= PANTALLA DE BLOQUEO ======================= -->
+  <div class="lock">
+    <div class="lock__clock">
+      <span class="ico ico--sm" data-icon="lock" style="opacity:.8"></span>
+      <p class="lock__time num">7:30</p>
+      <p class="lock__date">jueves, 17 de septiembre</p>
+    </div>
+
+    <!-- Una sola notificacion al dia (decision 33). No hay pila, no hay
+         insignia con numero, no hay "3 notificaciones". -->
+    <div style="margin-top:auto;padding:0 var(--space-4) 120px">
+      <div class="notif">
+        <div class="notif__head">
+          <span class="notif__icon"><span></span></span>
+          <span class="notif__app">Organizer</span>
+          <span class="notif__when">ahora</span>
+        </div>
+        <p class="notif__title">Hoy, jueves 17</p>
+        <p class="notif__body clamp2">8:00 Cálculo · 11:00 Álgebra · 15:00 Migrar el schema · 20:00 Resumen</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= LOS CINCO TEXTOS ========================= -->
+  <div class="pb-6" style="background:var(--bg)">
+
+    <div class="spec">
+      <h2 class="t-section">Los textos</h2>
+      <p class="t-meta c-muted mt-1">
+        Escritos para caber plegados. El número es el largo real; el techo es
+        38 en el título y 88 en el cuerpo.
+      </p>
+    </div>
+
+    <div class="ruler"></div>
+
+    <!-- 1 · MAÑANA -->
+    <section class="spec">
+      <div class="flex items-baseline justify-between gap-3 mb-3">
+        <span class="spec__label">Mañana</span>
+        <span class="spec__when num">7:30</span>
+        <span class="spec__count ml-auto">14 / 69</span>
+      </div>
+      <div class="darkstrip">
+        <div class="notif" style="border:0;background:rgb(255 255 255 / .11)">
+          <div class="notif__head">
+            <span class="notif__icon"><span></span></span>
+            <span class="notif__app">Organizer</span>
+            <span class="notif__when">ahora</span>
+          </div>
+          <p class="notif__title">Hoy, jueves 17</p>
+          <p class="notif__body clamp2">8:00 Cálculo · 11:00 Álgebra · 15:00 Migrar el schema · 20:00 Resumen</p>
+        </div>
+      </div>
+      <p class="spec__why">
+        El día entero, en orden, con hora. Sin contadores y sin “abre la app”.
+        Si no cabe, el servidor quita los bloques más tardíos, no corta frases.
+      </p>
+    </section>
+
+    <div class="ruler"></div>
+
+    <!-- 2 · NOCHE -->
+    <section class="spec">
+      <div class="flex items-baseline justify-between gap-3 mb-3">
+        <span class="spec__label">Noche</span>
+        <span class="spec__when num">21:30</span>
+        <span class="spec__count ml-auto">14 / 67</span>
+      </div>
+      <div class="darkstrip">
+        <div class="notif" style="border:0;background:rgb(255 255 255 / .11)">
+          <div class="notif__head">
+            <span class="notif__icon"><span></span></span>
+            <span class="notif__app">Organizer</span>
+            <span class="notif__when">ahora</span>
+          </div>
+          <p class="notif__title">Cierre del día</p>
+          <p class="notif__body clamp2">Quedó abierto: Resumen de Cálculo. ¿Lo pasas a mañana o lo sueltas?</p>
+        </div>
+      </div>
+      <p class="spec__why">
+        Pregunta, no señala. “Quedó abierto”, nunca “no cumpliste”. Nada se
+        arrastra solo al día siguiente: la respuesta la da él.
+      </p>
+    </section>
+
+    <div class="ruler"></div>
+
+    <!-- 3 · DOMINGO -->
+    <section class="spec">
+      <div class="flex items-baseline justify-between gap-3 mb-3">
+        <span class="spec__label">Domingo</span>
+        <span class="spec__when num">19:00</span>
+        <span class="spec__count ml-auto">7 / 68</span>
+      </div>
+      <div class="darkstrip">
+        <div class="notif" style="border:0;background:rgb(255 255 255 / .11)">
+          <div class="notif__head">
+            <span class="notif__icon"><span></span></span>
+            <span class="notif__app">Organizer</span>
+            <span class="notif__when">ahora</span>
+          </div>
+          <p class="notif__title">Domingo</p>
+          <p class="notif__body clamp2">Unos 10 minutos para armar la semana. Quedó algo suelto del viernes.</p>
+        </div>
+      </div>
+      <p class="spec__why">
+        Dice cuánto dura. Con TDAH lo que no tiene tamaño no se empieza, y
+        “revisión semanal” sin número se lee como una tarde entera.
+      </p>
+    </section>
+
+    <div class="ruler"></div>
+
+    <!-- 4 · AVISO DE ENTREGA -->
+    <section class="spec">
+      <div class="flex items-baseline justify-between gap-3 mb-3">
+        <span class="spec__label">Aviso de entrega</span>
+        <span class="spec__when">a mano, por tarea</span>
+        <span class="spec__count ml-auto">35 / 63</span>
+      </div>
+      <div class="darkstrip">
+        <div class="notif" style="border:0;background:rgb(255 255 255 / .11)">
+          <div class="notif__head">
+            <span class="notif__icon"><span></span></span>
+            <span class="notif__app">Organizer</span>
+            <span class="notif__when">ahora</span>
+          </div>
+          <p class="notif__title">Viernes: entrega del proyecto de IA</p>
+          <p class="notif__body clamp2">Faltan 2 días. Tienes 3 horas reservadas el jueves a las 15:00.</p>
+        </div>
+      </div>
+      <p class="spec__why">
+        La única excepción a “una notificación al día” (decisión 33), y solo
+        si él la activa en esa tarea. No dice que falta: dice que ya hay plan.
+      </p>
+    </section>
+
+    <div class="ruler"></div>
+
+    <!-- 5 · LUNES SIN REVISION -->
+    <section class="spec">
+      <div class="flex items-baseline justify-between gap-3 mb-3">
+        <span class="spec__label">Lunes sin revisión</span>
+        <span class="spec__when num">7:30</span>
+        <span class="spec__count ml-auto">24 / 66</span>
+      </div>
+      <div class="darkstrip">
+        <div class="notif" style="border:0;background:rgb(255 255 255 / .11)">
+          <div class="notif__head">
+            <span class="notif__icon"><span></span></span>
+            <span class="notif__app">Organizer</span>
+            <span class="notif__when">ahora</span>
+          </div>
+          <p class="notif__title">La semana ya está armada</p>
+          <p class="notif__body clamp2">Puse tus clases y lo que quedó pendiente. Ajústala cuando quieras.</p>
+        </div>
+      </div>
+      <p class="spec__why">
+        El texto de la decisión 22, palabra por palabra: se saltó el domingo y
+        aun así hay semana. Ni una sílaba de reproche, ni una semana vacía.
+      </p>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

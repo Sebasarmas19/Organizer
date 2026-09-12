@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Organizer · Comps</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="tw.js"></script>
+<script src="icons.js" defer></script>
+</head>
+
+<!--
+  Indice de revision (decision 46: esto se abre desde el iPhone).
+  Cada comp va en un iframe a 390px reales, asi que en el telefono se ve a
+  tamano 1:1. La unica pregunta que hay que poder responder aqui es si esto
+  se lee de un vistazo, con una mano, caminando.
+-->
+
+<style>
+  :root { --fit: min(1, 100vw / 390); --fitd: min(1, (100vw - 40px) / 1280); }
+
+  .wrap { max-width: 460px; margin: 0 auto; }
+  .wrap--wide { max-width: 1320px; }
+
+  .lede { padding: var(--space-10) var(--gutter) var(--space-8); }
+
+  .switch { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface-sunken); gap: 2px; }
+  .switch button {
+    min-height: 34px; padding: 0 var(--space-3); border-radius: 999px;
+    font-size: var(--text-label); font-weight: var(--weight-medium); color: var(--text-muted);
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .switch button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); }
+
+  .comp-block { padding-top: var(--space-10); }
+  .comp-head { padding: 0 var(--gutter) var(--space-4); }
+  .comp-head h2 { font-size: var(--text-section); line-height: var(--lh-section); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-title); }
+  .comp-head p { font-size: var(--text-meta); line-height: var(--lh-meta); color: var(--text-muted); margin-top: var(--space-1); }
+  .comp-head a { font-size: var(--text-label); font-weight: var(--weight-medium); }
+
+  /* zoom (no transform) para que el marco encoja TAMBIEN su caja de layout:
+     asi nunca hay desbordamiento horizontal en pantallas de menos de 390px,
+     y a 390 exactos el comp se ve 1:1, que es el punto de todo esto. */
+  .stage { display: flex; justify-content: center; }
+  .frame {
+    width: 390px; height: 844px; border: 0; display: block;
+    background: var(--bg);
+    box-shadow: 0 0 0 1px var(--line);
+    zoom: var(--fit);
+  }
+  .frame--desk { width: 1280px; height: 860px; zoom: var(--fitd); }
+
+  /* especimen de tokens */
+  .swatches { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); padding: 0 var(--gutter); }
+  .sw { border-radius: var(--radius); overflow: hidden; box-shadow: 0 0 0 1px var(--line); }
+  .sw__chip { height: 52px; }
+  .sw__name { padding: var(--space-2) var(--space-3); font-size: var(--text-label); }
+  .sw__hex { color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+  .scale-row { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-2) var(--gutter); }
+  .scale-row + .scale-row { box-shadow: inset 0 1px 0 var(--line); }
+  .scale-row span:first-child { width: 58px; flex: 0 0 auto; font-size: var(--text-label); color: var(--text-faint); font-variant-numeric: tabular-nums; }
+</style>
+
+<body>
+
+<header class="wrap lede">
+  <p class="t-label c-muted">Organizer · fase FD</p>
+  <h1 class="t-title mt-1">Comps de diseño</h1>
+  <p class="t-body c-muted mt-3">
+    Ocho pantallas a 390px, más la variante de escritorio de Semana. Ábrelas
+    desde el iPhone: a este ancho se ven a tamaño real. La pregunta no es si
+    te gustan — es si <em>Inicio</em> te baja la ansiedad al abrirlo, y si la
+    notificación se lee entera sin desbloquear.
+  </p>
+
+  <div class="mt-5 flex items-center gap-3">
+    <div class="switch" role="group" aria-label="Tema">
+      <button data-theme-btn="" aria-pressed="true">Sistema</button>
+      <button data-theme-btn="light" aria-pressed="false">Claro</button>
+      <button data-theme-btn="dark" aria-pressed="false">Oscuro</button>
+    </div>
+  </div>
+</header>
+
+<main id="comps"></main>
+
+<!-- ============================ EL SISTEMA ============================= -->
+<section class="wrap comp-block" id="sistema">
+  <div class="comp-head">
+    <h2>El sistema</h2>
+    <p>Todo lo de arriba sale de <code>tokens.css</code>. Cambia el tema con el
+       interruptor y estos valores cambian con él.</p>
+  </div>
+
+  <h3 class="t-label c-muted font-semibold gutter mb-3">Color</h3>
+  <div class="swatches">
+    <div class="sw"><div class="sw__chip" style="background:var(--bg)"></div><p class="sw__name">Fondo<br><span class="sw__hex">--bg</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--surface)"></div><p class="sw__name">Superficie<br><span class="sw__hex">--surface</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--surface-sunken)"></div><p class="sw__name">Hundida<br><span class="sw__hex">--surface-sunken</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--surface-class)"></div><p class="sw__name">Clases<br><span class="sw__hex">--surface-class</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--accent)"></div><p class="sw__name">Acento · petróleo<br><span class="sw__hex">--accent</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--accent-soft)"></div><p class="sw__name">Acento suave<br><span class="sw__hex">--accent-soft</span></p></div>
+  </div>
+
+  <p class="t-meta c-muted gutter mt-4">
+    Un solo acento en toda la app: acción primaria, bloque en curso y racha.
+    Nada más. No existe un rojo: lo no cumplido es neutro, siempre.
+  </p>
+
+  <h3 class="t-label c-muted font-semibold gutter mt-8 mb-3">Contextos</h3>
+  <div class="gutter flex flex-wrap gap-2">
+    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-1)"></span>Cálculo III</span>
+    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-2)"></span>Lecturas</span>
+    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>Proyecto IA</span>
+    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-4)"></span>Cursos</span>
+    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-5)"></span>Algún día</span>
+    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-6)"></span>Personal</span>
+  </div>
+  <p class="t-meta c-muted gutter mt-3">
+    Desaturados y en superficie pequeña: un punto de 7px o un borde de 2px.
+    Ninguno cae en el tono del acento, para no confundirse con “en curso”.
+  </p>
+
+  <h3 class="t-label c-muted font-semibold gutter mt-8 mb-3">Tipografía · cinco tamaños</h3>
+  <div>
+    <div class="scale-row"><span>28 / 700</span><span class="t-title">Jueves 17</span></div>
+    <div class="scale-row"><span>20 / 600</span><span class="t-section">Esto quedó de la semana</span></div>
+    <div class="scale-row"><span>17 / 500</span><span class="t-body">Migrar el schema a Supabase</span></div>
+    <div class="scale-row"><span>15 / 400</span><span class="t-meta c-muted">15:00 – 17:00 · Proyecto IA</span></div>
+    <div class="scale-row"><span>13 / 600</span><span class="t-label c-muted">DE AYER</span></div>
+  </div>
+  <p class="t-meta c-muted gutter mt-3">
+    Una sola familia, la del sistema (SF Pro en iOS). La jerarquía la hacen el
+    peso y el color. 17px es el mínimo de cualquier texto de contenido.
+  </p>
+
+  <h3 class="t-label c-muted font-semibold gutter mt-8 mb-3">Radios y superficie</h3>
+  <div class="gutter flex items-end gap-4">
+    <div><div style="width:72px;height:56px;border-radius:var(--radius);background:var(--surface);box-shadow:0 0 0 1px var(--line)"></div><p class="t-label c-faint mt-2">12px</p></div>
+    <div><div style="width:72px;height:56px;border-radius:var(--radius-lg);background:var(--surface);box-shadow:0 0 0 1px var(--line)"></div><p class="t-label c-faint mt-2">20px</p></div>
+    <div><div style="width:44px;height:44px;border-radius:999px;background:var(--accent)"></div><p class="t-label c-faint mt-2">44px táctil</p></div>
+  </div>
+  <p class="t-meta c-muted gutter mt-3">
+    Dos radios en toda la app. La separación es espacio y línea de 1px, nunca
+    sombra: lo único que flota de verdad es la hoja de acción.
+  </p>
+
+  <div style="height:var(--space-16)"></div>
+</section>
+
+<footer class="wrap gutter pb-12">
+  <p class="t-label c-faint">
+    Organizer · comps de la fase FD · <span class="num">2026-09-12</span>.
+    Informe en <code>docs/estado-FD.md</code>.
+  </p>
+</footer>
+
+<script>
+  var COMPS = [
+    { f: 'inicio.html', t: 'Inicio · con contenido',
+      d: 'La restricción más dura: cabe en una pantalla sin scroll. Lo de ayer se resuelve en un toque y nunca en rojo.' },
+    { f: 'inicio-vacio.html', t: 'Inicio · vacío',
+      d: 'Nada pendiente hoy. Un logro, no un hueco: sin ilustración, sin “aún no tienes tareas”, y la semana sigue informando.' },
+    { f: 'semana.html', t: 'Semana · móvil',
+      d: 'Un día por vez con la tira de la semana arriba. Las clases son fondo. El arrastre está dibujado en vivo.' },
+    { f: 'semana-escritorio.html', t: 'Semana · escritorio', k: 'desk',
+      d: 'Rejilla de 7 columnas y carril “sin planificar” para arrastrar al calendario. El escritorio sirve para planificar.' },
+    { f: 'tareas.html', t: 'Tareas · con carpetas',
+      d: 'Lo capturado por Siri cae en Entrada. Carpetas debajo, sin un solo contador en toda la pantalla.' },
+    { f: 'recursos.html', t: 'Recursos · búsqueda',
+      d: 'Abre con el cursor dentro. El teclado está dibujado porque la pregunta real es cuántos resultados quedan visibles.' },
+    { f: 'domingo.html', t: 'Domingo · triage', h: 980,
+      d: 'El momento donde una app normal pasa factura. Cero rojo, cero recuento, un toque por tarea, deshacer siempre.' },
+    { f: 'notificacion.html', t: 'La notificación', h: 2260,
+      d: 'El producto. Cinco textos escritos para caber plegados en la pantalla de bloqueo: 38 caracteres de título, 88 de cuerpo.' }
+  ];
+
+  var host = document.getElementById('comps');
+  COMPS.forEach(function (c, i) {
+    var wide = c.k === 'desk';
+    var h = c.h || 844;
+    var sec = document.createElement('section');
+    sec.className = 'wrap comp-block' + (wide ? ' wrap--wide' : '');
+    sec.innerHTML =
+      '<div class="comp-head">' +
+        '<p class="t-label c-faint num">' + String(i + 1).padStart(2, '0') + '</p>' +
+        '<h2>' + c.t + '</h2>' +
+        '<p>' + c.d + '</p>' +
+        '<a href="comps/' + c.f + '" target="_blank" rel="noopener">Abrir sola &rsaquo;</a>' +
+      '</div>' +
+      '<div class="stage">' +
+        '<iframe class="frame' + (wide ? ' frame--desk' : '') + '"' +
+          (wide ? '' : ' style="height:' + h + 'px"') +
+          ' src="comps/' + c.f + '" title="' + c.t + '" loading="lazy"></iframe>' +
+      '</div>';
+    host.appendChild(sec);
+  });
+
+  // Tema: se aplica al indice y se propaga a cada comp por postMessage, sin
+  // recargar, para que no se pierda el scroll ni el estado de la pagina.
+  var current = '';
+  function setTheme(v) {
+    current = v;
+    if (v) { document.documentElement.setAttribute('data-theme', v); }
+    else { document.documentElement.removeAttribute('data-theme'); }
+    document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.themeBtn === v));
+    });
+    document.querySelectorAll('iframe').forEach(function (f) {
+      try { f.contentWindow.postMessage({ type: 'organizer:theme', theme: v }, '*'); } catch (e) {}
+    });
+  }
+  document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
+    b.addEventListener('click', function () { setTheme(b.dataset.themeBtn); });
+  });
+  // Los iframes cargan tarde (loading="lazy"): hay que repetirles el tema.
+  document.addEventListener('load', function (e) {
+    if (e.target.tagName === 'IFRAME') {
+      try { e.target.contentWindow.postMessage({ type: 'organizer:theme', theme: current }, '*'); } catch (err) {}
+    }
+  }, true);
+</script>
+</body>
+</html>
