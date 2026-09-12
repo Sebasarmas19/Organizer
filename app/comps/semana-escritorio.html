@@ -25,6 +25,19 @@
 
   Navegacion adaptativa: en >=1024px las 4 pestanas pasan a barra lateral.
   Son los mismos 4 modulos, en el mismo orden, con icono y etiqueta.
+
+  FD2 anade tres cosas, las mismas que en el telefono y con el mismo
+  vocabulario, para que no haya dos apps:
+
+    - El control segmentado Dia / Semana / Mes. Las tres vistas existen
+      tambien aqui: son tres preguntas, no tres zooms.
+    - La FILA DE REMINDERS sobre la rejilla. Un reminder no ocupa tiempo: no
+      es un bloque, ocurre. Por eso vive en una banda de dia completo y no
+      dentro de la rejilla, y no lleva casilla (decision 49).
+    - Las CAPAS (Tareas / Reminders / Materias). Apagar materias es lo que
+      convierte esta pantalla en una herramienta de planificacion: entonces
+      lo que se ve es el hueco, no la clase (decision 52). Aqui estan
+      encendidas; en semana.html se ve el modo con materias apagadas.
 -->
 
 <style>
@@ -47,8 +60,8 @@
   .main { display: flex; flex-direction: column; min-width: 0; }
   .mainhead { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5) var(--gutter-wide) var(--space-4); }
 
-  .week { display: grid; grid-template-columns: 56px repeat(7, 1fr); }
-  .week__head { display: grid; grid-template-columns: 56px repeat(7, 1fr); padding-right: 6px; box-shadow: inset 0 -1px 0 var(--line); }
+  .week { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); }
+  .week__head { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); padding-right: 6px; box-shadow: inset 0 -1px 0 var(--line); }
   .colhead { text-align: center; padding: var(--space-2) 0 var(--space-3); }
   .colhead__dow { font-size: var(--text-label); color: var(--text-muted); display: block; }
   .colhead__num { font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
@@ -56,16 +69,32 @@
   .colhead--today .colhead__num { color: var(--accent); }
 
   .weekbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-  .col { position: relative; border-left: 1px solid var(--line); }
+  .col { position: relative; min-width: 0; border-left: 1px solid var(--line); }
   .col--weekend { background: var(--surface-sunken); }
-  .col .block { left: 3px; right: 3px; padding: var(--space-1) var(--space-2); }
-  .col .block__title { font-size: var(--text-label); line-height: var(--lh-label); }
-  .col .block__time { font-size: 11px; line-height: 14px; }
+  .col .calblock { left: 3px; right: 3px; padding: var(--space-1) var(--space-2); }
+  .col .calblock__title { font-size: var(--text-label); line-height: var(--lh-label); }
+  .col .calblock__time { font-size: 11px; line-height: 14px; }
 
   /* Bloque que paso y no se cerro. Contorno punteado neutro, nunca rojo:
      la app pregunta, no reprocha. */
-  .block--open { background: transparent; border: 1px dashed var(--line-strong); border-left-width: 2px; }
-  .block--open .block__title { color: var(--text-muted); }
+  .calblock--open { background: transparent; border: 1px dashed var(--line-strong); border-left-width: 2px; }
+  .calblock--open .calblock__title { color: var(--text-muted); }
+
+  /* Fila de reminders de dia completo, sobre la rejilla. */
+  .remrow { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); padding-right: 6px;
+            box-shadow: inset 0 -1px 0 var(--line); min-height: 40px; }
+  .remrow__label { font-size: var(--text-label); color: var(--text-faint); text-align: right;
+                   padding: var(--space-2) var(--space-2) 0 0; }
+  .remrow__cell { min-width: 0; padding: 5px 3px; border-left: 1px solid var(--line); }
+  .remchip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 6px; border-radius: 6px;
+    background: var(--surface-sunken);
+    border-left: 2px solid var(--ctx, var(--line-strong));
+    font-size: 11px; line-height: 14px; color: var(--text);
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .remchip .ico { width: 11px; height: 11px; color: var(--text-muted); }
 
   .rail { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
   .railitem {
@@ -94,7 +123,11 @@
     <a class="navitem" href="tareas.html"><span class="ico ico--lg" data-icon="check-circle"></span>Tareas</a>
     <a class="navitem" href="recursos.html"><span class="ico ico--lg" data-icon="bookmark"></span>Recursos</a>
 
-    <div class="mt-auto px-3">
+    <a class="navitem mt-auto" href="horario.html" style="font-size:var(--text-meta)">
+      <span class="ico ico--lg" data-icon="grid"></span>Horario
+    </a>
+
+    <div class="px-3 pt-3">
       <p class="t-label c-accent num">12 días seguidos</p>
       <p class="t-label c-faint mt-1">2 comodines este mes</p>
     </div>
@@ -111,6 +144,12 @@
         <h1 class="t-section num">14 – 20 de septiembre</h1>
         <p class="t-label c-muted">Semana 1 del semestre</p>
       </div>
+      <div class="seg ml-4" style="width:240px" role="tablist" aria-label="Vista del calendario">
+        <button role="tab" aria-selected="false">Día</button>
+        <button role="tab" aria-selected="true">Semana</button>
+        <button role="tab" aria-selected="false">Mes</button>
+      </div>
+
       <div class="ml-auto flex items-center gap-2">
         <button class="btn btn--quiet">Hoy</button>
         <button class="btn">
@@ -120,7 +159,17 @@
       </div>
     </header>
 
+    <!-- CAPAS · el filtro y el interruptor de materias son el mismo control -->
+    <div class="chips" style="padding: 0 var(--gutter-wide) var(--space-3)" role="group" aria-label="Qué se ve">
+      <button class="chip" aria-pressed="true">Tareas</button>
+      <button class="chip" aria-pressed="true">Reminders</button>
+      <button class="chip" aria-pressed="true">Materias</button>
+    </div>
+
     <div class="week__head" id="weekhead"><div></div></div>
+
+    <!-- REMINDERS · banda de día completo, fuera de la rejilla de horas -->
+    <div class="remrow" id="remrow"><div class="remrow__label">fechas</div></div>
 
     <div class="weekbody" id="weekbody">
       <div class="week" style="--hour:44px">
@@ -210,6 +259,24 @@
       head.appendChild(el);
     });
 
+    // Fila de reminders: un reminder no ocupa horas, ocurre. Por eso va
+    // arriba, en su propia banda, y nunca como bloque dentro de la rejilla.
+    var REMINDERS = {
+      3: { t: 'Entrega del avance de IA', c: 3 },
+      4: { t: 'Parcial de Cálculo', c: 1 }
+    };
+    var remrow = document.getElementById('remrow');
+    DAYS.forEach(function (d, i) {
+      var cell = document.createElement('div');
+      cell.className = 'remrow__cell';
+      var r = REMINDERS[i];
+      if (r) {
+        cell.innerHTML = '<span class="remchip" style="--ctx:var(--ctx-' + r.c + ')">' +
+          '<span class="ico" data-icon="flag"></span>' + r.t + '</span>';
+      }
+      remrow.appendChild(cell);
+    });
+
     // Gutter de horas
     var hours = document.getElementById('hours');
     for (var h = FROM; h < TO; h++) {
@@ -235,14 +302,14 @@
 
       EVENTS.filter(function (e) { return e.d === i; }).forEach(function (e) {
         var b = document.createElement('div');
-        b.className = 'block ' + (e.k === 'class' ? 'block--class'
-          : e.k === 'open' ? 'block--task block--open'
-          : e.k === 'now' ? 'block--task block--now' : 'block--task');
+        b.className = 'block ' + (e.k === 'class' ? 'calblock--class'
+          : e.k === 'open' ? 'calblock--task calblock--open'
+          : e.k === 'now' ? 'calblock--task calblock--now' : 'calblock--task');
         b.style.top = ((e.s - FROM) * H) + 'px';
         b.style.height = ((e.e - e.s) * H) + 'px';
         if (e.c) b.style.setProperty('--ctx', 'var(--ctx-' + e.c + ')');
-        b.innerHTML = '<p class="block__time num">' + hhmm(e.s) + '</p>' +
-                      '<p class="block__title">' + e.t + '</p>';
+        b.innerHTML = '<p class="calblock__time num">' + hhmm(e.s) + '</p>' +
+                      '<p class="calblock__title">' + e.t + '</p>';
         col.appendChild(b);
       });
 

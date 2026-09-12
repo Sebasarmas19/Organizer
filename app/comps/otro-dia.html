@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Otro día · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  "OTRO DÍA" · el selector del triage           (FD2 · decisión 56) · NUEVO
+  ---------------------------------------------------------------------------
+  Es el paso intermedio del triage que en FD no existía. Sale de tocar
+  "Otro día" en la bandeja de "De ayer" de Inicio.
+
+  EL PRINCIPIO: elegir un día no puede costar más que hacer la tarea.
+  Por eso lo primero no es un calendario, son tres respuestas escritas —
+  "mañana", "el sábado", "el lunes" — que son como la gente piensa las
+  fechas. El calendario está debajo para el caso raro, no para el normal.
+  Con TDAH, un selector de fecha rodante es una pared: hay que contar, hay
+  que apuntar y hay que acertar.
+
+  Cada opción mide 56px. El calendario da 44 por celda. Ninguno baja de ahí.
+
+  NO HAY BOTÓN DE CONFIRMAR. Tocar la opción resuelve y cierra: un toque, no
+  dos. Lo que sí hay es deshacer, que aparece en Inicio después.
+
+  "Quitar fecha" está abajo y en tono neutro. No borra la tarea: la devuelve
+  al módulo Tareas, sin fecha, que es la regla de la decisión 56.
+-->
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="15:42"></div>
+
+  <!-- INICIO, atenuado detrás. Se dibuja para que se vea que la hoja no
+       navega a ningún sitio: la tarea sigue ahí, y al cerrar sigues donde
+       estabas. -->
+  <main class="screen screen--fixed flex flex-col">
+
+    <header class="pagehead" style="padding-bottom:var(--space-2)">
+      <div>
+        <h1 class="t-title">Jueves 17</h1>
+        <p class="t-meta c-muted">septiembre · semana 1</p>
+      </div>
+    </header>
+
+    <section>
+      <div class="sectionhead" style="padding-bottom:0"><h2>Hoy</h2></div>
+      <ul class="list-none m-0 p-0">
+        <li class="row row--done">
+          <button class="check" role="checkbox" aria-checked="true" aria-label="Leer el paper de Anthropic, cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Leer el paper de Anthropic</p>
+            <p class="row__meta"><span class="num">9:00</span></p>
+          </div>
+        </li>
+        <li class="row row--now">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Migrar el schema a Supabase, marcar cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Migrar el schema a Supabase</p>
+            <p class="row__meta"><span class="num c-accent font-medium">15:00 – 17:00</span></p>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <div class="sectionhead mt-3"><h2>De ayer</h2></div>
+    <div class="mx-gutter rounded bg-sunken px-4 py-3">
+      <p class="t-body font-medium">Terminar el modelo de datos</p>
+      <p class="t-meta c-muted num mt-0.5">miércoles · 7:00 pm</p>
+    </div>
+
+  </main>
+
+  <nav data-tabbar="inicio"></nav>
+  <div data-homebar></div>
+
+    <!-- LA HOJA ------------------------------------------------------------- -->
+    <div class="overlay">
+      <div class="sheet">
+        <div class="sheet__grab"></div>
+
+        <div class="gutter pb-3">
+          <p class="t-label c-muted">Terminar el modelo de datos</p>
+          <h2 class="t-section mt-0.5">¿Cuándo?</h2>
+        </div>
+
+        <!-- Las respuestas de siempre. Como se piensan las fechas de verdad. -->
+        <button class="opt">
+          <span class="ico ico--sm c-muted" data-icon="arrow-right"></span>
+          Mañana
+          <span class="opt__when">vie 18</span>
+        </button>
+        <button class="opt">
+          <span class="ico ico--sm c-muted" data-icon="sunrise"></span>
+          El sábado
+          <span class="opt__when">sáb 19</span>
+        </button>
+        <button class="opt">
+          <span class="ico ico--sm c-muted" data-icon="calendar"></span>
+          El lunes
+          <span class="opt__when">lun 21</span>
+        </button>
+
+        <!-- El calendario, para el caso raro. Nunca es el primer recurso. -->
+        <div class="mt-3" style="box-shadow: inset 0 1px 0 var(--line); padding-top: var(--space-3)">
+          <div class="flex items-center justify-between gutter pb-1">
+            <p class="t-label c-muted font-semibold">Septiembre</p>
+            <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+              <button class="tapicon" aria-label="Mes anterior"><span class="ico ico--sm" data-icon="chevron-left"></span></button>
+              <button class="tapicon" aria-label="Mes siguiente"><span class="ico ico--sm" data-icon="chevron-right"></span></button>
+            </div>
+          </div>
+          <div class="px-3">
+            <div class="month" aria-hidden="true">
+              <span class="month__dow">L</span><span class="month__dow">M</span><span class="month__dow">X</span>
+              <span class="month__dow">J</span><span class="month__dow">V</span><span class="month__dow">S</span>
+              <span class="month__dow">D</span>
+            </div>
+            <div class="month" id="pick"></div>
+          </div>
+        </div>
+
+        <!-- Nunca borra. Devuelve al módulo Tareas, sin fecha. -->
+        <div class="gutter mt-3" style="box-shadow: inset 0 1px 0 var(--line); padding-top: var(--space-3)">
+          <button class="btn btn--full">
+            <span class="ico ico--sm" data-icon="undo"></span>
+            Dejarla sin fecha, en Tareas
+          </button>
+        </div>
+      </div>
+    </div>
+
+</div>
+
+<script>
+  // Mini calendario del selector. Celdas de 44px: se toca, no se apunta.
+  (function () {
+    var LEAD = 1, DAYS = 30, TODAY = 17;
+    var pick = document.getElementById('pick');
+    function cell(label, opts) {
+      var el = document.createElement(opts.n ? 'button' : 'div');
+      el.className = 'mday' + (opts.out ? ' mday--out' : '') + (opts.today ? ' mday--today' : '');
+      el.style.minHeight = '44px';
+      if (opts.past) el.style.opacity = '.38';
+      el.innerHTML = '<span class="mday__n num">' + label + '</span>';
+      if (opts.n) el.setAttribute('aria-label', label + ' de septiembre');
+      pick.appendChild(el);
+    }
+    for (var i = 0; i < LEAD; i++) cell(31 - LEAD + 1 + i, { out: true });
+    for (var d = 1; d <= DAYS; d++) cell(d, { n: true, today: d === TODAY, past: d < TODAY });
+    var trail = (7 - ((LEAD + DAYS) % 7)) % 7;
+    for (var j = 1; j <= trail; j++) cell(j, { out: true });
+  })();
+</script>
+</body>
+</html>

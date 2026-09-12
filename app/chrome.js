@@ -11,7 +11,9 @@
 (function () {
   var TABS = [
     { id: 'inicio',   label: 'Inicio',   icon: 'house',        href: 'inicio.html' },
-    { id: 'semana',   label: 'Semana',   icon: 'calendar',     href: 'semana.html' },
+    // El modulo del calendario abre en Dia ("que hago ahora"). Semana y Mes
+    // son las otras dos vistas del mismo modulo, no otras pestanas.
+    { id: 'semana',   label: 'Semana',   icon: 'calendar',     href: 'dia.html' },
     { id: 'tareas',   label: 'Tareas',   icon: 'check-circle', href: 'tareas.html' },
     { id: 'recursos', label: 'Recursos', icon: 'bookmark',     href: 'recursos.html' },
   ];

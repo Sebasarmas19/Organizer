@@ -14,12 +14,15 @@
 </head>
 
 <!--
-  INICIO · estado vacio
+  INICIO · estado vacio                          (FD2 · orden nuevo)
   ---------------------------------------------------------------------------
-  Un estado vacio es un logro, no un hueco. Aqui no hay ilustracion, no hay
-  mascota y no hay "aun no tienes tareas". Hay una frase que confirma que el
-  dia esta cerrado, la racha intacta, y la informacion que sigue siendo util:
-  lo que viene esta semana.
+  Mismo orden que la version con contenido: Hoy · (De ayer) · Esta semana ·
+  racha. "De ayer" no aparece porque no hay nada que triar — un estado vacio
+  no se rellena con una seccion vacia.
+
+  Un estado vacio es un logro, no un hueco. Sin ilustracion, sin mascota, sin
+  "aun no tienes tareas". Una frase que confirma que el dia esta cerrado, y
+  debajo lo unico que sigue siendo util: lo que viene.
 
   La salida no empuja a hacer mas. Ofrece mirar la semana, que es planificar,
   no ejecutar. Abrir la app en este estado tiene que bajar la ansiedad.
@@ -31,48 +34,68 @@
 
   <main class="screen screen--fixed flex flex-col">
 
-    <header class="pagehead">
+    <header class="pagehead" style="padding-bottom:var(--space-2)">
       <div>
         <h1 class="t-title">Jueves 17</h1>
         <p class="t-meta c-muted">septiembre · semana 1</p>
       </div>
-      <p class="t-label c-accent num">13 días seguidos</p>
     </header>
 
-    <!-- EL VACIO ------------------------------------------------------------
-         Ocupa el centro optico de la pantalla, no una esquina. Dos lineas:
-         el hecho y su consecuencia. Ninguna felicitacion, ningun confeti. -->
+    <!-- 1 · HOY, vacío ------------------------------------------------------
+         Ocupa el centro óptico, no una esquina. Dos líneas: el hecho y su
+         consecuencia. Ninguna felicitación, ningún confeti. -->
     <section class="flex-1 flex flex-col items-center justify-center gutter text-center" style="gap:var(--space-2)">
       <p class="t-section">Nada pendiente hoy.</p>
       <p class="t-meta c-muted" style="max-width:30ch">
-        Cerraste las cuatro. Las clases de mañana ya están puestas en Semana.
+        Cerraste las cuatro. Las materias de mañana ya están puestas en el calendario.
       </p>
-      <a href="semana.html" class="btn btn--quiet no-underline mt-3" style="color:var(--text)">
+      <a href="dia.html" class="btn btn--quiet no-underline mt-3" style="color:var(--text)">
         <span class="ico ico--sm" data-icon="calendar"></span>
-        Ver la semana
+        Ver el día de mañana
       </a>
     </section>
 
-    <!-- ESTA SEMANA ---------------------------------------------------------
-         Se queda. Es lo que impide que la pantalla vacia sea una pantalla
-         rota: sigue devolviendo informacion sin pedir nada. -->
-    <section class="pb-2" aria-labelledby="h-semana">
-      <div class="sectionhead">
+    <!-- 3 · ESTA SEMANA -----------------------------------------------------
+         Se queda. Es lo que impide que la pantalla vacía sea una pantalla
+         rota: sigue devolviendo información sin pedir nada.
+
+         El segundo reminder es el caso que ninguna app cubre: falta poco y
+         no hay ni una tarea planificada. La señal la da el peso tipográfico
+         y el acento aparece como ACCIÓN, no como alarma. Cero rojo: todavía
+         está a tiempo, no es una falta suya. -->
+    <section aria-labelledby="h-semana">
+      <div class="sectionhead" style="padding-bottom:var(--space-1)">
         <h2 id="h-semana">Esta semana</h2>
       </div>
-      <ul class="list-none m-0 px-gutter grid gap-1.5">
-        <li class="flex items-baseline gap-2.5 t-meta c-faint">
-          <span class="num" style="min-width:44px">vie 18</span>
-          <span class="ctxdot self-center" style="--ctx:var(--ctx-3)"></span>
-          <span class="text-ink">Entrega parcial del proyecto de IA</span>
-        </li>
-        <li class="flex items-baseline gap-2.5 t-meta c-faint">
-          <span class="num" style="min-width:44px">lun 21</span>
-          <span class="ctxdot self-center" style="--ctx:var(--ctx-1)"></span>
-          <span>Quiz de Cálculo</span>
-        </li>
-      </ul>
+
+      <a href="reminder-detalle.html" class="rem no-underline" style="padding-block:var(--space-2);color:var(--text)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <span class="rem__body">
+          <span class="rem__title" style="font-size:var(--text-meta)">Parcial de Cálculo · viernes 18</span>
+          <span class="prep">
+            <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+            todo listo
+          </span>
+        </span>
+      </a>
+
+      <div class="rem" style="padding-block:var(--space-2)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <div class="rem__body">
+          <p class="rem__title" style="font-size:var(--text-meta)">Defensa del proyecto · en 6 días</p>
+          <p class="prep prep--none">
+            <span class="ico ico--sm" data-icon="alert-triangle" style="width:14px;height:14px"></span>
+            Sin tareas todavía
+          </p>
+        </div>
+        <button class="taptext t-label" style="align-self:center">Planificar</button>
+      </div>
     </section>
+
+    <!-- 4 · LA RACHA -------------------------------------------------------- -->
+    <p class="gutter t-label c-accent num" style="padding-block:var(--space-2) var(--space-3)">
+      13 días seguidos
+    </p>
 
   </main>
 

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reminder · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  REMINDER · detalle                  (FD2 · decisiones 49, 50, 51) · NUEVO
+  ---------------------------------------------------------------------------
+  Esta es la pantalla que justifica el modelo entero. Guardar una fecha lo
+  hace cualquier app. Lo que ninguna da es responder:
+
+        ¿me estoy preparando, o solo lo sé?
+
+  Que es exactamente la distancia entre anotar y cumplir — el problema que da
+  origen al proyecto (docs/00-problema.md).
+
+  DOS ESTADOS, los dos en esta página:
+    arriba   un parcial con sus tres tareas. Dos hechas, una pendiente.
+    abajo    una defensa en 6 días sin una sola tarea. La alerta que hoy no
+             tiene en ningún lado.
+
+  LO QUE NO HAY, y es deliberado:
+  - No hay casilla para marcar el reminder. Un parcial no se hace, ocurre
+    (decisión 49). Cuando pase el día bajará al histórico solo.
+  - No hay rojo, ni en el de 6 días. No es una falta suya: todavía está a
+    tiempo. La señal la da el peso de la letra, y el acento aparece como
+    ACCIÓN ("Planificar una tarea"), nunca como alarma.
+  - No hay barra de progreso de porcentaje. Tres puntos y una frase.
+
+  La cabecera lleva la cuenta atrás en días porque es como se siente una
+  fecha, no en formato largo.
+-->
+
+<style>
+  .stack { width: 390px; }
+  .caption { padding: var(--space-6) var(--gutter) var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
+
+  .remhead { padding: var(--space-4) var(--gutter) var(--space-5); }
+  .remhead__when {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    font-size: var(--text-meta); color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="stack">
+
+  <!-- ===================== 1 · CON TAREAS ASOCIADAS ===================== -->
+  <div class="caption">
+    <h2>Preparado</h2>
+    <p>Dos de tres hechas. Sabes exactamente qué te falta.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:42"></div>
+
+    <main class="screen flex flex-col">
+
+      <div class="flex items-center justify-between gutter" style="padding-block:var(--space-1)">
+        <button class="taptext taptext--quiet t-meta" aria-label="Volver">
+          <span class="ico ico--sm" data-icon="chevron-left"></span>
+          Semana
+        </button>
+        <button class="tapicon" aria-label="Más acciones" style="margin-right:calc(var(--space-3) * -1)">
+          <span class="ico ico--lg" data-icon="more-h"></span>
+        </button>
+      </div>
+
+      <header class="remhead">
+        <p class="remhead__when">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          viernes 18 de septiembre · 10:00
+        </p>
+        <h1 class="t-title mt-1">Parcial de Cálculo</h1>
+        <p class="t-meta c-muted mt-1 flex items-center gap-2">
+          <span class="ctxdot" style="--ctx:var(--ctx-1)"></span>Cálculo III
+          <span class="sep">·</span>mañana
+        </p>
+      </header>
+
+      <!-- LA RELACIÓN. Aquí sí hay casillas: las tareas se hacen. -->
+      <section aria-labelledby="h-tareas">
+        <div class="sectionhead">
+          <h2 id="h-tareas">Para prepararlo</h2>
+          <span class="prep" style="margin:0">
+            <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
+            falta 1
+          </span>
+        </div>
+
+        <ul class="list-none m-0 p-0">
+          <li class="row row--done">
+            <button class="check" role="checkbox" aria-checked="true" aria-label="Resolver la guía del capítulo 3, cumplido">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Resolver la guía del capítulo 3</p>
+              <p class="row__meta num">martes 15</p>
+            </div>
+          </li>
+          <li class="row row--done">
+            <button class="check" role="checkbox" aria-checked="true" aria-label="Resumen de derivadas, cumplido">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Resumen de derivadas</p>
+              <p class="row__meta num">miércoles 16</p>
+            </div>
+          </li>
+          <li class="row">
+            <button class="check" role="checkbox" aria-checked="false" aria-label="Repaso final, marcar cumplido">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Repaso final</p>
+              <p class="row__meta num">hoy · 20:00</p>
+            </div>
+          </li>
+        </ul>
+
+        <!-- Añadir una tarea desde aquí ya la deja asociada. El usuario no
+             elige tipo ni marca ninguna casilla: el sitio donde entra lo
+             determina (decisión 48). -->
+        <button class="row w-full text-left" style="color:var(--accent)">
+          <span class="grid place-items-center" style="width:var(--tap-min);height:var(--tap-min);margin:-10px 0 -10px calc(var(--space-2) * -1.5)">
+            <span class="ico ico--sm" data-icon="plus"></span>
+          </span>
+          <span class="row__body">
+            <span class="row__title" style="color:var(--accent)">Añadir una tarea</span>
+          </span>
+        </button>
+      </section>
+
+      <!-- Las notas del plan de evaluación, que es de donde sale el reminder -->
+      <section class="gutter mt-4" aria-labelledby="h-notas">
+        <h2 id="h-notas" class="t-label c-muted font-semibold mb-1">Notas</h2>
+        <p class="t-meta c-muted">Capítulos 1 a 3. Aula 204. Entra la guía completa.</p>
+      </section>
+
+      <div class="flex-1"></div>
+
+      <p class="gutter t-label c-faint" style="padding-block:var(--space-4)">
+        Cuando pase el viernes, esto baja al histórico solo. No hay nada que marcar.
+      </p>
+
+    </main>
+
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <!-- ===================== 2 · SIN NINGUNA TAREA ======================= -->
+  <div class="caption">
+    <h2>Sin preparar</h2>
+    <p>La alerta que hoy no tiene en ningún lado. Sin rojo: todavía está a tiempo.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:43"></div>
+
+    <main class="screen flex flex-col">
+
+      <div class="flex items-center justify-between gutter" style="padding-block:var(--space-1)">
+        <button class="taptext taptext--quiet t-meta" aria-label="Volver">
+          <span class="ico ico--sm" data-icon="chevron-left"></span>
+          Mes
+        </button>
+        <button class="tapicon" aria-label="Más acciones" style="margin-right:calc(var(--space-3) * -1)">
+          <span class="ico ico--lg" data-icon="more-h"></span>
+        </button>
+      </div>
+
+      <header class="remhead">
+        <p class="remhead__when">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          miércoles 23 de septiembre · 14:00
+        </p>
+        <h1 class="t-title mt-1">Defensa del proyecto</h1>
+        <p class="t-meta c-muted mt-1 flex items-center gap-2">
+          <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>Proyecto IA
+          <span class="sep">·</span>en 6 días
+        </p>
+      </header>
+
+      <!-- El estado vacío que SÍ debe inquietar un poco, sin regañar.
+           Dice el hecho, y a continuación el camino de salida. -->
+      <section class="gutter" aria-labelledby="h-vacio">
+        <div class="rounded bg-sunken p-4">
+          <p class="prep prep--none" style="margin:0;font-size:var(--text-body)">
+            <span class="ico ico--sm" data-icon="alert-triangle"></span>
+            Ninguna tarea planificada todavía
+          </p>
+          <p class="t-meta c-muted mt-2">
+            Lo tienes anotado, pero no te has puesto. Seis días dan para tres
+            sesiones cortas.
+          </p>
+          <button class="btn btn--primary btn--full mt-4">
+            <span class="ico ico--sm" data-icon="plus"></span>
+            Planificar una tarea
+          </button>
+        </div>
+      </section>
+
+      <!-- La biblioteca de ideas también entra por aquí: si ya anotaste algo
+           relacionado, se ofrece en vez de pedir que lo escribas otra vez. -->
+      <section class="mt-5" aria-labelledby="h-suelto">
+        <div class="sectionhead">
+          <h2 id="h-suelto">Ya tenías anotado</h2>
+        </div>
+        <div class="row">
+          <button class="check" role="checkbox" aria-checked="false" aria-label="Preparar slides de la defensa, marcar cumplido">
+            <span class="ico" data-icon="check"></span>
+          </button>
+          <div class="row__body">
+            <p class="row__title">Preparar slides de la defensa</p>
+            <p class="row__meta">en Tareas<span class="sep">·</span>sin fecha</p>
+          </div>
+          <button class="btn" style="align-self:center;padding-inline:var(--space-3)">Asociar</button>
+        </div>
+      </section>
+
+      <div class="flex-1"></div>
+
+      <p class="gutter t-label c-faint" style="padding-block:var(--space-4)">
+        Asociar es opcional. Una tarea sin reminder vale exactamente igual.
+      </p>
+
+    </main>
+
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <div style="height:var(--space-10)"></div>
+</div>
+</body>
+</html>

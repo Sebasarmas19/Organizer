@@ -118,3 +118,8 @@ Detalle completo en `docs/08-modelo-tareas-reminders.md`.
 | 55 | Orden de Inicio | **Hoy primero**, luego De ayer, luego Esta semana, luego racha | Lo primero que ves debe ser lo que puedes hacer ahora, no la deuda |
 | 56 | Triage de "de ayer" | Hoy → sube a hoy · Otro día → selector · **Quitar → vuelve a Tareas, no se borra** | Sostiene "nada se pierde en silencio" |
 | 57 | Reminder en la notificación | El reminder manda: las tareas se recortan para que quepa, nunca al revés | Con 88 caracteres, un parcial mañana es lo más importante del día |
+| 58 | Nombres de las vistas | `dia.html` · `semana.html` · `mes.html`, un archivo por vista | El `semana.html` de FD era en realidad la vista Día. Mapear archivo↔vista hace el sistema legible |
+| 59 | Semana en el teléfono | **Siete filas, una por día**, con reminders y títulos de tareas. Sin rejilla de horas | La vista Semana no responde "¿qué hago a las 3?" sino "¿cómo reparto el trabajo?", y eso no necesita horas. La rejilla por horas vive en Día y en escritorio |
+| 60 | Anticipación del aviso | **1 día por defecto**, editable por reminder | Con 6 días, el mismo parcial encabeza seis notificaciones seguidas y a partir de la tercera es ruido |
+| 61 | Reminder preparado no avisa | Si todas sus tareas están hechas, **no encabeza la notificación** | Estar preparado es la señal de que no hace falta avisar. Gratis en código, y es la diferencia entre un aviso útil y una alarma repetida |
+| 62 | Reminders fuera del triage dominical | No se posponen ni se quitan. En el paso 2 aparecen **solo de lectura** | Un parcial no se pospone. Con botones "Otro día / Quitar", el domingo volvería a ser una factura |

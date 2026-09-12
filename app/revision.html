@@ -104,8 +104,8 @@
 <div class="wrap">
 
   <h1>Diseño de Organizer</h1>
-  <p class="sub">Ocho comps para revisar antes de programar nada.</p>
-  <p class="meta">FD · 12 sep 2026 · sistema de diseño + 8 pantallas</p>
+  <p class="sub">Segunda ronda: el modelo cambió y los comps también.</p>
+  <p class="meta">FD2 · 12 sep 2026 · 12 pantallas · materias, reminders y tareas</p>
 
   <p class="lead">
     <strong>Ábrelo desde el iPhone.</strong> Están dibujados a 390&nbsp;px, el ancho real de tu
@@ -113,13 +113,116 @@
     caminando ni si los botones se alcanzan con el pulgar.
   </p>
 
-  <h2>Las pantallas</h2>
+  <h2>Lo que cambió desde la vez pasada</h2>
+
+  <div class="flag">
+    <p style="margin:0;font-weight:600">Corregido: los botones pequeños.</p>
+    <p style="margin:6px 0 0;color:var(--muted);font-size:0.9375rem">
+      Tenías razón. El triage, “se me corrió el día” y el deshacer estaban por debajo del mínimo
+      para el pulgar. Ahora los cuatro miden 44&nbsp;px. <strong>Inicio se pasó 16&nbsp;px del límite
+      al subirlos, así que salió una tarea del día, no el tamaño del botón.</strong> Esa es la regla
+      de ahora en adelante.
+    </p>
+    <table>
+      <tr><th>Control</th><th>Antes</th><th>Ahora</th></tr>
+      <tr><td>Hoy / Otro día / Quitar</td><td>40 px</td><td>44 px</td></tr>
+      <tr><td>Se me corrió el día</td><td>32 px</td><td>44 px</td></tr>
+      <tr><td>Deshacer, Clasificar, Editar</td><td>32 px</td><td>44 px</td></tr>
+    </table>
+  </div>
+
+  <div class="q" style="margin-top:10px">
+    <div class="q__t">Inicio cambió de orden</div>
+    <p class="q__b">Ahora abre con <strong>Hoy</strong>, y “De ayer” va debajo. Lo primero que ves es
+      lo que puedes hacer, no lo que debes. La racha bajó al final.</p>
+  </div>
+
+  <div class="q">
+    <div class="q__t">Hay tres cosas distintas, no una</div>
+    <p class="q__b"><strong>Materias</strong> (tu horario, gris de fondo), <strong>reminders</strong>
+      (parciales y entregas: no se marcan, pasan) y <strong>tareas</strong> (lo que haces). Se
+      distinguen por la forma y no por el color: la tarea lleva casilla, el reminder lleva banderín
+      y no tiene nada que marcar.</p>
+  </div>
+
+  <h2>Empieza por estas tres</h2>
   <div class="comps">
 
     <a class="comp" href="comps/inicio.html">
       <span class="comp__top"><span class="comp__name">Inicio</span><span class="comp__open">Abrir →</span></span>
-      <p class="comp__what">Lo que ves al abrir la app. Cabe sin scroll: está medido.</p>
-      <p class="comp__look"><b>Mira:</b> ¿te baja la ansiedad o te la sube? Es la pantalla que vas a ver varias veces al día, y la única que importa de verdad.</p>
+      <p class="comp__what">Orden nuevo, botones de 44&nbsp;px, y sigue cabiendo sin scroll.</p>
+      <p class="comp__look"><b>Mira:</b> ¿te baja la ansiedad o te la sube? Es la pantalla que vas a
+        ver varias veces al día, y la única que importa de verdad.</p>
+    </a>
+
+    <a class="comp" href="comps/reminder-detalle.html">
+      <span class="comp__top"><span class="comp__name">Un parcial y sus tareas</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Dos estados: uno preparado y otro sin ninguna tarea todavía.</p>
+      <p class="comp__look"><b>Mira:</b> esto es lo que ninguna app de tareas te da. No “cuándo es el
+        parcial”, sino <em>si te estás preparando o solo lo sabes</em>. Dime si el segundo caso
+        —“en 6 días, sin tareas”— te empuja a hacer algo o te hace cerrar la app.</p>
+    </a>
+
+    <a class="comp" href="comps/mes.html">
+      <span class="comp__top"><span class="comp__name">Mes</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Solo parciales, entregas y defensas. Sin tareas y sin clases.</p>
+      <p class="comp__look"><b>Decide:</b> esto sustituye al Calendar del iPhone. ¿Responde
+        “¿cuándo son mis parciales?” de un vistazo, o le falta algo?</p>
+    </a>
+
+  </div>
+
+  <h2>El calendario, por dentro</h2>
+  <div class="comps">
+
+    <a class="comp" href="comps/dia.html">
+      <span class="comp__top"><span class="comp__name">Día</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Qué hago ahora. Las horas, con los reminders del día en una banda arriba.</p>
+      <p class="comp__look"><b>Mira:</b> las tres pastillas de arriba encienden y apagan capas. Apagar
+        <em>Materias</em> es para cuando planificas: entonces lo que importa es el hueco, no la clase.</p>
+    </a>
+
+    <a class="comp" href="comps/semana.html">
+      <span class="comp__top"><span class="comp__name">Semana · teléfono</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Cómo reparto el trabajo: los siete días, uno por fila.</p>
+      <p class="comp__look"><b>Decide:</b> la vez pasada te dije que siete columnas por horas no caben
+        en un teléfono. Esta es la respuesta: sin horas, con lo que tienes puesto cada día. Aquí las
+        materias están apagadas, y por eso el sábado se lee como “día entero libre”.
+        <b>Necesita tu visto bueno.</b></p>
+    </a>
+
+    <a class="comp" href="comps/semana-escritorio.html">
+      <span class="comp__top"><span class="comp__name">Semana · escritorio</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Aquí sí caben las siete columnas por horas, con los parciales en una banda.</p>
+      <p class="comp__look"><b>Mira:</b> es donde armarías el domingo. ¿Lo harías aquí?</p>
+    </a>
+
+  </div>
+
+  <h2>Lo demás</h2>
+  <div class="comps">
+
+    <a class="comp" href="comps/tareas.html">
+      <span class="comp__top"><span class="comp__name">Tareas</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Dos pestañas: tus tareas, y los parciales con sus tareas asociadas.</p>
+      <p class="comp__look"><b>Mira:</b> abre en <em>Tareas</em> a propósito. La mayoría de lo que
+        captures por Siri no va a tener parcial asociado nunca, y no puede verse como el cajón de
+        sobras. Asociar una tarea a un parcial es opcional: una pastilla que se ignora.</p>
+    </a>
+
+    <a class="comp" href="comps/otro-dia.html">
+      <span class="comp__top"><span class="comp__name">“Otro día”</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Lo que sale al tocar “Otro día” en el triage.</p>
+      <p class="comp__look"><b>Mira:</b> primero palabras —mañana, el sábado, el lunes— y el calendario
+        debajo, para el caso raro. Y “Quitar” nunca borra: devuelve la tarea a Tareas.</p>
+    </a>
+
+    <a class="comp" href="comps/horario.html">
+      <span class="comp__top"><span class="comp__name">Cargar tu horario</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Una vez, al principio del semestre, y se repite hasta febrero.</p>
+      <p class="comp__look"><b>Decide:</b> este es el único trabajo pesado de toda la app, y el momento
+        donde abandonarla sale gratis. Escribes el nombre una vez y marcas los días.
+        ¿Cargarías seis materias aquí sin cansarte?</p>
     </a>
 
     <a class="comp" href="comps/inicio-vacio.html">
@@ -128,94 +231,70 @@
       <p class="comp__look"><b>Mira:</b> ¿se siente como un logro o como que algo está roto?</p>
     </a>
 
-    <a class="comp" href="comps/semana.html">
-      <span class="comp__top"><span class="comp__name">Semana · teléfono</span><span class="comp__open">Abrir →</span></span>
-      <p class="comp__what">Un día por vez, con la tira de la semana arriba.</p>
-      <p class="comp__look"><b>Decide:</b> pediste calendario semanal, pero siete columnas en un teléfono dan 50&nbsp;px por día y arrastrar sería imposible. Esta es la desviación más grande del plan. <b>Necesita tu visto bueno.</b></p>
-    </a>
-
-    <a class="comp" href="comps/semana-escritorio.html">
-      <span class="comp__top"><span class="comp__name">Semana · escritorio</span><span class="comp__open">Abrir →</span></span>
-      <p class="comp__what">Aquí sí: las siete columnas completas, más un carril de lo no planificado.</p>
-      <p class="comp__look"><b>Mira:</b> es donde armarías el domingo. ¿Lo harías aquí?</p>
-    </a>
-
-    <a class="comp" href="comps/tareas.html">
-      <span class="comp__top"><span class="comp__name">Tareas</span><span class="comp__open">Abrir →</span></span>
-      <p class="comp__what">Lo que capturas por Siri cae aquí, y se organiza en carpetas.</p>
-      <p class="comp__look"><b>Decide:</b> las carpetas están dibujadas como tus contextos (ramos, proyectos). ¿Es eso, o querías dos cosas separadas?</p>
-    </a>
-
-    <a class="comp" href="comps/recursos.html">
-      <span class="comp__top"><span class="comp__name">Recursos</span><span class="comp__open">Abrir →</span></span>
-      <p class="comp__what">Skills, herramientas y artículos. Abre con el cursor en el buscador.</p>
-      <p class="comp__look"><b>Mira:</b> ¿encontrarías algo que guardaste hace tres meses?</p>
-    </a>
-
     <a class="comp" href="comps/domingo.html">
       <span class="comp__top"><span class="comp__name">Ritual del domingo</span><span class="comp__open">Abrir →</span></span>
       <p class="comp__what">Primer paso: qué hacer con lo que no cumpliste.</p>
-      <p class="comp__look"><b>Mira:</b> este es el momento donde el sistema se cae si te hace sentir mal. ¿Te regaña?</p>
+      <p class="comp__look"><b>Mira:</b> este es el momento donde el sistema se cae si te hace sentir
+        mal. ¿Te regaña? Los parciales no entran aquí: uno que ya pasó no es una deuda tuya.</p>
     </a>
 
     <a class="comp" href="comps/notificacion.html">
       <span class="comp__top"><span class="comp__name">La notificación</span><span class="comp__open">Abrir →</span></span>
-      <p class="comp__what">Los cinco textos, en la pantalla de bloqueo, con su largo real.</p>
-      <p class="comp__look"><b>Mira con calma:</b> esto <em>es</em> el producto. Si con solo leer esto ya sabes tu día y no hace falta abrir nada, funcionó.</p>
+      <p class="comp__what">Seis textos en la pantalla de bloqueo, con su largo real.</p>
+      <p class="comp__look"><b>Mira con calma:</b> esto <em>es</em> el producto. Hay una nueva: cuando
+        tienes un parcial cerca, el parcial se lleva el título y las tareas se recortan para que quepa.
+        Si con solo leer esto ya sabes tu día y no hace falta abrir nada, funcionó.</p>
     </a>
 
-  </div>
+    <a class="comp" href="comps/recursos.html">
+      <span class="comp__top"><span class="comp__name">Recursos</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Sin cambios: dijiste que te servía así.</p>
+      <p class="comp__look"><b>Mira:</b> ¿encontrarías algo que guardaste hace tres meses?</p>
+    </a>
 
-  <h2>Lo que encontré yo</h2>
-  <div class="flag">
-    <p style="margin:0;font-weight:600">Los controles más importantes son los más pequeños.</p>
-    <p style="margin:6px 0 0;color:var(--muted);font-size:0.9375rem">
-      El sistema define 44&nbsp;px como mínimo para tocar con el pulgar, y luego lo incumple justo
-      en los tres controles que más usarás. Se lo devuelvo para corregir.
-    </p>
-    <table>
-      <tr><th>Control</th><th>Es</th><th>Debería</th></tr>
-      <tr><td>Hoy / Otro día / Quitar</td><td>40 px</td><td>44 px</td></tr>
-      <tr><td>Se me corrió el día</td><td>32 px</td><td>44 px</td></tr>
-      <tr><td>Deshacer</td><td>32 px</td><td>44 px</td></tr>
-    </table>
   </div>
 
   <h2>Lo que necesito que decidas</h2>
 
   <div class="q">
     <div class="q__n">01</div>
-    <div class="q__t">Semana en el teléfono: ¿un día por vez?</div>
-    <p class="q__b">Siete columnas a 390&nbsp;px son ilegibles y matarían el arrastre, que era la mitigación del riesgo del calendario. La rejilla completa vive en escritorio. Es la desviación más visible del plan.</p>
+    <div class="q__t">Semana en el teléfono: ¿siete filas en vez de siete columnas?</div>
+    <p class="q__b">Sin horas, con los parciales de cada día y los títulos de lo que tienes puesto.
+      La rejilla por horas vive en <em>Día</em> y en escritorio. Es la desviación más visible del plan.</p>
   </div>
 
   <div class="q">
     <div class="q__n">02</div>
-    <div class="q__t">¿Qué se cae cuando el día no cabe en la notificación?</div>
-    <p class="q__b">Hallazgo nuevo: iOS solo muestra <code>38</code> caracteres de título y <code>88</code> de cuerpo antes de cortar. Con cuatro bloques ya vas justo. Con siete, algo tiene que salir — nunca cortar una frase a la mitad.</p>
+    <div class="q__t">¿Con cuánta anticipación te avisa un parcial?</div>
+    <p class="q__b">Lo dejaste abierto hasta F3, pero ya afecta al diseño: si un parcial avisa con seis
+      días, la notificación de esos seis días se la lleva él. ¿Uno? ¿Tres? ¿Lo pones tú en cada parcial?</p>
   </div>
 
   <div class="q">
     <div class="q__n">03</div>
-    <div class="q__t">¿Carpeta y contexto son la misma cosa?</div>
-    <p class="q__b">Pediste carpetas en Tareas, pero ya existen los contextos (ramos, proyectos, cursos). Tenerlos por separado sería lo mismo dos veces.</p>
+    <div class="q__t">“Sin tareas todavía”: ¿te empuja o te hunde?</div>
+    <p class="q__b">Es la única señal de alerta de toda la app. La dibujé sin rojo y sin regaño: letra
+      más fuerte y un botón de <em>Planificar</em>. Si aun así te hace cerrar la app, la quito.</p>
   </div>
 
   <div class="q">
     <div class="q__n">04</div>
-    <div class="q__t">¿Las clases aparecen en la notificación?</div>
-    <p class="q__b">En <em>Inicio</em> no salen, eso ya lo decidiste. Pero a las 8:00 lo que pasa es Cálculo. La propuesta: Inicio es para <em>decidir</em>, y las clases no se deciden; la notificación es para <em>saber qué pasa hoy</em>.</p>
+    <div class="q__t">¿Falta algo en el formulario del horario?</div>
+    <p class="q__b">Puse nombre, días, hora y aula. No pide profesor ni tipo de clase. Es el trabajo
+      manual más grande del proyecto: cada campo de más se paga seis veces.</p>
   </div>
 
   <div class="q">
     <div class="q__n">05</div>
     <div class="q__t">Cuando no cabe todo en Inicio, ¿pongo el número?</div>
-    <p class="q__b">Ahora dice <em>“El resto está en Tareas”</em>, sin cifra. Poner <em>“+3 más”</em> informa mejor, pero es literalmente un contador de deuda — justo lo que prohibimos.</p>
+    <p class="q__b">Sigue diciendo <em>“El resto está en Tareas”</em>, sin cifra. Poner <em>“+3 más”</em>
+      informa mejor, pero es literalmente un contador de deuda — justo lo que prohibimos. Quedó de la
+      ronda pasada sin responder.</p>
   </div>
 
   <footer>
-    Los ocho comps están en el repo, en <code>app/comps/</code>. El informe completo del diseñador,
-    con lo que quedó fuera, en <code>docs/estado-FD.md</code>.
+    Los comps están en el repo, en <code>app/comps/</code>. El informe completo del diseñador, con lo
+    que quedó fuera y lo que choca con el plan, en <code>docs/estado-FD2.md</code>.
   </footer>
 
 </div>

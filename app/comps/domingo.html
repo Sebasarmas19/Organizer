@@ -33,6 +33,16 @@
 
   El ritual tiene 4 pasos. Este comp dibuja el primero completo y deja ver
   que viene despues, que es lo que hace que se empiece.
+
+  FD2 · LOS REMINDERS NO ENTRAN AQUI. Revisado contra el modelo de tres
+  entidades: en el triage solo hay TAREAS. Un parcial no se pospone ni se
+  quita, y uno que ya paso no es deuda (decision 49): baja al historico solo,
+  sin pasar por esta pantalla. Si un reminder apareciera aqui con los botones
+  "Otro dia / Quitar", el domingo volveria a ser una factura — que es justo
+  lo que esta pantalla existe para evitar.
+
+  El paso 2 si los muestra, pero de lectura: que se te viene encima la semana
+  que viene, para decidir las tareas de esta.
 -->
 
 <style>
@@ -118,7 +128,7 @@
       <ol class="list-none m-0 p-0 t-meta c-faint grid gap-2">
         <li class="flex items-center gap-3">
           <span class="ico ico--sm" data-icon="calendar"></span>
-          Después: las clases y entregas de la semana que viene
+          Después: los reminders y las clases de la semana que viene
         </li>
         <li class="flex items-center gap-3">
           <span class="ico ico--sm" data-icon="bookmark"></span>
