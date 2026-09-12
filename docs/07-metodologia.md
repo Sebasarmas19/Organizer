@@ -41,7 +41,7 @@ lanzar sus propios workers. El árbol queda plano — un coordinador, N ejecutor
 | CLI `agy` (Antigravity) | ✔ `%LOCALAPPDATA%\agy\bin\agy.exe` v1.2.1 |
 | Agentes detectados por Orca | **2: Claude y Antigravity**, ambos activados, ambos con la skill de orquestación |
 | Cuenta Codex | Ninguna. Opcional, no bloquea nada |
-| El repo es git | No. Orca admite workspaces de carpeta; no hace falta git |
+| El repo es git | ✔ Sí, desde el 2026-09-12, rama `main`. Habilita worktrees de Orca |
 
 ### Antigravity SÍ es orquestable
 
