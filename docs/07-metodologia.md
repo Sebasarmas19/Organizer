@@ -169,6 +169,31 @@ coordinador lanza ola ─► workers ejecutan ─► worker_done + docs/estado-F
 anterior. Las fases marcadas como paralelizables en `docs/04-plan-fases.md` sí
 corren a la vez, pero cada una se valida por separado.
 
+### Doble puerta para el diseño (decisión #45)
+
+El trabajo visual lleva **dos validaciones, en este orden**:
+
+```
+worker entrega ─► 1. coordinador: ¿viola alguna de las 46 decisiones?
+                         │
+                    ✔ pasa │ ✘ vuelve al worker, sin gastar tiempo del usuario
+                         ▼
+                  2. usuario: ¿te gusta? ¿lo abrirías?
+                         │
+                    ✔ aprobado ─► se programa contra este diseño
+                    ✘ ajustes ──► vuelve al worker con lo que el usuario dijo
+```
+
+El coordinador va primero para no llevarle al usuario algo con fallos evidentes.
+Pero **la segunda puerta manda**: el coordinador puede verificar que el diseño
+cumple cada decisión escrita y aun así estar equivocado, porque ninguna decisión
+captura *"no me gusta, y por eso no la abro"* — que es exactamente el modo de
+fallo que el proyecto entero existe para evitar.
+
+**Cómo revisa el usuario (decisión #46):** los comps se publican como página web
+y los abre **desde su iPhone**. Son comps de 390px para una app de iPhone;
+validarlos en una pantalla de escritorio mide la cosa equivocada.
+
 ## Lo que el usuario tiene que hacer a mano
 
 Poco, y nada de ello es abrir terminales:
