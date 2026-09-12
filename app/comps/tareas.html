@@ -14,7 +14,7 @@
 </head>
 
 <!--
-  TAREAS                      (FD2 · decisiones 36, 48, 50, 51) · ACTUALIZADO
+  TAREAS              (FD3 · decisiones 36, 48, 50, 51, 70, 73) · ACTUALIZADO
   ---------------------------------------------------------------------------
   El módulo tiene dos pestañas y las dos están dibujadas en esta página.
 
@@ -27,10 +27,21 @@
 
   REMINDERS (abajo) es de sólo lectura para crear, y el aviso lo dice en una
   línea: se crean tocando un día en el calendario. Ese es el mecanismo de la
-  decisión 48 — el lugar donde entras determina el tipo. En toda la app no
-  hay una sola pantalla que pregunte "¿esto es tarea o reminder?". Un
-  reminder sin fecha no existe, así que su sitio de creación es el calendario
-  y no un formulario con un desplegable de tipo.
+  decisión 48 — el lugar donde entras determina el tipo. Un reminder sin
+  fecha no existe, así que su sitio de creación es el calendario.
+
+  MATIZ DE FD3 (decisión 70): la hoja del "+" del calendario SÍ pregunta el
+  tipo. No es una excepción caprichosa — la decisión 48 protege LA CAPTURA,
+  que es donde la fricción mata (Siri, caminando, tres segundos). Planificar
+  sobre el calendario es un momento deliberado, y ahí preguntar cuesta un
+  toque y quita toda la ambigüedad. Aquí, en el módulo de captura, se sigue
+  sin preguntar nada.
+
+  "LO QUE VIENE" VIVE AQUÍ Y SÓLO AQUÍ (decisión 73). Salió de la vista de
+  Mes en FD3. El calendario contesta CUÁNDO —y para eso le bastan puntos—;
+  esta lista contesta QUÉ SIGUE, con el nombre entero y el estado de
+  preparación. Tenerlo en los dos sitios era la misma información con dos
+  formas distintas, y obligaba a mantener dos verdades.
 
   LA ASOCIACIÓN ES OPCIONAL DE VERDAD (decisión 50). Al escribir una tarea
   aparecen dos pastillas apagadas, "Fecha" y "Reminder". Se ignoran pulsando
@@ -181,13 +192,11 @@
 
         <div>
           <button class="folder" aria-expanded="false">
-            <span class="ctxdot" style="--ctx:var(--ctx-1)"></span>
             <span class="folder__name">Cálculo III</span>
             <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
 
           <button class="folder" aria-expanded="true">
-            <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>
             <span class="folder__name">Proyecto IA</span>
             <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
@@ -216,13 +225,11 @@
           </div>
 
           <button class="folder" aria-expanded="false">
-            <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>
             <span class="folder__name">Cursos</span>
             <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
 
           <button class="folder" aria-expanded="false">
-            <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
             <span class="folder__name">Personal</span>
             <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
@@ -230,7 +237,6 @@
           <!-- Biblioteca "algún día" (decisión 7): no caduca, no molesta, y
                el domingo el ritual saca UNA cosa de aquí. Nunca la lista. -->
           <button class="folder" aria-expanded="false">
-            <span class="ctxdot" style="--ctx:var(--ctx-5)"></span>
             <span class="folder__name">Algún día</span>
             <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
@@ -288,7 +294,7 @@
           <span class="ico ico--sm rem__flag" data-icon="flag"></span>
           <span class="rem__body">
             <span class="rem__title">Entrega del avance de IA</span>
-            <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>hoy · 23:59</span>
+            <span class="rem__when">hoy · 23:59</span>
             <span class="prep">
               <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
               te queda migrar el schema
@@ -301,7 +307,7 @@
           <span class="ico ico--sm rem__flag" data-icon="flag"></span>
           <span class="rem__body">
             <span class="rem__title">Parcial de Cálculo</span>
-            <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-1)"></span>viernes 18 · 10:00</span>
+            <span class="rem__when">viernes 18 · 10:00</span>
             <span class="prep">
               <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
               todo listo
@@ -314,7 +320,7 @@
           <span class="ico ico--sm rem__flag" data-icon="flag"></span>
           <div class="rem__body">
             <p class="rem__title">Defensa del proyecto</p>
-            <p class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>miércoles 23 · en 6 días</p>
+            <p class="rem__when">miércoles 23 · en 6 días</p>
             <p class="prep prep--none">
               <span class="ico ico--sm" data-icon="alert-triangle" style="width:14px;height:14px"></span>
               Sin tareas todavía
@@ -327,7 +333,7 @@
           <span class="ico ico--sm rem__flag" data-icon="flag"></span>
           <span class="rem__body">
             <span class="rem__title">Quiz de Álgebra</span>
-            <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-2)"></span>lunes 28 · 11:00</span>
+            <span class="rem__when">lunes 28 · 11:00</span>
           </span>
           <span class="ico ico--sm c-faint self-center" data-icon="chevron-right"></span>
         </a>

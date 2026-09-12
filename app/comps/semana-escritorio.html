@@ -13,39 +13,42 @@
 </head>
 
 <!--
-  SEMANA · escritorio (1280px)
+  SEMANA · escritorio (1280px)        (FD3 · referencias 06 y 07) · REHECHO
   ---------------------------------------------------------------------------
-  El escritorio es secundario y sirve para una cosa: planificar (decision 17).
-  Por eso gana dos elementos que el movil no tiene y no necesita:
+  El escritorio sirve para UNA cosa: planificar (regla 4 del proyecto). No
+  para consultar —eso lo hace la notificación— ni para capturar —eso lo hace
+  Siri. Aquí hay ratón y hay espacio, así que aquí viven las dos cosas que el
+  teléfono no puede dar:
 
-    1. La rejilla real de 7 columnas. A este ancho si se lee.
-    2. El carril "Sin planificar" a la derecha. Es el puente entre lo que se
-       capturo por Siri y el calendario: se arrastra de la lista a una hora.
-       En el telefono eso mismo se hace tocando la tarea y eligiendo hora.
+    1. LA REJILLA DENSA de horas × 7 días (referencia 06). A 1280px sí se lee.
+    2. LA BARRA DE TAREAS SIN PLANIFICAR, a la izquierda, agrupada por
+       contexto (referencia 07). Se arrastran a la rejilla. ESO es planificar
+       la semana: repartir lo que ya capturaste sobre el tiempo que tienes.
 
-  Navegacion adaptativa: en >=1024px las 4 pestanas pasan a barra lateral.
-  Son los mismos 4 modulos, en el mismo orden, con icono y etiqueta.
+  Y por eso la barra va a la IZQUIERDA y no a la derecha: se lee antes que la
+  rejilla. El orden de lectura occidental es el orden del trabajo — primero
+  qué tengo pendiente, después dónde lo pongo.
 
-  FD2 anade tres cosas, las mismas que en el telefono y con el mismo
-  vocabulario, para que no haya dos apps:
+  EL ARRASTRE, DIBUJADO ENTERO
+  - El original se queda apagado en su sitio: se ve de dónde salió y adónde
+    vuelve si sueltas fuera.
+  - Un chip sigue al cursor, ligeramente girado, para que se lea como algo
+    que tienes cogido y no como algo que ya cayó.
+  - El hueco de destino lleva LA HORA ESCRITA. Sueltas sabiendo el resultado,
+    no esperando a verlo.
 
-    - El control segmentado Dia / Semana / Mes. Las tres vistas existen
-      tambien aqui: son tres preguntas, no tres zooms.
-    - La FILA DE REMINDERS sobre la rejilla. Un reminder no ocupa tiempo: no
-      es un bloque, ocurre. Por eso vive en una banda de dia completo y no
-      dentro de la rejilla, y no lleva casilla (decision 49).
-    - Las CAPAS (Tareas / Reminders / Materias). Apagar materias es lo que
-      convierte esta pantalla en una herramienta de planificacion: entonces
-      lo que se ve es el hueco, no la clase (decision 52). Aqui estan
-      encendidas; en semana.html se ve el modo con materias apagadas.
+  COLOR POR ENTIDAD (decisiones 63-66): barra azul marino para tareas, bloque
+  verde tintado para materias, ámbar para reminders. Ni un título va pintado
+  del color de su entidad. Los contextos son texto — ya no tienen punto.
 -->
 
 <style>
-  .desk { width: 1280px; height: 860px; display: grid; grid-template-columns: 220px 1fr 264px; background: var(--bg); }
+  .desk { width: 1280px; height: 860px; display: grid; grid-template-columns: 216px 268px minmax(0, 1fr); background: var(--bg); }
 
+  /* --- navegación de la app ------------------------------------------- */
   .side { border-right: 1px solid var(--line); padding: var(--space-6) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
   .side__brand { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3) var(--space-6); }
-  .side__mark { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; }
+  .side__mark { width: 22px; height: 22px; border-radius: 6px; background: var(--task); display: grid; place-items: center; }
   .side__mark span { width: 9px; height: 9px; border: 1.6px solid var(--text-on-accent); border-radius: 999px; }
   .navitem {
     display: flex; align-items: center; gap: var(--space-3);
@@ -55,64 +58,59 @@
     transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
   }
   .navitem:hover { background: var(--surface-sunken); color: var(--text); }
-  .navitem[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+  .navitem[aria-current="page"] { background: var(--task-soft); color: var(--task); }
 
+  /* --- barra de sin planificar (referencia 07) ------------------------- */
+  .plan { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--surface-sunken); }
+  .plan__head { padding: var(--space-5) var(--space-4) var(--space-3); }
+  .plan__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 var(--space-2) var(--space-4); }
+
+  /* --- rejilla --------------------------------------------------------- */
   .main { display: flex; flex-direction: column; min-width: 0; }
   .mainhead { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5) var(--gutter-wide) var(--space-4); }
 
-  .week { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); }
-  .week__head { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); padding-right: 6px; box-shadow: inset 0 -1px 0 var(--line); }
-  .colhead { text-align: center; padding: var(--space-2) 0 var(--space-3); }
+  .week, .week__head, .remrow { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); }
+  .week__head { padding-right: 6px; box-shadow: inset 0 -1px 0 var(--line); }
+  .colhead { text-align: center; padding: var(--space-2) 0 var(--space-3); min-width: 0; }
   .colhead__dow { font-size: var(--text-label); color: var(--text-muted); display: block; }
   .colhead__num { font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
-  .colhead--today .colhead__dow { color: var(--accent); font-weight: var(--weight-semibold); }
-  .colhead--today .colhead__num { color: var(--accent); }
+  /* Hoy: pastilla llena, como en la referencia 06. Forma, no texto de color. */
+  .colhead--today .colhead__num {
+    display: inline-grid; place-items: center;
+    width: 34px; height: 34px; border-radius: 999px;
+    background: var(--task); color: var(--text-on-accent);
+  }
 
-  .weekbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .weekbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; position: relative; }
   .col { position: relative; min-width: 0; border-left: 1px solid var(--line); }
   .col--weekend { background: var(--surface-sunken); }
   .col .calblock { left: 3px; right: 3px; padding: var(--space-1) var(--space-2); }
   .col .calblock__title { font-size: var(--text-label); line-height: var(--lh-label); }
   .col .calblock__time { font-size: 11px; line-height: 14px; }
 
-  /* Bloque que paso y no se cerro. Contorno punteado neutro, nunca rojo:
-     la app pregunta, no reprocha. */
-  .calblock--open { background: transparent; border: 1px dashed var(--line-strong); border-left-width: 2px; }
+  /* Bloque que pasó y no se cerró. Contorno punteado neutro, nunca rojo:
+     la app pregunta, no reprocha (decisión 22). */
+  .calblock--open { background: transparent; border: 1px dashed var(--line-control); border-left: 3px solid var(--task); }
   .calblock--open .calblock__title { color: var(--text-muted); }
 
-  /* Fila de reminders de dia completo, sobre la rejilla. */
-  .remrow { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); padding-right: 6px;
-            box-shadow: inset 0 -1px 0 var(--line); min-height: 40px; }
-  .remrow__label { font-size: var(--text-label); color: var(--text-faint); text-align: right;
-                   padding: var(--space-2) var(--space-2) 0 0; }
+  /* Banda de reminders de día completo, sobre la rejilla. */
+  .remrow { padding-right: 6px; box-shadow: inset 0 -1px 0 var(--line); min-height: 42px; }
+  .remrow__label { font-size: var(--text-label); color: var(--text-faint); text-align: right; padding: var(--space-3) var(--space-2) 0 0; }
   .remrow__cell { min-width: 0; padding: 5px 3px; border-left: 1px solid var(--line); }
   .remchip {
     display: flex; align-items: center; gap: 5px;
-    padding: 3px 6px; border-radius: 6px;
-    background: var(--surface-sunken);
-    border-left: 2px solid var(--ctx, var(--line-strong));
-    font-size: 11px; line-height: 14px; color: var(--text);
+    padding: 4px 6px; border-radius: 6px;
+    background: var(--rem-soft);
+    font-size: 11px; line-height: 14px; color: var(--text); font-weight: var(--weight-medium);
     overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
-  .remchip .ico { width: 11px; height: 11px; color: var(--text-muted); }
-
-  .rail { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
-  .railitem {
-    display: flex; align-items: center; gap: var(--space-2);
-    padding: var(--space-3) var(--space-4);
-    cursor: grab;
-    box-shadow: inset 0 -1px 0 var(--line);
-    transition: background var(--dur-fast) var(--ease-out);
-  }
-  .railitem:hover { background: var(--surface-sunken); }
-  .railitem__grip { color: var(--text-faint); opacity: 0; transition: opacity var(--dur-fast) var(--ease-out); }
-  .railitem:hover .railitem__grip { opacity: 1; }
+  .remchip .ico { width: 11px; height: 11px; color: var(--rem); flex: 0 0 auto; }
 </style>
 
 <body class="comp">
 <div class="desk">
 
-  <!-- BARRA LATERAL ---------------------------------------------------------- -->
+  <!-- ================= NAVEGACIÓN ====================================== -->
   <nav class="side" aria-label="Secciones">
     <div class="side__brand">
       <span class="side__mark"><span></span></span>
@@ -123,208 +121,227 @@
     <a class="navitem" href="tareas.html"><span class="ico ico--lg" data-icon="check-circle"></span>Tareas</a>
     <a class="navitem" href="recursos.html"><span class="ico ico--lg" data-icon="bookmark"></span>Recursos</a>
 
-    <a class="navitem mt-auto" href="horario.html" style="font-size:var(--text-meta)">
-      <span class="ico ico--lg" data-icon="grid"></span>Horario
-    </a>
-
-    <div class="px-3 pt-3">
-      <p class="t-label c-accent num">12 días seguidos</p>
-      <p class="t-label c-faint mt-1">2 comodines este mes</p>
-    </div>
+    <div style="flex:1"></div>
+    <a class="navitem" href="horario.html"><span class="ico ico--lg" data-icon="grid"></span>Horario</a>
   </nav>
 
-  <!-- CALENDARIO -------------------------------------------------------------- -->
-  <div class="main">
-    <header class="mainhead">
-      <div class="flex items-center" style="margin-left:calc(var(--space-3) * -1)">
+  <!-- ================= SIN PLANIFICAR (referencia 07) ================== -->
+  <aside class="plan" aria-labelledby="h-plan">
+    <div class="plan__head">
+      <h2 id="h-plan" class="t-section">Sin planificar</h2>
+      <!-- Ni un número, ni una antigüedad. Esta lista es un menú de lo que
+           puedes hacer, no una factura de lo que debes (decisión 51). -->
+      <p class="t-meta c-muted mt-1">Arrastra a un hueco de la semana.</p>
+    </div>
+
+    <div class="plan__body">
+
+      <!-- Los contextos son TEXTO. Perdieron su punto de color (decisión 66):
+           tres colores de entidad más seis de contexto convertían cada fila
+           en un arcoíris donde ninguno significaba nada. -->
+      <div class="sidegroup">
+        <div class="sidegroup__head">
+          <span>Proyecto IA</span>
+          <span class="ico ico--sm" data-icon="chevron-down"></span>
+        </div>
+        <!-- ESTA es la que se está arrastrando: se queda apagada en su sitio. -->
+        <div class="sidetask sidetask--ghost">
+          <span class="sidetask__bar"></span>
+          <span>Probar Hermes</span>
+          <span class="ico ico--sm sidetask__grip" data-icon="reorder" style="opacity:1"></span>
+        </div>
+        <div class="sidetask">
+          <span class="sidetask__bar"></span>
+          <span>Escribir el README del repo</span>
+          <span class="ico ico--sm sidetask__grip" data-icon="reorder"></span>
+        </div>
+      </div>
+
+      <div class="sidegroup">
+        <div class="sidegroup__head">
+          <span>Cursos</span>
+          <span class="ico ico--sm" data-icon="chevron-down"></span>
+        </div>
+        <div class="sidetask">
+          <span class="sidetask__bar"></span>
+          <span>Curso de Anthropic</span>
+          <span class="ico ico--sm sidetask__grip" data-icon="reorder"></span>
+        </div>
+        <div class="sidetask">
+          <span class="sidetask__bar"></span>
+          <span>Terminar el capítulo 4 de SQL</span>
+          <span class="ico ico--sm sidetask__grip" data-icon="reorder"></span>
+        </div>
+      </div>
+
+      <div class="sidegroup">
+        <div class="sidegroup__head">
+          <span>Personal</span>
+          <span class="ico ico--sm" data-icon="chevron-down"></span>
+        </div>
+        <div class="sidetask">
+          <span class="sidetask__bar"></span>
+          <span>Comprar cuadernos</span>
+          <span class="ico ico--sm sidetask__grip" data-icon="reorder"></span>
+        </div>
+        <div class="sidetask">
+          <span class="sidetask__bar"></span>
+          <span>Renovar el pase del metro</span>
+          <span class="ico ico--sm sidetask__grip" data-icon="reorder"></span>
+        </div>
+      </div>
+
+      <button class="sidetask mt-3" style="color:var(--task)">
+        <span class="ico ico--sm" data-icon="plus"></span>
+        <span>Escribir una nueva</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= REJILLA ========================================= -->
+  <main class="main">
+
+    <!-- Cabecera de la referencia 06: título, las tres vistas, Hoy y flechas. -->
+    <div class="mainhead">
+      <h1 class="t-title">Septiembre 2026</h1>
+
+      <div class="seg" style="width:260px;margin-left:var(--space-4)" role="tablist" aria-label="Vista del calendario">
+        <button role="tab" aria-selected="false">Mes</button>
+        <button role="tab" aria-selected="true">Semana</button>
+        <button role="tab" aria-selected="false">Día</button>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <div class="flex items-center gap-1">
+        <button class="btn btn--quiet">Hoy</button>
         <button class="tapicon" aria-label="Semana anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
         <button class="tapicon" aria-label="Semana siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
       </div>
-      <div>
-        <h1 class="t-section num">14 – 20 de septiembre</h1>
-        <p class="t-label c-muted">Semana 1 del semestre</p>
-      </div>
-      <div class="seg ml-4" style="width:240px" role="tablist" aria-label="Vista del calendario">
-        <button role="tab" aria-selected="false">Día</button>
-        <button role="tab" aria-selected="true">Semana</button>
-        <button role="tab" aria-selected="false">Mes</button>
-      </div>
-
-      <div class="ml-auto flex items-center gap-2">
-        <button class="btn btn--quiet">Hoy</button>
-        <button class="btn">
-          <span class="ico ico--sm" data-icon="arrow-down"></span>
-          Se me corrió el día
-        </button>
-      </div>
-    </header>
-
-    <!-- CAPAS · el filtro y el interruptor de materias son el mismo control -->
-    <div class="chips" style="padding: 0 var(--gutter-wide) var(--space-3)" role="group" aria-label="Qué se ve">
-      <button class="chip" aria-pressed="true">Tareas</button>
-      <button class="chip" aria-pressed="true">Reminders</button>
-      <button class="chip" aria-pressed="true">Materias</button>
     </div>
 
-    <div class="week__head" id="weekhead"><div></div></div>
-
-    <!-- REMINDERS · banda de día completo, fuera de la rejilla de horas -->
-    <div class="remrow" id="remrow"><div class="remrow__label">fechas</div></div>
-
-    <div class="weekbody" id="weekbody">
-      <div class="week" style="--hour:44px">
-        <div class="cal__hours" id="hours"></div>
-        <!-- 7 columnas: inyectadas abajo -->
-      </div>
-    </div>
-  </div>
-
-  <!-- CARRIL SIN PLANIFICAR ---------------------------------------------------- -->
-  <aside class="rail" aria-labelledby="h-rail">
-    <div class="px-4 pt-6 pb-3">
-      <h2 id="h-rail" class="t-body font-semibold">Sin planificar</h2>
-      <p class="t-meta c-muted mt-1">Lo que capturaste y todavía no tiene hora. Arrástralo a un hueco.</p>
+    <!-- Capas. Apagar materias es lo que convierte esta pantalla en una
+         herramienta de planificación: entonces se ve el hueco, no la clase. -->
+    <div class="chips" style="padding:0 var(--gutter-wide) var(--space-4)" role="group" aria-label="Capas visibles">
+      <button class="chip" aria-pressed="true"><span class="layerdot layerdot--task"></span>Tareas</button>
+      <button class="chip" aria-pressed="true"><span class="layerdot layerdot--rem"></span>Reminders</button>
+      <button class="chip" aria-pressed="true"><span class="layerdot layerdot--class"></span>Materias</button>
     </div>
 
-    <div class="overflow-y-auto" style="box-shadow: inset 0 1px 0 var(--line)">
-      <div class="railitem">
-        <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
-        <span class="t-meta flex-1">Comprar cuadernos</span>
-        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+    <div class="week__head">
+      <div></div>
+      <div class="colhead"><span class="colhead__dow">lun</span><span class="colhead__num num">14</span></div>
+      <div class="colhead"><span class="colhead__dow">mar</span><span class="colhead__num num">15</span></div>
+      <div class="colhead"><span class="colhead__dow">mié</span><span class="colhead__num num">16</span></div>
+      <div class="colhead colhead--today"><span class="colhead__dow">jue</span><span class="colhead__num num">17</span></div>
+      <div class="colhead"><span class="colhead__dow">vie</span><span class="colhead__num num">18</span></div>
+      <div class="colhead"><span class="colhead__dow">sáb</span><span class="colhead__num num">19</span></div>
+      <div class="colhead"><span class="colhead__dow">dom</span><span class="colhead__num num">20</span></div>
+    </div>
+
+    <!-- REMINDERS · banda de día completo. No entran en la rejilla porque no
+         duran: ocurren (decisión 49). Y no llevan casilla. -->
+    <div class="remrow">
+      <div class="remrow__label">todo el día</div>
+      <div class="remrow__cell"></div>
+      <div class="remrow__cell"></div>
+      <div class="remrow__cell"></div>
+      <div class="remrow__cell">
+        <span class="remchip"><span class="ico" data-icon="flag"></span>Avance de IA</span>
       </div>
-      <div class="railitem">
-        <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>
-        <span class="t-meta flex-1">Configurar el Atajo de Siri</span>
-        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+      <div class="remrow__cell">
+        <span class="remchip"><span class="ico" data-icon="flag"></span>Parcial de Cálculo</span>
       </div>
-      <div class="railitem">
-        <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>
-        <span class="t-meta flex-1">Probar Hermes</span>
-        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
-      </div>
-      <div class="railitem">
-        <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
-        <span class="t-meta flex-1">Pedir constancia de estudios</span>
-        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+      <div class="remrow__cell"></div>
+      <div class="remrow__cell"></div>
+    </div>
+
+    <div class="weekbody">
+      <div class="week" id="grid" style="--hour:56px"></div>
+
+      <!-- ARRASTRE EN CURSO · el chip sigue al cursor y el hueco de destino
+           lleva la hora escrita. Posición fija para que el comp se lea. -->
+      <div class="dragchip" style="left:376px;top:318px">
+        <span class="dragchip__bar"></span>
+        Probar Hermes
       </div>
     </div>
 
-    <p class="t-label c-faint px-4 py-3 mt-auto" style="box-shadow: inset 0 1px 0 var(--line)">
-      Arrastrar es opcional. También puedes tocar y elegir hora.
-    </p>
-  </aside>
-
+  </main>
 </div>
 
 <script>
-  (function () {
-    var FROM = 7, TO = 22, H = 44;
-    var DAYS = [
-      { dow: 'lun', num: 14 }, { dow: 'mar', num: 15 }, { dow: 'mié', num: 16 },
-      { dow: 'jue', num: 17, today: true }, { dow: 'vie', num: 18 },
-      { dow: 'sáb', num: 19, weekend: true }, { dow: 'dom', num: 20, weekend: true }
-    ];
+  /* La rejilla se genera para no repetir 7 columnas a mano. Semana del 14 al
+     20 de septiembre de 2026; hoy es jueves 17, y son las 15:42. */
+  var H0 = 7, H1 = 20, HOUR = 56;                 /* 7:00 a 20:00 */
+  /* Se llama yAt y no top a proposito: `var top` en ambito global no
+     sobrescribe window.top —es un accesor no configurable— y la funcion
+     nunca llegaba a existir. La rejilla salia vacia sin un solo error. */
+  var yAt = function (h, m) { return ((h - H0) * 60 + (m || 0)) / 60 * HOUR; };
 
-    // k: class = plantilla fija · task = tarea · now = en curso · open = paso sin cerrar
-    var EVENTS = [
-      { d: 0, s: 8,    e: 10,   t: 'Cálculo III',        k: 'class' },
-      { d: 0, s: 14,   e: 16,   t: 'Programación',       k: 'class' },
-      { d: 1, s: 11,   e: 13,   t: 'Álgebra Lineal',     k: 'class' },
-      { d: 1, s: 16,   e: 18,   t: 'Ejercicios de Álgebra', k: 'task', c: 1 },
-      { d: 1, s: 18.5, e: 19.5, t: 'Gym',                k: 'class' },
-      { d: 2, s: 8,    e: 10,   t: 'Cálculo III',        k: 'class' },
-      { d: 2, s: 14,   e: 16,   t: 'Programación',       k: 'class' },
-      { d: 2, s: 19,   e: 20.5, t: 'Terminar el modelo de datos', k: 'open', c: 3 },
-      { d: 3, s: 11,   e: 13,   t: 'Álgebra Lineal',     k: 'class' },
-      { d: 3, s: 15,   e: 17,   t: 'Migrar el schema a Supabase', k: 'now', c: 3 },
-      { d: 3, s: 18.5, e: 19.5, t: 'Gym',                k: 'class' },
-      { d: 3, s: 20,   e: 21,   t: 'Resumen de Cálculo', k: 'task', c: 1 },
-      { d: 4, s: 8,    e: 10,   t: 'Cálculo III',        k: 'class' },
-      { d: 4, s: 10.5, e: 12,   t: 'Entrega parcial del proyecto de IA', k: 'task', c: 3 },
-      { d: 6, s: 19,   e: 19.5, t: 'Revisión de la semana', k: 'task', c: 6 }
-    ];
+  /* t = tarea · c = materia · o = tarea que pasó sin cerrar */
+  var DAYS = [
+    [ {k:'c', t:'Cálculo III',   a:[8,0],  b:[9,30]},
+      {k:'c', t:'Álgebra Lineal',a:[11,0], b:[12,30]},
+      {k:'t', t:'Comprar cuadernos', a:[18,0], b:[18,30], done:true} ],
 
-    function hhmm(x) {
-      var h = Math.floor(x), m = Math.round((x - h) * 60);
-      return h + ':' + (m < 10 ? '0' + m : m);
+    [ {k:'c', t:'Cálculo III', a:[8,0], b:[9,30]},
+      {k:'t', t:'Guía del capítulo 3', a:[16,0], b:[17,30], done:true} ],
+
+    [ {k:'c', t:'Álgebra Lineal', a:[11,0], b:[12,30]},
+      {k:'t', t:'Resumen de derivadas', a:[15,0], b:[16,0], done:true},
+      {k:'o', t:'Terminar el modelo de datos', a:[19,0], b:[20,0]} ],
+
+    [ {k:'c', t:'Cálculo III', a:[8,0], b:[9,30]},
+      {k:'t', t:'Leer el paper de Anthropic', a:[9,45], b:[10,30], done:true},
+      {k:'c', t:'Álgebra Lineal', a:[11,0], b:[12,30]},
+      {k:'t', t:'Migrar el schema a Supabase', a:[15,0], b:[17,0], now:true} ],
+
+    /* El viernes no lleva clase: lo ocupa el parcial, que va en la banda de
+       arriba. Mismos datos que semana.html — un comp que se contradice con
+       otro deja de servir para revisar. */
+    [ {k:'t', t:'Repaso final', a:[19,0], b:[20,0]} ],
+
+    [],
+    [ {k:'t', t:'Repaso de la semana', a:[19,0], b:[20,0]} ]
+  ];
+
+  function fmt(a) { return a[0] + ':' + (a[1] < 10 ? '0' : '') + a[1]; }
+
+  var html = '<div class="cal__hours" style="grid-column:1">';
+  for (var h = H0; h <= H1; h++) html += '<div class="cal__hour num">' + h + '</div>';
+  html += '</div>';
+
+  DAYS.forEach(function (evs, i) {
+    var lines = '';
+    for (var h = H0; h <= H1; h++) lines += '<div class="cal__line" style="top:' + yAt(h) + 'px"></div>';
+
+    var blocks = evs.map(function (e) {
+      var cls = e.k === 'c' ? 'calblock--class' : (e.k === 'o' ? 'calblock--task calblock--open' : 'calblock--task');
+      if (e.now) cls += ' calblock--now';
+      var style = 'top:' + yAt(e.a[0], e.a[1]) + 'px;height:' + (yAt(e.b[0], e.b[1]) - yAt(e.a[0], e.a[1])) + 'px' +
+                  (e.done ? ';opacity:.6' : '');
+      var title = e.done
+        ? '<p class="calblock__title" style="text-decoration:line-through;text-decoration-thickness:1px">' + e.t + '</p>'
+        : '<p class="calblock__title">' + e.t + '</p>';
+      return '<div class="calblock ' + cls + '" style="' + style + '">' + title +
+             '<p class="calblock__time num">' + fmt(e.a) + ' – ' + fmt(e.b) + '</p></div>';
+    }).join('');
+
+    /* El jueves lleva además el hueco de destino del arrastre y la línea de
+       ahora. El hueco dice la hora: se suelta sabiendo el resultado. */
+    var extra = '';
+    if (i === 3) {
+      extra = '<div class="dropslot" style="top:' + yAt(13, 0) + 'px;height:' + HOUR + 'px;left:3px;right:3px">13:00 – 14:00</div>' +
+              '<div class="cal__now" style="top:' + yAt(15, 42) + 'px"></div>';
     }
 
-    // Encabezados de columna
-    var head = document.getElementById('weekhead');
-    DAYS.forEach(function (d) {
-      var el = document.createElement('div');
-      el.className = 'colhead' + (d.today ? ' colhead--today' : '');
-      el.innerHTML = '<span class="colhead__dow">' + d.dow + '</span>' +
-                     '<span class="colhead__num">' + d.num + '</span>';
-      head.appendChild(el);
-    });
+    html += '<div class="col' + (i > 4 ? ' col--weekend' : '') + '" style="height:' + ((H1 - H0 + 1) * HOUR) + 'px">' +
+            lines + blocks + extra + '</div>';
+  });
 
-    // Fila de reminders: un reminder no ocupa horas, ocurre. Por eso va
-    // arriba, en su propia banda, y nunca como bloque dentro de la rejilla.
-    var REMINDERS = {
-      3: { t: 'Entrega del avance de IA', c: 3 },
-      4: { t: 'Parcial de Cálculo', c: 1 }
-    };
-    var remrow = document.getElementById('remrow');
-    DAYS.forEach(function (d, i) {
-      var cell = document.createElement('div');
-      cell.className = 'remrow__cell';
-      var r = REMINDERS[i];
-      if (r) {
-        cell.innerHTML = '<span class="remchip" style="--ctx:var(--ctx-' + r.c + ')">' +
-          '<span class="ico" data-icon="flag"></span>' + r.t + '</span>';
-      }
-      remrow.appendChild(cell);
-    });
-
-    // Gutter de horas
-    var hours = document.getElementById('hours');
-    for (var h = FROM; h < TO; h++) {
-      var l = document.createElement('div');
-      l.className = 'cal__hour num';
-      l.textContent = h + ':00';
-      hours.appendChild(l);
-    }
-
-    // Columnas + lineas + bloques
-    var week = document.querySelector('.week');
-    DAYS.forEach(function (d, i) {
-      var col = document.createElement('div');
-      col.className = 'col' + (d.weekend ? ' col--weekend' : '');
-      col.style.height = ((TO - FROM) * H) + 'px';
-
-      for (var h = FROM; h <= TO; h++) {
-        var line = document.createElement('div');
-        line.className = 'cal__line';
-        line.style.top = ((h - FROM) * H) + 'px';
-        col.appendChild(line);
-      }
-
-      EVENTS.filter(function (e) { return e.d === i; }).forEach(function (e) {
-        var b = document.createElement('div');
-        b.className = 'block ' + (e.k === 'class' ? 'calblock--class'
-          : e.k === 'open' ? 'calblock--task calblock--open'
-          : e.k === 'now' ? 'calblock--task calblock--now' : 'calblock--task');
-        b.style.top = ((e.s - FROM) * H) + 'px';
-        b.style.height = ((e.e - e.s) * H) + 'px';
-        if (e.c) b.style.setProperty('--ctx', 'var(--ctx-' + e.c + ')');
-        b.innerHTML = '<p class="calblock__time num">' + hhmm(e.s) + '</p>' +
-                      '<p class="calblock__title">' + e.t + '</p>';
-        col.appendChild(b);
-      });
-
-      if (d.today) {
-        var now = document.createElement('div');
-        now.className = 'cal__now';
-        now.style.top = ((15.7 - FROM) * H) + 'px';
-        col.appendChild(now);
-      }
-      week.appendChild(col);
-    });
-
-    document.getElementById('weekbody').scrollTop = (8 - FROM) * H;
-    if (window.renderIcons) window.renderIcons();
-  })();
+  document.getElementById('grid').innerHTML = html;
+  if (window.renderIcons) window.renderIcons();
 </script>
 </body>
 </html>

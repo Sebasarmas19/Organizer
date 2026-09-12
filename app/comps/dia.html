@@ -14,166 +14,250 @@
 </head>
 
 <!--
-  CALENDARIO · vista DÍA            (FD2 · decisiones 52, 53, y docs/08)
+  CALENDARIO · DÍA                       (FD3 · decisiones 67, 68) · REHECHO
   ---------------------------------------------------------------------------
-  La pregunta de esta vista es UNA: ¿qué hago ahora?
+  Pregunta que contesta:  ¿QUÉ HAGO AHORA?
 
-  Las tres vistas del módulo no son la misma información en letra más chica.
-  Son tres preguntas distintas, y por eso el control segmentado de arriba no
-  es un zoom:
+  Es el nivel de zoom más cercano de los tres, y por eso es donde abre el
+  módulo: el resto del día cabe entero en una pantalla y la línea de "ahora"
+  dice en qué punto estás sin que tengas que buscarlo.
 
-      Día     ¿qué hago ahora?        bloques por hora + reminders del día
-      Semana  ¿cómo reparto?          7 días, reminders y carga
-      Mes     ¿qué se me viene?       SOLO reminders
+  DE DÓNDE SALE CADA PIEZA
+  - Referencia 08 → la tira de 7 días. Es lo que más le gustó al usuario.
+    Número grande arriba, abreviatura debajo, el día activo en una pastilla.
+  - Referencia 09 → riel a la izquierda, contenido a la derecha, barra de
+    color por elemento. Donde ella pone días, aquí van horas.
+  - Referencia 11 → el botón "‹ Semana": subir un nivel de zoom.
+  - Referencia 09 → el botón + flotante.
 
-  LA BANDA DE ARRIBA. Un reminder no es un bloque: no ocupa tiempo, ocurre.
-  Por eso vive en una banda sobre la rejilla y no dentro de ella. Sin casilla
-  que marcar (decisión 49).
+  LA TIRA NAVEGA SIN SALIR. Tocar un día cambia el día de abajo; no abre otra
+  pantalla y no pierde el contexto de la semana.
 
-  LAS CAPAS. Un solo control hace de filtro y de interruptor de materias:
-  tres capas que se encienden por separado. Eso da "solo tareas", "solo
-  reminders", "ambos" y, sobre todo, apagar las materias — que es lo que pide
-  la decisión 52. Una materia no es contenido, es ausencia de tiempo
-  disponible; al planificar interesa el hueco, no la clase.
+  LAS FLECHAS NO FLANQUEAN LA TIRA, y eso es una desviación consciente de la
+  referencia 10. Dos flechas de 44px más siete días de 44px son 396px en una
+  pantalla de 390: flanquear obligaba a dejar los días en 36px, que es
+  exactamente el fallo que corregimos en FD2. Así que se movió la colocación
+  y no el tamaño del control. Las flechas viven arriba, con las demás
+  acciones, y mueven un día; la tira salta dentro de la semana.
 
-  Aquí las tres están encendidas. En semana.html se ve el modo planificar,
-  con las materias apagadas.
+  POR QUÉ LOS REMINDERS NO ESTÁN EN LA REJILLA
+  Un parcial el viernes a las 10:00 no dura: es un hecho, no un bloque. Si
+  entrara a la rejilla habría que inventarle una duración. Va en una banda
+  fija encima, sobre ámbar (decisión 63), y ahí se lee aunque la rejilla esté
+  desplazada.
+
+  EL COLOR, LEÍDO EN ESTA PANTALLA
+    tarea    → barra azul marino a la izquierda del bloque
+    materia  → bloque verde tintado, de fondo, texto subordinado
+    reminder → banda y banderín ámbar
+  Ni un título va pintado del color de su entidad (decisión 63).
 -->
 
-<body class="comp">
-<div class="device">
-  <div data-statusbar="15:42"></div>
+<style>
+  .stack { width: 390px; }
+  .caption { padding: var(--space-6) var(--gutter) var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
 
-  <main class="screen screen--fixed flex flex-col">
+  /* La tira ocupa el ancho entero: así cada día mide 50px y se acierta con el
+     pulgar en marcha. Se separa de la rejilla con una línea, no con un bloque
+     de color: es un cambio de función (navegar → leer), no de jerarquía. */
+  .stripbar { display: flex; align-items: center; padding: 0 var(--space-2) var(--space-2); }
+  .topfixed { box-shadow: inset 0 -1px 0 var(--line); background: var(--bg); }
+</style>
 
-    <header class="pagehead" style="padding-bottom:var(--space-3)">
-      <div>
-        <h1 class="t-title">Jueves 17</h1>
-        <p class="t-meta c-muted num">septiembre · semana 1</p>
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="stack">
+
+  <div class="caption">
+    <h2>Día · jueves 17 de septiembre</h2>
+    <p>El nivel más cercano. Tira de 7 días arriba, riel de horas a la izquierda.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:42"></div>
+
+    <div class="topfixed">
+      <!-- CABECERA · IDÉNTICA EN LOS TRES NIVELES, y eso es lo que hace que
+           tres pantallas se sientan una sola: el gesto de subir está siempre
+           en el mismo píxel. A la izquierda el nivel de arriba, a la derecha
+           Hoy, las dos flechas y añadir. Solo cambia la etiqueta. -->
+      <div class="calhead">
+        <a href="semana.html" class="uplevel no-underline">
+          <span class="ico" data-icon="chevron-left"></span>
+          Semana
+        </a>
+        <div class="calhead__acts">
+          <button class="taptext taptext--quiet t-meta" style="margin-inline:0">Hoy</button>
+          <button class="tapicon" aria-label="Día anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+          <button class="tapicon" aria-label="Día siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+          <a href="anadir.html" class="tapicon no-underline" aria-label="Añadir" style="color:var(--task)">
+            <span class="ico ico--lg" data-icon="plus"></span>
+          </a>
+        </div>
       </div>
-      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
-        <button class="tapicon" aria-label="Día anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
-        <button class="tapicon" aria-label="Día siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
-      </div>
-    </header>
 
-    <!-- LAS TRES VISTAS -->
-    <div class="gutter pb-3">
-      <div class="seg" role="tablist" aria-label="Vista del calendario">
-        <button role="tab" aria-selected="true">Día</button>
-        <button role="tab" aria-selected="false">Semana</button>
-        <button role="tab" aria-selected="false">Mes</button>
-      </div>
-    </div>
+      <!-- Que dia estas mirando. Es la etiqueta mas util de la pantalla y
+           no la da ninguna otra pieza: la tira solo lleva numeros. -->
+      <p class="callabel">jueves 17 de septiembre</p>
 
-    <!-- BANDA DE REMINDERS DEL DÍA -->
-    <a href="reminder-detalle.html" class="remband no-underline" style="color:var(--text)">
-      <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-      <span class="flex-1 min-w-0">
-        <span class="t-meta font-medium block">Entrega del avance de IA</span>
-        <span class="prep">
-          <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
-          te queda migrar el schema
-        </span>
-      </span>
-      <span class="t-meta c-muted num">23:59</span>
-    </a>
-
-    <!-- CAPAS · filtro e interruptor de materias, en un solo control -->
-    <div class="chips gutter" style="padding-block:var(--space-3)" role="group" aria-label="Qué se ve">
-      <button class="chip" aria-pressed="true">Tareas</button>
-      <button class="chip" aria-pressed="true">Reminders</button>
-      <button class="chip" aria-pressed="true">Materias</button>
-    </div>
-
-    <!-- REJILLA DE HORAS ---------------------------------------------------- -->
-    <div class="flex-1 min-h-0 overflow-y-auto" id="scroller" style="box-shadow: inset 0 1px 0 var(--line)">
-      <div class="cal pb-6 pt-3" style="--hour:56px">
-        <div class="cal__hours" id="hours"></div>
-        <div class="cal__grid" id="grid" style="height:840px">
-
-          <!-- MATERIAS · ausencia de tiempo disponible, no contenido.
-               Gris, planas, sin borde de color, texto subordinado. -->
-          <div class="calblock calblock--class" style="top:56px;height:112px">
-            <p class="calblock__title">Cálculo III</p>
-            <p class="calblock__time">8:00 – 10:00 · Aula 204</p>
-          </div>
-
-          <div class="calblock calblock--class" style="top:224px;height:112px">
-            <p class="calblock__title">Álgebra Lineal</p>
-            <p class="calblock__time">11:00 – 13:00 · Aula 112</p>
-          </div>
-
-          <div class="calblock calblock--class" style="top:644px;height:56px">
-            <p class="calblock__title">Gym</p>
-            <p class="calblock__time">18:30 – 19:30</p>
-          </div>
-
-          <!-- TAREA EN CURSO · único uso del acento en esta pantalla -->
-          <div class="calblock calblock--task calblock--now" style="top:448px;height:112px;--ctx:var(--ctx-3)">
-            <p class="calblock__time num">15:00 – 17:00</p>
-            <p class="calblock__title">Migrar el schema a Supabase</p>
-          </div>
-
-          <!-- ARRASTRE EN CURSO ---------------------------------------------
-               Destino punteado + bloque levantado. Sin formulario, sin
-               diálogo. Es la mitigación comprometida del riesgo del
-               calendario rígido: si arrastrar no es fluido, la app se
-               abandona. -->
-          <div class="calblock calblock--ghost" style="top:728px;height:56px">
-            <span class="num" style="padding-inline:var(--space-1)">20:00 – 21:00</span>
-          </div>
-
-          <div class="calblock calblock--task calblock--dragging" style="top:702px;height:56px;--ctx:var(--ctx-1)">
-            <p class="calblock__time num">19:00 – 20:00</p>
-            <p class="calblock__title">Repaso final</p>
-            <span class="calblock__grip"></span>
-          </div>
-
-          <div class="cal__now" style="top:487px"></div>
+      <div class="stripbar">
+        <div class="daystrip" role="tablist" aria-label="Días de la semana">
+          <button class="daystrip__d" role="tab" aria-selected="false">
+            <span class="daystrip__n num">14</span><span class="daystrip__w">lun</span>
+          </button>
+          <button class="daystrip__d" role="tab" aria-selected="false">
+            <span class="daystrip__n num">15</span><span class="daystrip__w">mar</span>
+          </button>
+          <button class="daystrip__d" role="tab" aria-selected="false">
+            <span class="daystrip__n num">16</span><span class="daystrip__w">mié</span>
+          </button>
+          <!-- Hoy Y seleccionado. Pastilla azul llena: la marca es forma, no
+               texto de color, así que el número mantiene 11:1 encima. -->
+          <button class="daystrip__d daystrip__d--today" role="tab" aria-selected="true" aria-current="date">
+            <span class="daystrip__n num">17</span><span class="daystrip__w">jue</span>
+            <span class="daystrip__dot" aria-hidden="true"></span>
+          </button>
+          <button class="daystrip__d" role="tab" aria-selected="false">
+            <span class="daystrip__n num">18</span><span class="daystrip__w">vie</span>
+            <span class="daystrip__dot" aria-hidden="true" title="Tiene un reminder"></span>
+          </button>
+          <button class="daystrip__d" role="tab" aria-selected="false">
+            <span class="daystrip__n num">19</span><span class="daystrip__w">sáb</span>
+          </button>
+          <button class="daystrip__d" role="tab" aria-selected="false">
+            <span class="daystrip__n num">20</span><span class="daystrip__w">dom</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- "Se me corrió el día": control visible, 44px, nunca dentro de un menú -->
-    <div class="gutter flex items-center justify-between" style="box-shadow: inset 0 1px 0 var(--line); padding-block:var(--space-1)">
-      <button class="taptext">
-        <span class="ico ico--sm" data-icon="arrow-down"></span>
-        Se me corrió el día
-      </button>
-      <button class="taptext taptext--quiet t-meta">
-        <span class="ico ico--sm" data-icon="plus"></span>
-        Reminder
-      </button>
-    </div>
+    <main class="screen">
 
-  </main>
+      <!-- BANDA DE REMINDERS · fuera de la rejilla, porque no duran.
+           Ámbar de fondo, título en --text: 14.9:1. -->
+      <div style="padding-block:var(--space-3)">
+        <a href="reminder-detalle.html" class="remband no-underline" style="color:var(--text)">
+          <span class="ico ico--sm rem__flag" data-icon="flag" style="margin:0"></span>
+          <span class="flex-1 min-w-0">
+            <span class="block t-meta font-medium">Entrega del avance de IA</span>
+            <span class="block t-label c-muted num">hoy · 23:59<span class="sep"> · </span>te queda migrar el schema</span>
+          </span>
+          <span class="ico ico--sm c-muted" data-icon="chevron-right"></span>
+        </a>
+      </div>
 
-  <nav data-tabbar="semana"></nav>
-  <div data-homebar></div>
+      <!-- CAPAS · tres interruptores independientes. El punto de color dice
+           cuál se apaga sin tener que leer la palabra. En Día están las tres
+           encendidas: aquí se ejecuta, no se planifica. -->
+      <div class="chips gutter" style="padding-bottom:var(--space-3)" role="group" aria-label="Capas visibles">
+        <button class="chip" aria-pressed="true"><span class="layerdot layerdot--task"></span>Tareas</button>
+        <button class="chip" aria-pressed="true"><span class="layerdot layerdot--rem"></span>Reminders</button>
+        <button class="chip" aria-pressed="true"><span class="layerdot layerdot--class"></span>Materias</button>
+      </div>
+
+      <!-- REJILLA DE HORAS · 7:00 a 22:00 a 56px la hora.
+           56px por hora no es decorativo: es lo mínimo para que un bloque de
+           una hora contenga título + hora en dos líneas legibles. -->
+      <div class="cal" style="--hour:56px;padding-bottom:calc(56px + var(--space-16))">
+        <div class="cal__hours" aria-hidden="true">
+          <div class="cal__hour num">7</div>
+          <div class="cal__hour num">8</div>
+          <div class="cal__hour num">9</div>
+          <div class="cal__hour num">10</div>
+          <div class="cal__hour num">11</div>
+          <div class="cal__hour num">12</div>
+          <div class="cal__hour num">13</div>
+          <div class="cal__hour num">14</div>
+          <div class="cal__hour num">15</div>
+          <div class="cal__hour num">16</div>
+          <div class="cal__hour num">17</div>
+          <div class="cal__hour num">18</div>
+          <div class="cal__hour num">19</div>
+          <div class="cal__hour num">20</div>
+          <div class="cal__hour num">21</div>
+          <div class="cal__hour num">22</div>
+        </div>
+
+        <div class="cal__grid">
+          <div class="cal__line" style="top:0"></div>
+          <div class="cal__line" style="top:56px"></div>
+          <div class="cal__line" style="top:112px"></div>
+          <div class="cal__line" style="top:168px"></div>
+          <div class="cal__line" style="top:224px"></div>
+          <div class="cal__line" style="top:280px"></div>
+          <div class="cal__line" style="top:336px"></div>
+          <div class="cal__line" style="top:392px"></div>
+          <div class="cal__line" style="top:448px"></div>
+          <div class="cal__line" style="top:504px"></div>
+          <div class="cal__line" style="top:560px"></div>
+          <div class="cal__line" style="top:616px"></div>
+          <div class="cal__line" style="top:672px"></div>
+          <div class="cal__line" style="top:728px"></div>
+          <div class="cal__line" style="top:784px"></div>
+          <div class="cal__line" style="top:840px"></div>
+
+          <!-- MATERIA · verde tintado, barra verde, texto subordinado.
+               8:00–9:30. No compite: es ausencia de tiempo, no contenido. -->
+          <div class="calblock calblock--class" style="top:56px;height:84px">
+            <p class="calblock__title">Cálculo III</p>
+            <p class="calblock__time num">8:00 – 9:30<span class="sep"> · </span>Aula 204</p>
+          </div>
+
+          <!-- TAREA cumplida. La barra azul se apaga, el título se tacha.
+               9:45–10:30 -->
+          <div class="calblock calblock--task" style="top:153px;height:42px;opacity:.66">
+            <p class="calblock__title" style="text-decoration:line-through;text-decoration-thickness:1px">Leer el paper de Anthropic</p>
+          </div>
+
+          <!-- MATERIA · 11:00–12:30 -->
+          <div class="calblock calblock--class" style="top:224px;height:84px">
+            <p class="calblock__title">Álgebra Lineal</p>
+            <p class="calblock__time num">11:00 – 12:30</p>
+          </div>
+
+          <!-- EN CURSO · azul de fondo y azul en la barra. La hora no va en
+               azul: el estado ya lo dice el fondo, y un texto azul aquí sería
+               pintar el texto con el color de la entidad. 15:00–17:00 -->
+          <div class="calblock calblock--task calblock--now" style="top:448px;height:112px">
+            <p class="calblock__title">Migrar el schema a Supabase</p>
+            <p class="calblock__time num flex items-center gap-1">
+              15:00 – 17:00
+              <span class="sep">·</span>
+              <span class="ico rem__flag" data-icon="flag" style="width:12px;height:12px;margin:0"></span>
+              Avance de IA
+            </p>
+          </div>
+
+          <!-- ARRASTRE · el bloque sigue al dedo y el destino se dibuja
+               debajo con su hora escrita: sueltas sabiendo el resultado.
+               20:00 -->
+          <div class="calblock calblock--ghost" style="top:728px;height:56px">20:00 – 21:00</div>
+          <div class="calblock calblock--task calblock--dragging" style="top:700px;height:56px">
+            <p class="calblock__title">Repaso de Cálculo</p>
+            <p class="calblock__time num">1 h</p>
+            <span class="calblock__grip" aria-hidden="true"></span>
+          </div>
+
+          <!-- LÍNEA DE AHORA · 15:42 -->
+          <div class="cal__now" style="top:487px" aria-hidden="true"></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- El + flotante (referencia 09). Abre la hoja de añadir: ahí SÍ se
+         pregunta tarea o reminder, porque esto no es capturar, es planificar
+         (decisión 70). -->
+    <a href="anadir.html" class="fab no-underline" aria-label="Añadir al jueves 17">
+      <span class="ico ico--lg" data-icon="plus"></span>
+    </a>
+
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <div style="height:var(--space-10)"></div>
 </div>
-
-<script>
-  // Andamio de la rejilla. En la app real sale del rango de horas del usuario.
-  (function () {
-    var FROM = 7, TO = 22, H = 56;
-    var hours = document.getElementById('hours');
-    var grid = document.getElementById('grid');
-    for (var h = FROM; h <= TO; h++) {
-      if (h < TO) {
-        var label = document.createElement('div');
-        label.className = 'cal__hour num';
-        label.textContent = h + ':00';
-        hours.appendChild(label);
-      }
-      var line = document.createElement('div');
-      line.className = 'cal__line';
-      line.style.top = ((h - FROM) * H) + 'px';
-      grid.insertBefore(line, grid.firstChild);
-    }
-    // Abre centrado en "ahora", no a las 7 de la mañana.
-    document.getElementById('scroller').scrollTop = Math.max(0, (15.7 - FROM) * H - 160);
-  })();
-</script>
 </body>
 </html>

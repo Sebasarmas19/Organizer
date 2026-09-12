@@ -26,6 +26,7 @@
 | `docs/05-preguntas-abiertas.md` | Lo que todavía falta decidir |
 | `docs/06-recursos.md` | Módulo Recursos: skills, herramientas y artículos |
 | `docs/08-modelo-tareas-reminders.md` | **Materias, reminders y tareas.** Sustituye parte de 03 |
+| `docs/ESTADO-VIVO.md` | **Qué hay corriendo ahora.** Léelo si eres una sesión nueva |
 | `docs/07-metodologia.md` | **Cómo se trabaja**: orquestación con Orca, roles, validación |
 
 ## Estructura del repositorio

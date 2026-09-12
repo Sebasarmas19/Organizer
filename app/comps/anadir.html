@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Añadir · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  AÑADIR · la hoja del "+"            (FD3 · decisiones 70, 71) · NUEVO
+  ---------------------------------------------------------------------------
+  ESTE ES EL COMP QUE MÁS IMPORTA DE TODO EL ENCARGO, y el motivo está en
+  docs/00-problema.md: el usuario captura bien y NUNCA RELEE. Todo lo que
+  anotó caminando por Siri se quedó en una lista que no abrió jamás.
+
+  La lista de "tareas sin planificar" aparece aquí, en el momento exacto en
+  que está decidiendo qué hacer el jueves. No hay que acordarse de ir a
+  buscarla: sale sola, en el único momento en que sirve. Eso es el puente que
+  le faltaba al producto (decisión 71).
+
+  POR QUÉ AQUÍ SÍ SE PREGUNTA "¿TAREA O REMINDER?" (decisión 70)
+  La regla "el lugar determina el tipo" (decisión 48) protege LA CAPTURA, que
+  es donde la fricción mata: Siri, caminando, tres segundos. Esto es lo
+  contrario — se sentó a planificar. Aquí un toque cuesta nada y quita toda
+  la ambigüedad.
+
+  QUE NO PAREZCA UN CAJÓN DE SOBRAS (decisión 51). Tres cosas lo evitan:
+    1. El encabezado no cuenta. Nada de "3 pendientes": un número aquí es un
+       contador de deuda y se lee como reproche.
+    2. Nada dice cuánto tiempo lleva sin planificarse. La antigüedad de una
+       captura no es información útil, es una factura.
+    3. Se eligen VARIAS de una vez y se confirma en positivo: "Poner 2 en el
+       jueves". El gesto es repartir, no saldar.
+
+  LOS DOS ESTADOS ESTÁN LOS DOS EN ESTA PÁGINA.
+-->
+
+<style>
+  .stack { width: 390px; }
+  .caption { padding: var(--space-6) var(--gutter) var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
+
+  /* El fondo apagado: el día al que vas a añadir sigue visible detrás. No es
+     decoración — es lo que te recuerda a qué día estás poniendo esto. */
+  .behind { filter: saturate(.6); }
+
+  .sheethead {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0 var(--gutter) var(--space-3);
+  }
+
+  /* Fila elegible de la lista de sin planificar. 56px, se toca sin apuntar. */
+  .pick {
+    display: flex; align-items: center; gap: var(--space-3);
+    width: 100%; min-height: 56px;
+    padding: var(--space-2) var(--gutter);
+    text-align: left; color: var(--text);
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .pick + .pick { box-shadow: inset 0 1px 0 var(--line); }
+  .pick__bar { width: 5px; align-self: stretch; min-height: 26px; border-radius: 999px; background: var(--task); flex: 0 0 auto; }
+  .pick__body { flex: 1 1 auto; min-width: 0; }
+  .pick__title { font-size: var(--text-body); font-weight: var(--weight-medium); }
+  .pick__meta { font-size: var(--text-meta); color: var(--text-muted); }
+  /* Elegida: tinte azul + marca. Color Y forma, como todo el sistema. */
+  .pick[aria-pressed="true"] { background: var(--task-soft); }
+  .pick__mark {
+    width: 24px; height: 24px; border-radius: 999px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    border: 1.5px solid var(--line-control);
+    color: transparent;
+  }
+  .pick[aria-pressed="true"] .pick__mark { background: var(--task); border-color: var(--task); color: var(--text-on-accent); }
+</style>
+
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="stack">
+
+  <!-- ==================== 1 · TAREA · el puente del producto ============= -->
+  <div class="caption">
+    <h2>Añadir · Tarea</h2>
+    <p>Lo que capturaste por Siri y no volviste a ver, justo cuando decides la semana.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:47"></div>
+
+    <div class="behind" style="flex:1 1 auto;min-height:0;overflow:hidden">
+      <div class="calhead">
+        <span class="uplevel"><span class="ico" data-icon="chevron-left"></span>Semana</span>
+        <div class="calhead__acts">
+          <span class="taptext taptext--quiet t-meta" style="margin-inline:0">Hoy</span>
+          <span class="tapicon"><span class="ico ico--lg" data-icon="chevron-left"></span></span>
+          <span class="tapicon"><span class="ico ico--lg" data-icon="chevron-right"></span></span>
+          <span class="tapicon" style="color:var(--task)"><span class="ico ico--lg" data-icon="plus"></span></span>
+        </div>
+      </div>
+      <div class="cal" style="--hour:56px">
+        <div class="cal__hours"><div class="cal__hour num">14</div><div class="cal__hour num">15</div><div class="cal__hour num">16</div><div class="cal__hour num">17</div></div>
+        <div class="cal__grid">
+          <div class="cal__line" style="top:0"></div>
+          <div class="cal__line" style="top:56px"></div>
+          <div class="cal__line" style="top:112px"></div>
+          <div class="calblock calblock--task calblock--now" style="top:56px;height:112px">
+            <p class="calblock__title">Migrar el schema a Supabase</p>
+            <p class="calblock__time num">15:00 – 17:00</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- La hoja. El velo cubre también las pestañas: mientras eliges, el
+         resto de la app no está disponible, y eso se ve. -->
+    <div class="overlay">
+      <div class="sheet" style="max-height:640px;display:flex;flex-direction:column">
+        <div class="sheet__grab" aria-hidden="true"></div>
+
+        <div class="sheethead">
+          <div>
+            <h2 class="t-section">Añadir al jueves 17</h2>
+          </div>
+          <button class="tapicon" aria-label="Cerrar" style="margin-right:calc(var(--space-2) * -1)">
+            <span class="ico ico--lg" data-icon="xmark"></span>
+          </button>
+        </div>
+
+        <!-- El tipo, de una vez y visible. Dos pastillas, no un menú. -->
+        <div class="gutter" style="padding-bottom:var(--space-4)">
+          <div class="seg" role="tablist" aria-label="Qué estás añadiendo">
+            <button role="tab" aria-selected="true">Tarea</button>
+            <button role="tab" aria-selected="false">Reminder</button>
+          </div>
+        </div>
+
+        <div style="flex:1 1 auto;min-height:0;overflow-y:auto">
+
+          <!-- EL PUENTE. Encabezado sin número y sin antigüedad: es un menú
+               de lo que podrías hacer, no una cuenta de lo que debes. -->
+          <div class="sectionhead">
+            <h3>Lo que ya tienes anotado</h3>
+          </div>
+
+          <button class="pick" aria-pressed="true">
+            <span class="pick__bar"></span>
+            <span class="pick__body">
+              <span class="pick__title block">Probar Hermes</span>
+              <span class="pick__meta">Proyecto IA</span>
+            </span>
+            <span class="pick__mark"><span class="ico ico--sm" data-icon="check" style="width:14px;height:14px"></span></span>
+          </button>
+
+          <button class="pick" aria-pressed="true">
+            <span class="pick__bar"></span>
+            <span class="pick__body">
+              <span class="pick__title block">Curso de Anthropic</span>
+              <span class="pick__meta">Cursos</span>
+            </span>
+            <span class="pick__mark"><span class="ico ico--sm" data-icon="check" style="width:14px;height:14px"></span></span>
+          </button>
+
+          <button class="pick" aria-pressed="false">
+            <span class="pick__bar"></span>
+            <span class="pick__body">
+              <span class="pick__title block">Comprar cuadernos</span>
+              <span class="pick__meta">Personal</span>
+            </span>
+            <span class="pick__mark"><span class="ico ico--sm" data-icon="check" style="width:14px;height:14px"></span></span>
+          </button>
+
+          <button class="pick" aria-pressed="false">
+            <span class="pick__bar"></span>
+            <span class="pick__body">
+              <span class="pick__title block">Renovar el pase del metro</span>
+              <span class="pick__meta">Personal</span>
+            </span>
+            <span class="pick__mark"><span class="ico ico--sm" data-icon="check" style="width:14px;height:14px"></span></span>
+          </button>
+
+          <!-- Escribir una nueva vive en el MISMO sitio, no en otra pantalla
+               (decisión 71). Elegir de lo anotado y escribir algo nuevo son
+               el mismo gesto con distinto origen. -->
+          <button class="pick" style="color:var(--task)">
+            <span class="pick__bar" style="background:transparent"></span>
+            <span class="pick__body">
+              <span class="pick__title block" style="color:var(--task)">Escribir una nueva</span>
+            </span>
+            <span class="ico" data-icon="plus"></span>
+          </button>
+        </div>
+
+        <!-- Confirmación en positivo y con el destino escrito. Nunca "2
+             pendientes menos": el marcador de este momento es cuánto has
+             repartido, no cuánto debes. -->
+        <div class="gutter" style="padding-top:var(--space-3)">
+          <button class="btn btn--primary btn--full">Poner 2 en el jueves 17</button>
+        </div>
+      </div>
+    </div>
+
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <!-- ==================== 2 · REMINDER ================================== -->
+  <div class="caption">
+    <h2>Añadir · Reminder</h2>
+    <p>La fecha ya viene puesta: es el día que tocaste. Todo lo demás es opcional.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:48"></div>
+
+    <div class="behind" style="flex:1 1 auto;min-height:0;overflow:hidden">
+      <div class="calhead">
+        <span class="uplevel"><span class="ico" data-icon="chevron-left"></span>Septiembre</span>
+        <div class="calhead__acts">
+          <span class="taptext taptext--quiet t-meta" style="margin-inline:0">Hoy</span>
+          <span class="tapicon"><span class="ico ico--lg" data-icon="chevron-left"></span></span>
+          <span class="tapicon"><span class="ico ico--lg" data-icon="chevron-right"></span></span>
+          <span class="tapicon" style="color:var(--task)"><span class="ico ico--lg" data-icon="plus"></span></span>
+        </div>
+      </div>
+      <div class="month" style="padding-top:var(--space-3)">
+        <div class="mday"><span class="mday__n num">21</span></div>
+        <div class="mday"><span class="mday__n num">22</span></div>
+        <div class="mday"><span class="mday__n num">23</span><span class="mday__dots"><i></i><i></i></span></div>
+        <div class="mday"><span class="mday__n num">24</span></div>
+        <div class="mday"><span class="mday__n num">25</span></div>
+        <div class="mday"><span class="mday__n num">26</span></div>
+        <div class="mday"><span class="mday__n num">27</span></div>
+      </div>
+    </div>
+
+    <div class="overlay">
+      <div class="sheet" style="max-height:660px;display:flex;flex-direction:column">
+        <div class="sheet__grab" aria-hidden="true"></div>
+
+        <div class="sheethead">
+          <h2 class="t-section">Añadir al miércoles 23</h2>
+          <button class="tapicon" aria-label="Cerrar" style="margin-right:calc(var(--space-2) * -1)">
+            <span class="ico ico--lg" data-icon="xmark"></span>
+          </button>
+        </div>
+
+        <div class="gutter" style="padding-bottom:var(--space-4)">
+          <div class="seg" role="tablist" aria-label="Qué estás añadiendo">
+            <button role="tab" aria-selected="false">Tarea</button>
+            <button role="tab" aria-selected="true">Reminder</button>
+          </div>
+        </div>
+
+        <div class="gutter" style="flex:1 1 auto;min-height:0;overflow-y:auto">
+
+          <!-- Etiqueta visible encima de cada campo, no placeholder: un
+               placeholder desaparece justo cuando hace falta. -->
+          <label class="t-label c-muted font-semibold block mb-1" for="rem-titulo">Título</label>
+          <div class="field field--focus" id="f-titulo">
+            <input id="rem-titulo" type="text" value="Defensa del proyecto" autocomplete="off">
+            <span class="caret" aria-hidden="true"></span>
+          </div>
+
+          <!-- La fecha ya viene del día que tocó. Se puede cambiar, pero el
+               caso normal es no tocarla. -->
+          <label class="t-label c-muted font-semibold block mb-1 mt-4">Fecha</label>
+          <button class="field w-full" style="justify-content:space-between;color:var(--text)">
+            <span class="flex items-center gap-2">
+              <span class="ico ico--sm" data-icon="calendar" style="color:var(--rem)"></span>
+              miércoles 23 de septiembre
+            </span>
+            <span class="ico ico--sm c-muted" data-icon="chevron-right"></span>
+          </button>
+
+          <div class="flex gap-3 mt-4">
+            <div class="flex-1 min-w-0">
+              <label class="t-label c-muted font-semibold block mb-1">Hora</label>
+              <button class="field w-full" style="justify-content:space-between;color:var(--text)">
+                <span class="num">14:00</span>
+                <span class="ico ico--sm c-muted" data-icon="chevron-down"></span>
+              </button>
+            </div>
+            <div class="flex-1 min-w-0">
+              <!-- Decisión 60: un día de antelación por defecto. Con seis, el
+                   mismo parcial encabeza seis notificaciones seguidas y a
+                   partir de la tercera se aprende a ignorarlas. -->
+              <label class="t-label c-muted font-semibold block mb-1">Avisar</label>
+              <button class="field w-full" style="justify-content:space-between;color:var(--text)">
+                <span class="flex items-center gap-2">
+                  <span class="ico ico--sm" data-icon="bell" style="color:var(--rem)"></span>
+                  1 día antes
+                </span>
+                <span class="ico ico--sm c-muted" data-icon="chevron-down"></span>
+              </button>
+            </div>
+          </div>
+
+          <label class="t-label c-muted font-semibold block mb-1 mt-4" for="rem-notas">Notas</label>
+          <div class="field" style="height:auto;align-items:flex-start;padding-block:var(--space-3)">
+            <span class="ico ico--sm c-faint" data-icon="text" style="margin-top:2px"></span>
+            <textarea id="rem-notas" rows="2" placeholder="Opcional"
+              style="flex:1;min-width:0;font:inherit;font-size:var(--text-body);color:var(--text);background:none;border:0;outline:none;resize:none"></textarea>
+          </div>
+
+          <!-- Y la frase que hace que este reminder valga más que una fecha
+               en el Calendar del iPhone. Sin botón: crear el reminder ya es
+               suficiente trabajo para un solo gesto. -->
+          <p class="t-label c-muted mt-3">
+            Después podrás asociarle tareas. Es lo que convierte "lo sé" en
+            "me estoy preparando".
+          </p>
+        </div>
+
+        <div class="gutter" style="padding-top:var(--space-3)">
+          <button class="btn btn--primary btn--full">Guardar el reminder</button>
+        </div>
+      </div>
+    </div>
+
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <div style="height:var(--space-10)"></div>
+</div>
+</body>
+</html>

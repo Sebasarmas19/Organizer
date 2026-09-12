@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>audit</title>
+<style>body{margin:0;font:13px monospace;background:#fff;color:#000}
+iframe{width:390px;height:1400px;border:0;position:absolute;left:-9999px;top:0}
+pre{padding:12px;white-space:pre-wrap}</style>
+</head>
+<!--
+  Arnés de verificación. No es parte de la app: es la herramienta con la que
+  se comprueba, en un navegador de verdad y sin ojo humano, que ni un solo
+  control baja de 44px y que ninguna pantalla desborda a lo ancho.
+
+  Se corre en Chrome headless:
+    chrome --headless=new --dump-dom --virtual-time-budget=4000 \
+           "http://localhost:PORT/_audit.html?theme=light"
+-->
+<body>
+<pre id="out">…</pre>
+<div id="frames"></div>
+<script>
+var COMPS = ['dia','semana','mes','anadir','inicio','inicio-vacio','tareas',
+             'reminder-detalle','otro-dia','horario','domingo','notificacion',
+             'recursos','semana-escritorio','mes-escritorio'];
+var theme = new URLSearchParams(location.search).get('theme') || 'light';
+var host = document.getElementById('frames');
+var results = [];
+var pending = COMPS.length;
+
+function audit(name, doc) {
+  var small = [], over = [];
+  doc.querySelectorAll('button,a,[role="checkbox"],[role="tab"],input,textarea,select')
+    .forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return;
+      /* Dos excepciones legitimas, las dos documentadas en base.css:
+         - el input/textarea dentro de .field: el objetivo tactil es el campo
+           entero, de 44px, no el cursor de texto;
+         - .seg button, que mide 38 porque el carril le suma 3 + 3.
+         Y .sr-only, que es texto para lector de pantalla, no un control. */
+      if (el.closest('.field') && el !== el.closest('.field')) return;
+      if (el.closest('.seg')) return;
+      if (el.classList.contains('sr-only')) return;
+      if (r.height < 43.5 || r.width < 43.5) {
+        small.push(el.className.toString().trim().slice(0, 34) + ' [' +
+          (el.textContent || '').trim().slice(0, 22) + '] ' +
+          Math.round(r.width) + 'x' + Math.round(r.height));
+      }
+    });
+  doc.querySelectorAll('.device,.desktop').forEach(function (d, i) {
+    var dx = d.scrollWidth - d.clientWidth;
+    if (dx > 0) over.push('device#' + i + ' +' + dx + 'px');
+  });
+  /* Inicio no puede desplazarse: es la restricción dura del proyecto. */
+  doc.querySelectorAll('.screen--fixed').forEach(function (s, i) {
+    var dy = s.scrollHeight - s.clientHeight;
+    if (dy > 0) over.push('screen--fixed#' + i + ' desborda ' + dy + 'px de alto');
+  });
+  results.push('== ' + name + (small.length || over.length ? '' : '  OK') +
+    (small.length ? '\n  <44px: ' + small.join('\n          ') : '') +
+    (over.length ? '\n  DESBORDA: ' + over.join(' · ') : ''));
+}
+
+COMPS.forEach(function (name) {
+  var f = document.createElement('iframe');
+  f.src = 'comps/' + name + '.html';
+  f.onload = function () {
+    try {
+      f.contentDocument.documentElement.setAttribute('data-theme', theme);
+      setTimeout(function () {
+        try { audit(name, f.contentDocument); }
+        catch (e) { results.push('== ' + name + '  ERROR ' + e.message); }
+        if (--pending === 0) {
+          document.getElementById('out').textContent =
+            '[' + theme + ']\n' + results.sort().join('\n');
+        }
+      }, 350);
+    } catch (e) {
+      results.push('== ' + name + '  ERROR ' + e.message);
+      if (--pending === 0) document.getElementById('out').textContent = results.sort().join('\n');
+    }
+  };
+  host.appendChild(f);
+});
+</script>
+</body>
+</html>

@@ -3,9 +3,28 @@
    Single source of truth for color, type, space, radius and motion.
    Light and dark are both authored. Nothing here is derived at runtime.
 
-   Contrast: every text token below was measured against every surface it is
-   allowed to sit on. All pairs are >= 4.5:1 (WCAG AA). Context colors are
-   non-text indicators and are >= 3:1.
+   FD3 · EL COLOR DICE QUE TIPO DE COSA ES  (decisiones 63-66)
+
+     tarea     -> azul marino
+     materia   -> verde
+     reminder  -> ambar
+
+   Y una regla que manda sobre las tres:
+
+       EL COLOR ENVUELVE AL TEXTO, NUNCA LO PINTA.
+
+   Barra lateral, fondo tintado, pildora, punto, banderin: todo vale. Texto
+   de color, no. La razon es medible y no es estetica: un ambar que llegue a
+   4.5:1 sobre blanco ha dejado de ser ambar y es marron. Asi que el color se
+   va a la superficie y el texto se queda en --text, que mide ~15:1 encima de
+   cualquiera de los tres tintes.
+
+   La unica excepcion es el azul como TEXTO DE ACCION (enlaces, .taptext).
+   Ahi el azul no esta etiquetando una tarea: esta diciendo "esto se toca".
+   Por eso se mide como texto (>=4.5:1) y no como indicador.
+
+   Contraste: cada par medido con luminancia relativa. Texto >= 4.5:1 (AA),
+   indicador no textual >= 3:1. Los ratios van anotados al lado del token.
 
    Theme resolution (three states):
      :root                                  -> light (default, always defined)
@@ -24,7 +43,7 @@
                "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   --text-title: 1.75rem;     /* 28px · nombre de pantalla                   */
-  --text-section: 1.25rem;   /* 20px · encabezado de sección / dia          */
+  --text-section: 1.25rem;   /* 20px · encabezado de seccion / dia          */
   --text-body: 1.0625rem;    /* 17px · contenido. Titulo de tarea.          */
   --text-meta: 0.9375rem;    /* 15px · hora, contexto, subordinados         */
   --text-label: 0.8125rem;   /* 13px · etiquetas, nav, encabezados de lista */
@@ -85,39 +104,54 @@
 
   --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(28 25 23 / 0.22);
   --shadow-float: 0 2px 4px -2px rgb(28 25 23 / 0.10), 0 8px 20px -8px rgb(28 25 23 / 0.16);
+  --shadow-fab:   0 4px 10px -4px rgb(28 25 23 / 0.28), 0 12px 28px -10px rgb(28 25 23 / 0.26);
 
-  /* --------------------------------------------------------------- color --
-     LIGHT. Neutros calidos (no azulados). Un solo acento: petroleo.       */
+  /* ================================================== color · CLARO =======
+     Neutros calidos (no azulados) y tres colores de entidad encima.       */
 
   --bg: #FAF8F5;             /* fondo de la app                             */
   --surface: #FFFFFF;        /* fila, tarjeta, hoja                         */
   --surface-sunken: #F1EDE7; /* campo, bandeja, agrupador                   */
-  --surface-class: #EFEBE4;  /* clases en Semana: fondo, no protagonista    */
 
-  --line: #E4DFD6;           /* hairline 1px, separacion normal             */
-  --line-strong: #D3CCC0;    /* borde de control, borde de bloque           */
+  --line: #E4DFD6;           /* hairline 1px entre filas (decorativa)       */
+  --line-strong: #D3CCC0;    /* separador fuerte, borde de bloque           */
+  --line-control: #8E877C;   /* 3.35:1 sobre --bg · borde que SI identifica
+                                un control: casilla, campo, boton fantasma  */
 
-  --text: #1B1917;           /* 16.5:1 sobre --bg                           */
-  --text-muted: #625B51;     /*  6.3:1 sobre --bg · metadatos               */
+  --text: #1B1917;           /* 16.5:1 sobre --bg · 14.8:1 sobre los tintes */
+  --text-muted: #625B51;     /*  6.3:1 sobre --bg ·  5.7:1 sobre los tintes */
   --text-faint: #6E675E;     /*  5.3:1 sobre --bg · lo minimo legible       */
-  --text-on-accent: #FFFFFF; /*  6.0:1 sobre --accent                       */
+  --text-on-accent: #FFFFFF; /* 11.1:1 sobre --task                         */
 
-  --accent: #0E6F66;         /* petroleo. Accion primaria, en curso, racha  */
-  --accent-press: #0A5A53;
-  --accent-soft: #E4F0EE;    /* fondo del bloque en curso                   */
+  /* --- TAREA · azul marino ---------------------------------------------
+     Es tambien el acento del sistema (decision 65): accion primaria, foco,
+     racha, "en curso". Si las materias son verdes, el verde ya no puede
+     significar "esto se toca".                                            */
+  --task: #1E3A6F;           /* 10.5:1 sobre --bg · vale como texto de accion */
+  --task-press: #16294F;     /* 14.3:1 sobre blanco                         */
+  --task-soft: #E7ECF6;      /* fondo tintado · --text encima mide 14.8:1   */
 
-  --focus-ring: #0E6F66;
+  /* --- MATERIA · verde --------------------------------------------------
+     Una materia es ausencia de tiempo disponible, no contenido (dec. 52).
+     Por eso el verde vive casi siempre en su version suave: identifica,
+     no compite.                                                           */
+  --class: #2F6B46;          /* 6.0:1 sobre --bg · barra, punto             */
+  --class-soft: #E4EFE8;     /* fondo del bloque de clase                   */
+
+  /* --- REMINDER · ambar -------------------------------------------------
+     El unico color que NUNCA puede ser texto. Banderin, punto del mes,
+     barra y fondo de pildora; el titulo encima se queda en --text.        */
+  --rem: #B26B00;            /* 4.0:1 sobre --bg · indicador (>=3 exigido)  */
+  --rem-soft: #FBEBCD;       /* fondo de pildora · --text encima 14.9:1     */
+
+  /* Alias de compatibilidad: el acento ES el azul de tareas.              */
+  --accent: var(--task);
+  --accent-press: var(--task-press);
+  --accent-soft: var(--task-soft);
+  --surface-class: var(--class-soft);
+
+  --focus-ring: #1E3A6F;
   --scrim: rgb(27 25 23 / 0.32);
-
-  /* Contextos (ramos, proyectos, cursos). Desaturados, superficie pequena.
-     Ninguno cae en el rango de tono del acento, para no confundirse con el.
-     >= 3:1 sobre --bg como indicador no textual.                          */
-  --ctx-1: #B4705A;  /* arcilla  */
-  --ctx-2: #A8843C;  /* ocre     */
-  --ctx-3: #6E7F42;  /* oliva    */
-  --ctx-4: #5B6BA8;  /* indigo   */
-  --ctx-5: #8C5F88;  /* ciruela  */
-  --ctx-6: #6F7480;  /* pizarra  */
 
   /* Pantalla de bloqueo de iOS (la notificacion). No es cromo de la app.  */
   --lock-bg: #17130F;
@@ -127,42 +161,43 @@
   --lock-text-muted: rgb(255 255 255 / 0.62);
 }
 
-/* ------------------------------------------------------------------ dark --
+/* ================================================== color · OSCURO =======
    Autorizado, no derivado. El uso nocturno (notificacion de cierre del dia)
    es real, asi que el negro es calido y las superficies suben por luz, no
-   por sombra.                                                              */
+   por sombra. Los tres colores de entidad se aclaran: en oscuro un azul
+   marino literal seria invisible.                                         */
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #121110;
     --surface: #1B1917;
     --surface-sunken: #0C0B0A;
-    --surface-class: #211E1B;
 
     --line: #2C2825;
     --line-strong: #3D3833;
+    --line-control: #736C63;   /* 3.6:1 sobre --bg */
 
-    --text: #F3F0EA;         /* 16.6:1 sobre --bg */
-    --text-muted: #A79F93;   /*  7.2:1 sobre --bg */
-    --text-faint: #8C8478;   /*  5.1:1 sobre --bg */
-    --text-on-accent: #0C1211;
+    --text: #F3F0EA;           /* 16.6:1 sobre --bg */
+    --text-muted: #A79F93;     /*  7.2:1 sobre --bg */
+    --text-faint: #8C8478;     /*  5.1:1 sobre --bg */
+    --text-on-accent: #0B1220; /*  9.0:1 sobre --task */
 
-    --accent: #55C4B6;       /*  8.9:1 sobre --bg */
-    --accent-press: #6FD3C5;
-    --accent-soft: #16302D;
+    --task: #93B4F2;           /*  9.0:1 sobre --bg */
+    --task-press: #AAC6F7;
+    --task-soft: #18243D;      /* --text encima: 13.6:1 */
 
-    --focus-ring: #55C4B6;
+    --class: #79C296;          /*  9.0:1 sobre --bg */
+    --class-soft: #15271C;     /* --text encima: 13.8:1 */
+
+    --rem: #E3B268;            /*  9.7:1 sobre --bg */
+    --rem-soft: #2E2412;       /* --text encima: 13.4:1 */
+
+    --focus-ring: #93B4F2;
     --scrim: rgb(0 0 0 / 0.56);
-
-    --ctx-1: #D99C82;
-    --ctx-2: #D4AC5E;
-    --ctx-3: #9BB06A;
-    --ctx-4: #8D9BD8;
-    --ctx-5: #C08CBB;
-    --ctx-6: #9BA0AD;
 
     --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(0 0 0 / 0.6);
     --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
+    --shadow-fab:   0 4px 10px -4px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
   }
 }
 
@@ -170,30 +205,30 @@
   --bg: #121110;
   --surface: #1B1917;
   --surface-sunken: #0C0B0A;
-  --surface-class: #211E1B;
 
   --line: #2C2825;
   --line-strong: #3D3833;
+  --line-control: #736C63;
 
   --text: #F3F0EA;
   --text-muted: #A79F93;
   --text-faint: #8C8478;
-  --text-on-accent: #0C1211;
+  --text-on-accent: #0B1220;
 
-  --accent: #55C4B6;
-  --accent-press: #6FD3C5;
-  --accent-soft: #16302D;
+  --task: #93B4F2;
+  --task-press: #AAC6F7;
+  --task-soft: #18243D;
 
-  --focus-ring: #55C4B6;
+  --class: #79C296;
+  --class-soft: #15271C;
+
+  --rem: #E3B268;
+  --rem-soft: #2E2412;
+
+  --focus-ring: #93B4F2;
   --scrim: rgb(0 0 0 / 0.56);
-
-  --ctx-1: #D99C82;
-  --ctx-2: #D4AC5E;
-  --ctx-3: #9BB06A;
-  --ctx-4: #8D9BD8;
-  --ctx-5: #C08CBB;
-  --ctx-6: #9BA0AD;
 
   --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(0 0 0 / 0.6);
   --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
+  --shadow-fab:   0 4px 10px -4px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
 }
