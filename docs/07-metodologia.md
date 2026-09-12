@@ -181,3 +181,67 @@ Poco, y nada de ello es abrir terminales:
    genera F1.
 4. **Instalar la PWA** en la pantalla de inicio y aceptar notificaciones.
 5. **Validar el resultado** cuando el coordinador le muestre algo.
+
+---
+
+## Trampas verificadas al lanzar workers
+
+Descubiertas al lanzar FD el 2026-09-12. **Ocurren con cada worker nuevo.**
+
+### 1. El diálogo de bypass se come el primer encargo
+
+Orca lanza `claude --dangerously-skip-permissions`. La primera vez que Claude
+Code corre así en un proyecto, muestra un diálogo de confirmación:
+
+```
+WARNING: Claude Code running in Bypass Permissions mode
+❯ No, exit
+  Yes, I accept
+```
+
+**El prompt del dispatch se escribe en ese diálogo y se pierde.** El worker
+queda vivo, en el prompt, sin trabajo. `worker-start` devuelve
+`turn_start_unobserved` y `worker-list` reporta `unverifiable / missing_status`.
+
+La guía de recuperación lo reconoce: *"a `live` terminal whose agent died at a
+trust prompt still reads `live`"*.
+
+**Diagnóstico:** leer la terminal con `terminal read --screen`. El diálogo se ve.
+
+**Solución:**
+
+```bash
+orca terminal send --terminal <handle> --text $'\x1b[B' --json   # bajar a "Yes, I accept"
+orca terminal send --terminal <handle> --text "" --enter --json  # confirmar
+```
+
+Después, el Task original queda `blocked` y **no es recuperable**: `dispatch
+--inject` devuelve `task_not_startable` y `--retry-of` devuelve
+`task_not_startable ... cannot retry`. La secuencia que sí funciona:
+
+```bash
+orca orchestration worker-abandon --dispatch <dispatch_viejo> --json
+orca orchestration worker-start --task-title "..." --spec "..." \
+  --terminal <handle> --worktree current --json
+```
+
+`worker-abandon` marca el intento como no autoritativo **sin tocar el proceso**,
+así que la terminal ya inicializada se reutiliza. No uses `worker-stop`: mataría
+un agente que está sano.
+
+### 2. Los hooks de estado de Antigravity no están instalados
+
+```
+orca agent hooks status
+  claude: installed        codex: installed
+  antigravity: not_installed
+```
+
+Sin ese hook, un worker de Antigravity siempre leerá `missing_status` y no habrá
+forma de saber si avanza. **Hay que resolverlo antes de F1**, que es la primera
+fase asignada a Antigravity.
+
+### 3. Pasar el spec por archivo, no inline
+
+Un `--spec` largo inline es frágil en la shell. Escribirlo a un archivo y
+pasarlo con `--spec "$(cat archivo)"` evita problemas de comillas y acentos.
