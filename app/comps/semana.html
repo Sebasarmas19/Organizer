@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Semana · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  SEMANA · movil
+  ---------------------------------------------------------------------------
+  En 390px una rejilla de 7 columnas por horas es ilegible, asi que el movil
+  muestra UN dia por vez con la tira de la semana arriba. Los puntos bajo cada
+  dia mantienen la conciencia de la semana completa sin pedir zoom. La rejilla
+  de 7 columnas existe, pero en escritorio (ver semana-escritorio.html).
+
+  Las clases son fondo (decision: no compiten con las tareas): superficie
+  plana, texto subordinado, sin borde de color. Las tareas llevan superficie
+  propia, linea de 1px y un borde izquierdo de 2px con el color del contexto.
+
+  El arrastre esta dibujado en vivo: el bloque levantado sigue al dedo y el
+  destino se marca con un contorno punteado. Es la mitigacion comprometida
+  del riesgo del calendario rigido: sin esto la app se abandona.
+-->
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="15:42"></div>
+
+  <main class="screen screen--fixed flex flex-col">
+
+    <header class="pagehead">
+      <div>
+        <h1 class="t-title">Semana</h1>
+        <p class="t-meta c-muted num">14 – 20 sep · semana 1</p>
+      </div>
+      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+        <button class="tapicon" aria-label="Semana anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+        <button class="tapicon" aria-label="Semana siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+      </div>
+    </header>
+
+    <!-- TIRA DE DIAS · los puntos son carga, no deuda: cuantos bloques hay -->
+    <div class="daystrip" role="tablist" aria-label="Días de la semana">
+      <button class="day" role="tab" aria-selected="false"><span class="day__dow">L</span><span class="day__num">14</span><span class="day__load"><i></i><i></i><i></i></span></button>
+      <button class="day" role="tab" aria-selected="false"><span class="day__dow">M</span><span class="day__num">15</span><span class="day__load"><i></i><i></i></span></button>
+      <button class="day" role="tab" aria-selected="false"><span class="day__dow">X</span><span class="day__num">16</span><span class="day__load"><i></i><i></i><i></i></span></button>
+      <button class="day day--today" role="tab" aria-selected="true"><span class="day__dow">J</span><span class="day__num">17</span><span class="day__load"><i></i><i></i><i></i><i></i></span></button>
+      <button class="day" role="tab" aria-selected="false"><span class="day__dow">V</span><span class="day__num">18</span><span class="day__load"><i></i><i></i></span></button>
+      <button class="day" role="tab" aria-selected="false"><span class="day__dow">S</span><span class="day__num">19</span><span class="day__load"></span></button>
+      <button class="day" role="tab" aria-selected="false"><span class="day__dow">D</span><span class="day__num">20</span><span class="day__load"><i></i></span></button>
+    </div>
+
+    <!-- BARRA DEL DIA · "Se me corrio el dia" es un control visible, no un
+         elemento de menu. Empuja de una vez todos los bloques pendientes. -->
+    <div class="flex items-center justify-between gutter pb-2" style="box-shadow: inset 0 -1px 0 var(--line); padding-bottom: var(--space-2)">
+      <h2 class="t-label c-muted font-semibold">Jueves 17 de septiembre</h2>
+      <button class="c-accent flex items-center gap-1 t-label font-medium" style="min-height:32px">
+        <span class="ico ico--sm" data-icon="arrow-down"></span>
+        Se me corrió el día
+      </button>
+    </div>
+
+    <!-- REJILLA DE HORAS ---------------------------------------------------- -->
+    <div class="flex-1 min-h-0 overflow-y-auto" id="scroller">
+      <div class="cal pb-6" style="--hour:56px">
+        <div class="cal__hours" id="hours"></div>
+        <div class="cal__grid" id="grid" style="height:840px">
+          <!-- lineas de hora: inyectadas abajo -->
+
+          <!-- CLASES · plantilla fija. Fondo, no protagonista. -->
+          <div class="block block--class" style="top:56px;height:112px">
+            <p class="block__title">Cálculo III</p>
+            <p class="block__time">8:00 – 10:00 · Aula 204</p>
+          </div>
+
+          <div class="block block--class" style="top:224px;height:112px">
+            <p class="block__title">Álgebra Lineal</p>
+            <p class="block__time">11:00 – 13:00 · Aula 112</p>
+          </div>
+
+          <div class="block block--class" style="top:644px;height:56px">
+            <p class="block__title">Gym</p>
+            <p class="block__time">18:30 – 19:30</p>
+          </div>
+
+          <!-- TAREA EN CURSO · unico uso del acento en esta pantalla -->
+          <div class="block block--task block--now" style="top:448px;height:112px;--ctx:var(--ctx-3)">
+            <p class="block__time">15:00 – 17:00</p>
+            <p class="block__title">Migrar el schema a Supabase</p>
+          </div>
+
+          <!-- ARRASTRE EN CURSO ---------------------------------------------
+               destino punteado + bloque levantado. Sin formulario, sin dialogo. -->
+          <div class="block block--ghost" style="top:728px;height:56px">
+            <span class="num" style="padding-inline:var(--space-1)">20:00 – 21:00</span>
+          </div>
+
+          <div class="block block--task block--dragging" style="top:702px;height:56px;--ctx:var(--ctx-1)">
+            <p class="block__time num">19:00 – 20:00</p>
+            <p class="block__title">Resumen de Cálculo</p>
+            <span class="block__grip"></span>
+          </div>
+
+          <!-- AHORA -->
+          <div class="cal__now" style="top:487px"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav data-tabbar="semana"></nav>
+  <div data-homebar></div>
+</div>
+
+<script>
+  // Andamio de la rejilla. En la app real esto sale del rango de horas del
+  // usuario; aqui se genera para no repetir 16 divs identicos en el marcado.
+  (function () {
+    var FROM = 7, TO = 22, H = 56;
+    var hours = document.getElementById('hours');
+    var grid = document.getElementById('grid');
+    for (var h = FROM; h <= TO; h++) {
+      if (h < TO) {
+        var label = document.createElement('div');
+        label.className = 'cal__hour num';
+        label.textContent = h + ':00';
+        hours.appendChild(label);
+      }
+      var line = document.createElement('div');
+      line.className = 'cal__line';
+      line.style.top = ((h - FROM) * H) + 'px';
+      grid.insertBefore(line, grid.firstChild);
+    }
+    // Abre centrado en "ahora", no a las 7 de la mañana.
+    var sc = document.getElementById('scroller');
+    sc.scrollTop = Math.max(0, (15.7 - FROM) * H - 180);
+  })();
+</script>
+</body>
+</html>

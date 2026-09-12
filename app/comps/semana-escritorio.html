@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semana · escritorio · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+</head>
+
+<!--
+  SEMANA · escritorio (1280px)
+  ---------------------------------------------------------------------------
+  El escritorio es secundario y sirve para una cosa: planificar (decision 17).
+  Por eso gana dos elementos que el movil no tiene y no necesita:
+
+    1. La rejilla real de 7 columnas. A este ancho si se lee.
+    2. El carril "Sin planificar" a la derecha. Es el puente entre lo que se
+       capturo por Siri y el calendario: se arrastra de la lista a una hora.
+       En el telefono eso mismo se hace tocando la tarea y eligiendo hora.
+
+  Navegacion adaptativa: en >=1024px las 4 pestanas pasan a barra lateral.
+  Son los mismos 4 modulos, en el mismo orden, con icono y etiqueta.
+-->
+
+<style>
+  .desk { width: 1280px; height: 860px; display: grid; grid-template-columns: 220px 1fr 264px; background: var(--bg); }
+
+  .side { border-right: 1px solid var(--line); padding: var(--space-6) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
+  .side__brand { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3) var(--space-6); }
+  .side__mark { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; }
+  .side__mark span { width: 9px; height: 9px; border: 1.6px solid var(--text-on-accent); border-radius: 999px; }
+  .navitem {
+    display: flex; align-items: center; gap: var(--space-3);
+    min-height: var(--tap-min); padding: 0 var(--space-3);
+    border-radius: var(--radius); color: var(--text-muted);
+    font-size: var(--text-body); font-weight: var(--weight-medium); text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .navitem:hover { background: var(--surface-sunken); color: var(--text); }
+  .navitem[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .mainhead { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5) var(--gutter-wide) var(--space-4); }
+
+  .week { display: grid; grid-template-columns: 56px repeat(7, 1fr); }
+  .week__head { display: grid; grid-template-columns: 56px repeat(7, 1fr); padding-right: 6px; box-shadow: inset 0 -1px 0 var(--line); }
+  .colhead { text-align: center; padding: var(--space-2) 0 var(--space-3); }
+  .colhead__dow { font-size: var(--text-label); color: var(--text-muted); display: block; }
+  .colhead__num { font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+  .colhead--today .colhead__dow { color: var(--accent); font-weight: var(--weight-semibold); }
+  .colhead--today .colhead__num { color: var(--accent); }
+
+  .weekbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .col { position: relative; border-left: 1px solid var(--line); }
+  .col--weekend { background: var(--surface-sunken); }
+  .col .block { left: 3px; right: 3px; padding: var(--space-1) var(--space-2); }
+  .col .block__title { font-size: var(--text-label); line-height: var(--lh-label); }
+  .col .block__time { font-size: 11px; line-height: 14px; }
+
+  /* Bloque que paso y no se cerro. Contorno punteado neutro, nunca rojo:
+     la app pregunta, no reprocha. */
+  .block--open { background: transparent; border: 1px dashed var(--line-strong); border-left-width: 2px; }
+  .block--open .block__title { color: var(--text-muted); }
+
+  .rail { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .railitem {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    cursor: grab;
+    box-shadow: inset 0 -1px 0 var(--line);
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .railitem:hover { background: var(--surface-sunken); }
+  .railitem__grip { color: var(--text-faint); opacity: 0; transition: opacity var(--dur-fast) var(--ease-out); }
+  .railitem:hover .railitem__grip { opacity: 1; }
+</style>
+
+<body class="comp">
+<div class="desk">
+
+  <!-- BARRA LATERAL ---------------------------------------------------------- -->
+  <nav class="side" aria-label="Secciones">
+    <div class="side__brand">
+      <span class="side__mark"><span></span></span>
+      <span class="t-body font-semibold">Organizer</span>
+    </div>
+    <a class="navitem" href="inicio.html"><span class="ico ico--lg" data-icon="house"></span>Inicio</a>
+    <a class="navitem" href="semana-escritorio.html" aria-current="page"><span class="ico ico--lg" data-icon="calendar"></span>Semana</a>
+    <a class="navitem" href="tareas.html"><span class="ico ico--lg" data-icon="check-circle"></span>Tareas</a>
+    <a class="navitem" href="recursos.html"><span class="ico ico--lg" data-icon="bookmark"></span>Recursos</a>
+
+    <div class="mt-auto px-3">
+      <p class="t-label c-accent num">12 días seguidos</p>
+      <p class="t-label c-faint mt-1">2 comodines este mes</p>
+    </div>
+  </nav>
+
+  <!-- CALENDARIO -------------------------------------------------------------- -->
+  <div class="main">
+    <header class="mainhead">
+      <div class="flex items-center" style="margin-left:calc(var(--space-3) * -1)">
+        <button class="tapicon" aria-label="Semana anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+        <button class="tapicon" aria-label="Semana siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+      </div>
+      <div>
+        <h1 class="t-section num">14 – 20 de septiembre</h1>
+        <p class="t-label c-muted">Semana 1 del semestre</p>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        <button class="btn btn--quiet">Hoy</button>
+        <button class="btn">
+          <span class="ico ico--sm" data-icon="arrow-down"></span>
+          Se me corrió el día
+        </button>
+      </div>
+    </header>
+
+    <div class="week__head" id="weekhead"><div></div></div>
+
+    <div class="weekbody" id="weekbody">
+      <div class="week" style="--hour:44px">
+        <div class="cal__hours" id="hours"></div>
+        <!-- 7 columnas: inyectadas abajo -->
+      </div>
+    </div>
+  </div>
+
+  <!-- CARRIL SIN PLANIFICAR ---------------------------------------------------- -->
+  <aside class="rail" aria-labelledby="h-rail">
+    <div class="px-4 pt-6 pb-3">
+      <h2 id="h-rail" class="t-body font-semibold">Sin planificar</h2>
+      <p class="t-meta c-muted mt-1">Lo que capturaste y todavía no tiene hora. Arrástralo a un hueco.</p>
+    </div>
+
+    <div class="overflow-y-auto" style="box-shadow: inset 0 1px 0 var(--line)">
+      <div class="railitem">
+        <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
+        <span class="t-meta flex-1">Comprar cuadernos</span>
+        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+      </div>
+      <div class="railitem">
+        <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>
+        <span class="t-meta flex-1">Configurar el Atajo de Siri</span>
+        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+      </div>
+      <div class="railitem">
+        <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>
+        <span class="t-meta flex-1">Probar Hermes</span>
+        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+      </div>
+      <div class="railitem">
+        <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
+        <span class="t-meta flex-1">Pedir constancia de estudios</span>
+        <span class="ico ico--sm railitem__grip" data-icon="more-h"></span>
+      </div>
+    </div>
+
+    <p class="t-label c-faint px-4 py-3 mt-auto" style="box-shadow: inset 0 1px 0 var(--line)">
+      Arrastrar es opcional. También puedes tocar y elegir hora.
+    </p>
+  </aside>
+
+</div>
+
+<script>
+  (function () {
+    var FROM = 7, TO = 22, H = 44;
+    var DAYS = [
+      { dow: 'lun', num: 14 }, { dow: 'mar', num: 15 }, { dow: 'mié', num: 16 },
+      { dow: 'jue', num: 17, today: true }, { dow: 'vie', num: 18 },
+      { dow: 'sáb', num: 19, weekend: true }, { dow: 'dom', num: 20, weekend: true }
+    ];
+
+    // k: class = plantilla fija · task = tarea · now = en curso · open = paso sin cerrar
+    var EVENTS = [
+      { d: 0, s: 8,    e: 10,   t: 'Cálculo III',        k: 'class' },
+      { d: 0, s: 14,   e: 16,   t: 'Programación',       k: 'class' },
+      { d: 1, s: 11,   e: 13,   t: 'Álgebra Lineal',     k: 'class' },
+      { d: 1, s: 16,   e: 18,   t: 'Ejercicios de Álgebra', k: 'task', c: 1 },
+      { d: 1, s: 18.5, e: 19.5, t: 'Gym',                k: 'class' },
+      { d: 2, s: 8,    e: 10,   t: 'Cálculo III',        k: 'class' },
+      { d: 2, s: 14,   e: 16,   t: 'Programación',       k: 'class' },
+      { d: 2, s: 19,   e: 20.5, t: 'Terminar el modelo de datos', k: 'open', c: 3 },
+      { d: 3, s: 11,   e: 13,   t: 'Álgebra Lineal',     k: 'class' },
+      { d: 3, s: 15,   e: 17,   t: 'Migrar el schema a Supabase', k: 'now', c: 3 },
+      { d: 3, s: 18.5, e: 19.5, t: 'Gym',                k: 'class' },
+      { d: 3, s: 20,   e: 21,   t: 'Resumen de Cálculo', k: 'task', c: 1 },
+      { d: 4, s: 8,    e: 10,   t: 'Cálculo III',        k: 'class' },
+      { d: 4, s: 10.5, e: 12,   t: 'Entrega parcial del proyecto de IA', k: 'task', c: 3 },
+      { d: 6, s: 19,   e: 19.5, t: 'Revisión de la semana', k: 'task', c: 6 }
+    ];
+
+    function hhmm(x) {
+      var h = Math.floor(x), m = Math.round((x - h) * 60);
+      return h + ':' + (m < 10 ? '0' + m : m);
+    }
+
+    // Encabezados de columna
+    var head = document.getElementById('weekhead');
+    DAYS.forEach(function (d) {
+      var el = document.createElement('div');
+      el.className = 'colhead' + (d.today ? ' colhead--today' : '');
+      el.innerHTML = '<span class="colhead__dow">' + d.dow + '</span>' +
+                     '<span class="colhead__num">' + d.num + '</span>';
+      head.appendChild(el);
+    });
+
+    // Gutter de horas
+    var hours = document.getElementById('hours');
+    for (var h = FROM; h < TO; h++) {
+      var l = document.createElement('div');
+      l.className = 'cal__hour num';
+      l.textContent = h + ':00';
+      hours.appendChild(l);
+    }
+
+    // Columnas + lineas + bloques
+    var week = document.querySelector('.week');
+    DAYS.forEach(function (d, i) {
+      var col = document.createElement('div');
+      col.className = 'col' + (d.weekend ? ' col--weekend' : '');
+      col.style.height = ((TO - FROM) * H) + 'px';
+
+      for (var h = FROM; h <= TO; h++) {
+        var line = document.createElement('div');
+        line.className = 'cal__line';
+        line.style.top = ((h - FROM) * H) + 'px';
+        col.appendChild(line);
+      }
+
+      EVENTS.filter(function (e) { return e.d === i; }).forEach(function (e) {
+        var b = document.createElement('div');
+        b.className = 'block ' + (e.k === 'class' ? 'block--class'
+          : e.k === 'open' ? 'block--task block--open'
+          : e.k === 'now' ? 'block--task block--now' : 'block--task');
+        b.style.top = ((e.s - FROM) * H) + 'px';
+        b.style.height = ((e.e - e.s) * H) + 'px';
+        if (e.c) b.style.setProperty('--ctx', 'var(--ctx-' + e.c + ')');
+        b.innerHTML = '<p class="block__time num">' + hhmm(e.s) + '</p>' +
+                      '<p class="block__title">' + e.t + '</p>';
+        col.appendChild(b);
+      });
+
+      if (d.today) {
+        var now = document.createElement('div');
+        now.className = 'cal__now';
+        now.style.top = ((15.7 - FROM) * H) + 'px';
+        col.appendChild(now);
+      }
+      week.appendChild(col);
+    });
+
+    document.getElementById('weekbody').scrollTop = (8 - FROM) * H;
+    if (window.renderIcons) window.renderIcons();
+  })();
+</script>
+</body>
+</html>

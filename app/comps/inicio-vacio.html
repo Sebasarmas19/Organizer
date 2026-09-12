@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inicio vacío · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  INICIO · estado vacio
+  ---------------------------------------------------------------------------
+  Un estado vacio es un logro, no un hueco. Aqui no hay ilustracion, no hay
+  mascota y no hay "aun no tienes tareas". Hay una frase que confirma que el
+  dia esta cerrado, la racha intacta, y la informacion que sigue siendo util:
+  lo que viene esta semana.
+
+  La salida no empuja a hacer mas. Ofrece mirar la semana, que es planificar,
+  no ejecutar. Abrir la app en este estado tiene que bajar la ansiedad.
+-->
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="21:08"></div>
+
+  <main class="screen screen--fixed flex flex-col">
+
+    <header class="pagehead">
+      <div>
+        <h1 class="t-title">Jueves 17</h1>
+        <p class="t-meta c-muted">septiembre · semana 1</p>
+      </div>
+      <p class="t-label c-accent num">13 días seguidos</p>
+    </header>
+
+    <!-- EL VACIO ------------------------------------------------------------
+         Ocupa el centro optico de la pantalla, no una esquina. Dos lineas:
+         el hecho y su consecuencia. Ninguna felicitacion, ningun confeti. -->
+    <section class="flex-1 flex flex-col items-center justify-center gutter text-center" style="gap:var(--space-2)">
+      <p class="t-section">Nada pendiente hoy.</p>
+      <p class="t-meta c-muted" style="max-width:30ch">
+        Cerraste las cuatro. Las clases de mañana ya están puestas en Semana.
+      </p>
+      <a href="semana.html" class="btn btn--quiet no-underline mt-3" style="color:var(--text)">
+        <span class="ico ico--sm" data-icon="calendar"></span>
+        Ver la semana
+      </a>
+    </section>
+
+    <!-- ESTA SEMANA ---------------------------------------------------------
+         Se queda. Es lo que impide que la pantalla vacia sea una pantalla
+         rota: sigue devolviendo informacion sin pedir nada. -->
+    <section class="pb-2" aria-labelledby="h-semana">
+      <div class="sectionhead">
+        <h2 id="h-semana">Esta semana</h2>
+      </div>
+      <ul class="list-none m-0 px-gutter grid gap-1.5">
+        <li class="flex items-baseline gap-2.5 t-meta c-faint">
+          <span class="num" style="min-width:44px">vie 18</span>
+          <span class="ctxdot self-center" style="--ctx:var(--ctx-3)"></span>
+          <span class="text-ink">Entrega parcial del proyecto de IA</span>
+        </li>
+        <li class="flex items-baseline gap-2.5 t-meta c-faint">
+          <span class="num" style="min-width:44px">lun 21</span>
+          <span class="ctxdot self-center" style="--ctx:var(--ctx-1)"></span>
+          <span>Quiz de Cálculo</span>
+        </li>
+      </ul>
+    </section>
+
+  </main>
+
+  <nav data-tabbar="inicio"></nav>
+  <div data-homebar></div>
+</div>
+</body>
+</html>

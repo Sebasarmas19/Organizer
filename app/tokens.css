@@ -1,0 +1,199 @@
+/* ============================================================================
+   Organizer · Design tokens
+   Single source of truth for color, type, space, radius and motion.
+   Light and dark are both authored. Nothing here is derived at runtime.
+
+   Contrast: every text token below was measured against every surface it is
+   allowed to sit on. All pairs are >= 4.5:1 (WCAG AA). Context colors are
+   non-text indicators and are >= 3:1.
+
+   Theme resolution (three states):
+     :root                                  -> light (default, always defined)
+     @media (prefers-color-scheme: dark)    -> dark, unless data-theme="light"
+     :root[data-theme="dark"]               -> dark, explicit override
+   ========================================================================= */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---------------------------------------------------------------- type --
+     One family. Five sizes in the whole app. Hierarchy comes from weight
+     and color, never from inventing a sixth size.                         */
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --text-title: 1.75rem;     /* 28px · nombre de pantalla                   */
+  --text-section: 1.25rem;   /* 20px · encabezado de sección / dia          */
+  --text-body: 1.0625rem;    /* 17px · contenido. Titulo de tarea.          */
+  --text-meta: 0.9375rem;    /* 15px · hora, contexto, subordinados         */
+  --text-label: 0.8125rem;   /* 13px · etiquetas, nav, encabezados de lista */
+
+  --lh-title: 2.125rem;      /* 34px */
+  --lh-section: 1.625rem;    /* 26px */
+  --lh-body: 1.375rem;       /* 22px */
+  --lh-meta: 1.25rem;        /* 20px */
+  --lh-label: 1.125rem;      /* 18px */
+
+  --tracking-title: -0.021em;
+  --tracking-body: -0.011em;
+  --tracking-label: 0.005em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --------------------------------------------------------------- space --
+     Escala de 4px. No hay valores fuera de esta lista.                    */
+
+  --space-0: 0px;
+  --space-05: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;   /* aire lateral minimo en cualquier ancho */
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --gutter: 20px;          /* aire lateral en movil (>= 16px exigido)       */
+  --gutter-wide: 32px;     /* aire lateral en escritorio                    */
+  --tap-min: 44px;         /* objetivo tactil minimo                        */
+
+  /* -------------------------------------------------------------- radius --
+     Dos valores. El circulo del checkbox es una forma, no un tercer radio. */
+
+  --radius: 12px;          /* filas, botones, campos, bloques de calendario */
+  --radius-lg: 20px;       /* hoja de accion, notificacion, selector        */
+
+  /* -------------------------------------------------------------- motion --
+     150-200ms. Solo para orientar en un cambio de contexto.               */
+
+  --dur-instant: 90ms;
+  --dur-fast: 150ms;
+  --dur: 190ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+
+  /* ---------------------------------------------------- elevation (rara) --
+     Solo para lo que de verdad flota. La separacion normal es espacio +
+     linea de 1px.                                                         */
+
+  --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(28 25 23 / 0.22);
+  --shadow-float: 0 2px 4px -2px rgb(28 25 23 / 0.10), 0 8px 20px -8px rgb(28 25 23 / 0.16);
+
+  /* --------------------------------------------------------------- color --
+     LIGHT. Neutros calidos (no azulados). Un solo acento: petroleo.       */
+
+  --bg: #FAF8F5;             /* fondo de la app                             */
+  --surface: #FFFFFF;        /* fila, tarjeta, hoja                         */
+  --surface-sunken: #F1EDE7; /* campo, bandeja, agrupador                   */
+  --surface-class: #EFEBE4;  /* clases en Semana: fondo, no protagonista    */
+
+  --line: #E4DFD6;           /* hairline 1px, separacion normal             */
+  --line-strong: #D3CCC0;    /* borde de control, borde de bloque           */
+
+  --text: #1B1917;           /* 16.5:1 sobre --bg                           */
+  --text-muted: #625B51;     /*  6.3:1 sobre --bg · metadatos               */
+  --text-faint: #6E675E;     /*  5.3:1 sobre --bg · lo minimo legible       */
+  --text-on-accent: #FFFFFF; /*  6.0:1 sobre --accent                       */
+
+  --accent: #0E6F66;         /* petroleo. Accion primaria, en curso, racha  */
+  --accent-press: #0A5A53;
+  --accent-soft: #E4F0EE;    /* fondo del bloque en curso                   */
+
+  --focus-ring: #0E6F66;
+  --scrim: rgb(27 25 23 / 0.32);
+
+  /* Contextos (ramos, proyectos, cursos). Desaturados, superficie pequena.
+     Ninguno cae en el rango de tono del acento, para no confundirse con el.
+     >= 3:1 sobre --bg como indicador no textual.                          */
+  --ctx-1: #B4705A;  /* arcilla  */
+  --ctx-2: #A8843C;  /* ocre     */
+  --ctx-3: #6E7F42;  /* oliva    */
+  --ctx-4: #5B6BA8;  /* indigo   */
+  --ctx-5: #8C5F88;  /* ciruela  */
+  --ctx-6: #6F7480;  /* pizarra  */
+
+  /* Pantalla de bloqueo de iOS (la notificacion). No es cromo de la app.  */
+  --lock-bg: #17130F;
+  --lock-material: rgb(255 255 255 / 0.13);
+  --lock-material-line: rgb(255 255 255 / 0.10);
+  --lock-text: #FFFFFF;
+  --lock-text-muted: rgb(255 255 255 / 0.62);
+}
+
+/* ------------------------------------------------------------------ dark --
+   Autorizado, no derivado. El uso nocturno (notificacion de cierre del dia)
+   es real, asi que el negro es calido y las superficies suben por luz, no
+   por sombra.                                                              */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121110;
+    --surface: #1B1917;
+    --surface-sunken: #0C0B0A;
+    --surface-class: #211E1B;
+
+    --line: #2C2825;
+    --line-strong: #3D3833;
+
+    --text: #F3F0EA;         /* 16.6:1 sobre --bg */
+    --text-muted: #A79F93;   /*  7.2:1 sobre --bg */
+    --text-faint: #8C8478;   /*  5.1:1 sobre --bg */
+    --text-on-accent: #0C1211;
+
+    --accent: #55C4B6;       /*  8.9:1 sobre --bg */
+    --accent-press: #6FD3C5;
+    --accent-soft: #16302D;
+
+    --focus-ring: #55C4B6;
+    --scrim: rgb(0 0 0 / 0.56);
+
+    --ctx-1: #D99C82;
+    --ctx-2: #D4AC5E;
+    --ctx-3: #9BB06A;
+    --ctx-4: #8D9BD8;
+    --ctx-5: #C08CBB;
+    --ctx-6: #9BA0AD;
+
+    --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(0 0 0 / 0.6);
+    --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #121110;
+  --surface: #1B1917;
+  --surface-sunken: #0C0B0A;
+  --surface-class: #211E1B;
+
+  --line: #2C2825;
+  --line-strong: #3D3833;
+
+  --text: #F3F0EA;
+  --text-muted: #A79F93;
+  --text-faint: #8C8478;
+  --text-on-accent: #0C1211;
+
+  --accent: #55C4B6;
+  --accent-press: #6FD3C5;
+  --accent-soft: #16302D;
+
+  --focus-ring: #55C4B6;
+  --scrim: rgb(0 0 0 / 0.56);
+
+  --ctx-1: #D99C82;
+  --ctx-2: #D4AC5E;
+  --ctx-3: #9BB06A;
+  --ctx-4: #8D9BD8;
+  --ctx-5: #C08CBB;
+  --ctx-6: #9BA0AD;
+
+  --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(0 0 0 / 0.6);
+  --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
+}
