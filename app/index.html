@@ -67,13 +67,13 @@
 <body>
 
 <header class="wrap lede">
-  <p class="t-label c-muted">Organizer · fase FD2</p>
+  <p class="t-label c-muted">Organizer · fase FD3</p>
   <h1 class="t-title mt-1">Comps de diseño</h1>
   <p class="t-body c-muted mt-3">
-    Doce pantallas a 390px, más la variante de escritorio de Semana. Ábrelas
-    desde el iPhone: a este ancho se ven a tamaño real. La pregunta no es si
-    te gustan — es si <em>Inicio</em> te baja la ansiedad al abrirlo, y si la
-    notificación se lee entera sin desbloquear.
+    Trece pantallas a 390px, más las dos de escritorio. Ábrelas desde el
+    iPhone: a este ancho se ven a tamaño real. Lo nuevo de esta ronda es el
+    color —tarea azul, materia verde, reminder ámbar— y el calendario como
+    tres niveles de zoom con la misma cabecera.
   </p>
 
   <div class="mt-5 flex items-center gap-3">
@@ -100,28 +100,37 @@
     <div class="sw"><div class="sw__chip" style="background:var(--bg)"></div><p class="sw__name">Fondo<br><span class="sw__hex">--bg</span></p></div>
     <div class="sw"><div class="sw__chip" style="background:var(--surface)"></div><p class="sw__name">Superficie<br><span class="sw__hex">--surface</span></p></div>
     <div class="sw"><div class="sw__chip" style="background:var(--surface-sunken)"></div><p class="sw__name">Hundida<br><span class="sw__hex">--surface-sunken</span></p></div>
-    <div class="sw"><div class="sw__chip" style="background:var(--surface-class)"></div><p class="sw__name">Clases<br><span class="sw__hex">--surface-class</span></p></div>
-    <div class="sw"><div class="sw__chip" style="background:var(--accent)"></div><p class="sw__name">Acento · petróleo<br><span class="sw__hex">--accent</span></p></div>
-    <div class="sw"><div class="sw__chip" style="background:var(--accent-soft)"></div><p class="sw__name">Acento suave<br><span class="sw__hex">--accent-soft</span></p></div>
+  </div>
+
+  <h3 class="t-label c-muted font-semibold gutter mt-8 mb-3">Las tres entidades</h3>
+  <div class="swatches">
+    <div class="sw"><div class="sw__chip" style="background:var(--task)"></div><p class="sw__name">Tarea · azul marino<br><span class="sw__hex">--task · 10.5:1</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--task-soft)"></div><p class="sw__name">Tarea suave<br><span class="sw__hex">--task-soft</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--class)"></div><p class="sw__name">Materia · verde<br><span class="sw__hex">--class · 6.0:1</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--class-soft)"></div><p class="sw__name">Materia suave<br><span class="sw__hex">--class-soft</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--rem)"></div><p class="sw__name">Reminder · ámbar<br><span class="sw__hex">--rem · 4.0:1</span></p></div>
+    <div class="sw"><div class="sw__chip" style="background:var(--rem-soft)"></div><p class="sw__name">Reminder suave<br><span class="sw__hex">--rem-soft</span></p></div>
+  </div>
+
+  <!-- La demostración de la regla: el mismo texto, en --text, encima de los
+       tres tintes. Si alguna vez alguien pinta el texto de ámbar, esta fila
+       es la que lo delata al lado. -->
+  <div class="gutter flex flex-wrap gap-2 mt-4">
+    <span style="background:var(--task-soft);color:var(--text);border-radius:var(--radius);padding:6px 12px;font-size:var(--text-meta)">Migrar el schema</span>
+    <span style="background:var(--class-soft);color:var(--text);border-radius:var(--radius);padding:6px 12px;font-size:var(--text-meta)">Cálculo III</span>
+    <span style="background:var(--rem-soft);color:var(--text);border-radius:var(--radius);padding:6px 12px;font-size:var(--text-meta)">Parcial · viernes</span>
   </div>
 
   <p class="t-meta c-muted gutter mt-4">
-    Un solo acento en toda la app: acción primaria, bloque en curso y racha.
-    Nada más. No existe un rojo: lo no cumplido es neutro, siempre.
+    <b>El color envuelve al texto, nunca lo pinta.</b> Barra, fondo, píldora,
+    punto, banderín: todo vale; texto de color, no. Un ámbar que llegara a
+    4.5:1 sobre blanco ya no sería ámbar, sería marrón. Así el texto se queda
+    en <code>--text</code> y mide 14.8:1 encima de los tres tintes.
   </p>
-
-  <h3 class="t-label c-muted font-semibold gutter mt-8 mb-3">Contextos</h3>
-  <div class="gutter flex flex-wrap gap-2">
-    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-1)"></span>Cálculo III</span>
-    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-2)"></span>Lecturas</span>
-    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>Proyecto IA</span>
-    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-4)"></span>Cursos</span>
-    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-5)"></span>Algún día</span>
-    <span class="chip"><span class="ctxdot" style="--ctx:var(--ctx-6)"></span>Personal</span>
-  </div>
   <p class="t-meta c-muted gutter mt-3">
-    Desaturados y en superficie pequeña: un punto de 7px o un borde de 2px.
-    Ninguno cae en el tono del acento, para no confundirse con “en curso”.
+    El acento del sistema <b>es el azul de tareas</b>: acción primaria, bloque
+    en curso y racha. Nada más. No existe un rojo: lo no cumplido es neutro,
+    siempre. Y los contextos ya no son de color — son texto.
   </p>
 
   <h3 class="t-label c-muted font-semibold gutter mt-8 mb-3">Tipografía · cinco tamaños</h3>
@@ -153,35 +162,39 @@
 
 <footer class="wrap gutter pb-12">
   <p class="t-label c-faint">
-    Organizer · comps de la fase FD2 · <span class="num">2026-09-12</span>.
-    Informe en <code>docs/estado-FD2.md</code>.
+    Organizer · comps de la fase FD3 · <span class="num">2026-09-12</span>.
+    Informe en <code>docs/estado-FD3.md</code>.
   </p>
 </footer>
 
 <script>
   var COMPS = [
     { f: 'inicio.html', t: 'Inicio · con contenido',
-      d: 'Orden nuevo (decisión 55): Hoy, De ayer, Esta semana, racha. Cabe sin scroll con los cuatro controles ya a 44px.' },
+      d: 'Orden nuevo (decisión 71): Hoy, Esta semana, De ayer. La racha subió al encabezado y “se me corrió el día” desapareció. Sigue cabiendo sin scroll.' },
     { f: 'inicio-vacio.html', t: 'Inicio · vacío',
       d: 'Nada pendiente hoy. Un logro, no un hueco. Abajo, el reminder sin ninguna tarea planificada todavía.' },
+    { f: 'dia.html', t: 'Calendario · Día',
+      d: '¿Qué hago ahora? Tira de siete días arriba, horas a la izquierda, banda ámbar de reminders. Arriba a la izquierda, el botón para subir a Semana.' },
+    { f: 'semana.html', t: 'Calendario · Semana',
+      d: '¿Cómo reparto el trabajo? Carril de días a la izquierda y el plan entero: tareas, reminders y materias juntos (decisión 69).' },
+    { f: 'mes.html', t: 'Calendario · Mes',
+      d: '¿Qué se me viene encima? Solo reminders, en puntos ámbar. Dos el mismo día son dos puntos. Un día sin punto es un día limpio.' },
+    { f: 'anadir.html', t: 'El “+” · tarea y reminder', h: 1800,
+      d: 'La pantalla más importante de la ronda. Arriba: lo que capturaste y nunca planificaste, listo para poner en un día. Abajo: el reminder nuevo. Sin contadores y sin “llevas 12 días sin tocar esto”.' },
     { f: 'reminder-detalle.html', t: 'Reminder · con y sin tareas', h: 1800,
       d: 'Lo que justifica el modelo: no cuándo es el parcial, sino si te estás preparando. Dos estados, uno debajo del otro.' },
-    { f: 'dia.html', t: 'Calendario · Día',
-      d: '¿Qué hago ahora? Horas, banda de reminders arriba, y las tres capas: tareas, reminders, materias.' },
-    { f: 'semana.html', t: 'Calendario · Semana',
-      d: '¿Cómo reparto el trabajo? Siete filas, no siete columnas. Materias apagadas: se ve el hueco, no la clase.' },
-    { f: 'mes.html', t: 'Calendario · Mes', h: 1180,
-      d: '¿Qué se me viene encima? Solo reminders (decisión 53). Los pasados se apagan, nunca se persiguen.' },
-    { f: 'semana-escritorio.html', t: 'Semana · escritorio', k: 'desk',
-      d: 'La rejilla de 7 columnas donde sí cabe, con la banda de reminders y el carril “sin planificar”.' },
     { f: 'tareas.html', t: 'Tareas · dos pestañas', h: 2000,
-      d: 'Abre en Tareas a propósito: las que no tienen reminder no son de segunda. Debajo, la pestaña de reminders, de sólo lectura.' },
+      d: 'Abre en Tareas a propósito. En la pestaña de Reminders, “Lo que viene” — que salió del calendario (decisión 73): el calendario dice cuándo, la lista dice qué sigue.' },
+    { f: 'semana-escritorio.html', t: 'Semana · escritorio', k: 'desk',
+      d: 'Rejilla de horas por días, con el panel de tareas sin planificar a la izquierda: se arrastran a la rejilla. Dibujado en pleno arrastre.' },
+    { f: 'mes-escritorio.html', t: 'Mes · escritorio', k: 'desk', h: 1800,
+      d: 'Dos estados: seleccionar un día abre su panel al lado, y “Añadir a este día” lo convierte en formulario. El panel nunca tapa el día.' },
     { f: 'otro-dia.html', t: '“Otro día” · el selector',
       d: 'El paso intermedio del triage. Primero palabras, el calendario después. Quitar devuelve a Tareas, no borra.' },
     { f: 'horario.html', t: 'Horario · carga de materias', h: 1500,
-      d: 'El único trabajo pesado del proyecto. Un nombre, varios días, y se repite cinco meses.' },
+      d: 'El único trabajo pesado del proyecto. Un nombre, varios días, y se repite cinco meses. Todas las materias son verdes: el color ya dice el tipo.' },
     { f: 'recursos.html', t: 'Recursos · búsqueda',
-      d: 'Sin cambios en FD2. Abre con el cursor dentro; el teclado está dibujado para que el presupuesto sea honesto.' },
+      d: 'Sólo cambió lo que cambió la paleta. Abre con el cursor dentro; el teclado está dibujado para que el presupuesto de altura sea honesto.' },
     { f: 'domingo.html', t: 'Domingo · triage', h: 1000,
       d: 'Cero rojo, cero recuento, un toque por tarea. Los reminders no entran aquí: uno que pasó no es deuda.' },
     { f: 'notificacion.html', t: 'La notificación', h: 2620,

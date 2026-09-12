@@ -14,143 +14,280 @@
 </head>
 
 <!--
-  CALENDARIO · vista SEMANA (teléfono)        (FD2 · decisiones 52, 53)
+  CALENDARIO · SEMANA                (FD3 · decisiones 67, 69) · REHECHO
   ---------------------------------------------------------------------------
-  ESTO RESUELVE LA PREGUNTA ABIERTA DE FD (§3.1 de docs/estado-FD.md).
+  Pregunta que contesta:  ¿CÓMO REPARTO EL TRABAJO?
 
-  En FD dije que siete columnas por horas a 390px eran ilegibles y dejé la
-  pregunta abierta. El modelo nuevo la contesta solo: la vista Semana no
-  responde "¿qué hago a las 3?" — responde "¿cómo reparto el trabajo?".
-  Y esa pregunta no necesita horas. Necesita, por cada día, qué se te viene
-  encima y cuánto te has cargado.
+  Es la estructura literal de la referencia 09, que es la que el usuario
+  señaló: riel de días a la izquierda, contenido a la derecha, y una BARRA DE
+  COLOR por elemento con el texto en negro.
 
-  Por eso aquí no hay rejilla: hay siete filas. Es legible a 390px, arrastrar
-  una tarea de un día a otro funciona con el pulgar, y la rejilla completa de
-  siete columnas sigue existiendo donde sí cabe (semana-escritorio.html).
+  SIN REJILLA DE HORAS, a propósito. "¿Cómo reparto el trabajo?" no se
+  responde con horas: se responde viendo qué días están cargados y cuáles
+  vacíos. Siete columnas de horas a 390px serían ilegibles y contestarían una
+  pregunta que ya contesta Día.
 
-  MATERIAS APAGADAS. Esta es la pantalla donde la decisión 52 se ve: al
-  planificar, lo que importa es el hueco, no la clase. Con la capa "Materias"
-  apagada, el sábado deja de ser "sin clases" y pasa a ser "día entero libre",
-  que es lo que estabas buscando.
+  LAS TRES ENTIDADES JUNTAS (decisión 69, que matiza la 59). Las materias
+  entran porque el hueco solo se ve si se ve lo que lo ocupa: un jueves con
+  dos clases y tres tareas no es un jueves libre. El interruptor las apaga
+  cuando ya sabes el horario de memoria y lo que quieres ver es el sitio.
 
-  La carga del día se lee con los títulos de las tareas, no con un número.
-  Un número sería un contador de deuda y, además, dice menos.
+  CÓMO SE LEE EL COLOR, DE UN VISTAZO Y SIN LEER UNA PALABRA
+    barra azul marino → tarea, algo que tú haces
+    barra ámbar       → reminder, algo que ocurre
+    verde tintado     → materia, tiempo que ya no tienes
+  Los días alternan superficie: separa sin gastar una línea por fila.
 -->
 
-<body class="comp">
-<div class="device">
-  <div data-statusbar="15:42"></div>
+<style>
+  .stack { width: 390px; }
+  .caption { padding: var(--space-6) var(--gutter) var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
+  .topfixed { box-shadow: inset 0 -1px 0 var(--line); background: var(--bg); }
+</style>
 
-  <main class="screen flex flex-col">
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="stack">
 
-    <header class="pagehead" style="padding-bottom:var(--space-3)">
-      <div>
-        <h1 class="t-title">Semana</h1>
-        <p class="t-meta c-muted num">14 – 20 sep · semana 1</p>
-      </div>
-      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
-        <button class="tapicon" aria-label="Semana anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
-        <button class="tapicon" aria-label="Semana siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
-      </div>
-    </header>
+  <div class="caption">
+    <h2>Semana · 14 – 20 de septiembre</h2>
+    <p>Riel de días, barra de color por elemento. Las tres entidades juntas.</p>
+  </div>
 
-    <div class="gutter pb-3">
-      <div class="seg" role="tablist" aria-label="Vista del calendario">
-        <button role="tab" aria-selected="false">Día</button>
-        <button role="tab" aria-selected="true">Semana</button>
-        <button role="tab" aria-selected="false">Mes</button>
+  <div class="device">
+    <div data-statusbar="15:44"></div>
+
+    <div class="topfixed">
+      <!-- MISMA CABECERA. Aquí el nivel de arriba es el mes. -->
+      <div class="calhead">
+        <a href="mes.html" class="uplevel no-underline">
+          <span class="ico" data-icon="chevron-left"></span>
+          Septiembre
+        </a>
+        <div class="calhead__acts">
+          <button class="taptext taptext--quiet t-meta" style="margin-inline:0">Hoy</button>
+          <button class="tapicon" aria-label="Semana anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+          <button class="tapicon" aria-label="Semana siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+          <a href="anadir.html" class="tapicon no-underline" aria-label="Añadir" style="color:var(--task)">
+            <span class="ico ico--lg" data-icon="plus"></span>
+          </a>
+        </div>
       </div>
+
+      <!-- Qué semana es. Las flechas ya están arriba (ver base.css: flanquear
+           la tira de días no cabe en 390px y rompería los 44px). -->
+      <p class="callabel">14 – 20 de septiembre</p>
     </div>
 
-    <!-- CAPAS · materias apagadas = modo planificar -->
-    <div class="chips gutter" style="padding-bottom:var(--space-3)" role="group" aria-label="Qué se ve">
-      <button class="chip" aria-pressed="true">Tareas</button>
-      <button class="chip" aria-pressed="true">Reminders</button>
-      <button class="chip" aria-pressed="false">
-        <span class="ico ico--sm" data-icon="eye-off" style="width:14px;height:14px"></span>
-        Materias
+    <main class="screen">
+
+      <!-- El interruptor de materias. Encendido por defecto (decisión 69):
+           el plan completo es el plan. Se apaga para ver el hueco limpio. -->
+      <button class="toggle" aria-pressed="true" style="padding-block:var(--space-2)">
+        <span class="layerdot layerdot--class"></span>
+        <span class="toggle__label">Mostrar materias</span>
+        <span class="toggle__switch" aria-hidden="true"></span>
       </button>
-    </div>
 
-    <!-- LOS SIETE DÍAS ------------------------------------------------------ -->
-    <div style="box-shadow: inset 0 1px 0 var(--line)">
+      <div class="wk">
 
-      <div class="agday">
-        <div class="agday__date"><span class="agday__dow">lun</span><span class="agday__num">14</span></div>
-        <div class="agday__body">
-          <p class="agday__tasks">Leer plan de evaluación<span class="sep"> · </span>Instalar Supabase CLI</p>
-        </div>
-      </div>
-
-      <div class="agday">
-        <div class="agday__date"><span class="agday__dow">mar</span><span class="agday__num">15</span></div>
-        <div class="agday__body">
-          <p class="agday__tasks">Ejercicios de Álgebra</p>
-        </div>
-      </div>
-
-      <div class="agday">
-        <div class="agday__date"><span class="agday__dow">mié</span><span class="agday__num">16</span></div>
-        <div class="agday__body">
-          <p class="agday__tasks">Terminar el modelo de datos</p>
-        </div>
-      </div>
-
-      <!-- HOY. El reminder va arriba del todo de su día: manda sobre las
-           tareas, porque es lo que no se mueve. -->
-      <div class="agday agday--today">
-        <div class="agday__date"><span class="agday__dow">jue</span><span class="agday__num">17</span></div>
-        <div class="agday__body">
-          <p class="flex items-center gap-2 t-meta font-medium">
-            <span class="ico ico--sm rem__flag" data-icon="flag" style="width:14px;height:14px"></span>
-            Entrega del avance de IA
-            <span class="c-muted num ml-auto">23:59</span>
-          </p>
-          <p class="agday__tasks">Migrar el schema<span class="sep"> · </span>Repaso final<span class="sep"> · </span>Comprar cuadernos</p>
-        </div>
-      </div>
-
-      <div class="agday">
-        <div class="agday__date"><span class="agday__dow">vie</span><span class="agday__num">18</span></div>
-        <div class="agday__body">
-          <p class="flex items-center gap-2 t-meta font-medium">
-            <span class="ico ico--sm rem__flag" data-icon="flag" style="width:14px;height:14px"></span>
-            Parcial de Cálculo
-            <span class="c-muted num ml-auto">10:00</span>
-          </p>
-          <p class="agday__tasks c-faint">Sin tareas este día</p>
-        </div>
-      </div>
-
-      <!-- ARRASTRE · el destino se marca, no se abre ningún formulario.
-           Con las materias apagadas, el sábado se lee como lo que es: un día
-           entero disponible. Eso es exactamente para lo que sirve apagarlas. -->
-      <div class="agday agday--target">
-        <div class="agday__date"><span class="agday__dow">sáb</span><span class="agday__num">19</span></div>
-        <div class="agday__body">
-          <div class="calblock calblock--ghost" style="position:static;height:36px;padding-inline:var(--space-2)">
-            Repaso final
+        <!-- LUNES 14 -->
+        <div class="wkday">
+          <div class="wkday__rail">
+            <span class="wkday__w">lun</span>
+            <span class="wkday__n num">14</span>
+          </div>
+          <div class="wkday__body">
+            <div class="ev ev--class">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Cálculo III</span>
+                <span class="ev__meta num">8:00 – 9:30</span>
+              </span>
+            </div>
+            <div class="ev ev--class">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Álgebra Lineal</span>
+                <span class="ev__meta num">11:00 – 12:30</span>
+              </span>
+            </div>
+            <div class="ev ev--task ev--done">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Comprar cuadernos</span>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="agday">
-        <div class="agday__date"><span class="agday__dow">dom</span><span class="agday__num">20</span></div>
-        <div class="agday__body">
-          <p class="agday__tasks">Revisión de la semana<span class="sep"> · </span><span class="num">19:00</span></p>
+        <!-- MARTES 15 -->
+        <div class="wkday">
+          <div class="wkday__rail">
+            <span class="wkday__w">mar</span>
+            <span class="wkday__n num">15</span>
+          </div>
+          <div class="wkday__body">
+            <div class="ev ev--class">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Cálculo III</span>
+                <span class="ev__meta num">8:00 – 9:30</span>
+              </span>
+            </div>
+            <div class="ev ev--task ev--done">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Resolver la guía del capítulo 3</span>
+              </span>
+            </div>
+          </div>
         </div>
+
+        <!-- MIÉRCOLES 16 · una tarea que no se hizo. Sin rojo, sin insignia:
+             sigue ahí, en gris, y su triage vive en Inicio (decisión 22). -->
+        <div class="wkday">
+          <div class="wkday__rail">
+            <span class="wkday__w">mié</span>
+            <span class="wkday__n num">16</span>
+          </div>
+          <div class="wkday__body">
+            <div class="ev ev--class">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Álgebra Lineal</span>
+                <span class="ev__meta num">11:00 – 12:30</span>
+              </span>
+            </div>
+            <div class="ev ev--task ev--done">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Resumen de derivadas</span>
+              </span>
+            </div>
+            <div class="ev ev--task">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Terminar el modelo de datos</span>
+                <span class="ev__meta num">19:00<span class="sep">·</span>sin hacer</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- JUEVES 17 · HOY. El riel se llena de azul: la marca es forma y
+             fondo, no un texto de color. -->
+        <div class="wkday wkday--today">
+          <div class="wkday__rail">
+            <span class="wkday__w">jue</span>
+            <span class="wkday__n num">17</span>
+          </div>
+          <div class="wkday__body">
+            <div class="ev ev--rem">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title flex items-center gap-2">
+                  <span class="ico ico--sm rem__flag" data-icon="flag" style="margin:0"></span>
+                  Entrega del avance de IA
+                </span>
+                <span class="ev__meta num">23:59</span>
+              </span>
+            </div>
+            <div class="ev ev--class">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Cálculo III</span>
+                <span class="ev__meta num">8:00 – 9:30</span>
+              </span>
+            </div>
+            <div class="ev ev--task ev--done">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Leer el paper de Anthropic</span>
+              </span>
+            </div>
+            <div class="ev ev--task">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Migrar el schema a Supabase</span>
+                <span class="ev__meta num">15:00 – 17:00</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIERNES 18 · el parcial. El reminder va primero del día: es lo
+             que ordena todo lo demás. -->
+        <div class="wkday">
+          <div class="wkday__rail">
+            <span class="wkday__w">vie</span>
+            <span class="wkday__n num">18</span>
+          </div>
+          <div class="wkday__body">
+            <a href="reminder-detalle.html" class="ev ev--rem no-underline" style="color:var(--text)">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title flex items-center gap-2">
+                  <span class="ico ico--sm rem__flag" data-icon="flag" style="margin:0"></span>
+                  Parcial de Cálculo
+                </span>
+                <span class="ev__meta num">10:00<span class="sep">·</span>Aula 204</span>
+              </span>
+            </a>
+            <div class="ev ev--task">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Repaso final</span>
+                <span class="ev__meta num">20:00</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SÁBADO 19 · vacío. Y el vacío se dice sin culpa: es sitio, no
+             deuda. La frase invita, no reprocha (decisión 22). -->
+        <div class="wkday">
+          <div class="wkday__rail">
+            <span class="wkday__w">sáb</span>
+            <span class="wkday__n num">19</span>
+          </div>
+          <div class="wkday__body">
+            <p class="wkday__none">Libre</p>
+          </div>
+        </div>
+
+        <!-- DOMINGO 20 -->
+        <div class="wkday">
+          <div class="wkday__rail">
+            <span class="wkday__w">dom</span>
+            <span class="wkday__n num">20</span>
+          </div>
+          <div class="wkday__body">
+            <div class="ev ev--task">
+              <span class="ev__bar"></span>
+              <span class="ev__body">
+                <span class="ev__title">Repaso de la semana</span>
+                <span class="ev__meta num">19:00</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-    </div>
+      <div style="height:calc(56px + var(--space-10))"></div>
+    </main>
 
-    <p class="gutter t-label c-faint" style="padding-block:var(--space-3)">
-      Arrastra una tarea a otro día. También puedes tocarla y elegir fecha.
-    </p>
+    <a href="anadir.html" class="fab no-underline" aria-label="Añadir a esta semana">
+      <span class="ico ico--lg" data-icon="plus"></span>
+    </a>
 
-  </main>
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
 
-  <nav data-tabbar="semana"></nav>
-  <div data-homebar></div>
+  <div style="height:var(--space-10)"></div>
 </div>
 </body>
 </html>

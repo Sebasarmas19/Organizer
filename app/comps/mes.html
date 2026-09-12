@@ -14,188 +14,134 @@
 </head>
 
 <!--
-  CALENDARIO · vista MES                        (FD2 · decisión 53) · NUEVO
+  CALENDARIO · MES                   (FD3 · decisiones 53, 67) · REHECHO
   ---------------------------------------------------------------------------
-  Una sola pregunta: ¿qué se me viene encima?
+  Pregunta que contesta:  ¿QUÉ SE ME VIENE ENCIMA?
 
-  Es literalmente para lo que el usuario usaba el Calendar del iPhone: abrir
-  los planes de evaluación a principio de semestre y anotar cada parcial,
-  defensa y entrega. Absorber eso es parte de "un solo destino".
+  Solo reminders. Ni tareas ni materias (decisión 53, confirmada en FD3).
+  Es exactamente lo que el usuario hacía en el Calendar del iPhone: abrir el
+  mes para ver cuándo son los parciales.
 
-  SOLO REMINDERS. Sin tareas y sin materias, y esto no es una omisión:
-  - las materias se repiten cuatro veces por semana y llenarían las treinta
-    celdas de ruido idéntico;
-  - las tareas cambian cada día y convertirían el mes en una sopa ilegible.
-  Meterle cualquiera de las dos arruina la única pregunta que responde. Por
-  eso aquí tampoco hay control de capas: siempre son reminders.
+  Referencia 12: rejilla con puntos. Nada escrito dentro de la celda.
 
-  LOS PASADOS NO SON DEUDA (decisión 49). El parcial del 4 sigue en su celda,
-  apagado, sin tachar y sin marca. Ocurrió. No es una falta del usuario, así
-  que no se persigue ni se colorea. Simplemente pesa menos.
+  POR QUÉ NO SE ESCRIBE NADA EN LA CELDA
+  Una celda de 50px sólo cabe un título mutilado, y un título mutilado se lee
+  peor que un punto: obliga a descifrar en vez de contar. El punto contesta
+  la única pregunta de este nivel —¿hay algo ese día?— en una fijación de
+  ojo. Y como el punto es ÁMBAR, contesta también "¿de qué tipo?" sin gastar
+  una palabra. El nombre completo está a un toque, en Día.
 
-  Debajo de la rejilla va la lista de lo que viene, porque una celda de 11px
-  no puede con un título largo y el mes tiene que servir de verdad, no sólo
-  verse bien.
+  DOS REMINDERS EL MISMO DÍA → DOS PUNTOS. Esto cierra el hueco que quedó
+  abierto en FD2 §4.5.2, donde una celda con un bloque escrito sólo podía
+  mostrar el primero. Con puntos, tres caben.
 
-  CREAR UN REMINDER: se toca un día. El tipo lo determina la entrada
-  (decisión 48) — aquí nunca se pregunta "¿esto es tarea o reminder?".
+  LA REJILLA OCUPA LA PANTALLA ENTERA. No es un widget arrinconado arriba:
+  es la vista. Las filas se reparten el alto disponible, así que un mes de
+  cinco semanas y uno de seis se ven igual de tranquilos.
+
+  Y LO QUE NO ESTÁ AQUÍ: "Lo que viene" se fue al módulo Tareas (decisión
+  73). El calendario contesta CUÁNDO; la lista contesta QUÉ SIGUE. Tenerlo en
+  los dos sitios duplicaba la misma información con dos formas distintas.
 -->
 
-<body class="comp">
-<div class="device">
-  <div data-statusbar="15:42"></div>
+<style>
+  .stack { width: 390px; }
+  .caption { padding: var(--space-6) var(--gutter) var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
+  .topfixed { box-shadow: inset 0 -1px 0 var(--line); background: var(--bg); }
 
-  <main class="screen flex flex-col">
+  /* La rejilla ocupa lo que queda. Solo se estira #grid: la fila de las
+     iniciales de los días es cabecera y mantiene su alto natural. */
+  .monthwrap { display: flex; flex-direction: column; height: 100%; padding-bottom: var(--space-4); }
+  .monthwrap #grid { flex: 1 1 auto; grid-auto-rows: minmax(0, 1fr); }
+  .monthwrap .mday { min-height: 0; justify-content: center; gap: var(--space-2); padding-block: 0; }
+  .mday__n { width: 34px; height: 34px; font-size: var(--text-body); }
+</style>
 
-    <header class="pagehead" style="padding-bottom:var(--space-3)">
-      <div>
-        <h1 class="t-title">Septiembre</h1>
-        <p class="t-meta c-muted">2026 · 4 fechas por delante</p>
-      </div>
-      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
-        <button class="tapicon" aria-label="Mes anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
-        <button class="tapicon" aria-label="Mes siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
-      </div>
-    </header>
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="stack">
 
-    <div class="gutter pb-4">
-      <div class="seg" role="tablist" aria-label="Vista del calendario">
-        <button role="tab" aria-selected="false">Día</button>
-        <button role="tab" aria-selected="false">Semana</button>
-        <button role="tab" aria-selected="true">Mes</button>
+  <div class="caption">
+    <h2>Mes · septiembre de 2026</h2>
+    <p>Solo reminders, en puntos ámbar. Un día sin punto es un día limpio.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:45"></div>
+
+    <div class="topfixed">
+      <!-- MISMA CABECERA, sin chevron: Mes es el techo de la escalera. El
+           título ocupa el sitio exacto del botón de subir, así que al cambiar
+           de nivel la cabecera no se mueve ni un píxel. -->
+      <div class="calhead">
+        <h1 class="calhead__title">Septiembre</h1>
+        <div class="calhead__acts">
+          <button class="taptext taptext--quiet t-meta" style="margin-inline:0">Hoy</button>
+          <button class="tapicon" aria-label="Mes anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+          <button class="tapicon" aria-label="Mes siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+          <a href="anadir.html" class="tapicon no-underline" aria-label="Añadir" style="color:var(--task)">
+            <span class="ico ico--lg" data-icon="plus"></span>
+          </a>
+        </div>
       </div>
+
+      <p class="callabel">2026<span class="sep"> · </span>7 reminders este mes</p>
     </div>
 
-    <!-- LA REJILLA · solo reminders ------------------------------------------ -->
-    <div class="px-2">
-      <div class="month" aria-hidden="true">
-        <span class="month__dow">L</span><span class="month__dow">M</span><span class="month__dow">X</span>
-        <span class="month__dow">J</span><span class="month__dow">V</span><span class="month__dow">S</span>
-        <span class="month__dow">D</span>
-      </div>
-      <div class="month" id="grid"></div>
-    </div>
-
-    <!-- LO QUE VIENE ---------------------------------------------------------
-         La rejilla da la forma del mes; esta lista da los nombres completos y
-         el estado de preparación, que es lo que no cabe en una celda. -->
-    <section class="mt-5" aria-labelledby="h-viene">
-      <div class="sectionhead">
-        <h2 id="h-viene">Lo que viene</h2>
-      </div>
-
-      <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <span class="rem__body">
-          <span class="rem__title">Entrega del avance de IA</span>
-          <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>hoy · 23:59</span>
-          <span class="prep">
-            <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
-            te queda migrar el schema
-          </span>
-        </span>
-      </a>
-
-      <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <span class="rem__body">
-          <span class="rem__title">Parcial de Cálculo</span>
-          <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-1)"></span>viernes 18 · 10:00</span>
-          <span class="prep">
-            <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
-            todo listo
-          </span>
-        </span>
-      </a>
-
-      <!-- El caso que ninguna app cubre: falta poco y no hay ni una tarea.
-           La señal la da el peso de la letra; el acento aparece como ACCIÓN,
-           nunca como alarma. Sin rojo: todavía está a tiempo. -->
-      <div class="rem">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <div class="rem__body">
-          <p class="rem__title">Defensa del proyecto</p>
-          <p class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>miércoles 23 · en 6 días</p>
-          <p class="prep prep--none">
-            <span class="ico ico--sm" data-icon="alert-triangle" style="width:14px;height:14px"></span>
-            Sin tareas todavía
-          </p>
+    <main class="screen screen--fixed">
+      <div class="monthwrap">
+        <div class="month" style="grid-auto-rows:auto">
+          <div class="month__dow">L</div><div class="month__dow">M</div><div class="month__dow">X</div>
+          <div class="month__dow">J</div><div class="month__dow">V</div><div class="month__dow">S</div>
+          <div class="month__dow">D</div>
         </div>
-        <button class="btn" style="align-self:center;min-height:var(--tap-min)">Planificar</button>
+        <div class="month" id="grid"></div>
       </div>
+    </main>
 
-      <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <span class="rem__body">
-          <span class="rem__title">Quiz de Álgebra</span>
-          <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-2)"></span>lunes 28 · 11:00</span>
-        </span>
-      </a>
-    </section>
+    <a href="anadir.html" class="fab no-underline" aria-label="Añadir un reminder">
+      <span class="ico ico--lg" data-icon="plus"></span>
+    </a>
 
-    <!-- PASADOS · bajan al histórico en silencio -->
-    <section class="mt-5 pb-4" aria-labelledby="h-pasados">
-      <div class="sectionhead">
-        <h2 id="h-pasados">Ya pasaron</h2>
-      </div>
-      <div class="rem rem--past">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <div class="rem__body">
-          <p class="rem__title">Entrega de laboratorio</p>
-          <p class="rem__when">martes 15</p>
-        </div>
-      </div>
-      <div class="rem rem--past">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <div class="rem__body">
-          <p class="rem__title">Primer parcial de Álgebra</p>
-          <p class="rem__when">viernes 4</p>
-        </div>
-      </div>
-    </section>
+    <nav data-tabbar="semana"></nav>
+    <div data-homebar></div>
+  </div>
 
-  </main>
-
-  <nav data-tabbar="semana"></nav>
-  <div data-homebar></div>
+  <div style="height:var(--space-10)"></div>
 </div>
 
 <script>
-  (function () {
-    // Septiembre 2026: el 1 cae martes. La rejilla empieza en lunes.
-    var LEAD = 1, DAYS = 30, TODAY = 17;
-    var REMINDERS = {
-      4:  { t: 'Parcial Álgebra', c: 2 },
-      15: { t: 'Entrega lab',     c: 3 },
-      17: { t: 'Avance IA',       c: 3 },
-      18: { t: 'Parcial Cálculo', c: 1 },
-      23: { t: 'Defensa',         c: 3 },
-      28: { t: 'Quiz Álgebra',    c: 2 }
-    };
+  /* Septiembre de 2026 empieza en martes, así que la rejilla arranca el
+     lunes 31 de agosto y son cinco filas. Hoy es jueves 17.
+     Cada entrada es el número de reminders de ese día. */
+  var REMINDERS = { 15: 1, 17: 1, 18: 1, 23: 2, 28: 1, 30: 1 };
+  var TODAY = 17, DAYS = 30, LEAD = 1, PREV = 31;   /* agosto tiene 31 */
 
-    var grid = document.getElementById('grid');
+  var cells = [], i;
+  for (i = 0; i < LEAD; i++) cells.push({ n: PREV - LEAD + 1 + i, out: true });
+  for (i = 1; i <= DAYS; i++) cells.push({ n: i, out: false });
+  while (cells.length % 7) cells.push({ n: cells.length - LEAD - DAYS + 1, out: true });
 
-    function cell(label, opts) {
-      var el = document.createElement(opts.n ? 'button' : 'div');
-      el.className = 'mday' + (opts.out ? ' mday--out' : '') +
-        (opts.today ? ' mday--today' : '') + (opts.past ? ' mday--past' : '');
-      var html = '<span class="mday__n num">' + label + '</span>';
-      if (opts.ev) {
-        html += '<span class="mday__ev" style="--ctx:var(--ctx-' + opts.ev.c + ')">' + opts.ev.t + '</span>';
-      }
-      el.innerHTML = html;
-      if (opts.n) el.setAttribute('aria-label', label + ' de septiembre' + (opts.ev ? ': ' + opts.ev.t : ', añadir reminder'));
-      grid.appendChild(el);
-    }
+  document.getElementById('grid').innerHTML = cells.map(function (c) {
+    var count = c.out ? 0 : (REMINDERS[c.n] || 0);
+    var past  = !c.out && c.n < TODAY;
+    var cls = 'mday' + (c.out ? ' mday--out' : '') + (past ? ' mday--past' : '') +
+              (!c.out && c.n === TODAY ? ' mday--today' : '');
+    /* La banda de puntos se dibuja SIEMPRE, tenga o no reminders. Si solo
+       apareciera cuando hay algo, los numeros de una misma fila quedarian a
+       alturas distintas y la rejilla dejaria de leerse como rejilla. */
+    var dots = '<span class="mday__dots" aria-hidden="true">' +
+               new Array(count + 1).join('<i></i>') + '</span>';
+    /* Tocar un día baja a Día. El aria-label dice lo que el punto dice en
+       color, porque un punto no se lee con lector de pantalla. */
+    var label = c.n + (count ? ' de septiembre, ' + count + (count === 1 ? ' reminder' : ' reminders') : ' de septiembre, sin reminders');
+    return '<a href="dia.html" class="' + cls + ' no-underline" aria-label="' + label + '"' +
+           (!c.out && c.n === TODAY ? ' aria-current="date"' : '') + '>' +
+           '<span class="mday__n num">' + c.n + '</span>' + dots + '</a>';
+  }).join('');
 
-    // Agosto tiene 31 días: las celdas de arrastre cierran el mes anterior.
-    for (var i = 0; i < LEAD; i++) cell(31 - LEAD + 1 + i, { out: true });
-    for (var d = 1; d <= DAYS; d++) {
-      cell(d, { n: true, today: d === TODAY, past: d < TODAY, ev: REMINDERS[d] });
-    }
-    var trail = (7 - ((LEAD + DAYS) % 7)) % 7;
-    for (var j = 1; j <= trail; j++) cell(j, { out: true });
-  })();
+  if (window.renderIcons) window.renderIcons();
 </script>
 </body>
 </html>

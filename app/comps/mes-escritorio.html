@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes · escritorio · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+</head>
+
+<!--
+  MES · escritorio (1280px)            (FD3 · referencia 13) · NUEVO
+  ---------------------------------------------------------------------------
+  Misma pregunta que el mes del teléfono —¿qué se me viene encima?— y los
+  mismos datos: SOLO REMINDERS (decisión 53). Lo único que cambia es cuánto
+  cabe. Aquí la celda tiene 150px de ancho, así que el reminder se escribe
+  entero en vez de resumirse en un punto. El modelo no cambia con el tamaño
+  de la pantalla; cambia la densidad.
+
+  EL PANEL FLOTANTE (referencia 13). Al seleccionar un día NO se abre otra
+  pantalla: se abre un panel encima, y el mes sigue detrás. Eso importa más
+  de lo que parece — la pregunta "¿qué hay ese día?" se contesta SIN perder
+  de vista el mes que estabas leyendo, que es justo lo que te hizo tocar.
+
+  EL PANEL TIENE DOS MOMENTOS, y hay una pantalla por cada uno:
+    arriba   lo que hay ese día, con la estructura de la referencia 09
+             (barra de color + texto negro)
+    abajo    el formulario de añadir, desplegado desde el botón de arriba
+
+  Van en dos pantallas y no en una porque el panel se ancla al día que
+  tocaste: dos paneles a la vez mentirían sobre dónde aparece cada uno.
+-->
+
+<style>
+  .desk { width: 1280px; height: 860px; display: grid; grid-template-columns: 216px minmax(0, 1fr); background: var(--bg); position: relative; }
+
+  .side { border-right: 1px solid var(--line); padding: var(--space-6) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
+  .side__brand { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3) var(--space-6); }
+  .side__mark { width: 22px; height: 22px; border-radius: 6px; background: var(--task); display: grid; place-items: center; }
+  .side__mark span { width: 9px; height: 9px; border: 1.6px solid var(--text-on-accent); border-radius: 999px; }
+  .navitem {
+    display: flex; align-items: center; gap: var(--space-3);
+    min-height: var(--tap-min); padding: 0 var(--space-3);
+    border-radius: var(--radius); color: var(--text-muted);
+    font-size: var(--text-body); font-weight: var(--weight-medium); text-decoration: none;
+  }
+  .navitem:hover { background: var(--surface-sunken); color: var(--text); }
+  .navitem[aria-current="page"] { background: var(--task-soft); color: var(--task); }
+
+  .main { display: flex; flex-direction: column; min-width: 0; position: relative; }
+  .mainhead { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-5) var(--gutter-wide) var(--space-4); }
+
+  .dowrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); padding: 0 var(--gutter-wide) var(--space-2); }
+  .dowrow span { font-size: var(--text-label); color: var(--text-muted); padding-left: var(--space-2); }
+  .monthgrid { flex: 1 1 auto; min-height: 0; padding: 0 var(--gutter-wide) var(--gutter-wide); }
+  .monthgrid .dmonth { height: 100%; grid-auto-rows: minmax(0, 1fr); }
+
+  .caption { width: 1280px; padding: var(--space-6) 0 var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
+</style>
+
+<body class="comp" style="flex-direction:column;align-items:center">
+
+<div class="caption">
+  <h2>Mes · el día seleccionado abre un panel, no una pantalla</h2>
+  <p>El mes sigue detrás. Estructura de la referencia 09 dentro del panel.</p>
+</div>
+
+<div class="desk">
+
+  <nav class="side" aria-label="Secciones">
+    <div class="side__brand">
+      <span class="side__mark"><span></span></span>
+      <span class="t-body font-semibold">Organizer</span>
+    </div>
+    <a class="navitem" href="inicio.html"><span class="ico ico--lg" data-icon="house"></span>Inicio</a>
+    <a class="navitem" href="mes-escritorio.html" aria-current="page"><span class="ico ico--lg" data-icon="calendar"></span>Semana</a>
+    <a class="navitem" href="tareas.html"><span class="ico ico--lg" data-icon="check-circle"></span>Tareas</a>
+    <a class="navitem" href="recursos.html"><span class="ico ico--lg" data-icon="bookmark"></span>Recursos</a>
+    <div style="flex:1"></div>
+    <a class="navitem" href="horario.html"><span class="ico ico--lg" data-icon="grid"></span>Horario</a>
+  </nav>
+
+  <main class="main">
+
+    <div class="mainhead">
+      <h1 class="t-title">Septiembre 2026</h1>
+
+      <div class="seg" style="width:260px;margin-left:var(--space-4)" role="tablist" aria-label="Vista del calendario">
+        <button role="tab" aria-selected="true">Mes</button>
+        <button role="tab" aria-selected="false">Semana</button>
+        <button role="tab" aria-selected="false">Día</button>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <div class="flex items-center gap-1">
+        <button class="btn btn--quiet">Hoy</button>
+        <button class="tapicon" aria-label="Mes anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+        <button class="tapicon" aria-label="Mes siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+      </div>
+    </div>
+
+    <div class="dowrow" aria-hidden="true">
+      <span>lunes</span><span>martes</span><span>miércoles</span><span>jueves</span>
+      <span>viernes</span><span>sábado</span><span>domingo</span>
+    </div>
+
+    <div class="monthgrid">
+      <div class="dmonth" id="grid"></div>
+    </div>
+
+    <!-- ============ PANEL DEL DÍA · estado 1: lo que hay ============
+         Se ancla AL LADO de la celda, nunca encima. Tapar el día que acabas
+         de tocar es quitarte la única pista de dónde estás. -->
+    <div class="daypanel" style="left:656px;top:424px">
+      <div class="daypanel__head">
+        <div>
+          <p class="t-label c-muted">jueves</p>
+          <h2 class="t-title" style="line-height:1.1">17</h2>
+        </div>
+        <button class="tapicon" aria-label="Cerrar"><span class="ico ico--lg" data-icon="xmark"></span></button>
+      </div>
+
+      <!-- Estructura de la referencia 09 también aquí: barra de color a la
+           izquierda, texto negro. Un solo lenguaje en toda la app. -->
+      <div class="ev ev--rem">
+        <span class="ev__bar"></span>
+        <span class="ev__body">
+          <span class="ev__title flex items-center gap-2">
+            <span class="ico ico--sm rem__flag" data-icon="flag" style="margin:0"></span>
+            Entrega del avance de IA
+          </span>
+          <span class="ev__meta num">23:59</span>
+        </span>
+      </div>
+
+      <!-- Un reminder no se marca: pasa el día y queda listo (decisión 49).
+           Lo que sí se ve es si lo estás preparando. -->
+      <div class="prep" style="padding-left:var(--space-5)">
+        <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
+        te queda migrar el schema
+      </div>
+
+      <div class="ev ev--task mt-2">
+        <span class="ev__bar"></span>
+        <span class="ev__body">
+          <span class="ev__title">Migrar el schema a Supabase</span>
+          <span class="ev__meta num">15:00 – 17:00</span>
+        </span>
+      </div>
+
+      <div class="ev ev--class">
+        <span class="ev__bar"></span>
+        <span class="ev__body">
+          <span class="ev__title">Cálculo III</span>
+          <span class="ev__meta num">8:00 – 9:30</span>
+        </span>
+      </div>
+
+      <button class="btn btn--full mt-3" style="justify-content:flex-start;color:var(--task)">
+        <span class="ico ico--sm" data-icon="plus"></span>
+        Añadir a este día
+      </button>
+    </div>
+
+  </main>
+</div>
+
+<div class="caption">
+  <h2>Mes · el formulario de añadir, desplegado en el mismo panel</h2>
+  <p>Referencia 13. Aquí sí se pregunta el tipo: planificar es deliberado (decisión 70).</p>
+</div>
+
+<div class="desk">
+  <nav class="side" aria-label="Secciones">
+    <div class="side__brand">
+      <span class="side__mark"><span></span></span>
+      <span class="t-body font-semibold">Organizer</span>
+    </div>
+    <a class="navitem" href="inicio.html"><span class="ico ico--lg" data-icon="house"></span>Inicio</a>
+    <a class="navitem" href="mes-escritorio.html" aria-current="page"><span class="ico ico--lg" data-icon="calendar"></span>Semana</a>
+    <a class="navitem" href="tareas.html"><span class="ico ico--lg" data-icon="check-circle"></span>Tareas</a>
+    <a class="navitem" href="recursos.html"><span class="ico ico--lg" data-icon="bookmark"></span>Recursos</a>
+    <div style="flex:1"></div>
+    <a class="navitem" href="horario.html"><span class="ico ico--lg" data-icon="grid"></span>Horario</a>
+  </nav>
+
+  <main class="main">
+    <div class="mainhead">
+      <h1 class="t-title">Septiembre 2026</h1>
+      <div class="seg" style="width:260px;margin-left:var(--space-4)" role="tablist" aria-label="Vista del calendario">
+        <button role="tab" aria-selected="true">Mes</button>
+        <button role="tab" aria-selected="false">Semana</button>
+        <button role="tab" aria-selected="false">Día</button>
+      </div>
+      <div style="flex:1"></div>
+      <div class="flex items-center gap-1">
+        <button class="btn btn--quiet">Hoy</button>
+        <button class="tapicon" aria-label="Mes anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+        <button class="tapicon" aria-label="Mes siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+      </div>
+    </div>
+
+    <div class="dowrow" aria-hidden="true">
+      <span>lunes</span><span>martes</span><span>miércoles</span><span>jueves</span>
+      <span>viernes</span><span>sábado</span><span>domingo</span>
+    </div>
+
+    <div class="monthgrid">
+      <div class="dmonth" id="grid2"></div>
+    </div>
+
+    <!-- ======= PANEL DEL DÍA · estado 2: el formulario desplegado ======= -->
+    <div class="daypanel" style="left:504px;top:286px;width:372px">
+      <div class="daypanel__head">
+        <div>
+          <p class="t-label c-muted">miércoles</p>
+          <h2 class="t-title" style="line-height:1.1">23</h2>
+        </div>
+        <button class="tapicon" aria-label="Cerrar"><span class="ico ico--lg" data-icon="xmark"></span></button>
+      </div>
+
+      <!-- Aquí también se pregunta el tipo (decisión 70): planificar sobre el
+           calendario es un momento deliberado, no una captura. -->
+      <div class="seg mb-4" role="tablist" aria-label="Qué estás añadiendo">
+        <button role="tab" aria-selected="false">Tarea</button>
+        <button role="tab" aria-selected="true">Reminder</button>
+      </div>
+
+      <div class="frow">
+        <span class="frow__label">Título</span>
+        <div class="field field--focus">
+          <input type="text" value="Defensa del proyecto" autocomplete="off">
+          <span class="caret" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="frow">
+        <span class="frow__label">Fecha</span>
+        <button class="field" style="justify-content:space-between;color:var(--text)">
+          <span class="flex items-center gap-2">
+            <span class="ico ico--sm" data-icon="calendar" style="color:var(--rem)"></span>
+            23 de septiembre
+          </span>
+          <span class="ico ico--sm c-muted" data-icon="chevron-down"></span>
+        </button>
+      </div>
+
+      <div class="frow">
+        <span class="frow__label">Hora</span>
+        <button class="field" style="justify-content:space-between;color:var(--text)">
+          <span class="num">14:00</span>
+          <span class="ico ico--sm c-muted" data-icon="chevron-down"></span>
+        </button>
+      </div>
+
+      <!-- Decisión 60: un día de antelación por defecto. -->
+      <div class="frow">
+        <span class="frow__label">Avisar</span>
+        <button class="field" style="justify-content:space-between;color:var(--text)">
+          <span class="flex items-center gap-2">
+            <span class="ico ico--sm" data-icon="bell" style="color:var(--rem)"></span>
+            1 día antes
+          </span>
+          <span class="ico ico--sm c-muted" data-icon="chevron-down"></span>
+        </button>
+      </div>
+
+      <div class="frow" style="align-items:flex-start">
+        <span class="frow__label" style="padding-top:var(--space-3)">Notas</span>
+        <div class="field" style="height:auto;align-items:flex-start;padding-block:var(--space-3)">
+          <span class="ico ico--sm c-faint" data-icon="text" style="margin-top:2px"></span>
+          <textarea rows="2" placeholder="Opcional"
+            style="flex:1;min-width:0;font:inherit;font-size:var(--text-body);color:var(--text);background:none;border:0;outline:none;resize:none"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button class="btn btn--quiet">Cancelar</button>
+        <button class="btn btn--primary">Guardar</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  /* Mismos reminders que comps/mes.html. Aquí se escriben porque la celda
+     mide 150px; allí son puntos porque mide 50. El dato es el mismo. */
+  var REM = {
+    15: ['Empieza el semestre'],
+    17: ['Entrega del avance de IA'],
+    18: ['Parcial de Cálculo'],
+    23: ['Defensa del proyecto', 'Entrega de notas'],
+    28: ['Quiz de Álgebra'],
+    30: ['Cierre del mes']
+  };
+  var TODAY = 17, SEL = [17, 23], DAYS = 30, LEAD = 1, PREV = 31;
+
+  var cells = [], i;
+  for (i = 0; i < LEAD; i++) cells.push({ n: PREV - LEAD + 1 + i, out: true });
+  for (i = 1; i <= DAYS; i++) cells.push({ n: i, out: false });
+  var tail = 1;
+  while (cells.length % 7) { cells.push({ n: tail++, out: true }); }
+
+  var gridHtml = cells.map(function (c) {
+    var evs = c.out ? [] : (REM[c.n] || []);
+    var cls = 'dmday' + (c.out ? ' dmday--out' : '') +
+              (!c.out && c.n === TODAY ? ' dmday--today' : '') +
+              (!c.out && SEL.indexOf(c.n) > -1 ? ' dmday--sel' : '');
+    return '<button class="' + cls + '">' +
+      '<span class="dmday__n num">' + c.n + '</span>' +
+      evs.map(function (t) { return '<span class="dmday__ev"><span>' + t + '</span></span>'; }).join('') +
+      '</button>';
+  }).join('');
+  document.getElementById('grid').innerHTML = gridHtml;
+  document.getElementById('grid2').innerHTML = gridHtml;
+
+  if (window.renderIcons) window.renderIcons();
+</script>
+</body>
+</html>

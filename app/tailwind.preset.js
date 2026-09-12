@@ -34,9 +34,19 @@ module.exports = {
         'accent-press': 'var(--accent-press)',
         'accent-soft': 'var(--accent-soft)',
         'on-accent': 'var(--text-on-accent)',
-        // Contextos: se aplican con la variable --ctx en el elemento, no con
-        // una clase por color, para que el color venga de la base de datos.
-        ctx: 'var(--ctx, var(--text-faint))',
+        'line-control': 'var(--line-control)',
+
+        // FD3 · el color dice que TIPO de cosa es (decisiones 63-66).
+        // Se usan en fondos, barras y puntos; nunca como color de texto.
+        // El acento del sistema ES `task`: accent y task apuntan al mismo
+        // valor a proposito (decision 65).
+        task: 'var(--task)',
+        'task-press': 'var(--task-press)',
+        'task-soft': 'var(--task-soft)',
+        klassc: 'var(--class)',
+        'klass-soft': 'var(--class-soft)',
+        rem: 'var(--rem)',
+        'rem-soft': 'var(--rem-soft)',
       },
 
       fontFamily: {

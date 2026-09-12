@@ -49,18 +49,24 @@
         <h1 class="t-title">Jueves 17</h1>
         <p class="t-meta c-muted">septiembre · semana 1</p>
       </div>
+
+      <!-- LA RACHA, ahora arriba y junto a la fecha. Va en una pastilla de
+           azul suave y NO en texto azul: el color envuelve, no pinta
+           (decisión 63). Y sigue siendo una pastilla pequeña, en tamaño de
+           etiqueta, sin llama y sin número grande — la racha informa, no
+           puntúa. Si un día se rompe, baja a cero sin decir nada. -->
+      <span class="streak num">12 días</span>
     </header>
 
     <!-- 1 · HOY -------------------------------------------------------------
          Primero. Tareas no fijas del dia (decision 35): las materias viven en
          el calendario y no ocupan sitio aqui. -->
     <section aria-labelledby="h-hoy">
+      <!-- "Se me corrió el día" ya no está (decisión 72). No se sustituye
+           por nada: el balance del día lo hacen el repaso de la noche y el
+           triage de "De ayer", que es donde el usuario de verdad mira. -->
       <div class="sectionhead" style="padding-bottom:0">
         <h2 id="h-hoy">Hoy</h2>
-        <button class="taptext t-label">
-          <span class="ico ico--sm" data-icon="arrow-down"></span>
-          Se me corrió el día
-        </button>
       </div>
 
       <ul class="list-none m-0 p-0">
@@ -70,8 +76,7 @@
           </button>
           <div class="row__body">
             <p class="row__title">Leer el paper de Anthropic</p>
-            <p class="row__meta"><span class="num">9:00</span><span class="sep">·</span>
-              <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>Cursos</p>
+            <p class="row__meta"><span class="num">9:00</span><span class="sep">·</span>Cursos</p>
           </div>
         </li>
 
@@ -81,7 +86,7 @@
           </button>
           <div class="row__body">
             <p class="row__title">Migrar el schema a Supabase</p>
-            <p class="row__meta"><span class="num c-accent font-medium">15:00 – 17:00</span><span class="sep">·</span>
+            <p class="row__meta"><span class="num font-medium">15:00 – 17:00</span><span class="sep">·</span>
               <span class="ico rem__flag" data-icon="flag" style="width:13px;height:13px;margin:0"></span>Avance de IA</p>
           </div>
         </li>
@@ -101,7 +106,7 @@
           </button>
           <div class="row__body">
             <p class="row__title">Comprar cuadernos</p>
-            <p class="row__meta"><span class="ctxdot" style="--ctx:var(--ctx-6)"></span>Personal</p>
+            <p class="row__meta">Personal</p>
           </div>
         </li>
       </ul>
@@ -113,10 +118,47 @@
       </a>
     </section>
 
-    <!-- 2 · DE AYER ---------------------------------------------------------
-         Segundo, no primero. Nunca rojo, nunca reproche (decision 22).
-         Bandeja neutra: la app pregunta, el usuario responde en un toque. -->
-    <section class="mt-1" aria-labelledby="h-ayer">
+    <!-- 2 · ESTA SEMANA -----------------------------------------------------
+         Reminders, no tareas. Sin casilla: un parcial no se marca, ocurre.
+         Lo que se muestra no es cuándo es, es si te estás preparando. -->
+    <section class="mt-3" aria-labelledby="h-semana">
+      <div class="sectionhead" style="padding-bottom:var(--space-1)">
+        <h2 id="h-semana">Esta semana</h2>
+      </div>
+
+      <a href="reminder-detalle.html" class="rem no-underline" style="min-height:var(--tap-min);padding-block:var(--space-1);color:var(--text)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <span class="rem__body">
+          <span class="rem__title" style="font-size:var(--text-meta)">Avance de IA · hoy 23:59</span>
+          <span class="prep">
+            <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
+            te queda migrar el schema
+          </span>
+        </span>
+      </a>
+
+      <!-- El segundo cabe porque "Se me corrió el día" dejó su sitio libre
+           (decisión 72). Y este es el caso bueno: preparado, así que no va a
+           encabezar ninguna notificación (decisión 61). -->
+      <a href="reminder-detalle.html" class="rem no-underline" style="min-height:var(--tap-min);padding-block:var(--space-1);color:var(--text)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <span class="rem__body">
+          <span class="rem__title" style="font-size:var(--text-meta)">Parcial de Cálculo · viernes 18</span>
+          <span class="prep">
+            <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+            todo listo
+          </span>
+        </span>
+      </a>
+    </section>
+
+    <!-- 3 · DE AYER ---------------------------------------------------------
+         ÚLTIMO, y eso es el cambio de FD3. Antes iba en segundo lugar;
+         ahora cierra la pantalla. Lo que puedes hacer ahora va arriba, lo que
+         se te viene encima en medio, y lo que no cumpliste al final —donde
+         se ve, se resuelve de un toque y no es lo primero que lees al abrir.
+         Nunca rojo, nunca reproche (decision 22). -->
+    <section class="mt-auto" aria-labelledby="h-ayer">
       <div class="sectionhead">
         <h2 id="h-ayer">De ayer</h2>
       </div>
@@ -134,33 +176,6 @@
 
       <p class="t-label c-faint gutter mt-2">Quitar no borra: vuelve a Tareas.</p>
     </section>
-
-    <!-- 3 · ESTA SEMANA -----------------------------------------------------
-         Reminders, no tareas. Sin casilla: un parcial no se marca, ocurre.
-         Lo que se muestra no es cuándo es, es si te estás preparando. -->
-    <section class="mt-auto" aria-labelledby="h-semana">
-      <div class="sectionhead" style="padding-bottom:var(--space-1)">
-        <h2 id="h-semana">Esta semana</h2>
-      </div>
-
-      <a href="reminder-detalle.html" class="rem no-underline" style="min-height:var(--tap-min);padding-block:var(--space-1);color:var(--text)">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <span class="rem__body">
-          <span class="rem__title" style="font-size:var(--text-meta)">Avance de IA · hoy 23:59</span>
-          <span class="prep">
-            <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
-            te queda migrar el schema
-          </span>
-        </span>
-      </a>
-    </section>
-
-    <!-- 4 · LA RACHA --------------------------------------------------------
-         Última, y una sola línea de texto. Sin insignia, sin llama, sin
-         número grande: la racha informa, no puntúa. -->
-    <p class="gutter t-label c-accent num" style="padding-block:var(--space-2) var(--space-3)">
-      12 días seguidos
-    </p>
 
   </main>
 

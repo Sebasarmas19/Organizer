@@ -48,11 +48,6 @@
 <style>
   .matcard__head { display: flex; align-items: center; gap: var(--space-3); }
   .matcard__head .field { flex: 1 1 auto; }
-  .colordot {
-    width: var(--tap-min); height: var(--tap-min);
-    display: grid; place-items: center; border-radius: var(--radius); flex: 0 0 auto;
-  }
-  .colordot span { width: 18px; height: 18px; border-radius: 999px; background: var(--ctx); }
   .sublabel { font-size: var(--text-label); color: var(--text-muted); margin-bottom: var(--space-2); }
   .slot + .slot { margin-top: var(--space-4); padding-top: var(--space-4); box-shadow: inset 0 1px 0 var(--line); }
 </style>
@@ -95,7 +90,6 @@
       <!-- MATERIA 1 · el caso normal: un nombre, tres días, una hora -------- -->
       <div class="matcard">
         <div class="matcard__head">
-          <button class="colordot" aria-label="Color de Cálculo III" style="--ctx:var(--ctx-1)"><span></span></button>
           <span class="field"><span class="t-body text-ink">Cálculo III</span></span>
           <button class="tapicon" aria-label="Duplicar Cálculo III"><span class="ico ico--sm" data-icon="copy"></span></button>
         </div>
@@ -136,7 +130,6 @@
            resuelve sin volver a escribir el nombre -------------------------- -->
       <div class="matcard">
         <div class="matcard__head">
-          <button class="colordot" aria-label="Color de Álgebra Lineal" style="--ctx:var(--ctx-2)"><span></span></button>
           <span class="field"><span class="t-body text-ink">Álgebra Lineal</span></span>
           <button class="tapicon" aria-label="Duplicar Álgebra Lineal"><span class="ico ico--sm" data-icon="copy"></span></button>
         </div>
@@ -163,7 +156,7 @@
         <div class="slot">
           <div class="flex items-center justify-between">
             <p class="sublabel" style="margin:0">Y también</p>
-            <button class="taptext taptext--quiet t-label" aria-label="Quitar este horario">
+            <button class="tapicon" aria-label="Quitar este horario" style="margin-right:calc(var(--space-2) * -1)">
               <span class="ico ico--sm" data-icon="trash"></span>
             </button>
           </div>
@@ -188,7 +181,6 @@
       <!-- MATERIA 3 · escribiéndose ahora mismo. Sin guardar, sin validar -->
       <div class="matcard">
         <div class="matcard__head">
-          <button class="colordot" aria-label="Color de la materia nueva" style="--ctx:var(--ctx-3)"><span></span></button>
           <label class="field field--focus" for="nueva" style="flex:1 1 auto">
             <span class="t-body text-ink">Sistemas Operativos<span class="caret inline-block align-middle ml-px"></span></span>
             <input id="nueva" class="sr-only" value="Sistemas Operativos" aria-label="Nombre de la materia" autofocus>

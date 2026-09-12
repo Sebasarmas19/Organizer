@@ -16,8 +16,17 @@ tailwind.config = {
         surface: 'var(--surface)',
         sunken: 'var(--surface-sunken)',
         klass: 'var(--surface-class)',
+        /* FD3 · los tres colores de entidad (decisiones 63-66). Se usan en
+           fondos, barras y puntos; nunca en utilidades de texto. */
+        task: 'var(--task)',
+        'task-soft': 'var(--task-soft)',
+        klassc: 'var(--class)',
+        'klass-soft': 'var(--class-soft)',
+        rem: 'var(--rem)',
+        'rem-soft': 'var(--rem-soft)',
         line: 'var(--line)',
         'line-strong': 'var(--line-strong)',
+        'line-control': 'var(--line-control)',
         ink: 'var(--text)',
         muted: 'var(--text-muted)',
         faint: 'var(--text-faint)',
