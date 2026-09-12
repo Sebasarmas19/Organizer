@@ -100,3 +100,21 @@ igual, con la advertencia sobre la mesa. Mitigaciones comprometidas:
 | 44 | Archivo de contexto de Antigravity | **`AGENTS.md`** (no `AGENT.md`), con skills en `.agents/` | Verificado en el binario `agy`: lee `AGENTS.md` y `GEMINI.md`, **no** `CLAUDE.md` |
 | 45 | Validación del diseño | **Doble puerta: coordinador primero, usuario después** | El coordinador verifica que no viole decisiones; el usuario valida la sensación. Ninguna decisión escrita captura "no me gusta y por eso no la abro" |
 | 46 | Cómo revisa el usuario los comps | **Publicados como página web**, abiertos desde su iPhone | Son comps de 390px para una app de iPhone: validarlos en el dispositivo real, no en una pantalla de escritorio |
+
+## Reestructuración a tres entidades (2026-09-12, tras ver los comps de FD)
+
+Detalle completo en `docs/08-modelo-tareas-reminders.md`.
+
+| # | Decisión | Valor | Razón |
+|---|---|---|---|
+| 47 | Tres entidades | **Materias · Reminders · Tareas** | Un parcial no se "hace", ocurre. Meterlo junto a "comprar cuadernos" era un error de modelo |
+| 48 | El tipo lo determina la entrada | Siri → tarea · tocar el calendario → reminder · formulario → materia | **El usuario nunca elige el tipo.** Preguntarlo sería la fricción que mató Notion |
+| 49 | Reminders sin completado | **No se marcan como hechos.** Pasa la fecha y quedan listos | Elimina un estado y la pregunta "¿lo marqué?". Un reminder vencido no es deuda: baja al histórico sin rojo |
+| 50 | Relación tarea → reminder | Opcional, nunca obligatoria | Es donde está el valor: "este parcial es en 6 días y no tiene ninguna tarea planificada" |
+| 51 | Tareas sin reminder | **Ciudadanas de primera** | La mayoría de capturas por Siri no tendrán reminder. Su vista nunca debe verse como cajón de sobras |
+| 52 | Materias = reservar espacio | Fondo gris, con interruptor para ocultarlas al planificar | No son contenido: son ausencia de tiempo disponible |
+| 53 | Vista de mes | **Solo reminders.** Sin tareas ni materias | Responde "¿qué se me viene encima?", que es para lo que usaba el Calendar del iPhone |
+| 54 | Carga del horario | Formulario de **una semana** que se replica **mínimo 5 meses** | Ya soportado por `schedule_templates` con `active_from`/`active_until` |
+| 55 | Orden de Inicio | **Hoy primero**, luego De ayer, luego Esta semana, luego racha | Lo primero que ves debe ser lo que puedes hacer ahora, no la deuda |
+| 56 | Triage de "de ayer" | Hoy → sube a hoy · Otro día → selector · **Quitar → vuelve a Tareas, no se borra** | Sostiene "nada se pierde en silencio" |
+| 57 | Reminder en la notificación | El reminder manda: las tareas se recortan para que quepa, nunca al revés | Con 88 caracteres, un parcial mañana es lo más importante del día |

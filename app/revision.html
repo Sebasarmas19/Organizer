@@ -1,0 +1,221 @@
+<title>Diseño de Organizer</title>
+<style>
+  /* Toma la paleta del sistema que estamos revisando (app/tokens.css),
+     para que el marco no contradiga lo que muestra. */
+  :root {
+    --bg:        #FAF8F4;
+    --surface:   #FFFFFF;
+    --sunken:    #F2EEE7;
+    --ink:       #1C1A17;
+    --muted:     #5E574E;
+    --faint:     #8A8279;
+    --line:      #E2DCD2;
+    --line-soft: #EDE8E0;
+    --accent:    #0E6F66;
+    --accent-sunk: #E4F0EE;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  :root:not([data-theme="light"]) { }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:        #131211;
+      --surface:   #1C1A18;
+      --sunken:    #232120;
+      --ink:       #F3F0EA;
+      --muted:     #A9A199;
+      --faint:     #7C756D;
+      --line:      #302D2A;
+      --line-soft: #262321;
+      --accent:    #55C4B6;
+      --accent-sunk: #17322F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:        #131211;
+    --surface:   #1C1A18;
+    --sunken:    #232120;
+    --ink:       #F3F0EA;
+    --muted:     #A9A199;
+    --faint:     #7C756D;
+    --line:      #302D2A;
+    --line-soft: #262321;
+    --accent:    #55C4B6;
+    --accent-sunk: #17322F;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; }
+
+  h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.02em; text-wrap: balance; }
+  .sub { color: var(--muted); font-size: 0.9375rem; margin: 0 0 4px; }
+  .meta { color: var(--faint); font-size: 0.8125rem; font-variant-numeric: tabular-nums; margin: 0; }
+
+  h2 {
+    font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--faint); font-weight: 600;
+    margin: 48px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line-soft);
+  }
+
+  .lead {
+    margin: 28px 0 0; padding: 16px 18px;
+    background: var(--accent-sunk); border-radius: 10px;
+    font-size: 0.9375rem; line-height: 1.55;
+  }
+  .lead strong { font-weight: 600; }
+
+  .comps { display: grid; gap: 12px; }
+  a.comp {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px 18px;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  a.comp:hover, a.comp:focus-visible { border-color: var(--accent); }
+  a.comp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .comp__top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .comp__name { font-weight: 600; font-size: 1.0625rem; }
+  .comp__open { color: var(--accent); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; }
+  .comp__what { color: var(--muted); font-size: 0.9375rem; margin: 4px 0 0; }
+  .comp__look { color: var(--ink); font-size: 0.875rem; margin: 10px 0 0; padding-left: 12px; border-left: 2px solid var(--accent); }
+  .comp__look b { font-weight: 600; color: var(--accent); }
+
+  .q { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
+  .q__n { font-size: 0.75rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+  .q__t { font-weight: 600; margin: 2px 0 6px; }
+  .q__b { color: var(--muted); font-size: 0.9375rem; margin: 0; }
+  .q__b code { background: var(--sunken); padding: 1px 5px; border-radius: 4px; font-size: 0.875em; }
+
+  .flag { border-left: 3px solid var(--accent); background: var(--sunken); border-radius: 0 10px 10px 0; padding: 14px 18px; }
+  .flag table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin-top: 10px; }
+  .flag th { text-align: left; color: var(--faint); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 6px; }
+  .flag td { padding: 5px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .flag td:nth-child(2) { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; padding-right: 14px; width: 1%; }
+
+  footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--line-soft); color: var(--faint); font-size: 0.8125rem; }
+</style>
+
+<div class="wrap">
+
+  <h1>Diseño de Organizer</h1>
+  <p class="sub">Ocho comps para revisar antes de programar nada.</p>
+  <p class="meta">FD · 12 sep 2026 · sistema de diseño + 8 pantallas</p>
+
+  <p class="lead">
+    <strong>Ábrelo desde el iPhone.</strong> Están dibujados a 390&nbsp;px, el ancho real de tu
+    teléfono. Revisarlos en la computadora mide la cosa equivocada: no ves si el texto se lee
+    caminando ni si los botones se alcanzan con el pulgar.
+  </p>
+
+  <h2>Las pantallas</h2>
+  <div class="comps">
+
+    <a class="comp" href="comps/inicio.html">
+      <span class="comp__top"><span class="comp__name">Inicio</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Lo que ves al abrir la app. Cabe sin scroll: está medido.</p>
+      <p class="comp__look"><b>Mira:</b> ¿te baja la ansiedad o te la sube? Es la pantalla que vas a ver varias veces al día, y la única que importa de verdad.</p>
+    </a>
+
+    <a class="comp" href="comps/inicio-vacio.html">
+      <span class="comp__top"><span class="comp__name">Inicio vacío</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Cuando ya cerraste el día.</p>
+      <p class="comp__look"><b>Mira:</b> ¿se siente como un logro o como que algo está roto?</p>
+    </a>
+
+    <a class="comp" href="comps/semana.html">
+      <span class="comp__top"><span class="comp__name">Semana · teléfono</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Un día por vez, con la tira de la semana arriba.</p>
+      <p class="comp__look"><b>Decide:</b> pediste calendario semanal, pero siete columnas en un teléfono dan 50&nbsp;px por día y arrastrar sería imposible. Esta es la desviación más grande del plan. <b>Necesita tu visto bueno.</b></p>
+    </a>
+
+    <a class="comp" href="comps/semana-escritorio.html">
+      <span class="comp__top"><span class="comp__name">Semana · escritorio</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Aquí sí: las siete columnas completas, más un carril de lo no planificado.</p>
+      <p class="comp__look"><b>Mira:</b> es donde armarías el domingo. ¿Lo harías aquí?</p>
+    </a>
+
+    <a class="comp" href="comps/tareas.html">
+      <span class="comp__top"><span class="comp__name">Tareas</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Lo que capturas por Siri cae aquí, y se organiza en carpetas.</p>
+      <p class="comp__look"><b>Decide:</b> las carpetas están dibujadas como tus contextos (ramos, proyectos). ¿Es eso, o querías dos cosas separadas?</p>
+    </a>
+
+    <a class="comp" href="comps/recursos.html">
+      <span class="comp__top"><span class="comp__name">Recursos</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Skills, herramientas y artículos. Abre con el cursor en el buscador.</p>
+      <p class="comp__look"><b>Mira:</b> ¿encontrarías algo que guardaste hace tres meses?</p>
+    </a>
+
+    <a class="comp" href="comps/domingo.html">
+      <span class="comp__top"><span class="comp__name">Ritual del domingo</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Primer paso: qué hacer con lo que no cumpliste.</p>
+      <p class="comp__look"><b>Mira:</b> este es el momento donde el sistema se cae si te hace sentir mal. ¿Te regaña?</p>
+    </a>
+
+    <a class="comp" href="comps/notificacion.html">
+      <span class="comp__top"><span class="comp__name">La notificación</span><span class="comp__open">Abrir →</span></span>
+      <p class="comp__what">Los cinco textos, en la pantalla de bloqueo, con su largo real.</p>
+      <p class="comp__look"><b>Mira con calma:</b> esto <em>es</em> el producto. Si con solo leer esto ya sabes tu día y no hace falta abrir nada, funcionó.</p>
+    </a>
+
+  </div>
+
+  <h2>Lo que encontré yo</h2>
+  <div class="flag">
+    <p style="margin:0;font-weight:600">Los controles más importantes son los más pequeños.</p>
+    <p style="margin:6px 0 0;color:var(--muted);font-size:0.9375rem">
+      El sistema define 44&nbsp;px como mínimo para tocar con el pulgar, y luego lo incumple justo
+      en los tres controles que más usarás. Se lo devuelvo para corregir.
+    </p>
+    <table>
+      <tr><th>Control</th><th>Es</th><th>Debería</th></tr>
+      <tr><td>Hoy / Otro día / Quitar</td><td>40 px</td><td>44 px</td></tr>
+      <tr><td>Se me corrió el día</td><td>32 px</td><td>44 px</td></tr>
+      <tr><td>Deshacer</td><td>32 px</td><td>44 px</td></tr>
+    </table>
+  </div>
+
+  <h2>Lo que necesito que decidas</h2>
+
+  <div class="q">
+    <div class="q__n">01</div>
+    <div class="q__t">Semana en el teléfono: ¿un día por vez?</div>
+    <p class="q__b">Siete columnas a 390&nbsp;px son ilegibles y matarían el arrastre, que era la mitigación del riesgo del calendario. La rejilla completa vive en escritorio. Es la desviación más visible del plan.</p>
+  </div>
+
+  <div class="q">
+    <div class="q__n">02</div>
+    <div class="q__t">¿Qué se cae cuando el día no cabe en la notificación?</div>
+    <p class="q__b">Hallazgo nuevo: iOS solo muestra <code>38</code> caracteres de título y <code>88</code> de cuerpo antes de cortar. Con cuatro bloques ya vas justo. Con siete, algo tiene que salir — nunca cortar una frase a la mitad.</p>
+  </div>
+
+  <div class="q">
+    <div class="q__n">03</div>
+    <div class="q__t">¿Carpeta y contexto son la misma cosa?</div>
+    <p class="q__b">Pediste carpetas en Tareas, pero ya existen los contextos (ramos, proyectos, cursos). Tenerlos por separado sería lo mismo dos veces.</p>
+  </div>
+
+  <div class="q">
+    <div class="q__n">04</div>
+    <div class="q__t">¿Las clases aparecen en la notificación?</div>
+    <p class="q__b">En <em>Inicio</em> no salen, eso ya lo decidiste. Pero a las 8:00 lo que pasa es Cálculo. La propuesta: Inicio es para <em>decidir</em>, y las clases no se deciden; la notificación es para <em>saber qué pasa hoy</em>.</p>
+  </div>
+
+  <div class="q">
+    <div class="q__n">05</div>
+    <div class="q__t">Cuando no cabe todo en Inicio, ¿pongo el número?</div>
+    <p class="q__b">Ahora dice <em>“El resto está en Tareas”</em>, sin cifra. Poner <em>“+3 más”</em> informa mejor, pero es literalmente un contador de deuda — justo lo que prohibimos.</p>
+  </div>
+
+  <footer>
+    Los ocho comps están en el repo, en <code>app/comps/</code>. El informe completo del diseñador,
+    con lo que quedó fuera, en <code>docs/estado-FD.md</code>.
+  </footer>
+
+</div>

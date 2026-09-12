@@ -270,3 +270,37 @@ alter table resources enable row level security;
 
 create policy "own resources" on resources
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ═══════════════════════════════════════════════════════════════════
+-- REMINDERS (decisiones #47–#55) — ver docs/08-modelo-tareas-reminders.md
+-- Parciales, entregas, defensas. NO se marcan como hechos: pasa el día
+-- y quedan listos. El estado se deriva de occurs_on, no se almacena.
+-- ═══════════════════════════════════════════════════════════════════
+
+create table reminders (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users on delete cascade,
+  title       text not null check (length(trim(title)) > 0),
+  notes       text,
+  context_id  uuid references contexts on delete set null,
+
+  occurs_on   date not null,          -- obligatoria: sin fecha no es reminder
+  occurs_at   time,                   -- opcional: hora exacta si se sabe
+  notice_days int check (notice_days is null or notice_days > 0),
+
+  created_at  timestamptz not null default now()
+);
+
+-- la vista de mes y la banda de "esta semana" consultan por fecha
+create index on reminders (user_id, occurs_on);
+
+alter table reminders enable row level security;
+create policy "own reminders" on reminders
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- La asociación tarea -> reminder. SIEMPRE opcional: la mayoría de lo
+-- capturado por Siri no tendrá reminder, y esas tareas no son de segunda.
+alter table items add column reminder_id uuid references reminders on delete set null;
+
+-- "de este reminder, cuántas tareas llevo" y "este reminder no tiene ninguna"
+create index on items (reminder_id) where reminder_id is not null;
