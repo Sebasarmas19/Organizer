@@ -18,13 +18,14 @@
 | Archivo | Qué contiene |
 |---|---|
 | `docs/00-problema.md` | El problema real y el diagnóstico. **Léelo primero.** |
-| `docs/01-decisiones.md` | Las 46 decisiones ya cerradas con el usuario. No las re-preguntes. |
+| `docs/01-decisiones.md` | Las 57 decisiones ya cerradas con el usuario. No las re-preguntes. |
 | `docs/02-arquitectura.md` | Stack, Web Push en iOS, captura por Atajo de Siri |
 | `docs/03-modelo-datos.md` | Entidades y por qué están así |
 | `docs/schema.sql` | DDL listo para Supabase |
 | `docs/04-plan-fases.md` | Fases F0–F6, dependencias y delegación a agentes |
 | `docs/05-preguntas-abiertas.md` | Lo que todavía falta decidir |
 | `docs/06-recursos.md` | Módulo Recursos: skills, herramientas y artículos |
+| `docs/08-modelo-tareas-reminders.md` | **Materias, reminders y tareas.** Sustituye parte de 03 |
 | `docs/07-metodologia.md` | **Cómo se trabaja**: orquestación con Orca, roles, validación |
 
 ## Estructura del repositorio
