@@ -1,0 +1,28 @@
+# dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# build
+.next/
+out/
+build/
+dist/
+
+# entorno — NUNCA commitear claves
+.env
+.env*.local
+.env.production
+
+# vercel / supabase
+.vercel
+.supabase/
+
+# sistema
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# tooling local
+.claude/settings.local.json

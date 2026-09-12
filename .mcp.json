@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "reicon": {
+      "command": "reicon-mcp"
+    }
+  }
+}
