@@ -123,3 +123,22 @@ Detalle completo en `docs/08-modelo-tareas-reminders.md`.
 | 60 | Anticipación del aviso | **1 día por defecto**, editable por reminder | Con 6 días, el mismo parcial encabeza seis notificaciones seguidas y a partir de la tercera es ruido |
 | 61 | Reminder preparado no avisa | Si todas sus tareas están hechas, **no encabeza la notificación** | Estar preparado es la señal de que no hace falta avisar. Gratis en código, y es la diferencia entre un aviso útil y una alarma repetida |
 | 62 | Reminders fuera del triage dominical | No se posponen ni se quitan. En el paso 2 aparecen **solo de lectura** | Un parcial no se pospone. Con botones "Otro día / Quitar", el domingo volvería a ser una factura |
+
+## Color y calendario (2026-09-12, tras revisar los comps de FD2)
+
+El usuario aportó ocho referencias visuales, guardadas en `briefs/ref/`.
+Detalle del encargo en `briefs/FD3-calendario-color.md`.
+
+| # | Decisión | Valor | Razón |
+|---|---|---|---|
+| 63 | Color por entidad | **Tareas azul marino · Materias verde · Reminders ámbar.** El color vive en la barra, el punto, el banderín o el fondo tintado — **nunca en el texto** | Petición explícita del usuario: "que estén ligadas a colores, no solo el texto que representa". Texto amarillo sobre blanco no llega a 2:1, así que el color no puede ser el texto |
+| 64 | Color **y** forma, no color solo | La casilla (tarea) y el banderín (reminder) se mantienen. El color refuerza | Funciona para daltonismo y funciona de reojo, que es como se usa esta app |
+| 65 | El acento cambia | **El acento del sistema pasa a ser el azul marino de tareas.** El petróleo `#0E6F66` desaparece | Si materias son verdes, verde deja de significar "esto se toca". La acción principal en esta app es una tarea. Cuatro colores pasan a tres |
+| 66 | Los contextos pierden el color | Quedan como texto (`Cursos`, `Personal`), sin punto de color | Tres colores de entidad + seis de contexto = cada fila un arcoíris y ninguno significa nada. **Un solo sistema de color por pantalla** |
+| 67 | Navegación del calendario | **Tres niveles: Mes → Semana → Día**, con botón de subir nivel al estilo iOS (`‹ Septiembre`) y flechas para moverse dentro del nivel | Referencias 10 y 11. El mismo gesto en los tres niveles: la etiqueta cambia, la cabecera no |
+| 68 | Vista Día | Tira de 7 días arriba + **riel de horas a la izquierda**, bloques a la derecha | Referencias 08 y 09. La tira navega la semana sin salir del día |
+| 69 | Vista Semana | **El plan semanal completo**: tareas, reminders y materias juntos, en siete filas | Matiza la #59, que dejaba las materias fuera. Palabras del usuario: "que se muestre el plan semanal completo" |
+| 70 | El "+" del calendario **sí** pregunta | Al añadir desde el calendario se elige entre tarea y reminder | Matiza la #48. Esa regla protege **la captura** (Siri, módulo Tareas), donde la fricción mata. Planificar sobre el calendario es un momento deliberado: ahí preguntar cuesta un toque y evita ambigüedad |
+| 71 | Planificar = elegir de lo ya capturado | Al añadir una tarea en el calendario, lo primero que se ve es **la lista de tareas capturadas y nunca planificadas**. Crear una nueva también se puede, en el mismo sitio | Es el puente que le faltaba al producto: lo que capturaste por Siri vuelve a aparecer justo cuando estás decidiendo la semana |
+| 72 | "Se me corrió el día" se elimina | Fuera de `inicio.html` | El usuario no entendió el botón, y al preguntarlo dio la razón correcta: "al final del día es que uno ve qué tareas hizo y cuáles no". El balance ya lo hace el repaso de la noche y el triage de "De ayer" |
+| 73 | "Lo que viene" sale del calendario | Vive en el módulo Tareas, junto a la lista de reminders | El calendario responde "cuándo"; la lista responde "qué sigue". Mezclarlas duplicaba la información en dos sitios |
