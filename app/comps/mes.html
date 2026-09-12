@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mes · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  CALENDARIO · vista MES                        (FD2 · decisión 53) · NUEVO
+  ---------------------------------------------------------------------------
+  Una sola pregunta: ¿qué se me viene encima?
+
+  Es literalmente para lo que el usuario usaba el Calendar del iPhone: abrir
+  los planes de evaluación a principio de semestre y anotar cada parcial,
+  defensa y entrega. Absorber eso es parte de "un solo destino".
+
+  SOLO REMINDERS. Sin tareas y sin materias, y esto no es una omisión:
+  - las materias se repiten cuatro veces por semana y llenarían las treinta
+    celdas de ruido idéntico;
+  - las tareas cambian cada día y convertirían el mes en una sopa ilegible.
+  Meterle cualquiera de las dos arruina la única pregunta que responde. Por
+  eso aquí tampoco hay control de capas: siempre son reminders.
+
+  LOS PASADOS NO SON DEUDA (decisión 49). El parcial del 4 sigue en su celda,
+  apagado, sin tachar y sin marca. Ocurrió. No es una falta del usuario, así
+  que no se persigue ni se colorea. Simplemente pesa menos.
+
+  Debajo de la rejilla va la lista de lo que viene, porque una celda de 11px
+  no puede con un título largo y el mes tiene que servir de verdad, no sólo
+  verse bien.
+
+  CREAR UN REMINDER: se toca un día. El tipo lo determina la entrada
+  (decisión 48) — aquí nunca se pregunta "¿esto es tarea o reminder?".
+-->
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="15:42"></div>
+
+  <main class="screen flex flex-col">
+
+    <header class="pagehead" style="padding-bottom:var(--space-3)">
+      <div>
+        <h1 class="t-title">Septiembre</h1>
+        <p class="t-meta c-muted">2026 · 4 fechas por delante</p>
+      </div>
+      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+        <button class="tapicon" aria-label="Mes anterior"><span class="ico ico--lg" data-icon="chevron-left"></span></button>
+        <button class="tapicon" aria-label="Mes siguiente"><span class="ico ico--lg" data-icon="chevron-right"></span></button>
+      </div>
+    </header>
+
+    <div class="gutter pb-4">
+      <div class="seg" role="tablist" aria-label="Vista del calendario">
+        <button role="tab" aria-selected="false">Día</button>
+        <button role="tab" aria-selected="false">Semana</button>
+        <button role="tab" aria-selected="true">Mes</button>
+      </div>
+    </div>
+
+    <!-- LA REJILLA · solo reminders ------------------------------------------ -->
+    <div class="px-2">
+      <div class="month" aria-hidden="true">
+        <span class="month__dow">L</span><span class="month__dow">M</span><span class="month__dow">X</span>
+        <span class="month__dow">J</span><span class="month__dow">V</span><span class="month__dow">S</span>
+        <span class="month__dow">D</span>
+      </div>
+      <div class="month" id="grid"></div>
+    </div>
+
+    <!-- LO QUE VIENE ---------------------------------------------------------
+         La rejilla da la forma del mes; esta lista da los nombres completos y
+         el estado de preparación, que es lo que no cabe en una celda. -->
+    <section class="mt-5" aria-labelledby="h-viene">
+      <div class="sectionhead">
+        <h2 id="h-viene">Lo que viene</h2>
+      </div>
+
+      <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <span class="rem__body">
+          <span class="rem__title">Entrega del avance de IA</span>
+          <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>hoy · 23:59</span>
+          <span class="prep">
+            <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
+            te queda migrar el schema
+          </span>
+        </span>
+      </a>
+
+      <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <span class="rem__body">
+          <span class="rem__title">Parcial de Cálculo</span>
+          <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-1)"></span>viernes 18 · 10:00</span>
+          <span class="prep">
+            <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+            todo listo
+          </span>
+        </span>
+      </a>
+
+      <!-- El caso que ninguna app cubre: falta poco y no hay ni una tarea.
+           La señal la da el peso de la letra; el acento aparece como ACCIÓN,
+           nunca como alarma. Sin rojo: todavía está a tiempo. -->
+      <div class="rem">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <div class="rem__body">
+          <p class="rem__title">Defensa del proyecto</p>
+          <p class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>miércoles 23 · en 6 días</p>
+          <p class="prep prep--none">
+            <span class="ico ico--sm" data-icon="alert-triangle" style="width:14px;height:14px"></span>
+            Sin tareas todavía
+          </p>
+        </div>
+        <button class="btn" style="align-self:center;min-height:var(--tap-min)">Planificar</button>
+      </div>
+
+      <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <span class="rem__body">
+          <span class="rem__title">Quiz de Álgebra</span>
+          <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-2)"></span>lunes 28 · 11:00</span>
+        </span>
+      </a>
+    </section>
+
+    <!-- PASADOS · bajan al histórico en silencio -->
+    <section class="mt-5 pb-4" aria-labelledby="h-pasados">
+      <div class="sectionhead">
+        <h2 id="h-pasados">Ya pasaron</h2>
+      </div>
+      <div class="rem rem--past">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <div class="rem__body">
+          <p class="rem__title">Entrega de laboratorio</p>
+          <p class="rem__when">martes 15</p>
+        </div>
+      </div>
+      <div class="rem rem--past">
+        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+        <div class="rem__body">
+          <p class="rem__title">Primer parcial de Álgebra</p>
+          <p class="rem__when">viernes 4</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav data-tabbar="semana"></nav>
+  <div data-homebar></div>
+</div>
+
+<script>
+  (function () {
+    // Septiembre 2026: el 1 cae martes. La rejilla empieza en lunes.
+    var LEAD = 1, DAYS = 30, TODAY = 17;
+    var REMINDERS = {
+      4:  { t: 'Parcial Álgebra', c: 2 },
+      15: { t: 'Entrega lab',     c: 3 },
+      17: { t: 'Avance IA',       c: 3 },
+      18: { t: 'Parcial Cálculo', c: 1 },
+      23: { t: 'Defensa',         c: 3 },
+      28: { t: 'Quiz Álgebra',    c: 2 }
+    };
+
+    var grid = document.getElementById('grid');
+
+    function cell(label, opts) {
+      var el = document.createElement(opts.n ? 'button' : 'div');
+      el.className = 'mday' + (opts.out ? ' mday--out' : '') +
+        (opts.today ? ' mday--today' : '') + (opts.past ? ' mday--past' : '');
+      var html = '<span class="mday__n num">' + label + '</span>';
+      if (opts.ev) {
+        html += '<span class="mday__ev" style="--ctx:var(--ctx-' + opts.ev.c + ')">' + opts.ev.t + '</span>';
+      }
+      el.innerHTML = html;
+      if (opts.n) el.setAttribute('aria-label', label + ' de septiembre' + (opts.ev ? ': ' + opts.ev.t : ', añadir reminder'));
+      grid.appendChild(el);
+    }
+
+    // Agosto tiene 31 días: las celdas de arrastre cierran el mes anterior.
+    for (var i = 0; i < LEAD; i++) cell(31 - LEAD + 1 + i, { out: true });
+    for (var d = 1; d <= DAYS; d++) {
+      cell(d, { n: true, today: d === TODAY, past: d < TODAY, ev: REMINDERS[d] });
+    }
+    var trail = (7 - ((LEAD + DAYS) % 7)) % 7;
+    for (var j = 1; j <= trail; j++) cell(j, { out: true });
+  })();
+</script>
+</body>
+</html>

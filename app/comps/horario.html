@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Horario · Organizer</title>
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../base.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="../tw.js"></script>
+<script src="../theme.js"></script>
+<script src="../icons.js" defer></script>
+<script src="../chrome.js" defer></script>
+</head>
+
+<!--
+  HORARIO · carga de materias                   (FD2 · decisión 54) · NUEVO
+  ---------------------------------------------------------------------------
+  Esta pantalla es la única barrera real de entrada a la app. Es el mayor
+  trabajo manual de todo el proyecto y se hace UNA vez, al principio del
+  semestre, que es justo el momento en el que abandonar sale gratis.
+
+  Por eso está diseñada contra un solo enemigo: repetir datos.
+
+  LO QUE HACE QUE SEA RÁPIDA
+  1. El nombre se escribe una vez y se reparte en varios días. Cálculo III
+     son lunes, miércoles y viernes de 8 a 10: eso es un nombre, tres
+     botones y una hora, no tres formularios.
+  2. Los siete días son siete botones de 44px, encendidos o apagados. Nada
+     de desplegables ni de "añadir día".
+  3. "Otro horario" es para el caso raro — la materia que un día tiene
+     laboratorio a otra hora. No estorba al caso normal.
+  4. "Duplicar" copia una materia entera con sus días. Los horarios
+     universitarios se parecen mucho entre sí.
+  5. El rango del semestre se pone UNA vez arriba, no por materia. Es lo que
+     hace que una semana cargada valga cinco meses (active_from /
+     active_until de schedule_templates).
+
+  LO QUE NO PIDE
+  - Ni aula ni profesor son obligatorios. Se escriben si sirven.
+  - No pregunta color: se asigna solo y se puede cambiar tocándolo.
+  - No hay botón de guardar por materia. Se guarda al escribir.
+
+  El interruptor de avisos por materia es la decisión 26: por defecto las
+  clases no notifican, pero se pueden encender una a una.
+-->
+
+<style>
+  .matcard__head { display: flex; align-items: center; gap: var(--space-3); }
+  .matcard__head .field { flex: 1 1 auto; }
+  .colordot {
+    width: var(--tap-min); height: var(--tap-min);
+    display: grid; place-items: center; border-radius: var(--radius); flex: 0 0 auto;
+  }
+  .colordot span { width: 18px; height: 18px; border-radius: 999px; background: var(--ctx); }
+  .sublabel { font-size: var(--text-label); color: var(--text-muted); margin-bottom: var(--space-2); }
+  .slot + .slot { margin-top: var(--space-4); padding-top: var(--space-4); box-shadow: inset 0 1px 0 var(--line); }
+</style>
+
+<body class="comp">
+<div class="device">
+  <div data-statusbar="9:14"></div>
+
+  <main class="screen flex flex-col">
+
+    <div class="flex items-center justify-between gutter" style="padding-block:var(--space-1)">
+      <button class="taptext taptext--quiet t-meta" aria-label="Volver">
+        <span class="ico ico--sm" data-icon="chevron-left"></span>
+        Ajustes
+      </button>
+      <button class="taptext t-meta">Listo</button>
+    </div>
+
+    <header class="pagehead" style="padding-bottom:var(--space-2)">
+      <div>
+        <h1 class="t-title">Tu horario</h1>
+        <p class="t-meta c-muted">Se carga una vez y dura todo el semestre.</p>
+      </div>
+    </header>
+
+    <!-- EL RANGO, UNA SOLA VEZ ----------------------------------------------
+         Aquí está lo que convierte una semana en cinco meses. Ponerlo por
+         materia sería pedir el mismo dato seis veces. -->
+    <div class="gutter pb-4">
+      <p class="sublabel">El semestre va de</p>
+      <div class="timepair">
+        <span class="field"><span class="t-body text-ink num">15 sep 2026</span></span>
+        <span class="c-faint">a</span>
+        <span class="field"><span class="t-body text-ink num">20 feb 2027</span></span>
+      </div>
+    </div>
+
+    <div class="gutter">
+
+      <!-- MATERIA 1 · el caso normal: un nombre, tres días, una hora -------- -->
+      <div class="matcard">
+        <div class="matcard__head">
+          <button class="colordot" aria-label="Color de Cálculo III" style="--ctx:var(--ctx-1)"><span></span></button>
+          <span class="field"><span class="t-body text-ink">Cálculo III</span></span>
+          <button class="tapicon" aria-label="Duplicar Cálculo III"><span class="ico ico--sm" data-icon="copy"></span></button>
+        </div>
+
+        <div class="slot mt-4">
+          <p class="sublabel">Se repite</p>
+          <div class="dayset" role="group" aria-label="Días de Cálculo III">
+            <button aria-pressed="true">L</button>
+            <button aria-pressed="false">M</button>
+            <button aria-pressed="true">X</button>
+            <button aria-pressed="false">J</button>
+            <button aria-pressed="true">V</button>
+            <button aria-pressed="false">S</button>
+            <button aria-pressed="false">D</button>
+          </div>
+
+          <div class="timepair mt-3">
+            <span class="field"><span class="t-body text-ink num">8:00</span></span>
+            <span class="c-faint">–</span>
+            <span class="field"><span class="t-body text-ink num">10:00</span></span>
+            <span class="field" style="flex:1.4"><span class="t-meta c-muted">Aula 204</span></span>
+          </div>
+        </div>
+
+        <!-- Para el caso raro, no para el normal -->
+        <button class="taptext t-label mt-3">
+          <span class="ico ico--sm" data-icon="plus"></span>
+          Otro horario para esta materia
+        </button>
+
+        <button class="toggle mt-1" aria-pressed="false" style="padding-inline:0">
+          <span class="toggle__label">Avisarme antes de clase</span>
+          <span class="toggle__switch"></span>
+        </button>
+      </div>
+
+      <!-- MATERIA 2 · dos horarios distintos, que es lo que "otro horario"
+           resuelve sin volver a escribir el nombre -------------------------- -->
+      <div class="matcard">
+        <div class="matcard__head">
+          <button class="colordot" aria-label="Color de Álgebra Lineal" style="--ctx:var(--ctx-2)"><span></span></button>
+          <span class="field"><span class="t-body text-ink">Álgebra Lineal</span></span>
+          <button class="tapicon" aria-label="Duplicar Álgebra Lineal"><span class="ico ico--sm" data-icon="copy"></span></button>
+        </div>
+
+        <div class="slot mt-4">
+          <p class="sublabel">Se repite</p>
+          <div class="dayset" role="group" aria-label="Días de Álgebra Lineal, teoría">
+            <button aria-pressed="false">L</button>
+            <button aria-pressed="true">M</button>
+            <button aria-pressed="false">X</button>
+            <button aria-pressed="true">J</button>
+            <button aria-pressed="false">V</button>
+            <button aria-pressed="false">S</button>
+            <button aria-pressed="false">D</button>
+          </div>
+          <div class="timepair mt-3">
+            <span class="field"><span class="t-body text-ink num">11:00</span></span>
+            <span class="c-faint">–</span>
+            <span class="field"><span class="t-body text-ink num">13:00</span></span>
+            <span class="field" style="flex:1.4"><span class="t-meta c-muted">Aula 112</span></span>
+          </div>
+        </div>
+
+        <div class="slot">
+          <div class="flex items-center justify-between">
+            <p class="sublabel" style="margin:0">Y también</p>
+            <button class="taptext taptext--quiet t-label" aria-label="Quitar este horario">
+              <span class="ico ico--sm" data-icon="trash"></span>
+            </button>
+          </div>
+          <div class="dayset mt-2" role="group" aria-label="Días de Álgebra Lineal, laboratorio">
+            <button aria-pressed="false">L</button>
+            <button aria-pressed="false">M</button>
+            <button aria-pressed="true">X</button>
+            <button aria-pressed="false">J</button>
+            <button aria-pressed="false">V</button>
+            <button aria-pressed="false">S</button>
+            <button aria-pressed="false">D</button>
+          </div>
+          <div class="timepair mt-3">
+            <span class="field"><span class="t-body text-ink num">14:00</span></span>
+            <span class="c-faint">–</span>
+            <span class="field"><span class="t-body text-ink num">16:00</span></span>
+            <span class="field" style="flex:1.4"><span class="t-meta c-muted">Lab 3</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MATERIA 3 · escribiéndose ahora mismo. Sin guardar, sin validar -->
+      <div class="matcard">
+        <div class="matcard__head">
+          <button class="colordot" aria-label="Color de la materia nueva" style="--ctx:var(--ctx-3)"><span></span></button>
+          <label class="field field--focus" for="nueva" style="flex:1 1 auto">
+            <span class="t-body text-ink">Sistemas Operativos<span class="caret inline-block align-middle ml-px"></span></span>
+            <input id="nueva" class="sr-only" value="Sistemas Operativos" aria-label="Nombre de la materia" autofocus>
+          </label>
+        </div>
+
+        <div class="slot mt-4">
+          <p class="sublabel">Se repite</p>
+          <div class="dayset" role="group" aria-label="Días de Sistemas Operativos">
+            <button aria-pressed="false">L</button>
+            <button aria-pressed="false">M</button>
+            <button aria-pressed="false">X</button>
+            <button aria-pressed="false">J</button>
+            <button aria-pressed="false">V</button>
+            <button aria-pressed="false">S</button>
+            <button aria-pressed="false">D</button>
+          </div>
+          <p class="t-label c-faint mt-2">Toca los días que la tengas.</p>
+        </div>
+      </div>
+
+      <button class="btn btn--full mt-4">
+        <span class="ico ico--sm" data-icon="plus"></span>
+        Otra materia
+      </button>
+
+      <p class="t-label c-faint mt-4" style="padding-bottom:var(--space-6)">
+        Con esto basta: la semana se repite sola hasta el 20 de febrero.
+        Si cambia algo a mitad de semestre, se edita aquí y se vuelve a repartir.
+      </p>
+
+    </div>
+
+  </main>
+
+  <div data-homebar></div>
+</div>
+</body>
+</html>

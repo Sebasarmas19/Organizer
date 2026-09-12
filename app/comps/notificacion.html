@@ -35,6 +35,15 @@
   Diferencia deliberada con Inicio: aqui SI entran las clases. Inicio es para
   decidir (decision 35) y las clases no se deciden; la notificacion es para
   saber que pasa hoy, y a las 8:00 lo que pasa es Calculo.
+
+  FD2 · EL REMINDER MANDA (decision 57). Si hay un parcial o una entrega
+  cerca, ocupa el TITULO y las tareas se recortan para que quepa. Nunca al
+  reves: con 88 caracteres, un parcial manana es lo mas importante del dia.
+  Ver la variante "Con un reminder cerca".
+
+  Y no lleva ningun simbolo de alarma. Ni un triangulo, ni un rojo, ni un
+  "ojo". La urgencia la da la frase, no un glifo: "Manana: Parcial de
+  Calculo" ya se entiende, y no regana a nadie.
 -->
 
 <style>
@@ -74,11 +83,11 @@
     </div>
   </div>
 
-  <!-- ======================= LOS CINCO TEXTOS ========================= -->
+  <!-- ======================== LOS SEIS TEXTOS ========================= -->
   <div class="pb-6" style="background:var(--bg)">
 
     <div class="spec">
-      <h2 class="t-section">Los textos</h2>
+      <h2 class="t-section">Los seis textos</h2>
       <p class="t-meta c-muted mt-1">
         Escritos para caber plegados. El número es el largo real; el techo es
         38 en el título y 88 en el cuerpo.
@@ -113,7 +122,34 @@
 
     <div class="ruler"></div>
 
-    <!-- 2 · NOCHE -->
+    <!-- 2 · CON UN REMINDER CERCA  (decision 57) -->
+    <section class="spec">
+      <div class="flex items-baseline justify-between gap-3 mb-3">
+        <span class="spec__label">Con un reminder cerca</span>
+        <span class="spec__when num">7:30</span>
+        <span class="spec__count ml-auto">26 / 63</span>
+      </div>
+      <div class="darkstrip">
+        <div class="notif" style="border:0;background:rgb(255 255 255 / .11)">
+          <div class="notif__head">
+            <span class="notif__icon"><span></span></span>
+            <span class="notif__app">Organizer</span>
+            <span class="notif__when">ahora</span>
+          </div>
+          <p class="notif__title">Mañana: Parcial de Cálculo</p>
+          <p class="notif__body clamp2">Hoy: 8:00 Cálculo · 15:00 Migrar el schema · 20:00 Repaso final</p>
+        </div>
+      </div>
+      <p class="spec__why">
+        El reminder se lleva el título y las tareas se recortan para que quepa,
+        nunca al revés. Si el día tuviera seis bloques, salen los de más tarde:
+        con un parcial mañana, saber la hora de la sexta tarea no cambia nada.
+      </p>
+    </section>
+
+    <div class="ruler"></div>
+
+    <!-- 3 · NOCHE -->
     <section class="spec">
       <div class="flex items-baseline justify-between gap-3 mb-3">
         <span class="spec__label">Noche</span>
@@ -139,7 +175,7 @@
 
     <div class="ruler"></div>
 
-    <!-- 3 · DOMINGO -->
+    <!-- 4 · DOMINGO -->
     <section class="spec">
       <div class="flex items-baseline justify-between gap-3 mb-3">
         <span class="spec__label">Domingo</span>
@@ -165,7 +201,7 @@
 
     <div class="ruler"></div>
 
-    <!-- 4 · AVISO DE ENTREGA -->
+    <!-- 5 · AVISO DE ENTREGA -->
     <section class="spec">
       <div class="flex items-baseline justify-between gap-3 mb-3">
         <span class="spec__label">Aviso de entrega</span>
@@ -191,7 +227,7 @@
 
     <div class="ruler"></div>
 
-    <!-- 5 · LUNES SIN REVISION -->
+    <!-- 6 · LUNES SIN REVISION -->
     <section class="spec">
       <div class="flex items-baseline justify-between gap-3 mb-3">
         <span class="spec__label">Lunes sin revisión</span>

@@ -1,7 +1,9 @@
 # Sistema visual de Organizer
 
-> Escrito por la sesión de diseño (fase FD). Deriva de `briefs/FD-diseno.md`,
-> `docs/00-problema.md` y las 46 decisiones de `docs/01-decisiones.md`.
+> Escrito por la sesión de diseño. **Actualizado en FD2** con el modelo de tres
+> entidades. Deriva de `briefs/FD-diseno.md`, `briefs/FD2-correcciones.md`,
+> `docs/00-problema.md`, `docs/08-modelo-tareas-reminders.md` y las 57
+> decisiones de `docs/01-decisiones.md`.
 >
 > Los comps de `app/comps/` son la referencia visual. Esto es el contrato:
 > si un comp y este documento se contradicen, gana el comp y hay que corregir
@@ -25,6 +27,109 @@ preferencias estéticas:
 
 ---
 
+## Las tres entidades
+
+`docs/08-modelo-tareas-reminders.md` las define; esto es cómo se ven.
+
+| | Qué es | Forma visual | ¿Se completa? |
+|---|---|---|---|
+| **Materia** | El horario fijo del semestre | Superficie gris de fondo | No |
+| **Reminder** | Parcial, entrega, defensa | **Banderín**, sin casilla | **No.** Pasa la fecha y queda listo |
+| **Tarea** | Lo que haces | **Círculo de check** | Sí |
+
+**La diferencia se ve sin color.** Una tarea lleva casilla; un reminder lleva
+banderín y no tiene nada que marcar; una materia es una superficie que no se
+toca. Ningún color nuevo entra en la paleta por esto.
+
+### Las tres reglas que el diseño tiene que sostener
+
+1. **Ninguna pantalla pregunta "¿esto es tarea o reminder?"** (decisión 48).
+   El lugar donde entras lo determina: Siri y el módulo Tareas hacen tareas,
+   tocar un día del calendario hace un reminder, el formulario de horario hace
+   materias. Por eso la pestaña de Reminders **no tiene botón de añadir**: esa
+   ausencia es la decisión hecha interfaz.
+2. **Las tareas sin reminder no son de segunda clase** (decisión 51). El módulo
+   Tareas abre en la pestaña de Tareas, y una tarea con banderín y una sin él
+   se dibujan con el mismo peso, una debajo de la otra. El banderín informa; no
+   crea una segunda división.
+3. **Un reminder pasado no es deuda** (decisión 49). Baja al histórico solo:
+   se apaga (`.rem--past`), no se tacha, no lleva insignia y no se persigue.
+   Es tiempo que pasó, no una falta del usuario.
+
+### La relación es el producto
+
+Guardar una fecha lo hace cualquier app. Lo que ninguna da:
+
+```
+Parcial de Cálculo — viernes 18
+  ✓ Resolver la guía del capítulo 3
+  ✓ Resumen de derivadas
+  □ Repaso final                         falta 1
+```
+
+y su contrario:
+
+```
+Defensa del proyecto — en 6 días
+  Sin tareas todavía                     [Planificar]
+```
+
+Eso responde *"¿me estoy preparando, o solo lo sé?"*, que es la distancia
+entre anotar y cumplir — el problema que origina el proyecto.
+
+**Cómo se dibuja la alerta sin alarmar.** El caso "sin tareas todavía" tiene
+que notarse y **no puede llevar rojo**: no es una falta del usuario, todavía
+está a tiempo. La solución del sistema:
+
+- la señal la da el **peso tipográfico** (`.prep--none` sube a color de texto
+  pleno y peso medio, frente al gris del resto),
+- el icono de aviso va en `--text-muted`, nunca en un color de alarma,
+- y **el acento aparece como acción** — el botón "Planificar" — no como
+  advertencia.
+
+La preparación se cuenta con tres puntos y una frase (`.prep`), nunca con un
+porcentaje ni una barra de progreso.
+
+### Materias = ausencia de tiempo disponible
+
+En palabras del usuario: *"no es que por tener Sistemas Operativos a las 8
+cambiemos la planificación; nos importa más el tiempo que tenemos disponible"*.
+
+Por eso una materia no es contenido: es un hueco ocupado. Gris, plana, texto
+subordinado, sin borde de color, y **apagable**. Al apagar la capa Materias en
+`Semana`, el sábado deja de ser "sin clases" y pasa a leerse como "día entero
+libre", que es lo que estabas buscando al planificar.
+
+---
+
+## El calendario: tres vistas, tres preguntas
+
+No es el mismo contenido en letra más chica.
+
+| Vista | Pregunta | Muestra | No muestra | Comp |
+|---|---|---|---|---|
+| **Día** | ¿Qué hago ahora? | Bloques por hora + banda de reminders del día | — | `dia.html` |
+| **Semana** | ¿Cómo reparto el trabajo? | 7 filas con sus reminders y los títulos de sus tareas | Horas | `semana.html` |
+| **Mes** | ¿Qué se me viene encima? | **Solo reminders** | Tareas y materias | `mes.html` |
+
+**La vista Semana en el teléfono no es una rejilla**, y eso resuelve la
+pregunta que quedó abierta en `docs/estado-FD.md` §3.1: siete columnas por
+horas a 390px son ilegibles, pero es que además "¿cómo reparto el trabajo?" no
+necesita horas. Siete filas responden mejor y se arrastran con el pulgar. La
+rejilla completa sigue existiendo en escritorio, donde sí cabe.
+
+**En Mes no hay control de capas**: ahí siempre son reminders. Meterle tareas
+o materias arruinaría la única pregunta que responde.
+
+### Las capas
+
+Un solo control hace de filtro y de interruptor de materias: tres pastillas
+que se encienden por separado (`Tareas · Reminders · Materias`). Da
+"solo tareas", "solo reminders", "ambos" y, sobre todo, apagar las materias.
+Un control, no dos vocabularios.
+
+---
+
 ## Archivos
 
 | Archivo | Qué es |
@@ -36,7 +141,7 @@ preferencias estéticas:
 | `chrome.js` | Barra de pestañas, barra de estado y barra de inicio |
 | `theme.js` | Los tres estados de tema: sistema, claro, oscuro |
 | `index.html` | Índice de revisión. Se abre desde el iPhone (decisión 46) |
-| `comps/` | Las ocho pantallas |
+| `comps/` | Las pantallas. Un archivo puede contener **dos dispositivos** cuando el sentido está en comparar dos estados (`tareas`, `reminder-detalle`) |
 
 ---
 
@@ -106,7 +211,25 @@ metadatos y etiquetas, que es donde iOS también baja.
   acción, notificación). El círculo del checkbox es una forma, no un radio.
 - **La separación es espacio y línea de 1px, nunca sombra.** Lo único que
   flota de verdad: la hoja de acción y el selector de fecha.
-- **44×44px** de área táctil mínima, aunque el icono mida 20.
+- **44×44px de área táctil mínima, sin excepción.** En FD esto estaba escrito
+  en `tokens.css` y luego incumplido justo en los controles más usados —el
+  triage, "se me corrió el día", el deshacer— que eran los más pequeños de la
+  app. Corregido en FD2, y con una regla que lo impide en adelante:
+
+  > **Si al respetar los 44px algo deja de caber, sale contenido, nunca el
+  > tamaño del control.**
+
+  El sistema ofrece tres formas de conseguirlos sin engordar la tipografía:
+
+  | Cuando el control es | Usa | Cómo llega a 44 |
+  |---|---|---|
+  | Un enlace de texto ("Clasificar", "Editar") | `.taptext` | alto 44 con margen negativo, el texto sigue alineado |
+  | Solo un icono | `.tapicon` | caja de 44 con el icono de 20 centrado |
+  | Una pastilla pequeña (filtros) | `.chip` | borde transparente de 5px + `background-clip: padding-box`: **se pinta 34 y mide 44** |
+
+  El `.chip` usa borde transparente y no un `::before` absoluto a propósito:
+  así la caja de layout es la real y dos filas de pastillas no pueden solapar
+  sus áreas táctiles por mucho que se apriete el `gap`.
 
 ---
 
@@ -146,6 +269,12 @@ Reicon Outline, grosor 1.5, un solo estilo. Vienen del MCP declarado en
 | **Ningún contador de deuda.** Ni badges, ni "23 pendientes", ni barras de progreso semanal | toda la app |
 | Los estados vacíos son un logro | `inicio-vacio.html` |
 | Búsqueda primero, cursor dentro al abrir | `recursos.html` |
+| **Orden de `Inicio`: Hoy → De ayer → Esta semana → racha** (decisión 55) | `inicio.html` |
+| **Triage:** Hoy sube a la lista en el sitio · Otro día abre el selector · **Quitar devuelve a Tareas, no borra** (decisión 56) | `inicio.html`, `otro-dia.html` |
+| Elegir fecha empieza por palabras ("mañana", "el sábado"), no por un calendario | `otro-dia.html` |
+| Crear un reminder = tocar un día del calendario. Nunca un desplegable de tipo | `mes.html`, `dia.html` |
+| Asociar una tarea a un reminder es una pastilla apagada que se ignora con intro | `tareas.html` |
+| El horario se carga una vez: un nombre, varios días, y se repite 5 meses | `horario.html` |
 
 ---
 
@@ -171,7 +300,19 @@ Diferencia deliberada con `Inicio`: **la notificación sí incluye las clases.**
 `Inicio` es para decidir y las clases no se deciden (decisión 35); la
 notificación es para saber qué pasa hoy, y a las 8:00 lo que pasa es Cálculo.
 
-Los cinco textos, con su largo real, están en `comps/notificacion.html`.
+**El reminder manda** (decisión 57). Si hay un parcial o una entrega cerca,
+ocupa el **título** y las tareas se recortan para que quepa, nunca al revés:
+con 88 caracteres, un parcial mañana es lo más importante del día.
+
+```
+Mañana: Parcial de Cálculo                                    26
+Hoy: 8:00 Cálculo · 15:00 Migrar el schema · 20:00 Repaso     63
+```
+
+Y sin ningún símbolo de alarma —ni triángulo, ni "ojo"—: la urgencia la da la
+frase, no un glifo.
+
+Los seis textos, con su largo real, están en `comps/notificacion.html`.
 
 ---
 
@@ -201,17 +342,24 @@ iPhone 390×844:
 deja de caber, se rompe a la vista en vez de convertirse en scroll silencioso.
 
 El comp con contenido ocupa los 710px disponibles con **desbordamiento 0**,
-verificado en navegador. Reparto aproximado:
+verificado en navegador después de subir los cuatro controles a 44px.
+
+Orden (decisión 55) y reparto aproximado:
 
 | Bloque | px |
 |---|---|
-| Encabezado (fecha + racha) | 76 |
-| "De ayer" con triage | 150 |
-| "Hoy": 4 filas + encabezado | 300 |
-| Salida al resto de Tareas | 40 |
-| Banda "Esta semana" | 90 |
+| Encabezado (solo la fecha) | 66 |
+| **1 · "Hoy"**: encabezado + 3 filas + salida a Tareas | 260 |
+| **2 · "De ayer"** con el triage a 44px | 190 |
+| **3 · "Esta semana"**: un reminder con su preparación | 70 |
+| **4 · La racha**: una línea | 34 |
 
-Si hay más de cuatro o cinco tareas, **no se hace scroll**: se muestra la
+**Qué se recortó y por qué.** Subir el triage de 40 a 44 y "se me corrió el
+día" de 32 a 44 dejó la pantalla 16px por encima del límite. Salió la cuarta
+tarea del día — contenido, no tamaño de control. Con TDAH tres cosas visibles
+son mejores que cuatro apretadas, y la que falta está a un toque.
+
+Si hay más tareas de las que caben, **no se hace scroll**: se muestra la
 salida "El resto está en Tareas". Sin número: un número ahí sería un contador
 de deuda.
 

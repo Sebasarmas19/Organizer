@@ -14,20 +14,34 @@
 </head>
 
 <!--
-  TAREAS · con carpetas
+  TAREAS                      (FD2 · decisiones 36, 48, 50, 51) · ACTUALIZADO
   ---------------------------------------------------------------------------
-  Esto no es la lista de hoy. Son las cosas anotadas que todavia no son plan
-  (decision 30). Es el vertedero con nombre: el sitio donde caen las capturas
-  del Atajo de Siri antes de decidir nada.
+  El módulo tiene dos pestañas y las dos están dibujadas en esta página.
 
-  "Entrada" va primero y abierta porque es lo unico que exige decision. Las
-  carpetas (decision 36) van debajo, cerradas, ordenables por el usuario.
+  TAREAS (arriba) es la pestaña por defecto, y eso no es un detalle: la
+  decisión 51 dice que las tareas sin reminder son ciudadanas de primera. La
+  mayoría de lo que entra por Siri no tendrá reminder nunca. Si al abrir el
+  módulo lo primero fueran los reminders, las tareas sueltas se leerían como
+  el cajón de sobras. Abre en Tareas, y las que tienen reminder llevan un
+  banderín discreto — no una jerarquía.
 
-  Ni un contador en toda la pantalla. Una carpeta con 40 cosas y una con 2 se
-  ven igual: el numero solo sirve para sentir deuda.
+  REMINDERS (abajo) es de sólo lectura para crear, y el aviso lo dice en una
+  línea: se crean tocando un día en el calendario. Ese es el mecanismo de la
+  decisión 48 — el lugar donde entras determina el tipo. En toda la app no
+  hay una sola pantalla que pregunte "¿esto es tarea o reminder?". Un
+  reminder sin fecha no existe, así que su sitio de creación es el calendario
+  y no un formulario con un desplegable de tipo.
 
-  Deslizar revela acciones, pero tocar la fila abre la misma hoja con todas.
-  El gesto nunca es la unica via.
+  LA ASOCIACIÓN ES OPCIONAL DE VERDAD (decisión 50). Al escribir una tarea
+  aparecen dos pastillas apagadas, "Fecha" y "Reminder". Se ignoran pulsando
+  intro. No son campos, no hay asterisco, no hay validación: capturar aquí
+  sigue costando cero.
+
+  CARPETAS = CONTEXTOS. Confirmado en FD2. Una carpeta y un contexto serían
+  la misma cosa dos veces.
+
+  OBJETIVOS TÁCTILES: "Clasificar" y "Editar" estaban a 32px. Ahora usan
+  .taptext, que mide 44 sin engordar la tipografía.
 -->
 
 <style>
@@ -39,15 +53,13 @@
     background: var(--surface-sunken); color: var(--text-muted);
   }
   .swipe__act--go { background: var(--accent); color: var(--text-on-accent); }
-  /* Deslizada: el contenido cede el ancho de las acciones en vez de salirse
-     por la izquierda. Asi el titulo sigue legible a media gesto, que es
-     justo lo que hay que poder juzgar en un comp. */
+  /* El contenido cede el ancho de las acciones en vez de salirse por la
+     izquierda: a media gesto el título sigue legible. */
   .swipe__content { position: relative; background: var(--bg); width: calc(100% - 128px); }
-  .swipe__hint { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); color: var(--text-faint); }
 
   .folder {
     display: flex; align-items: center; gap: var(--space-3);
-    width: 100%; min-height: 52px; padding: var(--space-2) var(--gutter);
+    width: 100%; min-height: 56px; padding: var(--space-2) var(--gutter);
     text-align: left; color: var(--text);
   }
   .folder + .folder, .folder + .subrow { box-shadow: inset 0 1px 0 var(--line); }
@@ -60,137 +72,301 @@
     min-height: 48px; padding: var(--space-2) var(--gutter) var(--space-2) 52px;
     box-shadow: inset 0 1px 0 var(--line);
   }
+
+  .stack { width: 390px; }
+  .caption { padding: var(--space-6) var(--gutter) var(--space-3); }
+  .caption h2 { font-size: var(--text-meta); font-weight: var(--weight-semibold); }
+  .caption p { font-size: var(--text-label); color: var(--text-muted); margin-top: 2px; }
 </style>
 
-<body class="comp">
-<div class="device">
-  <div data-statusbar="15:42"></div>
+<body class="comp" style="flex-direction:column;align-items:center">
+<div class="stack">
 
-  <main class="screen flex flex-col">
+  <!-- ========================= 1 · PESTAÑA TAREAS ======================= -->
+  <div class="caption">
+    <h2>Tareas</h2>
+    <p>La pestaña por defecto. Lo que entra por Siri cae aquí sin pedir nada.</p>
+  </div>
 
-    <header class="pagehead">
-      <h1 class="t-title">Tareas</h1>
-      <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
-        <button class="tapicon" aria-label="Buscar en tareas"><span class="ico ico--lg" data-icon="search"></span></button>
-        <button class="tapicon" aria-label="Nueva tarea"><span class="ico ico--lg" data-icon="plus"></span></button>
+  <div class="device">
+    <div data-statusbar="15:42"></div>
+
+    <main class="screen flex flex-col">
+
+      <header class="pagehead" style="padding-bottom:var(--space-3)">
+        <h1 class="t-title">Tareas</h1>
+        <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+          <button class="tapicon" aria-label="Buscar en tareas"><span class="ico ico--lg" data-icon="search"></span></button>
+          <button class="tapicon" aria-label="Nueva tarea"><span class="ico ico--lg" data-icon="plus"></span></button>
+        </div>
+      </header>
+
+      <div class="gutter pb-4">
+        <div class="seg" role="tablist" aria-label="Qué se ve">
+          <button role="tab" aria-selected="true">Tareas</button>
+          <button role="tab" aria-selected="false">Reminders</button>
+        </div>
       </div>
-    </header>
 
-    <!-- ENTRADA --------------------------------------------------------------
-         Lo que llego por Siri y todavia no es nada. Sin campos obligatorios,
-         sin categoria, sin fecha: se clasifica despues o nunca. -->
-    <section aria-labelledby="h-entrada">
-      <div class="sectionhead">
-        <h2 id="h-entrada">Entrada</h2>
-        <button class="c-accent t-label font-medium" style="min-height:32px">Clasificar</button>
+      <!-- ESCRIBIENDO UNA TAREA ------------------------------------------
+           Sin campos obligatorios, sin categoría, sin fecha. Las dos
+           pastillas de abajo son opcionales de verdad: se ignoran pulsando
+           intro y la tarea queda guardada igual. -->
+      <div class="gutter pb-4">
+        <label class="field field--focus" for="nueva">
+          <span class="flex-1 t-body text-ink">Pedir la carta de pasantías<span class="caret inline-block align-middle ml-px"></span></span>
+          <input id="nueva" class="sr-only" value="Pedir la carta de pasantías" aria-label="Nueva tarea" autofocus>
+        </label>
+        <div class="chips" style="padding-top:var(--space-3)">
+          <button class="chip" aria-pressed="false">
+            <span class="ico ico--sm" data-icon="calendar" style="width:14px;height:14px"></span>
+            Fecha
+          </button>
+          <button class="chip" aria-pressed="false">
+            <span class="ico ico--sm" data-icon="flag" style="width:14px;height:14px"></span>
+            Reminder
+          </button>
+          <span class="t-label c-faint self-center">opcionales</span>
+        </div>
       </div>
 
-      <ul class="list-none m-0 p-0">
-        <!-- Fila deslizada: asi se ve el gesto a medio camino -->
-        <li class="swipe" style="box-shadow: inset 0 1px 0 var(--line)">
-          <div class="swipe__actions" aria-hidden="true">
-            <span class="swipe__act swipe__act--go"><span class="ico ico--sm" data-icon="calendar"></span>Planificar</span>
-            <span class="swipe__act"><span class="ico ico--sm" data-icon="trash"></span>Quitar</span>
-          </div>
-          <div class="swipe__content row" style="box-shadow:none">
+      <!-- ENTRADA ---------------------------------------------------------- -->
+      <section aria-labelledby="h-entrada">
+        <div class="sectionhead">
+          <h2 id="h-entrada">Entrada</h2>
+          <button class="taptext t-label">Clasificar</button>
+        </div>
+
+        <ul class="list-none m-0 p-0">
+          <!-- Fila deslizada: así se ve el gesto a medio camino. Tocar la
+               fila abre la misma hoja con todas las acciones: el gesto nunca
+               es la única vía. -->
+          <li class="swipe" style="box-shadow: inset 0 1px 0 var(--line)">
+            <div class="swipe__actions" aria-hidden="true">
+              <span class="swipe__act swipe__act--go"><span class="ico ico--sm" data-icon="calendar"></span>Planificar</span>
+              <span class="swipe__act"><span class="ico ico--sm" data-icon="trash"></span>Quitar</span>
+            </div>
+            <div class="swipe__content row" style="box-shadow:none">
+              <div class="row__body" style="margin-left:var(--space-1)">
+                <p class="row__title">Probar Hermes</p>
+                <p class="row__meta">por Siri<span class="sep">·</span>hace 2 h</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="row">
             <div class="row__body" style="margin-left:var(--space-1)">
-              <p class="row__title">Probar Hermes</p>
-              <p class="row__meta">por Siri<span class="sep">·</span>hace 2 h</p>
+              <p class="row__title">Preparar slides de la defensa</p>
+              <p class="row__meta">por Siri<span class="sep">·</span>ayer</p>
+            </div>
+            <span class="ico ico--sm c-faint" data-icon="chevron-right" style="align-self:center"></span>
+          </li>
+
+          <li class="row">
+            <div class="row__body" style="margin-left:var(--space-1)">
+              <p class="row__title">Curso de Anthropic — terminar módulo 3</p>
+              <p class="row__meta">desde Recursos<span class="sep">·</span>ayer</p>
+            </div>
+            <span class="ico ico--sm c-faint" data-icon="chevron-right" style="align-self:center"></span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- CARPETAS = CONTEXTOS --------------------------------------------- -->
+      <section class="mt-5" aria-labelledby="h-carpetas">
+        <div class="sectionhead">
+          <h2 id="h-carpetas">Carpetas</h2>
+          <button class="taptext t-label">Editar</button>
+        </div>
+
+        <div>
+          <button class="folder" aria-expanded="false">
+            <span class="ctxdot" style="--ctx:var(--ctx-1)"></span>
+            <span class="folder__name">Cálculo III</span>
+            <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+          </button>
+
+          <button class="folder" aria-expanded="true">
+            <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>
+            <span class="folder__name">Proyecto IA</span>
+            <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+          </button>
+
+          <!-- Una con reminder y otra sin él, una debajo de la otra y con el
+               mismo peso. El banderín informa; no degrada a la de al lado. -->
+          <div class="subrow">
+            <button class="check" role="checkbox" aria-checked="false" aria-label="Migrar el schema a Supabase, marcar cumplido" style="margin-left:calc(var(--space-6) * -1)">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Migrar el schema a Supabase</p>
+              <p class="row__meta">
+                <span class="ico rem__flag" data-icon="flag" style="width:13px;height:13px;margin:0"></span>Avance de IA
+              </p>
             </div>
           </div>
-        </li>
-
-        <li class="row">
-          <div class="row__body" style="margin-left:var(--space-1)">
-            <p class="row__title">Pedir constancia de estudios</p>
-            <p class="row__meta">por Siri<span class="sep">·</span>ayer</p>
+          <div class="subrow">
+            <button class="check" role="checkbox" aria-checked="false" aria-label="Escribir el README, marcar cumplido" style="margin-left:calc(var(--space-6) * -1)">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Escribir el README</p>
+              <p class="row__meta num">sin fecha</p>
+            </div>
           </div>
-          <span class="ico ico--sm swipe__hint" data-icon="chevron-right" style="position:static;align-self:center"></span>
-        </li>
 
-        <li class="row">
-          <div class="row__body" style="margin-left:var(--space-1)">
-            <p class="row__title">Curso de Anthropic — terminar módulo 3</p>
-            <p class="row__meta">desde Recursos<span class="sep">·</span>ayer</p>
-          </div>
-          <span class="ico ico--sm c-faint" data-icon="chevron-right" style="align-self:center"></span>
-        </li>
-      </ul>
-    </section>
-
-    <!-- CARPETAS -------------------------------------------------------------
-         El usuario las crea, las nombra y las reordena (decision 36). -->
-    <section class="mt-5" aria-labelledby="h-carpetas">
-      <div class="sectionhead">
-        <h2 id="h-carpetas">Carpetas</h2>
-        <button class="c-accent t-label font-medium" style="min-height:32px">Editar</button>
-      </div>
-
-      <div>
-        <button class="folder" aria-expanded="false">
-          <span class="ctxdot" style="--ctx:var(--ctx-1)"></span>
-          <span class="folder__name">Cálculo III</span>
-          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
-        </button>
-
-        <!-- Carpeta abierta: la jerarquia se ve, no se explica -->
-        <button class="folder" aria-expanded="true">
-          <span class="ctxdot" style="--ctx:var(--ctx-3)"></span>
-          <span class="folder__name">Proyecto IA</span>
-          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
-        </button>
-        <div class="subrow">
-          <button class="check" role="checkbox" aria-checked="false" aria-label="Escribir el README, marcar cumplido" style="margin-left:calc(var(--space-6) * -1)">
-            <span class="ico" data-icon="check"></span>
+          <button class="folder" aria-expanded="false">
+            <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>
+            <span class="folder__name">Cursos</span>
+            <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
-          <div class="row__body">
-            <p class="row__title">Escribir el README</p>
-            <p class="row__meta num">sin fecha</p>
-          </div>
-        </div>
-        <div class="subrow">
-          <button class="check" role="checkbox" aria-checked="false" aria-label="Conectar Web Push, marcar cumplido" style="margin-left:calc(var(--space-6) * -1)">
-            <span class="ico" data-icon="check"></span>
+
+          <button class="folder" aria-expanded="false">
+            <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
+            <span class="folder__name">Personal</span>
+            <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
           </button>
-          <div class="row__body">
-            <p class="row__title">Conectar Web Push</p>
-            <p class="row__meta num">vie 18</p>
-          </div>
+
+          <!-- Biblioteca "algún día" (decisión 7): no caduca, no molesta, y
+               el domingo el ritual saca UNA cosa de aquí. Nunca la lista. -->
+          <button class="folder" aria-expanded="false">
+            <span class="ctxdot" style="--ctx:var(--ctx-5)"></span>
+            <span class="folder__name">Algún día</span>
+            <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+          </button>
         </div>
 
-        <button class="folder" aria-expanded="false">
-          <span class="ctxdot" style="--ctx:var(--ctx-4)"></span>
-          <span class="folder__name">Cursos</span>
-          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
+        <button class="folder c-muted" style="box-shadow: inset 0 1px 0 var(--line)">
+          <span class="ico ico--sm" data-icon="plus" style="margin-left:2px"></span>
+          <span class="folder__name" style="font-weight:var(--weight-regular)">Nueva carpeta</span>
         </button>
+      </section>
 
-        <button class="folder" aria-expanded="false">
-          <span class="ctxdot" style="--ctx:var(--ctx-6)"></span>
-          <span class="folder__name">Personal</span>
-          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
-        </button>
+      <div class="h-4"></div>
 
-        <!-- Biblioteca "algun dia" (decision 7): no caduca, no molesta, y el
-             domingo el ritual saca UNA cosa de aqui. Nunca la lista entera. -->
-        <button class="folder" aria-expanded="false">
-          <span class="ctxdot" style="--ctx:var(--ctx-5)"></span>
-          <span class="folder__name">Algún día</span>
-          <span class="ico ico--sm folder__chev" data-icon="chevron-right"></span>
-        </button>
+    </main>
+
+    <nav data-tabbar="tareas"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <!-- ======================= 2 · PESTAÑA REMINDERS ===================== -->
+  <div class="caption">
+    <h2>Reminders</h2>
+    <p>Sólo lectura. Se crean tocando un día en el calendario, nunca aquí.</p>
+  </div>
+
+  <div class="device">
+    <div data-statusbar="15:43"></div>
+
+    <main class="screen flex flex-col">
+
+      <header class="pagehead" style="padding-bottom:var(--space-3)">
+        <h1 class="t-title">Tareas</h1>
+        <div class="flex items-center" style="margin-right:calc(var(--space-3) * -1)">
+          <button class="tapicon" aria-label="Buscar"><span class="ico ico--lg" data-icon="search"></span></button>
+          <!-- No hay "+" en esta pestaña, y eso es la decisión 48 hecha
+               interfaz: un reminder sin fecha no existe, así que su sitio de
+               creación es el calendario. -->
+        </div>
+      </header>
+
+      <div class="gutter pb-4">
+        <div class="seg" role="tablist" aria-label="Qué se ve">
+          <button role="tab" aria-selected="false">Tareas</button>
+          <button role="tab" aria-selected="true">Reminders</button>
+        </div>
       </div>
 
-      <button class="folder c-muted" style="box-shadow: inset 0 1px 0 var(--line)">
-        <span class="ico ico--sm" data-icon="plus" style="margin-left:2px"></span>
-        <span class="folder__name" style="font-weight:var(--weight-regular)">Nueva carpeta</span>
-      </button>
-    </section>
+      <!-- LA VISTA DE LA RELACIÓN ----------------------------------------- -->
+      <section aria-labelledby="h-prox">
+        <div class="sectionhead">
+          <h2 id="h-prox">Lo que viene</h2>
+        </div>
 
-    <div class="h-4"></div>
+        <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          <span class="rem__body">
+            <span class="rem__title">Entrega del avance de IA</span>
+            <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>hoy · 23:59</span>
+            <span class="prep">
+              <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
+              te queda migrar el schema
+            </span>
+          </span>
+          <span class="ico ico--sm c-faint self-center" data-icon="chevron-right"></span>
+        </a>
 
-  </main>
+        <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          <span class="rem__body">
+            <span class="rem__title">Parcial de Cálculo</span>
+            <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-1)"></span>viernes 18 · 10:00</span>
+            <span class="prep">
+              <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+              todo listo
+            </span>
+          </span>
+          <span class="ico ico--sm c-faint self-center" data-icon="chevron-right"></span>
+        </a>
 
-  <nav data-tabbar="tareas"></nav>
-  <div data-homebar></div>
+        <div class="rem">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          <div class="rem__body">
+            <p class="rem__title">Defensa del proyecto</p>
+            <p class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-3)"></span>miércoles 23 · en 6 días</p>
+            <p class="prep prep--none">
+              <span class="ico ico--sm" data-icon="alert-triangle" style="width:14px;height:14px"></span>
+              Sin tareas todavía
+            </p>
+          </div>
+          <button class="btn" style="align-self:center;padding-inline:var(--space-3)">Planificar</button>
+        </div>
+
+        <a href="reminder-detalle.html" class="rem no-underline" style="color:var(--text)">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          <span class="rem__body">
+            <span class="rem__title">Quiz de Álgebra</span>
+            <span class="rem__when"><span class="ctxdot" style="--ctx:var(--ctx-2)"></span>lunes 28 · 11:00</span>
+          </span>
+          <span class="ico ico--sm c-faint self-center" data-icon="chevron-right"></span>
+        </a>
+      </section>
+
+      <!-- HISTÓRICO · bajan solos, sin rojo y sin insignia (decisión 49) -->
+      <section class="mt-5" aria-labelledby="h-pasados">
+        <div class="sectionhead">
+          <h2 id="h-pasados">Ya pasaron</h2>
+        </div>
+        <div class="rem rem--past">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          <div class="rem__body">
+            <p class="rem__title">Entrega de laboratorio</p>
+            <p class="rem__when">martes 15</p>
+          </div>
+        </div>
+        <div class="rem rem--past">
+          <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+          <div class="rem__body">
+            <p class="rem__title">Primer parcial de Álgebra</p>
+            <p class="rem__when">viernes 4</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="flex-1"></div>
+
+      <p class="gutter t-label c-faint" style="padding-block:var(--space-4)">
+        Los reminders se crean tocando un día en el calendario. Aquí sólo se consultan.
+      </p>
+
+    </main>
+
+    <nav data-tabbar="tareas"></nav>
+    <div data-homebar></div>
+  </div>
+
+  <div style="height:var(--space-10)"></div>
 </div>
 </body>
 </html>

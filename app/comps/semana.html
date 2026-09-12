@@ -14,29 +14,36 @@
 </head>
 
 <!--
-  SEMANA · movil
+  CALENDARIO · vista SEMANA (teléfono)        (FD2 · decisiones 52, 53)
   ---------------------------------------------------------------------------
-  En 390px una rejilla de 7 columnas por horas es ilegible, asi que el movil
-  muestra UN dia por vez con la tira de la semana arriba. Los puntos bajo cada
-  dia mantienen la conciencia de la semana completa sin pedir zoom. La rejilla
-  de 7 columnas existe, pero en escritorio (ver semana-escritorio.html).
+  ESTO RESUELVE LA PREGUNTA ABIERTA DE FD (§3.1 de docs/estado-FD.md).
 
-  Las clases son fondo (decision: no compiten con las tareas): superficie
-  plana, texto subordinado, sin borde de color. Las tareas llevan superficie
-  propia, linea de 1px y un borde izquierdo de 2px con el color del contexto.
+  En FD dije que siete columnas por horas a 390px eran ilegibles y dejé la
+  pregunta abierta. El modelo nuevo la contesta solo: la vista Semana no
+  responde "¿qué hago a las 3?" — responde "¿cómo reparto el trabajo?".
+  Y esa pregunta no necesita horas. Necesita, por cada día, qué se te viene
+  encima y cuánto te has cargado.
 
-  El arrastre esta dibujado en vivo: el bloque levantado sigue al dedo y el
-  destino se marca con un contorno punteado. Es la mitigacion comprometida
-  del riesgo del calendario rigido: sin esto la app se abandona.
+  Por eso aquí no hay rejilla: hay siete filas. Es legible a 390px, arrastrar
+  una tarea de un día a otro funciona con el pulgar, y la rejilla completa de
+  siete columnas sigue existiendo donde sí cabe (semana-escritorio.html).
+
+  MATERIAS APAGADAS. Esta es la pantalla donde la decisión 52 se ve: al
+  planificar, lo que importa es el hueco, no la clase. Con la capa "Materias"
+  apagada, el sábado deja de ser "sin clases" y pasa a ser "día entero libre",
+  que es lo que estabas buscando.
+
+  La carga del día se lee con los títulos de las tareas, no con un número.
+  Un número sería un contador de deuda y, además, dice menos.
 -->
 
 <body class="comp">
 <div class="device">
   <div data-statusbar="15:42"></div>
 
-  <main class="screen screen--fixed flex flex-col">
+  <main class="screen flex flex-col">
 
-    <header class="pagehead">
+    <header class="pagehead" style="padding-bottom:var(--space-3)">
       <div>
         <h1 class="t-title">Semana</h1>
         <p class="t-meta c-muted num">14 – 20 sep · semana 1</p>
@@ -47,103 +54,103 @@
       </div>
     </header>
 
-    <!-- TIRA DE DIAS · los puntos son carga, no deuda: cuantos bloques hay -->
-    <div class="daystrip" role="tablist" aria-label="Días de la semana">
-      <button class="day" role="tab" aria-selected="false"><span class="day__dow">L</span><span class="day__num">14</span><span class="day__load"><i></i><i></i><i></i></span></button>
-      <button class="day" role="tab" aria-selected="false"><span class="day__dow">M</span><span class="day__num">15</span><span class="day__load"><i></i><i></i></span></button>
-      <button class="day" role="tab" aria-selected="false"><span class="day__dow">X</span><span class="day__num">16</span><span class="day__load"><i></i><i></i><i></i></span></button>
-      <button class="day day--today" role="tab" aria-selected="true"><span class="day__dow">J</span><span class="day__num">17</span><span class="day__load"><i></i><i></i><i></i><i></i></span></button>
-      <button class="day" role="tab" aria-selected="false"><span class="day__dow">V</span><span class="day__num">18</span><span class="day__load"><i></i><i></i></span></button>
-      <button class="day" role="tab" aria-selected="false"><span class="day__dow">S</span><span class="day__num">19</span><span class="day__load"></span></button>
-      <button class="day" role="tab" aria-selected="false"><span class="day__dow">D</span><span class="day__num">20</span><span class="day__load"><i></i></span></button>
+    <div class="gutter pb-3">
+      <div class="seg" role="tablist" aria-label="Vista del calendario">
+        <button role="tab" aria-selected="false">Día</button>
+        <button role="tab" aria-selected="true">Semana</button>
+        <button role="tab" aria-selected="false">Mes</button>
+      </div>
     </div>
 
-    <!-- BARRA DEL DIA · "Se me corrio el dia" es un control visible, no un
-         elemento de menu. Empuja de una vez todos los bloques pendientes. -->
-    <div class="flex items-center justify-between gutter pb-2" style="box-shadow: inset 0 -1px 0 var(--line); padding-bottom: var(--space-2)">
-      <h2 class="t-label c-muted font-semibold">Jueves 17 de septiembre</h2>
-      <button class="c-accent flex items-center gap-1 t-label font-medium" style="min-height:32px">
-        <span class="ico ico--sm" data-icon="arrow-down"></span>
-        Se me corrió el día
+    <!-- CAPAS · materias apagadas = modo planificar -->
+    <div class="chips gutter" style="padding-bottom:var(--space-3)" role="group" aria-label="Qué se ve">
+      <button class="chip" aria-pressed="true">Tareas</button>
+      <button class="chip" aria-pressed="true">Reminders</button>
+      <button class="chip" aria-pressed="false">
+        <span class="ico ico--sm" data-icon="eye-off" style="width:14px;height:14px"></span>
+        Materias
       </button>
     </div>
 
-    <!-- REJILLA DE HORAS ---------------------------------------------------- -->
-    <div class="flex-1 min-h-0 overflow-y-auto" id="scroller">
-      <div class="cal pb-6" style="--hour:56px">
-        <div class="cal__hours" id="hours"></div>
-        <div class="cal__grid" id="grid" style="height:840px">
-          <!-- lineas de hora: inyectadas abajo -->
+    <!-- LOS SIETE DÍAS ------------------------------------------------------ -->
+    <div style="box-shadow: inset 0 1px 0 var(--line)">
 
-          <!-- CLASES · plantilla fija. Fondo, no protagonista. -->
-          <div class="block block--class" style="top:56px;height:112px">
-            <p class="block__title">Cálculo III</p>
-            <p class="block__time">8:00 – 10:00 · Aula 204</p>
-          </div>
-
-          <div class="block block--class" style="top:224px;height:112px">
-            <p class="block__title">Álgebra Lineal</p>
-            <p class="block__time">11:00 – 13:00 · Aula 112</p>
-          </div>
-
-          <div class="block block--class" style="top:644px;height:56px">
-            <p class="block__title">Gym</p>
-            <p class="block__time">18:30 – 19:30</p>
-          </div>
-
-          <!-- TAREA EN CURSO · unico uso del acento en esta pantalla -->
-          <div class="block block--task block--now" style="top:448px;height:112px;--ctx:var(--ctx-3)">
-            <p class="block__time">15:00 – 17:00</p>
-            <p class="block__title">Migrar el schema a Supabase</p>
-          </div>
-
-          <!-- ARRASTRE EN CURSO ---------------------------------------------
-               destino punteado + bloque levantado. Sin formulario, sin dialogo. -->
-          <div class="block block--ghost" style="top:728px;height:56px">
-            <span class="num" style="padding-inline:var(--space-1)">20:00 – 21:00</span>
-          </div>
-
-          <div class="block block--task block--dragging" style="top:702px;height:56px;--ctx:var(--ctx-1)">
-            <p class="block__time num">19:00 – 20:00</p>
-            <p class="block__title">Resumen de Cálculo</p>
-            <span class="block__grip"></span>
-          </div>
-
-          <!-- AHORA -->
-          <div class="cal__now" style="top:487px"></div>
+      <div class="agday">
+        <div class="agday__date"><span class="agday__dow">lun</span><span class="agday__num">14</span></div>
+        <div class="agday__body">
+          <p class="agday__tasks">Leer plan de evaluación<span class="sep"> · </span>Instalar Supabase CLI</p>
         </div>
       </div>
+
+      <div class="agday">
+        <div class="agday__date"><span class="agday__dow">mar</span><span class="agday__num">15</span></div>
+        <div class="agday__body">
+          <p class="agday__tasks">Ejercicios de Álgebra</p>
+        </div>
+      </div>
+
+      <div class="agday">
+        <div class="agday__date"><span class="agday__dow">mié</span><span class="agday__num">16</span></div>
+        <div class="agday__body">
+          <p class="agday__tasks">Terminar el modelo de datos</p>
+        </div>
+      </div>
+
+      <!-- HOY. El reminder va arriba del todo de su día: manda sobre las
+           tareas, porque es lo que no se mueve. -->
+      <div class="agday agday--today">
+        <div class="agday__date"><span class="agday__dow">jue</span><span class="agday__num">17</span></div>
+        <div class="agday__body">
+          <p class="flex items-center gap-2 t-meta font-medium">
+            <span class="ico ico--sm rem__flag" data-icon="flag" style="width:14px;height:14px"></span>
+            Entrega del avance de IA
+            <span class="c-muted num ml-auto">23:59</span>
+          </p>
+          <p class="agday__tasks">Migrar el schema<span class="sep"> · </span>Repaso final<span class="sep"> · </span>Comprar cuadernos</p>
+        </div>
+      </div>
+
+      <div class="agday">
+        <div class="agday__date"><span class="agday__dow">vie</span><span class="agday__num">18</span></div>
+        <div class="agday__body">
+          <p class="flex items-center gap-2 t-meta font-medium">
+            <span class="ico ico--sm rem__flag" data-icon="flag" style="width:14px;height:14px"></span>
+            Parcial de Cálculo
+            <span class="c-muted num ml-auto">10:00</span>
+          </p>
+          <p class="agday__tasks c-faint">Sin tareas este día</p>
+        </div>
+      </div>
+
+      <!-- ARRASTRE · el destino se marca, no se abre ningún formulario.
+           Con las materias apagadas, el sábado se lee como lo que es: un día
+           entero disponible. Eso es exactamente para lo que sirve apagarlas. -->
+      <div class="agday agday--target">
+        <div class="agday__date"><span class="agday__dow">sáb</span><span class="agday__num">19</span></div>
+        <div class="agday__body">
+          <div class="calblock calblock--ghost" style="position:static;height:36px;padding-inline:var(--space-2)">
+            Repaso final
+          </div>
+        </div>
+      </div>
+
+      <div class="agday">
+        <div class="agday__date"><span class="agday__dow">dom</span><span class="agday__num">20</span></div>
+        <div class="agday__body">
+          <p class="agday__tasks">Revisión de la semana<span class="sep"> · </span><span class="num">19:00</span></p>
+        </div>
+      </div>
+
     </div>
+
+    <p class="gutter t-label c-faint" style="padding-block:var(--space-3)">
+      Arrastra una tarea a otro día. También puedes tocarla y elegir fecha.
+    </p>
 
   </main>
 
   <nav data-tabbar="semana"></nav>
   <div data-homebar></div>
 </div>
-
-<script>
-  // Andamio de la rejilla. En la app real esto sale del rango de horas del
-  // usuario; aqui se genera para no repetir 16 divs identicos en el marcado.
-  (function () {
-    var FROM = 7, TO = 22, H = 56;
-    var hours = document.getElementById('hours');
-    var grid = document.getElementById('grid');
-    for (var h = FROM; h <= TO; h++) {
-      if (h < TO) {
-        var label = document.createElement('div');
-        label.className = 'cal__hour num';
-        label.textContent = h + ':00';
-        hours.appendChild(label);
-      }
-      var line = document.createElement('div');
-      line.className = 'cal__line';
-      line.style.top = ((h - FROM) * H) + 'px';
-      grid.insertBefore(line, grid.firstChild);
-    }
-    // Abre centrado en "ahora", no a las 7 de la mañana.
-    var sc = document.getElementById('scroller');
-    sc.scrollTop = Math.max(0, (15.7 - FROM) * H - 180);
-  })();
-</script>
 </body>
 </html>

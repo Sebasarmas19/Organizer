@@ -67,10 +67,10 @@
 <body>
 
 <header class="wrap lede">
-  <p class="t-label c-muted">Organizer · fase FD</p>
+  <p class="t-label c-muted">Organizer · fase FD2</p>
   <h1 class="t-title mt-1">Comps de diseño</h1>
   <p class="t-body c-muted mt-3">
-    Ocho pantallas a 390px, más la variante de escritorio de Semana. Ábrelas
+    Doce pantallas a 390px, más la variante de escritorio de Semana. Ábrelas
     desde el iPhone: a este ancho se ven a tamaño real. La pregunta no es si
     te gustan — es si <em>Inicio</em> te baja la ansiedad al abrirlo, y si la
     notificación se lee entera sin desbloquear.
@@ -153,29 +153,39 @@
 
 <footer class="wrap gutter pb-12">
   <p class="t-label c-faint">
-    Organizer · comps de la fase FD · <span class="num">2026-09-12</span>.
-    Informe en <code>docs/estado-FD.md</code>.
+    Organizer · comps de la fase FD2 · <span class="num">2026-09-12</span>.
+    Informe en <code>docs/estado-FD2.md</code>.
   </p>
 </footer>
 
 <script>
   var COMPS = [
     { f: 'inicio.html', t: 'Inicio · con contenido',
-      d: 'La restricción más dura: cabe en una pantalla sin scroll. Lo de ayer se resuelve en un toque y nunca en rojo.' },
+      d: 'Orden nuevo (decisión 55): Hoy, De ayer, Esta semana, racha. Cabe sin scroll con los cuatro controles ya a 44px.' },
     { f: 'inicio-vacio.html', t: 'Inicio · vacío',
-      d: 'Nada pendiente hoy. Un logro, no un hueco: sin ilustración, sin “aún no tienes tareas”, y la semana sigue informando.' },
-    { f: 'semana.html', t: 'Semana · móvil',
-      d: 'Un día por vez con la tira de la semana arriba. Las clases son fondo. El arrastre está dibujado en vivo.' },
+      d: 'Nada pendiente hoy. Un logro, no un hueco. Abajo, el reminder sin ninguna tarea planificada todavía.' },
+    { f: 'reminder-detalle.html', t: 'Reminder · con y sin tareas', h: 1800,
+      d: 'Lo que justifica el modelo: no cuándo es el parcial, sino si te estás preparando. Dos estados, uno debajo del otro.' },
+    { f: 'dia.html', t: 'Calendario · Día',
+      d: '¿Qué hago ahora? Horas, banda de reminders arriba, y las tres capas: tareas, reminders, materias.' },
+    { f: 'semana.html', t: 'Calendario · Semana',
+      d: '¿Cómo reparto el trabajo? Siete filas, no siete columnas. Materias apagadas: se ve el hueco, no la clase.' },
+    { f: 'mes.html', t: 'Calendario · Mes', h: 1180,
+      d: '¿Qué se me viene encima? Solo reminders (decisión 53). Los pasados se apagan, nunca se persiguen.' },
     { f: 'semana-escritorio.html', t: 'Semana · escritorio', k: 'desk',
-      d: 'Rejilla de 7 columnas y carril “sin planificar” para arrastrar al calendario. El escritorio sirve para planificar.' },
-    { f: 'tareas.html', t: 'Tareas · con carpetas',
-      d: 'Lo capturado por Siri cae en Entrada. Carpetas debajo, sin un solo contador en toda la pantalla.' },
+      d: 'La rejilla de 7 columnas donde sí cabe, con la banda de reminders y el carril “sin planificar”.' },
+    { f: 'tareas.html', t: 'Tareas · dos pestañas', h: 2000,
+      d: 'Abre en Tareas a propósito: las que no tienen reminder no son de segunda. Debajo, la pestaña de reminders, de sólo lectura.' },
+    { f: 'otro-dia.html', t: '“Otro día” · el selector',
+      d: 'El paso intermedio del triage. Primero palabras, el calendario después. Quitar devuelve a Tareas, no borra.' },
+    { f: 'horario.html', t: 'Horario · carga de materias', h: 1500,
+      d: 'El único trabajo pesado del proyecto. Un nombre, varios días, y se repite cinco meses.' },
     { f: 'recursos.html', t: 'Recursos · búsqueda',
-      d: 'Abre con el cursor dentro. El teclado está dibujado porque la pregunta real es cuántos resultados quedan visibles.' },
-    { f: 'domingo.html', t: 'Domingo · triage', h: 980,
-      d: 'El momento donde una app normal pasa factura. Cero rojo, cero recuento, un toque por tarea, deshacer siempre.' },
-    { f: 'notificacion.html', t: 'La notificación', h: 2260,
-      d: 'El producto. Cinco textos escritos para caber plegados en la pantalla de bloqueo: 38 caracteres de título, 88 de cuerpo.' }
+      d: 'Sin cambios en FD2. Abre con el cursor dentro; el teclado está dibujado para que el presupuesto sea honesto.' },
+    { f: 'domingo.html', t: 'Domingo · triage', h: 1000,
+      d: 'Cero rojo, cero recuento, un toque por tarea. Los reminders no entran aquí: uno que pasó no es deuda.' },
+    { f: 'notificacion.html', t: 'La notificación', h: 2620,
+      d: 'El producto. Seis textos para caber plegados: 38 de título, 88 de cuerpo. Con un parcial cerca, manda el parcial.' }
   ];
 
   var host = document.getElementById('comps');

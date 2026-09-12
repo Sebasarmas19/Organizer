@@ -253,24 +253,55 @@ body.comp {
 }
 .tapicon:active { background: var(--surface-sunken); }
 
-/* Pastilla de triage: una accion, un toque. */
-.triage { display: flex; gap: var(--space-2); }
-.triage .btn { flex: 1 1 0; padding-inline: var(--space-2); min-height: 40px; }
+/* Enlace de accion en texto (no icono). Tambien 44px: es el tamano del dedo,
+   no el tamano de la tipografia. El area crece hacia fuera con margen
+   negativo para que el texto siga alineado con su columna. */
+.taptext {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding-inline: var(--space-2);
+  margin-inline: calc(var(--space-2) * -1);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.taptext:active { background: var(--accent-soft); }
+.taptext--quiet { color: var(--text-muted); }
+.taptext--quiet:active { background: var(--surface-sunken); }
 
+/* Pastilla de triage: una accion, un toque.
+   44px de alto, sin excepcion: es el control mas usado de la app y se toca
+   caminando, con una mano. Si algo deja de caber por esto, sale contenido. */
+.triage { display: flex; gap: var(--space-2); }
+.triage .btn { flex: 1 1 0; padding-inline: var(--space-1); min-height: var(--tap-min); }
+
+/* Chip: la pastilla se PINTA de 34px pero MIDE 44.
+   El truco es un borde transparente de 5px arriba y abajo con
+   background-clip: padding-box — el fondo solo llega al padding, pero la caja
+   de layout es la de verdad. Frente a un ::before absoluto tiene una ventaja
+   que importa: dos filas de chips nunca pueden solaparse sus areas tactiles,
+   porque son cajas reales y el gap las separa de verdad.
+   Asi el filtro no engorda la pantalla y el dedo conserva su medida. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 34px;
+  min-height: var(--tap-min);
   padding: 0 var(--space-3);
   border-radius: 999px;
   font-size: var(--text-label);
   font-weight: var(--weight-medium);
   color: var(--text-muted);
   background: var(--surface-sunken);
-  border: 1px solid transparent;
+  background-clip: padding-box;
+  border: 5px solid transparent;
+  border-inline-width: 1px;
   white-space: nowrap;
 }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 
 .field {
@@ -310,7 +341,13 @@ body.comp {
   color: var(--text-muted);
   background: var(--surface-sunken);
 }
-.undo button { color: var(--accent); font-weight: var(--weight-medium); min-height: 32px; padding-inline: var(--space-2); }
+.undo button {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  min-height: var(--tap-min);
+  padding-inline: var(--space-3);
+  margin-block: calc(var(--space-1) * -1);
+}
 
 /* ------------------------------------------------------------ iconografia */
 
@@ -372,7 +409,7 @@ body.comp {
   width: 8px; height: 8px; border-radius: 999px; background: var(--accent);
 }
 
-.block {
+.calblock {
   position: absolute;
   left: var(--space-2);
   right: var(--space-2);
@@ -382,26 +419,26 @@ body.comp {
   font-size: var(--text-meta);
   line-height: var(--lh-meta);
 }
-.block__title { font-size: var(--text-meta); font-weight: var(--weight-medium); color: var(--text); }
-.block__time { font-size: var(--text-label); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.calblock__title { font-size: var(--text-meta); font-weight: var(--weight-medium); color: var(--text); }
+.calblock__time { font-size: var(--text-label); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 /* Las clases no compiten: fondo, sin borde de color, texto subordinado. */
-.block--class { background: var(--surface-class); z-index: 1; }
-.block--class .block__title { color: var(--text-muted); font-weight: var(--weight-regular); }
+.calblock--class { background: var(--surface-class); z-index: 1; }
+.calblock--class .calblock__title { color: var(--text-muted); font-weight: var(--weight-regular); }
 
 /* Las tareas si: superficie propia, linea de 1px, borde izquierdo de contexto. */
-.block--task {
+.calblock--task {
   background: var(--surface);
   border: 1px solid var(--line);
   border-left: 2px solid var(--ctx, var(--line-strong));
   z-index: 2;
 }
-.block--now { background: var(--accent-soft); border-color: var(--accent); border-left-color: var(--accent); }
-.block--now .block__time { color: var(--accent); font-weight: var(--weight-medium); }
+.calblock--now { background: var(--accent-soft); border-color: var(--accent); border-left-color: var(--accent); }
+.calblock--now .calblock__time { color: var(--accent); font-weight: var(--weight-medium); }
 
 /* Estado de arrastre: el bloque sigue al dedo, el destino se dibuja debajo. */
-.block--dragging { box-shadow: var(--shadow-float); transform: scale(1.02); z-index: 5; }
-.block--ghost {
+.calblock--dragging { box-shadow: var(--shadow-float); transform: scale(1.02); z-index: 5; }
+.calblock--ghost {
   background: transparent;
   border: 1.5px dashed var(--accent);
   z-index: 4;
@@ -410,28 +447,10 @@ body.comp {
   font-size: var(--text-label);
   font-weight: var(--weight-medium);
 }
-.block__grip {
+.calblock__grip {
   position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
   width: 28px; height: 3px; border-radius: 999px; background: var(--accent); opacity: .5;
 }
-
-/* Tira de dias */
-.daystrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); padding: 0 var(--gutter) var(--space-3); }
-.day {
-  display: flex; flex-direction: column; align-items: center; gap: var(--space-1);
-  padding: var(--space-2) 0 var(--space-1);
-  border-radius: var(--radius);
-  min-height: var(--tap-min);
-  color: var(--text-muted);
-}
-.day__dow { font-size: var(--text-label); line-height: 1; }
-.day__num { font-size: var(--text-meta); line-height: 1; font-weight: var(--weight-semibold); color: var(--text); font-variant-numeric: tabular-nums; }
-.day__load { display: flex; gap: 2px; height: 4px; margin-top: 1px; }
-.day__load i { width: 4px; height: 4px; border-radius: 999px; background: var(--line-strong); display: block; }
-.day[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
-.day[aria-selected="true"] .day__num { color: var(--accent); }
-.day[aria-selected="true"] .day__load i { background: var(--accent); opacity: .55; }
-.day--today .day__dow { color: var(--accent); font-weight: var(--weight-semibold); }
 
 /* ------------------------------------------------------------------ hoja */
 
@@ -495,6 +514,269 @@ body.comp {
 }
 .kb__key--wide { flex: 1.6 1 0; background: var(--line); font-size: var(--text-label); }
 .kb__key--space { flex: 5 1 0; }
+
+/* ============================================================================
+   MODELO DE TRES ENTIDADES  ·  materias · reminders · tareas
+   (docs/08-modelo-tareas-reminders.md, decisiones 47-57)
+
+   La diferencia entre una tarea y un reminder se ve SIN color:
+
+     tarea     -> circulo de check a la izquierda. Se completa.
+     reminder  -> banderin. No se completa: pasa el dia y queda listo.
+     materia   -> superficie gris de fondo. Ni se completa ni se toca.
+
+   Ningun reminder usa rojo, ni vencido. Un reminder pasado no es deuda.
+   ========================================================================= */
+
+/* ----------------------------------------------------- control segmentado
+   Las tres vistas del calendario. No son zoom: son tres preguntas.        */
+
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+.seg button {
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); }
+/* La caja mide 44px contando el padding del carril: 38 + 3 + 3. */
+
+/* ------------------------------------------------------------ interruptor
+   Ocultar las materias al planificar: entonces interesa el hueco, no la
+   clase (decision 52).                                                    */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding-inline: var(--gutter);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: left;
+}
+.toggle__label { flex: 1 1 auto; }
+.toggle__switch {
+  flex: 0 0 auto;
+  width: 46px; height: 28px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.toggle__switch::after {
+  content: "";
+  position: absolute; top: 2px; left: 2px;
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .18);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.toggle[aria-pressed="true"] .toggle__switch { background: var(--accent); }
+.toggle[aria-pressed="true"] .toggle__switch::after { transform: translateX(18px); }
+
+/* -------------------------------------------------------------- reminder
+   Se distingue de una tarea por la forma, no por el color: banderin en vez
+   de circulo, y ninguna casilla que marcar.                               */
+
+.rem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) var(--gutter);
+  text-align: left;
+  color: var(--text);
+}
+.rem + .rem { box-shadow: inset 0 1px 0 var(--line); }
+.rem__flag { color: var(--text-muted); margin-top: 2px; }
+.rem__body { flex: 1 1 auto; min-width: 0; }
+.rem__title { font-size: var(--text-body); line-height: var(--lh-body); font-weight: var(--weight-medium); }
+.rem__when {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin-top: var(--space-05);
+  font-size: var(--text-meta); line-height: var(--lh-meta);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pasado. Baja al historico en silencio: se apaga, no se tacha ni se marca.
+   Nunca rojo, nunca insignia, nunca perseguir (decision 49). */
+.rem--past .rem__title { color: var(--text-faint); font-weight: var(--weight-regular); }
+.rem--past .rem__flag { color: var(--text-faint); opacity: .6; }
+.rem--past .rem__when { color: var(--text-faint); }
+
+/* --------------------------------------------------- preparacion (prep)
+   La relacion tarea->reminder. Es lo unico que ninguna app de tareas da:
+   no "cuando es", sino "me estoy preparando o solo lo se".                */
+
+.prep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: var(--text-label);
+  line-height: var(--lh-label);
+  color: var(--text-muted);
+}
+.prep__bar { display: flex; gap: 3px; }
+.prep__bar i { width: 16px; height: 3px; border-radius: 999px; background: var(--line-strong); display: block; }
+.prep__bar i.on { background: var(--text-muted); }
+
+/* Sin ninguna tarea todavia. El peso tipografico hace de senal y el acento
+   aparece como ACCION ("Planificar algo"), no como alarma. Cero rojo: no es
+   una falta del usuario, es informacion que todavia esta a tiempo. */
+.prep--none { color: var(--text); font-weight: var(--weight-medium); }
+.prep--none .ico { color: var(--text-muted); }
+
+/* --------------------------------------------------------- banda del dia
+   Los reminders de hoy, arriba del todo en la vista Dia.                  */
+
+.remband {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline: var(--gutter);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+/* ------------------------------------------------------- agenda semanal
+   La vista Semana en el telefono. No es la rejilla por horas en letra mas
+   chica: es "como reparto el trabajo", un dia por fila.                   */
+
+.agday {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--gutter);
+  align-items: start;
+}
+.agday + .agday { box-shadow: inset 0 1px 0 var(--line); }
+.agday--today { background: var(--accent-soft); }
+.agday__date { text-align: center; padding-top: 2px; }
+.agday__dow { display: block; font-size: var(--text-label); color: var(--text-muted); }
+.agday__num { display: block; font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+.agday--today .agday__dow, .agday--today .agday__num { color: var(--accent); }
+.agday__body { min-width: 0; display: grid; gap: var(--space-1); }
+.agday__none { font-size: var(--text-meta); color: var(--text-faint); }
+
+/* La carga del dia se lee con los titulos de las tareas, no con un numero:
+   un numero seria un contador de deuda, y ademas dice menos. Dos lineas. */
+.agday__tasks {
+  font-size: var(--text-meta); line-height: var(--lh-meta); color: var(--text-muted);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.agday__tasks .sep { color: var(--line-strong); }
+
+/* Materia en la agenda: gris, minuscula, nunca protagonista. */
+.agclass { font-size: var(--text-meta); color: var(--text-faint); }
+
+/* Arrastre entre dias: el destino se marca, no se abre ningun formulario. */
+.agday--target { box-shadow: inset 0 0 0 1.5px var(--accent); border-radius: var(--radius); }
+
+/* ------------------------------------------------------------------- mes
+   Solo reminders (decision 53). Meterle tareas la arruinaria.             */
+
+/* minmax(0,1fr) y no 1fr: con 1fr la columna no puede encogerse por debajo
+   del ancho minimo de su contenido, y un titulo de reminder con nowrap
+   reventaba la rejilla hacia la derecha. */
+.month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.month__dow {
+  text-align: center; padding-bottom: var(--space-2);
+  font-size: var(--text-label); color: var(--text-muted);
+}
+.mday {
+  min-width: 0;          /* cinturon: ni con 1fr puede reventar la columna */
+  overflow: hidden;
+  min-height: 64px;
+  padding: var(--space-1) 3px var(--space-2);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  box-shadow: inset 0 1px 0 var(--line);
+  color: var(--text);
+}
+.mday__n {
+  width: 26px; height: 26px; border-radius: 999px;
+  display: grid; place-items: center;
+  font-size: var(--text-meta); font-variant-numeric: tabular-nums;
+}
+.mday--out .mday__n { color: var(--text-faint); }
+.mday--today .mday__n { background: var(--accent); color: var(--text-on-accent); font-weight: var(--weight-semibold); }
+.mday__ev {
+  width: 100%;
+  max-width: 100%;
+  font-size: 11px; line-height: 14px;
+  padding: 2px 4px; border-radius: 4px;
+  background: var(--surface-sunken);
+  border-left: 2px solid var(--ctx, var(--line-strong));
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mday--past .mday__ev { color: var(--text-faint); }
+
+/* ----------------------------------------------------------- hoja y velo
+   La hoja de accion es de lo poco que flota de verdad.                    */
+
+.overlay {
+  position: absolute; inset: 0;
+  background: var(--scrim);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  z-index: 10;
+}
+
+/* Opcion de lista dentro de una hoja. 56px: se elige de un toque. */
+.opt {
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; min-height: 56px;
+  padding: var(--space-2) var(--gutter);
+  text-align: left;
+  font-size: var(--text-body);
+  color: var(--text);
+}
+.opt + .opt { box-shadow: inset 0 1px 0 var(--line); }
+.opt__when { margin-left: auto; font-size: var(--text-meta); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.opt:active { background: var(--surface-sunken); }
+
+/* ------------------------------------------------------ formulario horario
+   El mayor trabajo manual del proyecto. Tiene que verse rapido: el nombre
+   se escribe una vez y se reparte en varios dias, nunca dos veces el mismo
+   dato (decision 54).                                                     */
+
+.matcard {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+.matcard + .matcard { margin-top: var(--space-3); }
+
+/* Selector de dias: siete objetivos de 44px, uno por dia. */
+.dayset { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); }
+.dayset button {
+  min-height: var(--tap-min);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.dayset button[aria-pressed="true"] { background: var(--accent); color: var(--text-on-accent); }
+
+.timepair { display: flex; align-items: center; gap: var(--space-2); }
+.timepair .field { flex: 1 1 0; }
 
 /* -------------------------------------------------------- reduced motion */
 
