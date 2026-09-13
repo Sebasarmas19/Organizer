@@ -20,7 +20,7 @@ export default function SignInPage() {
       <div className="gutter" style={{ maxWidth: 420, margin: '0 auto', paddingBlock: 'var(--space-16)' }}>
         <h1 className="t-title">Organizer</h1>
         <p className="t-body c-muted" style={{ marginTop: 'var(--space-2)' }}>
-          Escribe tu correo y te llega un enlace. No hay contrasena que recordar.
+          Escribe tu correo y te llega un codigo. No hay contrasena que recordar.
         </p>
 
         <SignInForm />
