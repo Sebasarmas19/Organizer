@@ -150,3 +150,11 @@ Detalle del encargo en `briefs/FD3-calendario-color.md`.
 | 74 | Orden de Inicio, definitivo | **Hoy → Esta semana (reminders) → De ayer**, con la racha en el encabezado junto a la fecha | Sustituye a la 55. Es lo que el usuario pidió, lo que se dibujó en FD3 y lo que él validó desde el iPhone. La 55 había quedado con el texto viejo y F1 la iba a leer para construir esa pantalla |
 | 75 | `--line-control` | Borde de control a **3.35:1**, separado de `--line` (separación de filas, 1.25:1) | Un borde que es la única señal de que algo es un control es un indicador no textual y necesita 3:1 (WCAG 1.4.11). Toda casilla y todo campo de FD y FD2 lo incumplían. Hallazgo del worker de FD3, no del coordinador |
 | 76 | El preset de Tailwind 3 se queda | Se carga con `@config` desde `globals.css`. **No se traduce a bloques `@theme` de Tailwind 4** | Traducir a mano un archivo que ya funciona, y que lleva dentro los ratios de contraste medidos, solo crea ocasiones de perder un token por el camino |
+
+## Entrada a la app (2026-09-13, tras dos fallos reales del correo)
+
+| # | Decisión | Valor | Razón |
+|---|---|---|---|
+| 77 | Cómo se entra | **Entrar con Google.** El correo queda como salida de emergencia, discreta | El correo falló dos veces por razones estructurales: el escáner de Gmail gasta el enlace de un solo uso antes de que el usuario lo abra (verificado: enviado 01:32:14, consumido 01:32:30, sin sesión), y Supabase no deja editar la plantilla para mandar un código sin montar un SMTP propio. Montar un servicio de correo entero para una app que solo lo usa para entrar era desproporcionado. En el iPhone la sesión de Google ya está abierta: entrar es un toque |
+| 78 | El correo no desaparece | Botón discreto: *"Entrar con un enlace al correo"* | Si la configuración de Google se rompe, el usuario no se queda encerrado fuera de sus propios datos. Es una salida de emergencia, no una segunda opción que sopesar cada vez |
+
