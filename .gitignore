@@ -10,9 +10,11 @@ build/
 dist/
 
 # entorno — NUNCA commitear claves
-.env
-.env*.local
-.env.production
+# Se ignora TODO lo que empiece por .env, en cualquier carpeta, y se
+# rescatan los .example. Antes se listaban tres casos concretos y
+# .env.development, por ejemplo, se colaba.
+.env*
+!.env*.example
 
 # vercel / supabase
 .vercel

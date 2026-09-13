@@ -1,0 +1,24 @@
+/* ============================================================================
+   Organizer · hoja raiz de la PWA
+
+   El orden importa y no es cosmetico:
+
+     1. Tailwind, que trae su preflight en @layer base.
+     2. tokens.css   — copia exacta de `app/tokens.css`. La fuente de verdad
+                       del color, la tipografia, el espacio y los ratios de
+                       contraste medidos. No se edita aqui: se edita alla y se
+                       vuelve a copiar (`npm run check:design` lo comprueba).
+     3. base.css     — la capa de componentes, tambien copiada de `app/`.
+                       Va sin capa, asi que gana al preflight de Tailwind:
+                       eso es lo que queremos, porque `body` y los controles
+                       ya estan resueltos por el sistema de diseno.
+     4. web.css      — lo poco que solo existe en la app y no en los comps.
+     5. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
+   ========================================================================= */
+
+@import "tailwindcss";
+@import "../styles/tokens.css";
+@import "../styles/base.css";
+@import "../styles/web.css";
+
+@config "../../tailwind.config.js";

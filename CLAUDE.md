@@ -18,7 +18,7 @@
 | Archivo | Qué contiene |
 |---|---|
 | `docs/00-problema.md` | El problema real y el diagnóstico. **Léelo primero.** |
-| `docs/01-decisiones.md` | Las 73 decisiones ya cerradas con el usuario. No las re-preguntes. |
+| `docs/01-decisiones.md` | Las 76 decisiones ya cerradas con el usuario. No las re-preguntes. |
 | `docs/02-arquitectura.md` | Stack, Web Push en iOS, captura por Atajo de Siri |
 | `docs/03-modelo-datos.md` | Entidades y por qué están así |
 | `docs/schema.sql` | DDL listo para Supabase |

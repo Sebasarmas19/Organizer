@@ -1,0 +1,31 @@
+/* ============================================================================
+   Organizer · lo que solo existe en la app real
+
+   `tokens.css` y `base.css` son copias de `app/`. Este archivo NO lo es: es
+   el sitio donde vive lo que la app necesita y los comps no tenian por que
+   tener. Se mantiene corto a proposito. Si algo de aqui se vuelve parte del
+   sistema, sube a `app/base.css` y baja copiado, no al reves.
+   ========================================================================= */
+
+/* El carril segmentado de `base.css` se estila con `aria-selected`, que es lo
+   correcto cuando las opciones son vistas (Mes · Semana · Dia son pestanas de
+   verdad). El interruptor de tema no son vistas: son tres valores de un mismo
+   ajuste, o sea un grupo de radio, y ahi el atributo correcto es
+   `aria-checked`. Se anade el selector en vez de mentir en la semantica. */
+.seg button[aria-checked="true"] {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-float);
+}
+
+/* La barra de pestanas va pegada abajo en la app; en los comps la sostenia el
+   marco del iPhone dibujado. Y respeta el area segura ella sola: el indicador
+   de inicio del iPhone se come 34px que nadie mas va a descontar. */
+.applayout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.applayout > .tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
