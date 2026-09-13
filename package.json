@@ -1,0 +1,12 @@
+{
+  "name": "organizer",
+  "private": true,
+  "description": "Atajos desde la raiz. El proyecto de verdad vive en web/.",
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start",
+    "verify": "npm --prefix web run verify",
+    "lint": "npm --prefix web run lint"
+  }
+}
