@@ -127,7 +127,7 @@ alter table blocks
 -- materializar la plantilla debe ser idempotente:
 -- una plantilla genera como máximo un bloque por día
 create unique index blocks_template_per_day
-  on blocks (template_id, (starts_at at time zone 'UTC')::date)
+  on blocks (template_id, ((starts_at at time zone 'UTC')::date))
   where template_id is not null;
 
 -- ───────────────────────────────────────────────────── weekly_reviews
@@ -253,12 +253,23 @@ create table resources (
 );
 
 -- "poder llegar a la información": la búsqueda es la entrada al módulo
+--
+-- Una columna generada exige una expresión IMMUTABLE, y ni to_tsvector con el
+-- nombre de la configuración como texto ni array_to_string lo son. Se declara
+-- una función inmutable que las envuelve: la configuración queda fijada a
+-- 'spanish'::regconfig, que es lo que hacía falta para que el plan sea estable.
+create or replace function resources_search_vector(
+  p_title text, p_notes text, p_tags text[]
+) returns tsvector
+language sql immutable strict parallel safe
+as $$
+  select to_tsvector('spanish'::regconfig,
+    coalesce(p_title,'') || ' ' || coalesce(p_notes,'') || ' ' ||
+    coalesce(array_to_string(p_tags,' '),''));
+$$;
+
 alter table resources add column search tsvector
-  generated always as (
-    to_tsvector('spanish',
-      coalesce(title,'') || ' ' || coalesce(notes,'') || ' ' ||
-      coalesce(array_to_string(tags,' '),''))
-  ) stored;
+  generated always as (resources_search_vector(title, notes, tags)) stored;
 
 create index on resources using gin (search);
 create index on resources using gin (tags);
