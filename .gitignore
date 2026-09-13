@@ -28,3 +28,6 @@ npm-debug.log*
 
 # tooling local
 .claude/settings.local.json
+
+# worktrees de los agentes en paralelo
+.worktrees/
