@@ -3,80 +3,93 @@
 /* ============================================================================
    Organizer · El formulario de entrada
 
-   Cliente porque tiene estado y llama a Supabase desde el navegador. Es el
-   unico formulario de toda la app que pide algo antes de dejarte pasar.
-
-   POR QUE UN CODIGO Y NO UN ENLACE
+   POR QUE GOOGLE Y NO CORREO
    --------------------------------------------------------------------------
-   Verificado contra la base el 2026-09-13: el correo salio a las 01:32:14 y
-   la cuenta quedo confirmada a las 01:32:30, dieciseis segundos despues, sin
-   que ninguna sesion se creara. Nadie abre un correo en dieciseis segundos:
-   fue el escaner de enlaces de Gmail, que visita cada URL antes de ensenarte
-   el mensaje. El enlace del magic link es de un solo uso, asi que el escaner
-   lo gasta y al usuario le llega `otp_expired`.
+   El correo fue el camino durante media hora y fallo dos veces, por dos
+   razones distintas y las dos estructurales:
 
-   Un codigo de seis digitos no se puede gastar mirandolo. El escaner no lo
-   escribe. Ademas resuelve el otro fallo del enlace: pedirlo en un navegador
-   y abrirlo en otro rompe el intercambio PKCE, y con el codigo da igual donde
-   este abierto el correo.
+   1. Verificado contra la base el 2026-09-13: el correo salio a las 01:32:14
+      y la cuenta quedo confirmada a las 01:32:30, dieciseis segundos despues,
+      sin que se creara ninguna sesion. Nadie abre un correo en dieciseis
+      segundos: fue el escaner de enlaces de Gmail. El enlace es de un solo
+      uso, el escaner lo gasta, y al usuario le llega `otp_expired`.
+   2. El arreglo natural —mandar un codigo de seis digitos en vez de un
+      enlace— exige editar la plantilla del correo, y Supabase solo lo permite
+      con un servidor SMTP propio. Montar un servicio de correo entero para
+      una app cuyo unico uso del correo es entrar era la cola moviendo al
+      perro.
 
-   El enlace sigue funcionando si la plantilla del correo lo incluye. El
-   codigo es el camino principal, no el de repuesto.
+   Google resuelve las dos de golpe y ademas quita el limite de cuatro correos
+   por hora del plan gratis. En el iPhone la sesion de Google ya esta abierta,
+   asi que entrar es un toque, que es exactamente lo que esta app necesita: el
+   usuario no vuelve de una friccion, se queda fuera.
 
-   Tres cosas que no son cosmeticas:
+   El correo se queda como salida de emergencia, discreta. Si la configuracion
+   de Google se rompe, el usuario no se queda encerrado fuera de sus datos.
 
-   - El campo mide 44px (`.field`) y el boton tambien (`.btn`). El minimo
-     tactil del sistema no tiene excepciones, ni siquiera en la pantalla que
-     se ve una vez cada seis meses.
-   - `inputMode="numeric"` y `autoComplete="one-time-code"` para que iOS
-     ofrezca el codigo desde la notificacion del correo, sin teclearlo.
+   Dos cosas que no son cosmeticas:
+
+   - El boton mide 44px (`.btn`). El minimo tactil del sistema no tiene
+     excepciones, ni en la pantalla que se ve una vez cada seis meses.
    - Los mensajes son `aria-live`: si no, un lector de pantalla no se entera
      de que paso algo.
    ========================================================================= */
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type State =
   | { kind: 'idle' }
+  | { kind: 'google' }
   | { kind: 'sending' }
-  | { kind: 'sent' }
-  | { kind: 'verifying' }
+  | { kind: 'sent'; email: string }
   | { kind: 'error'; message: string };
 
 export function SignInForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
   const [state, setState] = useState<State>({ kind: 'idle' });
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [email, setEmail] = useState('');
 
-  /* El correo ya se pidio: no se vuelve a la pantalla anterior por error. */
-  const asked = state.kind === 'sent' || state.kind === 'verifying';
+  async function signInWithGoogle() {
+    if (state.kind === 'google') return;
+    setState({ kind: 'google' });
 
-  async function requestCode(event: FormEvent<HTMLFormElement>) {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+        },
+      });
+      /* Si sale bien, el navegador ya se fue a Google y esto no se ejecuta. */
+      if (error) setState({ kind: 'error', message: error.message });
+    } catch (error) {
+      setState({
+        kind: 'error',
+        message:
+          error instanceof Error ? error.message : 'No se pudo abrir Google.',
+      });
+    }
+  }
+
+  async function sendLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (state.kind === 'sending') return;
-
     setState({ kind: 'sending' });
 
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          emailRedirectTo: window.location.origin + '/auth/callback',
-        },
+        options: { emailRedirectTo: window.location.origin + '/auth/callback' },
       });
-
       if (error) {
         setState({ kind: 'error', message: error.message });
         return;
       }
-      setState({ kind: 'sent' });
+      setState({ kind: 'sent', email });
     } catch (error) {
-      /* Tipicamente: faltan las variables de entorno. Se dice tal cual en
-         vez de dejar un "Failed to fetch" que no orienta a nadie. */
       setState({
         kind: 'error',
         message:
@@ -87,142 +100,15 @@ export function SignInForm() {
     }
   }
 
-  async function verifyCode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (state.kind === 'verifying') return;
-
-    setState({ kind: 'verifying' });
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: code.trim(),
-        type: 'email',
-      });
-
-      if (error) {
-        setState({ kind: 'error', message: error.message });
-        return;
-      }
-
-      /* `refresh` ademas de `push`: el servidor tiene que volver a leer la
-         cookie de sesion para que `profiles` se cree del lado de alla. Sin
-         el refresh, la navegacion de cliente sirve el arbol ya cacheado y la
-         pantalla sigue creyendo que no hay sesion. */
-      router.push('/');
-      router.refresh();
-    } catch (error) {
-      setState({
-        kind: 'error',
-        message:
-          error instanceof Error ? error.message : 'No se pudo comprobar el codigo.',
-      });
-    }
-  }
-
-  const message =
-    state.kind === 'error' ? (
-      <span className="c-muted">{state.message}</span>
-    ) : null;
-
-  /* ---------------------------------------------------------------- paso 2 */
-  if (asked || (state.kind === 'error' && code !== '')) {
-    return (
-      <form onSubmit={verifyCode} style={{ marginTop: 'var(--space-8)' }}>
-        <p className="t-body">Te mandamos un código a {email}.</p>
-        <p className="t-meta c-muted" style={{ marginTop: 'var(--space-2)' }}>
-          Seis dígitos. Caduca en una hora.
-        </p>
-
-        <label
-          className="t-label c-muted"
-          htmlFor="code"
-          style={{ fontWeight: 600, display: 'block', marginTop: 'var(--space-6)' }}
-        >
-          El código
-        </label>
-
-        <div className="field" style={{ marginTop: 'var(--space-2)' }}>
-          <input
-            id="code"
-            name="code"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            autoCapitalize="none"
-            spellCheck={false}
-            maxLength={6}
-            required
-            autoFocus
-            placeholder="123456"
-            value={code}
-            onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
-            style={{ letterSpacing: '0.18em', fontVariantNumeric: 'tabular-nums' }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="btn btn--primary btn--full"
-          style={{ marginTop: 'var(--space-4)' }}
-          disabled={state.kind === 'verifying' || code.length < 6}
-        >
-          {state.kind === 'verifying' ? 'Comprobando…' : 'Entrar'}
-        </button>
-
-        <p
-          aria-live="polite"
-          className="t-meta"
-          style={{ marginTop: 'var(--space-3)', minHeight: 20 }}
-        >
-          {message}
-        </p>
-
-        <button
-          type="button"
-          className="taptext t-label c-muted"
-          onClick={() => {
-            setCode('');
-            setState({ kind: 'idle' });
-          }}
-        >
-          Usar otro correo
-        </button>
-      </form>
-    );
-  }
-
-  /* ---------------------------------------------------------------- paso 1 */
   return (
-    <form onSubmit={requestCode} style={{ marginTop: 'var(--space-8)' }}>
-      <label className="t-label c-muted" htmlFor="email" style={{ fontWeight: 600 }}>
-        Tu correo
-      </label>
-
-      <div className="field" style={{ marginTop: 'var(--space-2)' }}>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          autoCapitalize="none"
-          spellCheck={false}
-          required
-          placeholder="tu@correo.com"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </div>
-
+    <div style={{ marginTop: 'var(--space-8)' }}>
       <button
-        type="submit"
+        type="button"
         className="btn btn--primary btn--full"
-        style={{ marginTop: 'var(--space-4)' }}
-        disabled={state.kind === 'sending'}
+        onClick={signInWithGoogle}
+        disabled={state.kind === 'google'}
       >
-        {state.kind === 'sending' ? 'Enviando…' : 'Mandarme el código'}
+        {state.kind === 'google' ? 'Abriendo Google…' : 'Entrar con Google'}
       </button>
 
       <p
@@ -231,9 +117,62 @@ export function SignInForm() {
         style={{ marginTop: 'var(--space-3)', minHeight: 20 }}
       >
         {state.kind === 'error' ? (
-          <span className="c-muted">No se pudo mandar el código: {state.message}</span>
+          <span className="c-muted">{state.message}</span>
         ) : null}
       </p>
-    </form>
+
+      {/* ------------------------------------------------ salida de emergencia
+          Deliberadamente callada. No es una segunda opcion que haya que
+          sopesar cada vez: es lo que se usa el dia que Google falle. */}
+      {state.kind === 'sent' ? (
+        <div role="status" style={{ marginTop: 'var(--space-6)' }}>
+          <p className="t-meta">Te mandamos un enlace a {state.email}.</p>
+          <p className="t-label c-muted" style={{ marginTop: 'var(--space-1)' }}>
+            Ábrelo en este mismo navegador. Caduca en una hora.
+          </p>
+        </div>
+      ) : emailOpen ? (
+        <form onSubmit={sendLink} style={{ marginTop: 'var(--space-6)' }}>
+          <label className="t-label c-muted" htmlFor="email" style={{ fontWeight: 600 }}>
+            Tu correo
+          </label>
+
+          <div className="field" style={{ marginTop: 'var(--space-2)' }}>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              required
+              autoFocus
+              placeholder="tu@correo.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn--full"
+            style={{ marginTop: 'var(--space-3)' }}
+            disabled={state.kind === 'sending'}
+          >
+            {state.kind === 'sending' ? 'Enviando…' : 'Mandarme un enlace'}
+          </button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          className="taptext t-label c-muted"
+          style={{ marginTop: 'var(--space-4)' }}
+          onClick={() => setEmailOpen(true)}
+        >
+          Entrar con un enlace al correo
+        </button>
+      )}
+    </div>
   );
 }
