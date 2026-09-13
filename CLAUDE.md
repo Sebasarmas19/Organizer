@@ -37,14 +37,16 @@ Organizer/
 ├── AGENTS.md      ← mismo contexto para Antigravity (`agy`)
 ├── docs/          ← DECISIONES · solo el coordinador escribe
 ├── briefs/        ← encargo de cada fase · solo el coordinador escribe
-└── app/           ← EL CÓDIGO · los workers escriben, el coordinador revisa
+├── app/           ← SISTEMA DE DISEÑO y comps · aprobado, solo se lee
+└── web/           ← LA PWA (Next.js) · los workers escriben, el coordinador revisa
 ```
 
 | Carpeta | Coordinador | Workers |
 |---|---|---|
 | `docs/` | escribe | leen · solo escriben `estado-F<n>.md` |
 | `briefs/` | escribe | solo leen |
-| `app/` | revisa | escriben |
+| `app/` | **congelado** | solo leen · diseño aprobado |
+| `web/` | revisa | escriben |
 | `docs/schema.sql` | escribe | **no tocan sin preguntar** |
 
 ## Reglas del proyecto
