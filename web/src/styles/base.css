@@ -1,0 +1,1148 @@
+/* ============================================================================
+   Organizer · Capa de componentes
+   Construida solo sobre tokens.css. Ni un color, ni un espacio, ni un radio
+   literal en este archivo.
+
+   En la app real esto vive en @layer components de Tailwind. Aqui va suelto
+   para que los comps abran sin build.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------ base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tracking-body);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Superficies del navegador que no dibujamos pero que igual son diseno. */
+::selection { background: var(--accent-soft); color: var(--text); }
+:root { accent-color: var(--accent); caret-color: var(--accent); }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+:where(a) { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+:where(button, a, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* ---------------------------------------------------------- tipo (5 pasos) */
+
+.t-title   { font-size: var(--text-title);   line-height: var(--lh-title);   letter-spacing: var(--tracking-title); font-weight: var(--weight-bold); }
+.t-section { font-size: var(--text-section); line-height: var(--lh-section); letter-spacing: var(--tracking-title); font-weight: var(--weight-semibold); }
+.t-body    { font-size: var(--text-body);    line-height: var(--lh-body);    letter-spacing: var(--tracking-body); }
+.t-meta    { font-size: var(--text-meta);    line-height: var(--lh-meta);    letter-spacing: var(--tracking-body); }
+.t-label   { font-size: var(--text-label);   line-height: var(--lh-label);   letter-spacing: var(--tracking-label); }
+
+.c-muted { color: var(--text-muted); }
+.c-faint { color: var(--text-faint); }
+.c-accent { color: var(--accent); }
+
+/* --------------------------------------------- lo que NO se copio de app/
+   Aqui iba el andamiaje de los comps: `body.comp`, `.device` (el marco de
+   390x844), `.statusbar` y `.homebar`. Son un iPhone dibujado para poder
+   revisar las pantallas en el navegador. En la app real el iPhone lo pone
+   el iPhone, asi que ese bloque se queda en `app/base.css` y no viaja.
+   Todo lo demas es identico, comentarios incluidos.                       */
+
+
+/* El cuerpo. Inicio usa .screen--fixed: prohibido el scroll. */
+.screen { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.screen--fixed { overflow: hidden; }
+
+.gutter { padding-inline: var(--gutter); }
+
+/* ------------------------------------------------------------ encabezados */
+
+.pagehead {
+  padding: var(--space-2) var(--gutter) var(--space-3);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--gutter) var(--space-2);
+  font-size: var(--text-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--tracking-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------- fila de tarea */
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--gutter);
+  background: transparent;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.row + .row { box-shadow: inset 0 1px 0 var(--line); }
+.row--now { background: var(--accent-soft); }
+.row--now + .row, .row + .row--now { box-shadow: none; }
+
+.row__body { flex: 1 1 auto; min-width: 0; }
+.row__title {
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.row__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-05);
+  font-size: var(--text-meta);
+  line-height: var(--lh-meta);
+  color: var(--text-muted);
+}
+.row__meta .sep { color: var(--line-strong); }
+
+.row--done .row__title { color: var(--text-faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+.row--done .row__meta { color: var(--text-faint); }
+
+/* Checkbox: 24px visibles, 44px de area tactil. Sin celebracion. */
+.check {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin: -10px 0 -10px calc(var(--space-2) * -1.5);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--text-faint);
+}
+.check::before {
+  content: "";
+  width: 23px;
+  height: 23px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line-control);   /* 3.35:1 — el borde ES el control */
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+/* FD3 · la casilla es azul marino porque la casilla ES la tarea (dec. 63).
+   Sigue sin celebracion: cambia de estado y se calla. El color entra por el
+   relleno, no por el texto — el titulo tachado se queda en --text-faint. */
+.check[aria-checked="true"]::before { background: var(--task); border-color: var(--task); }
+.check[aria-checked="true"] .ico {
+  position: absolute;
+  color: var(--text-on-accent);
+  width: 14px; height: 14px;
+}
+.check .ico { position: absolute; opacity: 0; width: 14px; height: 14px; transition: opacity var(--dur-fast) var(--ease-out); }
+.check[aria-checked="true"] .ico { opacity: 1; }
+
+/* FD3 · El punto de contexto se elimina (decision 66). Un contexto es texto:
+   "Calculo III", "Personal". Tres colores de entidad mas seis de contexto
+   convertian cada fila en un arcoiris donde ninguno significaba nada. */
+
+/* ------------------------------------------------------------- controles */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-body);
+  color: var(--text);
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.btn:active { background: var(--line); }
+.btn--primary { background: var(--accent); color: var(--text-on-accent); }
+.btn--primary:active { background: var(--accent-press); }
+.btn--quiet { background: transparent; border-color: var(--line-control); color: var(--text-muted); }
+.btn--quiet:active { background: var(--surface-sunken); }
+.btn--full { width: 100%; }
+.btn[disabled] { opacity: .42; pointer-events: none; }
+
+/* Control de solo icono. 44x44 reales aunque el icono mida 20. */
+.tapicon {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.tapicon:active { background: var(--surface-sunken); }
+
+/* Enlace de accion en texto (no icono). Tambien 44px: es el tamano del dedo,
+   no el tamano de la tipografia. El area crece hacia fuera con margen
+   negativo para que el texto siga alineado con su columna. */
+.taptext {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding-inline: var(--space-2);
+  margin-inline: calc(var(--space-2) * -1);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.taptext:active { background: var(--accent-soft); }
+.taptext--quiet { color: var(--text-muted); }
+.taptext--quiet:active { background: var(--surface-sunken); }
+
+/* Pastilla de triage: una accion, un toque.
+   44px de alto, sin excepcion: es el control mas usado de la app y se toca
+   caminando, con una mano. Si algo deja de caber por esto, sale contenido. */
+.triage { display: flex; gap: var(--space-2); }
+.triage .btn { flex: 1 1 0; padding-inline: var(--space-1); min-height: var(--tap-min); }
+
+/* Chip: la pastilla se PINTA de 34px pero MIDE 44.
+   El truco es un borde transparente de 5px arriba y abajo con
+   background-clip: padding-box — el fondo solo llega al padding, pero la caja
+   de layout es la de verdad. Frente a un ::before absoluto tiene una ventaja
+   que importa: dos filas de chips nunca pueden solaparse sus areas tactiles,
+   porque son cajas reales y el gap las separa de verdad.
+   Asi el filtro no engorda la pantalla y el dedo conserva su medida. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+  background-clip: padding-box;
+  border: 5px solid transparent;
+  border-inline-width: 1px;
+  white-space: nowrap;
+}
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.field--focus { border-color: var(--accent); background: var(--surface); }
+.field input {
+  flex: 1 1 auto; min-width: 0;
+  font: inherit; font-size: var(--text-body);
+  color: var(--text); background: none; border: 0; outline: none;
+}
+.field input::placeholder { color: var(--text-faint); }
+
+.caret {
+  width: 2px; height: 21px; background: var(--accent); border-radius: 1px;
+  animation: caret 1.06s steps(1) infinite;
+}
+@keyframes caret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+
+/* Deshacer: visible, en el sitio, sin dialogo que bloquee. */
+.undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--gutter);
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+}
+.undo button {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  min-height: var(--tap-min);
+  padding-inline: var(--space-3);
+  margin-block: calc(var(--space-1) * -1);
+}
+
+/* ------------------------------------------------------------ iconografia */
+
+.ico { display: inline-block; width: 20px; height: 20px; vertical-align: -4px; flex: 0 0 auto; }
+.ico svg { display: block; width: 100%; height: 100%; }
+.ico--sm { width: 16px; height: 16px; }
+.ico--lg { width: 24px; height: 24px; }
+
+/* -------------------------------------------------------- barra de pestanas */
+
+.tabbar {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 var(--line);
+  padding-top: var(--space-1);
+}
+.tab {
+  min-height: 49px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-faint);
+  font-size: var(--text-label);
+  line-height: 1;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.tab[aria-current="page"] { color: var(--accent); }
+
+/* --------------------------------------------------------------- calendario */
+
+/* El aire lateral minimo (16px) se respeta tambien aqui: 16 a la izquierda
+   antes del gutter de horas, y 8 + 8 del inset del bloque a la derecha. */
+.cal { display: grid; grid-template-columns: 46px 1fr; position: relative; padding-left: var(--space-4); padding-right: var(--space-2); }
+.cal__hours { position: relative; }
+.cal__hour {
+  height: var(--hour, 56px);
+  padding-right: var(--space-2);
+  text-align: right;
+  font-size: var(--text-label);
+  color: var(--text-faint);
+  transform: translateY(-8px);
+}
+.cal__grid { position: relative; border-left: 1px solid var(--line); }
+.cal__line { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+
+.cal__now { position: absolute; left: 0; right: 0; height: 0; z-index: 3; pointer-events: none; }
+.cal__now::before {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px;
+  border-top: 1.5px solid var(--accent);
+}
+.cal__now::after {
+  content: ""; position: absolute; left: -4px; top: -4.5px;
+  width: 8px; height: 8px; border-radius: 999px; background: var(--accent);
+}
+
+.calblock {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  border-radius: var(--radius);
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+  font-size: var(--text-meta);
+  line-height: var(--lh-meta);
+}
+.calblock__title { font-size: var(--text-meta); font-weight: var(--weight-medium); color: var(--text); }
+.calblock__time { font-size: var(--text-label); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* MATERIA · verde suave. Tinte de fondo + barra verde. No compite: es
+   ausencia de tiempo disponible, no contenido (decision 52). */
+.calblock--class { background: var(--class-soft); border-left: 3px solid var(--class); z-index: 1; }
+.calblock--class .calblock__title { color: var(--text-muted); font-weight: var(--weight-regular); }
+
+/* TAREA · azul marino. Superficie propia y barra azul de 3px a la izquierda.
+   El titulo NO es azul: el color envuelve, no pinta (decision 63). */
+.calblock--task {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--task);
+  z-index: 2;
+}
+/* En curso: el mismo azul, ahora tambien de fondo. Sigue sin texto azul. */
+.calblock--now { background: var(--task-soft); border-color: var(--task-soft); border-left-color: var(--task); }
+.calblock--now .calblock__time { color: var(--text-muted); font-weight: var(--weight-medium); }
+
+/* Estado de arrastre: el bloque sigue al dedo, el destino se dibuja debajo. */
+.calblock--dragging { box-shadow: var(--shadow-float); transform: scale(1.02); z-index: 5; }
+.calblock--ghost {
+  background: transparent;
+  border: 1.5px dashed var(--accent);
+  z-index: 4;
+  display: flex; align-items: center;
+  color: var(--accent);
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+}
+.calblock__grip {
+  position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
+  width: 28px; height: 3px; border-radius: 999px; background: var(--accent); opacity: .5;
+}
+
+/* ------------------------------------------------------------------ hoja */
+
+.sheet {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-sheet);
+  padding: var(--space-2) 0 var(--space-4);
+}
+.sheet__grab { width: 36px; height: 5px; border-radius: 999px; background: var(--line-strong); margin: 0 auto var(--space-3); }
+
+/* ------------------------------------------------ pantalla de bloqueo iOS */
+
+.lock {
+  width: 390px; height: 844px;
+  background: var(--lock-bg);
+  color: var(--lock-text);
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+.lock__clock { text-align: center; padding-top: 76px; }
+.lock__date { font-size: var(--text-body); font-weight: var(--weight-semibold); opacity: .85; }
+.lock__time { font-size: 84px; line-height: 1; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+
+.notif {
+  border-radius: var(--radius-lg);
+  background: var(--lock-material);
+  border: 1px solid var(--lock-material-line);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+  padding: var(--space-3);
+  color: var(--lock-text);
+}
+.notif__head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-1); }
+.notif__app {
+  font-size: 11px; line-height: 1; letter-spacing: .06em; text-transform: uppercase;
+  font-weight: var(--weight-semibold); color: var(--lock-text-muted);
+}
+.notif__when { margin-left: auto; font-size: 12px; color: var(--lock-text-muted); }
+.notif__title { font-size: 15px; line-height: 20px; font-weight: var(--weight-semibold); }
+.notif__body { font-size: 15px; line-height: 20px; color: rgb(255 255 255 / 0.88); }
+.notif__icon {
+  width: 20px; height: 20px; border-radius: 5px; flex: 0 0 auto;
+  background: var(--accent); display: grid; place-items: center;
+}
+.notif__icon span { width: 9px; height: 9px; border: 1.6px solid var(--text-on-accent); border-radius: 999px; }
+
+/* Recorte a 2 lineas: asi la ve iOS sin desplegar. Es el limite real. */
+.clamp2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+/* --------------------------------------------------------------- teclado */
+
+.kb { background: var(--surface-sunken); padding: var(--space-2) var(--space-1) var(--space-1); }
+.kb__row { display: flex; justify-content: center; gap: 6px; margin-bottom: 8px; }
+.kb__key {
+  min-width: 30px; height: 40px; flex: 1 1 0;
+  display: grid; place-items: center;
+  border-radius: 5px; background: var(--surface);
+  box-shadow: 0 1px 0 var(--line-strong);
+  font-size: var(--text-section); font-weight: var(--weight-regular); color: var(--text);
+}
+.kb__key--wide { flex: 1.6 1 0; background: var(--line); font-size: var(--text-label); }
+.kb__key--space { flex: 5 1 0; }
+
+/* ============================================================================
+   MODELO DE TRES ENTIDADES  ·  materias · reminders · tareas
+   (docs/08-modelo-tareas-reminders.md, decisiones 47-57)
+
+   La diferencia entre una tarea y un reminder se ve SIN color:
+
+     tarea     -> circulo de check a la izquierda. Se completa.
+     reminder  -> banderin. No se completa: pasa el dia y queda listo.
+     materia   -> superficie gris de fondo. Ni se completa ni se toca.
+
+   Ningun reminder usa rojo, ni vencido. Un reminder pasado no es deuda.
+   ========================================================================= */
+
+/* ----------------------------------------------------- control segmentado
+   Las tres vistas del calendario. No son zoom: son tres preguntas.        */
+
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+.seg button {
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); }
+/* La caja mide 44px contando el padding del carril: 38 + 3 + 3. */
+
+/* ------------------------------------------------------------ interruptor
+   Ocultar las materias al planificar: entonces interesa el hueco, no la
+   clase (decision 52).                                                    */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding-inline: var(--gutter);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  text-align: left;
+}
+.toggle__label { flex: 1 1 auto; }
+.toggle__switch {
+  flex: 0 0 auto;
+  width: 46px; height: 28px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.toggle__switch::after {
+  content: "";
+  position: absolute; top: 2px; left: 2px;
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .18);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.toggle[aria-pressed="true"] .toggle__switch { background: var(--accent); }
+.toggle[aria-pressed="true"] .toggle__switch::after { transform: translateX(18px); }
+
+/* -------------------------------------------------------------- reminder
+   Se distingue de una tarea por la forma, no por el color: banderin en vez
+   de circulo, y ninguna casilla que marcar.                               */
+
+.rem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) var(--gutter);
+  text-align: left;
+  color: var(--text);
+}
+.rem + .rem { box-shadow: inset 0 1px 0 var(--line); }
+/* El banderin es el ambar. Es un indicador no textual: 4.0:1 sobre --bg. */
+.rem__flag { color: var(--rem); margin-top: 2px; }
+.rem__body { flex: 1 1 auto; min-width: 0; }
+.rem__title { font-size: var(--text-body); line-height: var(--lh-body); font-weight: var(--weight-medium); }
+.rem__when {
+  display: flex; align-items: center; gap: var(--space-2);
+  margin-top: var(--space-05);
+  font-size: var(--text-meta); line-height: var(--lh-meta);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pasado. Baja al historico en silencio: se apaga, no se tacha ni se marca.
+   Nunca rojo, nunca insignia, nunca perseguir (decision 49). */
+.rem--past .rem__title { color: var(--text-faint); font-weight: var(--weight-regular); }
+.rem--past .rem__flag { color: var(--text-faint); opacity: .6; }   /* pasado: se apaga, no se tacha */
+.rem--past .rem__when { color: var(--text-faint); }
+
+/* --------------------------------------------------- preparacion (prep)
+   La relacion tarea->reminder. Es lo unico que ninguna app de tareas da:
+   no "cuando es", sino "me estoy preparando o solo lo se".                */
+
+.prep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: var(--text-label);
+  line-height: var(--lh-label);
+  color: var(--text-muted);
+}
+.prep__bar { display: flex; gap: 3px; }
+.prep__bar i { width: 16px; height: 3px; border-radius: 999px; background: var(--line-strong); display: block; }
+.prep__bar i.on { background: var(--text-muted); }
+
+/* Sin ninguna tarea todavia. El peso tipografico hace de senal y el acento
+   aparece como ACCION ("Planificar algo"), no como alarma. Cero rojo: no es
+   una falta del usuario, es informacion que todavia esta a tiempo. */
+.prep--none { color: var(--text); font-weight: var(--weight-medium); }
+.prep--none .ico { color: var(--text-muted); }
+
+/* --------------------------------------------------------- banda del dia
+   Los reminders de hoy, arriba del todo en la vista Dia.                  */
+
+.remband {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline: var(--gutter);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--rem-soft);          /* --text encima: 14.9:1 */
+  border-left: 3px solid var(--rem);
+  color: var(--text);
+}
+
+/* ------------------------------------------------------- agenda semanal
+   La vista Semana en el telefono. No es la rejilla por horas en letra mas
+   chica: es "como reparto el trabajo", un dia por fila.                   */
+
+.agday {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--gutter);
+  align-items: start;
+}
+.agday + .agday { box-shadow: inset 0 1px 0 var(--line); }
+.agday--today { background: var(--accent-soft); }
+.agday__date { text-align: center; padding-top: 2px; }
+.agday__dow { display: block; font-size: var(--text-label); color: var(--text-muted); }
+.agday__num { display: block; font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+.agday--today .agday__dow, .agday--today .agday__num { color: var(--accent); }
+.agday__body { min-width: 0; display: grid; gap: var(--space-1); }
+.agday__none { font-size: var(--text-meta); color: var(--text-faint); }
+
+/* La carga del dia se lee con los titulos de las tareas, no con un numero:
+   un numero seria un contador de deuda, y ademas dice menos. Dos lineas. */
+.agday__tasks {
+  font-size: var(--text-meta); line-height: var(--lh-meta); color: var(--text-muted);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.agday__tasks .sep { color: var(--line-strong); }
+
+/* Materia en la agenda: gris, minuscula, nunca protagonista. */
+.agclass { font-size: var(--text-meta); color: var(--text-faint); }
+
+/* Arrastre entre dias: el destino se marca, no se abre ningun formulario. */
+.agday--target { box-shadow: inset 0 0 0 1.5px var(--accent); border-radius: var(--radius); }
+
+/* ------------------------------------------------------------------- mes
+   Solo reminders (decision 53). Meterle tareas la arruinaria.             */
+
+/* minmax(0,1fr) y no 1fr: con 1fr la columna no puede encogerse por debajo
+   del ancho minimo de su contenido, y un titulo de reminder con nowrap
+   reventaba la rejilla hacia la derecha. */
+.month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.month__dow {
+  text-align: center; padding-bottom: var(--space-2);
+  font-size: var(--text-label); color: var(--text-muted);
+}
+.mday {
+  min-width: 0;          /* cinturon: ni con 1fr puede reventar la columna */
+  overflow: hidden;
+  min-height: 64px;
+  padding: var(--space-1) 3px var(--space-2);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  box-shadow: inset 0 1px 0 var(--line);
+  color: var(--text);
+}
+.mday__n {
+  width: 26px; height: 26px; border-radius: 999px;
+  display: grid; place-items: center;
+  font-size: var(--text-meta); font-variant-numeric: tabular-nums;
+}
+.mday--out .mday__n { color: var(--text-faint); }
+.mday--today .mday__n { background: var(--accent); color: var(--text-on-accent); font-weight: var(--weight-semibold); }
+/* FD3 · el mes del telefono no escribe nada: puntos ambar (referencia 12).
+   Un dia sin punto es un dia limpio, y esa es toda la informacion que esta
+   vista tiene que dar. El nombre del reminder se lee al bajar a Dia. */
+.mday__dots { display: flex; gap: 3px; height: 6px; align-items: center; }
+.mday__dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--rem); display: block; }
+.mday--past .mday__dots i { opacity: .45; }
+
+/* ----------------------------------------------------------- hoja y velo
+   La hoja de accion es de lo poco que flota de verdad.                    */
+
+.overlay {
+  position: absolute; inset: 0;
+  background: var(--scrim);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  z-index: 10;
+}
+
+/* Opcion de lista dentro de una hoja. 56px: se elige de un toque. */
+.opt {
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; min-height: 56px;
+  padding: var(--space-2) var(--gutter);
+  text-align: left;
+  font-size: var(--text-body);
+  color: var(--text);
+}
+.opt + .opt { box-shadow: inset 0 1px 0 var(--line); }
+.opt__when { margin-left: auto; font-size: var(--text-meta); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.opt:active { background: var(--surface-sunken); }
+
+/* ------------------------------------------------------ formulario horario
+   El mayor trabajo manual del proyecto. Tiene que verse rapido: el nombre
+   se escribe una vez y se reparte en varios dias, nunca dos veces el mismo
+   dato (decision 54).                                                     */
+
+.matcard {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  /* FD3 · el aire lateral baja de 16 a 12: con 16 los siete dias del
+     selector median 41px de ancho, por debajo del minimo. Sale el padding,
+     no el tamano del control: 350 - 16 de aire - 12 de separaciones da 46px
+     por dia. */
+  padding: var(--space-3) var(--space-2) var(--space-4);
+}
+.matcard + .matcard { margin-top: var(--space-3); }
+
+/* Selector de dias: siete objetivos de 44px, uno por dia. */
+.dayset { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.dayset button {
+  min-height: var(--tap-min);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.dayset button[aria-pressed="true"] { background: var(--accent); color: var(--text-on-accent); }
+
+.timepair { display: flex; align-items: center; gap: var(--space-2); }
+.timepair .field { flex: 1 1 0; }
+
+/* -------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .caret { animation: none; opacity: 1; }
+}
+
+/* ============================================================================
+   FD3 · EL CALENDARIO  ·  tres niveles de zoom  (decisiones 67-71)
+
+       Mes  ->  Semana  ->  Dia
+
+   Se BAJA tocando (un dia del mes lleva a Dia) y se SUBE con el boton de
+   arriba a la izquierda, al estilo de iOS: "< Septiembre" (referencia 11).
+   Dentro de un nivel se mueve uno con flechas (referencia 10).
+
+   La cabecera es la misma en los tres niveles. Solo cambia la etiqueta. Eso
+   es lo que hace que tres pantallas se sientan una sola: el gesto de subir
+   esta siempre en el mismo pixel.
+
+   Y una regla de color que atraviesa todo el bloque:
+     el color va en la BARRA, el PUNTO, el BANDERIN o el FONDO TINTADO.
+     El texto se queda en --text. Nunca hay un titulo azul, verde ni ambar.
+   ========================================================================= */
+
+/* --------------------------------------------------- cabecera de nivel --- */
+
+.calhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4) var(--space-2);
+}
+
+/* Subir un nivel. Pastilla, no enlace: es el control que mas usa el pulgar
+   en todo el modulo, asi que se ve y se acierta sin mirar. */
+.uplevel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4) 0 var(--space-3);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-size: var(--text-section);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-title);
+}
+.uplevel:active { background: var(--line); }
+.uplevel .ico { color: var(--text-muted); }
+
+/* En Mes no hay nivel superior: el titulo ocupa el mismo sitio, sin chevron,
+   para que la cabecera no se mueva al cambiar de nivel. */
+.calhead__title {
+  padding-inline: var(--space-3);
+  font-size: var(--text-section);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-title);
+}
+
+.calhead__acts { display: flex; align-items: center; gap: var(--space-1); }
+
+/* Las flechas de mover (referencia 10) viven en la cabecera, con el resto de
+   acciones, y NO flanqueando la tira de dias. La razon es aritmetica y manda
+   sobre la referencia: 44 + 44 de flechas mas siete dias de 44 son 396px en
+   una pantalla de 390. Flanquear la tira obligaba a dejar los dias en 36px,
+   que es exactamente el fallo que corregimos en FD2. Sale la colocacion, no
+   el tamano del control.
+
+   Cada flecha mueve UNA unidad del nivel en el que estas: un dia en Dia, una
+   semana en Semana, un mes en Mes. */
+
+/* Etiqueta de lo que estas mirando. Solo texto: las flechas ya estan arriba. */
+.callabel {
+  padding: 0 var(--gutter) var(--space-2);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------- tira de 7 dias (ref. 08/11) --
+   Numero grande arriba, abreviatura debajo. El dia activo va dentro de una
+   pastilla llena: la marca es una FORMA, no un color de texto, asi que el
+   numero sigue midiendo 11:1 encima.                                       */
+
+.daystrip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.daystrip__d {
+  min-width: 0;
+  min-height: 60px;
+  padding: var(--space-1) 0 var(--space-2);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  border-radius: var(--radius);
+  color: var(--text);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.daystrip__n {
+  font-size: var(--text-section);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.daystrip__w {
+  font-size: var(--text-label);
+  line-height: 1.1;
+  color: var(--text-muted);
+}
+.daystrip__d[aria-current="date"] { background: var(--task); }
+.daystrip__d[aria-current="date"] .daystrip__n,
+.daystrip__d[aria-current="date"] .daystrip__w { color: var(--text-on-accent); }
+/* Hoy sin estar seleccionado: numero en negrita y un subrayado azul. */
+.daystrip__d--today:not([aria-current="date"]) .daystrip__n { font-weight: var(--weight-bold); }
+.daystrip__d--today:not([aria-current="date"]) { box-shadow: inset 0 -2px 0 var(--task); }
+/* Punto ambar: ese dia tiene un reminder. Mismo lenguaje que el Mes. */
+.daystrip__dot { width: 5px; height: 5px; border-radius: 999px; background: var(--rem); margin-top: 1px; }
+.daystrip__d[aria-current="date"] .daystrip__dot { background: var(--text-on-accent); }
+
+/* ------------------------------------------- riel de dias (referencia 09) --
+   La vista Semana. Riel a la izquierda, contenido a la derecha, una barra de
+   color por elemento. Los dias alternan superficie para separarse sin que
+   haga falta una linea por fila.                                            */
+
+.wk { display: flex; flex-direction: column; }
+.wkday {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-2);
+  background: var(--bg);
+}
+.wkday:nth-child(even) { background: var(--surface); }
+.wkday__rail { text-align: center; padding-top: var(--space-1); }
+.wkday__w { display: block; font-size: var(--text-label); color: var(--text-muted); }
+.wkday__n { display: block; font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+/* Hoy: tarjeta llena en el riel, como en el referente. */
+.wkday--today .wkday__rail {
+  background: var(--task);
+  border-radius: var(--radius);
+  padding: var(--space-1) 0 var(--space-2);
+}
+.wkday--today .wkday__w, .wkday--today .wkday__n { color: var(--text-on-accent); }
+.wkday__body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.wkday__none { font-size: var(--text-meta); color: var(--text-faint); padding-block: var(--space-2); }
+
+/* --------------------------------------------------- elemento con barra ---
+   La pieza que el usuario senalo en la referencia 09: barra de color a la
+   izquierda, texto negro. Sirve igual para tarea, reminder y materia; lo
+   unico que cambia es el color de la barra y la forma del icono.           */
+
+.ev {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  text-align: left;
+  color: var(--text);
+  border-radius: var(--radius);
+}
+.ev__bar {
+  flex: 0 0 auto;
+  width: 5px;
+  align-self: stretch;
+  min-height: 28px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+.ev--task  .ev__bar { background: var(--task); }
+.ev--rem   .ev__bar { background: var(--rem); }
+.ev--class .ev__bar { background: var(--class); }
+/* La materia se hunde de tres maneras a la vez, y las tres hacen falta:
+   tinte verde, texto en --text-muted a tamano meta, y una fila mas baja.
+
+   Con el tinte solo, la materia era lo mas grande de la pantalla y la tarea
+   —lo unico que el usuario decide— quedaba debajo de su propia clase. Eso es
+   exactamente lo contrario de la decision 52: una materia es AUSENCIA de
+   tiempo disponible, no contenido. Identifica el hueco; no lo protagoniza. */
+.ev--class {
+  background: var(--class-soft);
+  padding: var(--space-1) var(--space-2);
+  align-items: center;
+}
+.ev--class .ev__bar { margin-left: calc(var(--space-2) * -1); min-height: 20px; }
+.ev--class .ev__title {
+  color: var(--text-muted);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-meta);
+  line-height: var(--lh-meta);
+}
+.ev--class .ev__meta { font-size: var(--text-label); color: var(--text-faint); }
+
+.ev__body { flex: 1 1 auto; min-width: 0; }
+.ev__title {
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
+}
+.ev__meta {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-meta); line-height: var(--lh-meta);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ev__meta .sep { color: var(--line-strong); }
+.ev--done .ev__title { color: var(--text-faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+.ev--done .ev__bar { opacity: .4; }
+
+/* Pildora de reminder: el ambar como FONDO, el titulo en --text (14.9:1).
+   Es la unica forma de darle al ambar el protagonismo que pide sin que el
+   texto baje de 4.5:1. */
+.rempill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--rem-soft);
+  color: var(--text);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  text-align: left;
+}
+.rempill .ico { color: var(--rem); flex: 0 0 auto; }
+.rempill__when { margin-left: auto; color: var(--text-muted); font-variant-numeric: tabular-nums; font-weight: var(--weight-regular); }
+
+/* -------------------------------------------------------- boton flotante --
+   Referencia 09. Azul marino lleno: es LA accion del modulo y el azul es el
+   acento (decision 65). 56px, por encima del minimo, porque se pulsa con el
+   pulgar en diagonal y sin mirar.                                           */
+
+.fab {
+  position: absolute;
+  right: var(--space-4);
+  bottom: calc(49px + 34px + var(--space-4));   /* pestanas + home + aire */
+  width: 56px; height: 56px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--task);
+  color: var(--text-on-accent);
+  box-shadow: var(--shadow-fab);
+  z-index: 8;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.fab:active { background: var(--task-press); transform: scale(.96); }
+
+/* ------------------------------------------------- capas (dia / semana) ---
+   Interruptores independientes. Pastillas de 44px con su color al lado, para
+   que se lea cual se esta apagando sin tener que leer la palabra.           */
+
+.layerdot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.layerdot--task  { background: var(--task); }
+.layerdot--rem   { background: var(--rem); }
+.layerdot--class { background: var(--class); }
+.chip[aria-pressed="false"] .layerdot { opacity: .3; }
+
+/* ======================================================= escritorio ======
+   Solo para planificar (regla 4 del proyecto). Aqui hay raton y espacio, asi
+   que aqui vive la rejilla densa y el arrastre.                            */
+
+/* Barra lateral de tareas sin planificar (referencia 07). */
+.sidegroup + .sidegroup { margin-top: var(--space-5); }
+.sidegroup__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 var(--space-2) var(--space-2);
+  font-size: var(--text-label); font-weight: var(--weight-semibold);
+  color: var(--text-muted); letter-spacing: var(--tracking-label);
+}
+.sidetask {
+  display: flex; align-items: center; gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius);
+  text-align: left;
+  color: var(--text);
+  font-size: var(--text-meta);
+  cursor: grab;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.sidetask:hover { background: var(--surface); }
+.sidetask__bar { width: 4px; align-self: stretch; min-height: 20px; border-radius: 999px; background: var(--task); flex: 0 0 auto; }
+.sidetask__grip { color: var(--text-faint); margin-left: auto; opacity: 0; }
+.sidetask:hover .sidetask__grip { opacity: 1; }
+/* Mientras se arrastra, el original se queda apagado en su sitio: asi se ve
+   de donde salio y adonde vuelve si se suelta fuera. */
+.sidetask--ghost { opacity: .38; }
+
+/* El chip que sigue al cursor. */
+.dragchip {
+  position: absolute;
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-fab);
+  font-size: var(--text-meta); font-weight: var(--weight-medium);
+  color: var(--text);
+  z-index: 20;
+  pointer-events: none;
+  transform: rotate(-1.5deg);
+}
+.dragchip__bar { width: 4px; align-self: stretch; min-height: 18px; border-radius: 999px; background: var(--task); }
+
+/* El hueco de destino. Dice la hora a la que va a caer: el usuario suelta
+   sabiendo el resultado, no esperando a verlo. */
+.dropslot {
+  position: absolute;
+  border-radius: var(--radius);
+  border: 1.5px dashed var(--task);
+  background: var(--task-soft);
+  display: flex; align-items: center;
+  padding-inline: var(--space-2);
+  font-size: var(--text-label); font-weight: var(--weight-medium);
+  color: var(--text);
+  z-index: 6;
+}
+
+/* Mes de escritorio (referencia 13): celdas de tarjeta, reminders escritos. */
+.dmonth { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2); }
+.dmday {
+  min-width: 0;
+  min-height: 104px;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  display: flex; flex-direction: column; gap: var(--space-1);
+  text-align: left;
+  transition: box-shadow var(--dur-fast) var(--ease-out);
+}
+.dmday:hover { box-shadow: 0 0 0 1px var(--line-control); }
+.dmday--out { background: transparent; box-shadow: none; }
+.dmday--out .dmday__n { color: var(--text-faint); }
+.dmday--sel { box-shadow: 0 0 0 2px var(--task); }
+.dmday__n { font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+.dmday--today .dmday__n {
+  align-self: flex-start;
+  min-width: 30px; height: 30px; padding-inline: 6px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: var(--task); color: var(--text-on-accent);
+}
+.dmday__ev {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: var(--text-label); line-height: var(--lh-label);
+  color: var(--text);
+}
+.dmday__ev::before {
+  content: ""; flex: 0 0 auto;
+  width: 3px; align-self: stretch; min-height: 14px;
+  border-radius: 999px; background: var(--rem);
+}
+.dmday__ev span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Panel flotante del dia (referencia 13). No pantalla completa: el mes sigue
+   detras, porque la pregunta "que hay ese dia" se responde SIN perder de
+   vista el mes que estabas leyendo. */
+.daypanel {
+  position: absolute;
+  width: 340px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-fab), 0 0 0 1px var(--line);
+  padding: var(--space-4);
+  z-index: 15;
+}
+.daypanel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+/* Formulario de la referencia 13: etiqueta a la izquierda, campo a la
+   derecha. En escritorio se lee mejor en dos columnas que apilado. */
+.frow { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: var(--space-3); align-items: center; }
+.frow + .frow { margin-top: var(--space-2); }
+.frow__label { font-size: var(--text-meta); color: var(--text-muted); }
+
+/* ------------------------------------------------------------------ racha
+   FD3 · sube a la cabecera de Inicio, junto a la fecha.
+
+   Va en pastilla de azul suave y NO en texto azul: el color envuelve, no
+   pinta (decision 63). Y se queda pequena, en tamano de etiqueta, sin llama
+   y sin numero grande — la racha informa, no puntua. Si un dia se rompe,
+   baja a cero sin decir nada: romper una racha es motivo de abandono total
+   (docs/00-problema.md) y esta app no va a ser quien lo provoque.          */
+
+.streak {
+  align-self: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  background: var(--task-soft);
+  color: var(--text);            /* 14.8:1 sobre --task-soft */
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}

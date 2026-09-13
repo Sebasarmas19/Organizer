@@ -115,7 +115,7 @@ Detalle completo en `docs/08-modelo-tareas-reminders.md`.
 | 52 | Materias = reservar espacio | Fondo gris, con interruptor para ocultarlas al planificar | No son contenido: son ausencia de tiempo disponible |
 | 53 | Vista de mes | **Solo reminders.** Sin tareas ni materias | Responde "¿qué se me viene encima?", que es para lo que usaba el Calendar del iPhone |
 | 54 | Carga del horario | Formulario de **una semana** que se replica **mínimo 5 meses** | Ya soportado por `schedule_templates` con `active_from`/`active_until` |
-| 55 | Orden de Inicio | **Hoy primero**, luego De ayer, luego Esta semana, luego racha | Lo primero que ves debe ser lo que puedes hacer ahora, no la deuda |
+| 55 | Orden de Inicio | ~~Hoy · De ayer · Esta semana · racha~~ → **sustituida por la 74** | Lo primero que ves debe ser lo que puedes hacer ahora, no la deuda |
 | 56 | Triage de "de ayer" | Hoy → sube a hoy · Otro día → selector · **Quitar → vuelve a Tareas, no se borra** | Sostiene "nada se pierde en silencio" |
 | 57 | Reminder en la notificación | El reminder manda: las tareas se recortan para que quepa, nunca al revés | Con 88 caracteres, un parcial mañana es lo más importante del día |
 | 58 | Nombres de las vistas | `dia.html` · `semana.html` · `mes.html`, un archivo por vista | El `semana.html` de FD era en realidad la vista Día. Mapear archivo↔vista hace el sistema legible |
@@ -142,3 +142,11 @@ Detalle del encargo en `briefs/FD3-calendario-color.md`.
 | 71 | Planificar = elegir de lo ya capturado | Al añadir una tarea en el calendario, lo primero que se ve es **la lista de tareas capturadas y nunca planificadas**. Crear una nueva también se puede, en el mismo sitio | Es el puente que le faltaba al producto: lo que capturaste por Siri vuelve a aparecer justo cuando estás decidiendo la semana |
 | 72 | "Se me corrió el día" se elimina | Fuera de `inicio.html` | El usuario no entendió el botón, y al preguntarlo dio la razón correcta: "al final del día es que uno ve qué tareas hizo y cuáles no". El balance ya lo hace el repaso de la noche y el triage de "De ayer" |
 | 73 | "Lo que viene" sale del calendario | Vive en el módulo Tareas, junto a la lista de reminders | El calendario responde "cuándo"; la lista responde "qué sigue". Mezclarlas duplicaba la información en dos sitios |
+
+## Corrección de coherencia (2026-09-12, encontrada al construir F0)
+
+| # | Decisión | Valor | Razón |
+|---|---|---|---|
+| 74 | Orden de Inicio, definitivo | **Hoy → Esta semana (reminders) → De ayer**, con la racha en el encabezado junto a la fecha | Sustituye a la 55. Es lo que el usuario pidió, lo que se dibujó en FD3 y lo que él validó desde el iPhone. La 55 había quedado con el texto viejo y F1 la iba a leer para construir esa pantalla |
+| 75 | `--line-control` | Borde de control a **3.35:1**, separado de `--line` (separación de filas, 1.25:1) | Un borde que es la única señal de que algo es un control es un indicador no textual y necesita 3:1 (WCAG 1.4.11). Toda casilla y todo campo de FD y FD2 lo incumplían. Hallazgo del worker de FD3, no del coordinador |
+| 76 | El preset de Tailwind 3 se queda | Se carga con `@config` desde `globals.css`. **No se traduce a bloques `@theme` de Tailwind 4** | Traducir a mano un archivo que ya funciona, y que lleva dentro los ratios de contraste medidos, solo crea ocasiones de perder un token por el camino |
