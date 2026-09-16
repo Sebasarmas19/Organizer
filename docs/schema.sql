@@ -3,6 +3,10 @@
 -- Ejecutar en el SQL Editor de Supabase.
 
 create extension if not exists pg_cron;
+-- `net.http_post` del bloque de cron del final vive en pg_net, no en pg_cron.
+-- Sin esta linea, descomentar ese bloque da `schema "net" does not exist` y no
+-- se manda ninguna notificacion. Encontrado por F3 (docs/estado-F3.md §5.1).
+create extension if not exists pg_net;
 
 -- ───────────────────────────────────────────────────────────── tipos
 
@@ -167,7 +171,7 @@ create index on push_subscriptions (user_id) where failed_at is null;
 create table notification_log (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users on delete cascade,
-  kind       text not null,                           -- morning | evening | weekly_review | task_reminder
+  kind       text not null,                           -- morning | evening | weekly_review | advance_notice
   dedupe_key text not null unique,                    -- ej: 'morning:2026-09-15'
   payload    jsonb,
   sent_at    timestamptz not null default now(),
