@@ -29,3 +29,260 @@
 .applayout > .tabbar {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* ============================================================================
+   Calendario de escritorio (semana-escritorio.html y mes-escritorio.html)
+   ========================================================================= */
+
+.desk {
+  width: 100%;
+  max-width: 100vw;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: 216px 268px minmax(0, 1fr);
+  background: var(--bg);
+}
+
+.desk--two-col {
+  grid-template-columns: 216px minmax(0, 1fr);
+}
+
+.side {
+  border-right: 1px solid var(--line);
+  padding: var(--space-6) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.side__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-6);
+}
+
+.side__mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--task);
+  display: grid;
+  place-items: center;
+}
+
+.side__mark span {
+  width: 9px;
+  height: 9px;
+  border: 1.6px solid var(--text-on-accent);
+  border-radius: 999px;
+}
+
+.navitem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.navitem:hover {
+  background: var(--surface-sunken);
+  color: var(--text);
+}
+
+.navitem[aria-current="page"] {
+  background: var(--task-soft);
+  color: var(--task);
+}
+
+.plan {
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-sunken);
+}
+
+.plan__head {
+  padding: var(--space-5) var(--space-4) var(--space-3);
+}
+
+.plan__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--space-2) var(--space-4);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
+
+.mainhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--gutter-wide) var(--space-4);
+}
+
+.week, .week__head, .remrow {
+  display: grid;
+  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+}
+
+.week__head {
+  padding-right: 6px;
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.colhead {
+  text-align: center;
+  padding: var(--space-2) 0 var(--space-3);
+  min-width: 0;
+}
+
+.colhead__dow {
+  font-size: var(--text-label);
+  color: var(--text-muted);
+  display: block;
+}
+
+.colhead__num {
+  font-size: var(--text-section);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.colhead--today .colhead__num {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--task);
+  color: var(--text-on-accent);
+}
+
+.weekbody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative;
+}
+
+.col {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid var(--line);
+}
+
+.col--weekend {
+  background: var(--surface-sunken);
+}
+
+.col .calblock {
+  left: 3px;
+  right: 3px;
+  padding: var(--space-1) var(--space-2);
+}
+
+.col .calblock__title {
+  font-size: var(--text-label);
+  line-height: var(--lh-label);
+}
+
+.col .calblock__time {
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.calblock--open {
+  background: transparent;
+  border: 1px dashed var(--line-control);
+  border-left: 3px solid var(--task);
+}
+
+.calblock--open .calblock__title {
+  color: var(--text-muted);
+}
+
+.remrow {
+  padding-right: 6px;
+  box-shadow: inset 0 -1px 0 var(--line);
+  min-height: 42px;
+}
+
+.remrow__label {
+  font-size: var(--text-label);
+  color: var(--text-faint);
+  text-align: right;
+  padding: var(--space-3) var(--space-2) 0 0;
+}
+
+.remrow__cell {
+  min-width: 0;
+  padding: 5px 3px;
+  border-left: 1px solid var(--line);
+}
+
+.remchip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: var(--rem-soft);
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--text);
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.remchip .ico {
+  width: 11px;
+  height: 11px;
+  color: var(--rem);
+  flex: 0 0 auto;
+}
+
+.dowrow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: 0 var(--gutter-wide) var(--space-2);
+}
+
+.dowrow span {
+  font-size: var(--text-label);
+  color: var(--text-muted);
+  padding-left: var(--space-2);
+}
+
+.monthgrid {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--gutter-wide) var(--gutter-wide);
+}
+
+.monthgrid .dmonth {
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+

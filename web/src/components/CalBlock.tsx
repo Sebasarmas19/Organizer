@@ -29,6 +29,7 @@ export function CalBlock({
   now = false,
   done = false,
   style,
+  onClick,
 }: {
   title: string;
   /** "8:00 – 9:30 · Aula 204". Ya formateado. */
@@ -38,6 +39,7 @@ export function CalBlock({
   done?: boolean;
   /** `top` y `height` en la rejilla de horas, o lo que necesite el contenedor. */
   style?: CSSProperties;
+  onClick?: () => void;
 }) {
   const classes = [
     'calblock',
@@ -53,7 +55,11 @@ export function CalBlock({
     : {};
 
   return (
-    <div className={classes} style={done ? { ...style, opacity: 0.66 } : style}>
+    <div
+      className={classes}
+      style={done ? { ...style, opacity: 0.66 } : style}
+      onClick={onClick}
+    >
       <p className="calblock__title" style={doneStyle}>
         {title}
       </p>
