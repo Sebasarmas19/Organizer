@@ -91,6 +91,15 @@ escribir una línea de código de notificaciones.**
 - iOS **invalida la suscripción** si se desinstala y reinstala la PWA.
 - Si el envío devuelve **404 o 410**, la suscripción está muerta → borrarla de
   la tabla y marcar que hay que re-registrar.
+- **Apple no usa 404 ni 410.** Verificado contra los servidores reales en F3
+  (`docs/estado-F3.md` §5.2): Google devuelve `410`, Mozilla `404`, y **Apple
+  devuelve `400` con `{"reason":"BadWebPushToken"}`**. Como el iPhone es el
+  único entorno que importa, mirar solo 404/410 significaría **no detectar
+  nunca** una suscripción muerta de iOS. Hay que mirar dentro del 400, y solo
+  para las razones de APNs que significan que el destino ya no existe
+  (`BadWebPushToken`, `BadDeviceToken`, `Unregistered`, `ExpiredToken`). Un 400
+  por otro motivo no marca nada: borrar una suscripción buena por un error
+  pasajero deja al usuario sin notificaciones sin que nadie se entere.
 - Guardar `last_seen_at` y re-suscribir en cada arranque si pasó mucho tiempo.
 - La app debe detectar "no tienes suscripción activa" y mostrarlo de forma
   visible. Una notificación que no llega y nadie nota es el peor fallo posible

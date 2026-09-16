@@ -101,11 +101,10 @@
 ## 5 · Lo que el usuario tiene que hacer a mano
 
 1. **Configurar la variable en Vercel:**
-   En el panel de Vercel (Project → Settings → Environment Variables), añade la variable `CAPTURE_TOKEN` con el valor configurado:
-   ```
-   CAPTURE_TOKEN=NqeBUNBRxgd1bSmGI57g08ZcPilekVDu0H54et3pp_8
-   ```
-   *(El archivo local `web/.env.local` ya tiene este valor guardado).*
+   En el panel de Vercel (Project → Settings → Environment Variables), añade la
+   variable `CAPTURE_TOKEN`. **El valor está en `web/.env.local`**, que git
+   ignora; el coordinador lo quitó de este informe porque `docs/` sí se
+   commitea y un token en un archivo versionado es un token quemado.
 
 2. **Configurar el Atajo en el iPhone:**
    Abre la app en el iPhone, navega a `/atajo` y sigue los pasos numerados copiando la URL y el token con los botones incluidos.
