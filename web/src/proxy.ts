@@ -31,9 +31,13 @@ import { createServerClient } from '@supabase/ssr';
 /** La unica ruta que se ve sin sesion. En espanol porque el usuario la lee. */
 const SIGN_IN_PATH = '/entrar';
 
-/** Rutas que no exigen sesion: la entrada y el retorno del enlace magico. */
+/** Rutas que no exigen sesion por cookie: la entrada, el retorno del auth y el endpoint de captura de Siri. */
 function isPublic(pathname: string): boolean {
-  return pathname === SIGN_IN_PATH || pathname.startsWith('/auth');
+  return (
+    pathname === SIGN_IN_PATH ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api/capture')
+  );
 }
 
 export async function proxy(request: NextRequest) {

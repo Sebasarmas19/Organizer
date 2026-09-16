@@ -15,6 +15,7 @@
    Cuando F1 escriba Inicio de verdad, este archivo se reemplaza entero.
    ========================================================================= */
 
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
@@ -59,8 +60,17 @@ export default async function HomePage() {
         </header>
 
         <p className="gutter t-meta c-muted">
-          Fundaciones listas. Las pantallas llegan en la fase siguiente.
+          Fundaciones listas. Tareas y Atajo de Siri disponibles:
         </p>
+
+        <div className="gutter mt-3 flex gap-2">
+          <Link href="/tareas" className="btn btn--primary flex-1">
+            Modulo Tareas
+          </Link>
+          <Link href="/atajo" className="btn btn--quiet flex-1">
+            Atajo de Siri
+          </Link>
+        </div>
 
         {/* ---------------------------------------------------- la cuenta -- */}
         <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>

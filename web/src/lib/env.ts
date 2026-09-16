@@ -46,3 +46,9 @@ export function isSupabaseConfigured(): boolean {
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
 }
+
+/** Token de autenticacion para POST /api/capture (Atajo de Siri). Solo servidor. */
+export function captureToken(): string {
+  return required(process.env.CAPTURE_TOKEN, 'CAPTURE_TOKEN');
+}
+
