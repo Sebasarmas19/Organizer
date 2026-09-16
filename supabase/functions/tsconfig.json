@@ -1,0 +1,33 @@
+{
+  /* ==========================================================================
+     Comprobacion de tipos de las Edge Functions SIN tener Deno instalado.
+
+         npx tsc -p supabase/functions --noEmit
+
+     No hay Deno en esta maquina y el codigo se despliega en Deno, asi que sin
+     esto la funcion viajaria sin que nadie le hubiera mirado los tipos. Se
+     apoya en que todo lo que usa —`fetch`, `crypto.subtle`, `TextEncoder`— son
+     APIs web que `lib.dom` ya describe; lo unico de Deno es el objeto `Deno`,
+     y ese esta declarado a mano en `dispatch-notifications/index.ts`.
+
+     `allowImportingTsExtensions` porque Deno importa con la extension escrita,
+     al contrario que Node con módulos compilados.
+     ====================================================================== */
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["./**/*.ts"],
+  /* Las pruebas corren en Node y usan `node:test`, que este tsconfig no
+     describe a proposito: lo que se comprueba aqui es lo que se despliega. */
+  "exclude": ["**/tests/**"]
+}

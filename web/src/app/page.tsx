@@ -63,12 +63,26 @@ export default async function HomePage() {
           Fundaciones listas. Tareas y Atajo de Siri disponibles:
         </p>
 
+        {/* La puerta a las notificaciones va primero y sola. Hasta que el
+            usuario pase por ahi una vez, la app no le habla — y "push, no
+            pull" es la primera regla del proyecto. Quien reemplace esta
+            pantalla tiene que dejar algun camino a
+            `/ajustes/notificaciones`; esta anotado en `docs/estado-F3.md`. */}
+        <div className="gutter" style={{ marginTop: 'var(--space-4)' }}>
+          <Link href="/ajustes/notificaciones" className="btn btn--primary btn--full">
+            Activar las notificaciones
+          </Link>
+        </div>
+
         <div className="gutter mt-3 flex gap-2">
-          <Link href="/tareas" className="btn btn--primary flex-1">
-            Modulo Tareas
+          <Link href="/tareas" className="btn btn--quiet flex-1">
+            Tareas
+          </Link>
+          <Link href="/dia" className="btn btn--quiet flex-1">
+            Calendario
           </Link>
           <Link href="/atajo" className="btn btn--quiet flex-1">
-            Atajo de Siri
+            Atajo
           </Link>
         </div>
 
