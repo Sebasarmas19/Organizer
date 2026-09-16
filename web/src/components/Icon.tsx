@@ -13,6 +13,7 @@
      - control de solo icono       -> `aria-label` en el BOTON, no en el svg
    ========================================================================= */
 
+import type { CSSProperties } from 'react';
 import { ICONS, type IconName } from '@/lib/icons';
 
 export type IconSize = 'sm' | 'md' | 'lg';
@@ -27,16 +28,18 @@ export function Icon({
   name,
   size = 'md',
   className,
+  style,
 }: {
   name: IconName;
   size?: IconSize;
   className?: string;
+  style?: CSSProperties;
 }) {
   const def = ICONS[name];
   const classes = className ? SIZE_CLASS[size] + ' ' + className : SIZE_CLASS[size];
 
   return (
-    <span className={classes} aria-hidden="true">
+    <span className={classes} style={style} aria-hidden="true">
       <svg
         viewBox={def.vb}
         fill="none"
