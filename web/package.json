@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "check:design": "node scripts/check-design.mjs",
     "gen:icons": "node scripts/gen-icons.mjs",
-    "verify": "npm run check:design && npm run lint && npm run typecheck && npm run build"
+    "gen:app-icons": "node scripts/gen-app-icons.mjs",
+    "typecheck:push": "tsc -p ../supabase/functions --noEmit",
+    "test:push": "node --test \"../supabase/functions/dispatch-notifications/tests/*.test.ts\"",
+    "verify": "npm run check:design && npm run lint && npm run typecheck && npm run typecheck:push && npm run test:push && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

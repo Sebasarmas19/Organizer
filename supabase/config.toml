@@ -1,0 +1,24 @@
+# ============================================================================
+# Organizer · configuracion de la CLI de Supabase
+#
+# Lo minimo para poder desplegar la Edge Function:
+#
+#     npx supabase login
+#     npx supabase link --project-ref ckqonhzywynbdhscdrsf
+#     npx supabase functions deploy dispatch-notifications
+# ============================================================================
+
+project_id = "ckqonhzywynbdhscdrsf"
+
+[functions.dispatch-notifications]
+# La pasarela de Supabase verifica el JWT antes de llamar a la funcion. Aqui se
+# apaga A PROPOSITO, y no para relajar nada: la funcion hace SU PROPIA
+# comprobacion y es mas estricta que la de la pasarela.
+#
+#   modo cron  ->  el token tiene que ser EXACTAMENTE la clave de servicio.
+#   modo test  ->  el token se cambia por un usuario contra /auth/v1/user, que
+#                  verifica la firma de verdad en vez de decodificarla.
+#
+# Dejandolo en la pasarela habria dos sitios donde puede fallar la autenticacion
+# y solo uno devuelve un mensaje que se entiende. Ver `index.ts`.
+verify_jwt = false
