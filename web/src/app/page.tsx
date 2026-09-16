@@ -15,6 +15,7 @@
    Cuando F1 escriba Inicio de verdad, este archivo se reemplaza entero.
    ========================================================================= */
 
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
@@ -61,6 +62,18 @@ export default async function HomePage() {
         <p className="gutter t-meta c-muted">
           Fundaciones listas. Las pantallas llegan en la fase siguiente.
         </p>
+
+        {/* F3 · la unica puerta a las notificaciones que hay hasta que exista
+            el resto de la app. Hasta que el usuario pase por ahi una vez, la
+            app no le habla — y "push, no pull" es la primera regla del
+            proyecto. Quien reemplace esta pantalla tiene que dejar algun
+            camino a `/ajustes/notificaciones`; esta anotado en
+            `docs/estado-F3.md`. */}
+        <div className="gutter" style={{ marginTop: 'var(--space-4)' }}>
+          <Link href="/ajustes/notificaciones" className="btn btn--primary btn--full">
+            Activar las notificaciones
+          </Link>
+        </div>
 
         {/* ---------------------------------------------------- la cuenta -- */}
         <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>

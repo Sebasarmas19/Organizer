@@ -29,3 +29,38 @@
 .applayout > .tabbar {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* `.field` de `base.css` solo estilaba `input`, porque en los comps no habia
+   ni un `select` ni una hora. Los ajustes de notificaciones (decision 25)
+   necesitan los dos, y se usan los controles NATIVOS a proposito: en iOS el
+   selector de hora y el de lista son los que el usuario ya sabe usar, y
+   cualquier version propia seria peor y mas fragil. */
+.field select,
+.field input[type="time"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: var(--text-body);
+  color: var(--text);
+  background: none;
+  border: 0;
+  outline: none;
+  /* Safari de iOS pinta los dos con su propio fondo y su propio borde si no
+     se le quita el aspecto nativo; el selector sigue siendo el del sistema. */
+  -webkit-appearance: none;
+  appearance: none;
+}
+.field select {
+  /* El chevron del `select` nativo desaparece con `appearance: none`. */
+  padding-right: var(--space-5);
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 6px center, right 1px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  color: var(--text);
+}
+/* La hora se lee de reojo: cifras de ancho fijo, como el resto de horas. */
+.field input[type="time"] {
+  font-variant-numeric: tabular-nums;
+}

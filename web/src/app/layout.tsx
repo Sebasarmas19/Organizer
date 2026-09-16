@@ -17,6 +17,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
 
 export const metadata: Metadata = {
   title: 'Organizer',
@@ -62,7 +63,12 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {/* No pinta nada: mantiene vivo el service worker que recibe las
+            notificaciones. Ver el propio componente. */}
+        <ServiceWorkerRegistrar />
+        {children}
+      </body>
     </html>
   );
 }
