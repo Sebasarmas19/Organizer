@@ -1,0 +1,1436 @@
+/* ============================================================================
+   Organizer · FD4 · la capa de componentes del diseno nuevo
+
+   QUE ES ESTO
+   Traduccion literal de `Organizer Inicio.dc.html` (Claude Design, proyecto
+   f008168f). El prototipo lleva todo el estilo EN LINEA, porque alli el
+   archivo es uno solo y se mira, no se mantiene. Aqui esos estilos se
+   convierten en clases, con los mismos numeros, para que el diseno quepa en
+   componentes de React sin repetir una tabla de `style={{...}}` por fila.
+
+   Regla: si un valor esta en `tokens.css`, se usa el token. Si es un numero
+   de composicion que solo aparece en un sitio (un 14px de padding, un 22px
+   de casilla), va literal y con el nombre de la clase al lado. Inventar un
+   token por cada numero no es un sistema, es un diccionario.
+
+   QUE NO ES
+   No reemplaza `base.css`. Aquella es la capa de FD3 y todavia sostiene
+   Horario, Ajustes, Atajo y Entrar. Las dos conviven porque comparten
+   `tokens.css`: el color y la tipografia salen del mismo sitio.
+
+   ORDEN DE LECTURA
+     1. armazon de pantalla y barra de pestanas
+     2. piezas compartidas (tarjeta, riel, casilla, banderin, pildora, boton)
+     3. Inicio
+     4. Calendario · cabecera, Mes, Semana, Dia
+     5. Pendientes
+     6. Anadir
+     7. escritorio  -> vive en `fd4-desk.css`, se carga aparte
+   ========================================================================= */
+
+/* ============================================================== 1. ARMAZON */
+
+/* El prototipo dibuja un iPhone de 390x844 con esquinas de 44px. La app real
+   ES el iPhone, asi que el marco desaparece y lo unico que sobrevive es lo
+   de dentro: una columna a pantalla completa con la barra pegada abajo.
+
+   `100dvh` y no `100vh`: en Safari de iOS el `vh` cuenta la barra de URL
+   como si no existiera, y la barra de pestanas se iria 80px por debajo del
+   borde de la pantalla justo cuando la barra del navegador esta visible. */
+.fd-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Altura real de la barra: 56 de boton + 8 arriba + 12 abajo. Se declara como
+   variable porque el relleno inferior de CADA pantalla depende de ella. */
+.fd-app {
+  --fd-tabbar-h: 76px;
+  --fd-screen-pb: calc(var(--fd-tabbar-h) + var(--space-10) + env(safe-area-inset-bottom));
+}
+
+/* La pantalla es lo que scrollea. `min-height: 0` es lo que hace que un hijo
+   flex pueda encogerse por debajo de su contenido; sin eso el scroll se va al
+   documento entero y la barra de pestanas se despega del fondo. */
+.fd-screen {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px var(--gutter) var(--fd-screen-pb);
+}
+
+/* Variante para las pantallas que traen cabecera fija y solo scrollean por
+   debajo de ella (Calendario y Pendientes). El contenedor deja de scrollear
+   y el hijo `.fd-scroll` toma el relevo. */
+.fd-screen--split {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.fd-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px var(--gutter) var(--fd-screen-pb);
+}
+
+.fd-fixedhead {
+  flex: 0 0 auto;
+  padding: 6px var(--gutter) 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ------------------------------------------------------ barra de pestanas --
+   Cinco destinos, y el del medio no es un destino: es el boton de capturar.
+   Por eso no lleva etiqueta y no se enciende nunca — no es un sitio donde
+   estar, es una accion. Los otros cuatro llevan icono Y etiqueta, que es la
+   regla de siempre: esta app se usa de reojo.
+
+   `env(safe-area-inset-bottom)`: el indicador de inicio del iPhone se come
+   34px que nadie mas va a descontar.                                      */
+.fd-tabbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 8px 10px 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+
+.fd-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px;
+  padding: 8px 0 6px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-faint);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+
+.fd-tab__label {
+  font-size: var(--fd-tiny);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+}
+
+.fd-tab[aria-current="page"] {
+  background: var(--tint-task);
+  color: var(--text);
+}
+
+/* El icono hereda el color del boton salvo el trazo, que siempre es --text a
+   un 90%: un icono apagado del todo deja de leerse de reojo. */
+.fd-tab .fd-ico {
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.fd-tab[aria-current="page"] .fd-ico {
+  opacity: 1;
+}
+
+/* El boton de capturar. 56 de alto como los demas para que la fila cuadre,
+   pero el cuadrado azul mide 38: flota dentro, no llena. */
+.fd-fab {
+  flex: 0 0 auto;
+  width: 56px;
+  min-height: 56px;
+  padding: 8px 0 6px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.fd-fab__mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: var(--task);
+  color: var(--text-on-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd-fab:active .fd-fab__mark {
+  background: var(--task-press);
+}
+
+/* ==================================================== 2. PIEZAS COMPARTIDAS */
+
+/* ------------------------------------------------------------- tipografia --
+   El prototipo escribe el tamano en cada nodo. Aqui se nombran los seis que
+   de verdad se repiten; el resto vive dentro de su componente.            */
+
+.fd-h1 {
+  margin: 0;
+  font-size: var(--fd-display);
+  line-height: 1.05;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+.fd-h1--screen {
+  font-size: var(--fd-title);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.fd-h1--cal {
+  font-size: var(--fd-title-sm);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.fd-sub {
+  font-size: var(--fd-small);
+  color: var(--text-faint);
+}
+
+.fd-meta {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-note {
+  margin: 9px 4px 0;
+  font-size: var(--fd-xs);
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+.fd-empty {
+  font-size: var(--fd-meta);
+  color: var(--text-faint);
+}
+
+/* --------------------------------------------------------------- secciones */
+
+.fd-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+}
+
+/* La etiqueta se pega a la tarjeta (10px) y no a lo de arriba (26px): el
+   titulo pertenece a lo que hay DEBAJO, no a lo que hay encima. */
+.fd-seclabel {
+  padding: 0 4px var(--gap-label);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd-seclabel h2 {
+  margin: 0;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+.fd-seclabel--quiet h2 {
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------ marcas de entidad --
+   Las tres formas que dicen que tipo de cosa es algo, sin usar texto de
+   color. El punto es tarea o materia; el banderin es siempre reminder.    */
+
+.fd-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--task);
+}
+
+.fd-dot--task     { background: var(--task); }
+.fd-dot--subject  { background: var(--class); }
+.fd-dot--reminder { background: var(--rem); }
+.fd-dot--none     { background: transparent; }
+.fd-dot--sm       { width: var(--month-dot); height: var(--month-dot); }
+.fd-dot--xs       { width: 6px; height: 6px; }
+
+/* El banderin es un rectangulo con una muesca abajo: no hay SVG, no hay
+   fuente de iconos, es una sola propiedad. `clip-path` con porcentajes
+   escala solo, asi que las cuatro medidas comparten forma. */
+.fd-flag {
+  flex: none;
+  width: 13px;
+  height: 16px;
+  background: var(--rem);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%);
+}
+
+.fd-flag--sm  { width: 11px; height: 14px; }
+.fd-flag--xs  { width: 9px;  height: 11px; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%); }
+.fd-flag--tiny{ width: 8px;  height: 10px; }
+
+/* ----------------------------------------------------------------- tarjeta --
+   La unidad de composicion de FD4. Una tarjeta es superficie + linea +
+   sombra abierta, y opcionalmente un riel de color al canto izquierdo que
+   dice de que entidad es todo lo que hay dentro.                          */
+
+.fd-card {
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+}
+
+.fd-card--sunken {
+  background: var(--surface-sunken);
+  box-shadow: none;
+  flex-direction: column;
+}
+
+.fd-card--flat {
+  box-shadow: none;
+}
+
+.fd-card__rail {
+  flex: none;
+  width: var(--rail);
+  background: var(--task);
+}
+
+.fd-card__rail--task     { background: var(--task); }
+.fd-card__rail--subject  { background: var(--class); }
+.fd-card__rail--reminder { background: var(--rem); }
+
+.fd-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------- casilla --
+   22px de caja dentro de una fila de 44 de alto: el objetivo tactil es la
+   fila entera, no el cuadrito. La palomita es dos bordes girados 45 grados
+   y se enciende por opacidad, para que no haya salto de layout al marcar. */
+
+.fd-check {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 6px;
+  border: 2px solid var(--line-control);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+
+.fd-check::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid var(--surface);
+  border-bottom: 2px solid var(--surface);
+  transform: rotate(-45deg) translate(1px, -2px);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.fd-check[data-on="true"] {
+  border-color: var(--task);
+  background: var(--task);
+}
+
+.fd-check[data-on="true"]::after {
+  opacity: 1;
+}
+
+/* Version chica, sin palomita: solo dice "esto es una tarea". Vive en las
+   tarjetas de dia de la vista Semana y en los chips de "sin hora". */
+.fd-check--mini {
+  width: 14px;
+  height: 14px;
+  margin-top: 0;
+  border-radius: 4px;
+  border-color: var(--task);
+}
+
+.fd-check--mini::after { display: none; }
+
+.fd-check--chip {
+  width: 12px;
+  height: 12px;
+  margin-top: 0;
+  border-radius: 4px;
+  border-color: var(--task);
+}
+
+.fd-check--chip::after { display: none; }
+
+/* ---------------------------------------------------------------- pildora */
+
+.fd-pill {
+  align-self: flex-start;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--rem-soft);
+  font-size: var(--fd-small);
+  font-weight: var(--weight-book);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-pill--line {
+  flex: none;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------- botones --
+   Tres. Primario (azul lleno), contorno (linea) y fantasma (nada). No hay
+   un cuarto: cuando hizo falta uno mas, lo que hacia falta era otra cosa. */
+
+.fd-btn {
+  min-height: var(--tap-min);
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd-btn:active { background: var(--surface-sunken); }
+
+.fd-btn--primary {
+  border: 0;
+  padding: 0 20px;
+  border-radius: 14px;
+  background: var(--task);
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-accent);
+}
+
+.fd-btn--primary:active { background: var(--task-press); }
+
+.fd-btn--ghost {
+  background: transparent;
+  font-weight: var(--weight-book);
+}
+
+.fd-btn--quiet {
+  background: transparent;
+  font-weight: var(--weight-book);
+  color: var(--text-muted);
+}
+
+.fd-btn--icon {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  font-size: var(--fd-body);
+}
+
+.fd-btn--full { width: 100%; }
+
+.fd-btn[disabled] { opacity: 0.5; }
+
+/* ---------------------------------------------------------- conmutadores --
+   Carril segmentado. Son pestanas de verdad (Mes · Semana · Dia son vistas
+   del mismo modulo), asi que el estado va en `aria-selected` y el estilo
+   cuelga del atributo, no de una clase que habria que sincronizar.       */
+
+.fd-seg {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.fd-seg button,
+.fd-seg a {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 38px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  font-size: var(--fd-small);
+  font-weight: var(--weight-book);
+  color: var(--text-muted);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+
+.fd-seg [aria-selected="true"] {
+  background: var(--tint-task);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+/* =================================================================== 3. INICIO */
+
+.fd-home__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0 22px;
+}
+
+/* La fecha es un boton, no un titulo: tocarla abre el dia. Se le quita todo
+   el aspecto de boton porque tiene que leerse como lo que es, un titulo. */
+.fd-home__date {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-decoration: none;
+}
+
+.fd-home__streak {
+  margin-top: 6px;
+}
+
+/* -------------------------------------------------------- fila de tarea --
+   El objetivo tactil es la fila entera. El separador va en `border-top` y
+   la primera fila lo lleva a cero: asi no hay una linea colgando del borde
+   de la tarjeta.                                                          */
+
+.fd-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 14px 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+  color: var(--text);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd-task:first-child { border-top: 0; }
+.fd-task:active { background: var(--surface-sunken); }
+
+.fd-task__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fd-task__text--roomy { gap: 5px; }
+
+.fd-task__title {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+/* Hecha: se tacha y se apaga. No desaparece, que es lo que pide la regla 5
+   del proyecto — nada se pierde en silencio. */
+.fd-task[data-done="true"] .fd-task__title {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+/* Etiqueta de "esto cuelga de un reminder". Ambar de fondo, texto en --text:
+   la regla de FD3 sigue mandando. */
+.fd-task__rem {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: var(--rem-soft);
+  font-size: var(--fd-xs);
+  color: var(--text);
+}
+
+/* Ultima fila de la tarjeta de Hoy: la puerta a Pendientes. */
+.fd-more {
+  min-height: var(--tap-min);
+  padding: 13px 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-book);
+  color: var(--text-muted);
+  text-align: left;
+  text-decoration: none;
+}
+
+.fd-more__chev {
+  font-size: var(--fd-body);
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------- tarjeta de reminder --
+   Un reminder no se completa: pasa. Por eso no hay casilla en ninguna
+   parte de esta tarjeta. Lo que si se completa son las tareas que cuelgan
+   de el, y esas se ven aqui como preparacion.                            */
+
+.fd-remcard {
+  border: 0;
+  padding: 0;
+  text-align: left;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex;
+  width: 100%;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd-remcard__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd-remcard__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fd-remcard__head .fd-flag { margin-top: 2px; }
+
+.fd-remcard__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fd-remcard__title {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.fd-remcard__chev {
+  flex: none;
+  font-size: var(--fd-sub);
+  color: var(--text-faint);
+}
+
+/* La preparacion va sangrada 25px: justo debajo del titulo, no del
+   banderin. Se lee como una lista que pertenece al reminder. */
+.fd-prep {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-left: 25px;
+}
+
+.fd-prep__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.fd-remcard__empty { margin-left: 25px; }
+
+/* ----------------------------------------------------------- de ayer ----
+   Lo que no se cumplio. Fondo hundido para que no compita con Hoy, y tres
+   salidas explicitas. Ninguna de las tres borra nada.                    */
+
+.fd-ayer__item {
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fd-ayer__item:first-child { border-top: 0; }
+
+.fd-ayer__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fd-ayer__title {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+.fd-ayer__acts {
+  display: flex;
+  gap: 8px;
+}
+
+.fd-ayer__acts .fd-btn {
+  flex: 1 1 0;
+  padding: 0 8px;
+}
+
+/* =============================================================== 4. CALENDARIO */
+
+.fd-calhead__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fd-calhead__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-calhead__nav {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+
+.fd-calhead__seg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --------------------------------------------------------------- mes ----
+   Rejilla de 7. El punto dice QUE HAY algo; el texto de abajo dice QUE es.
+   Maximo tres puntos por dia y ningun numero: un calendario con contadores
+   deja de ser un calendario y pasa a ser un tablero de metricas.         */
+
+.fd-month {
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+  padding: 12px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fd-month__dow {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.fd-month__dow span {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fd-tiny);
+  font-weight: var(--weight-medium);
+  color: var(--text-faint);
+}
+
+.fd-month__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.fd-cell {
+  min-height: var(--month-cell);
+  padding: 6px 0 5px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd-cell__num {
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-book);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.fd-cell__dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 6px;
+}
+
+/* Los meses vecinos se atenuan pero SIGUEN siendo tocables: si ves el 31 de
+   agosto en la rejilla de septiembre, tocarlo tiene que llevarte alli. */
+.fd-cell[data-out="true"] .fd-cell__num { color: var(--text-faint); }
+
+.fd-cell[data-today="true"] {
+  background: var(--tint-task);
+  border-color: var(--task);
+}
+
+.fd-cell[data-today="true"] .fd-cell__num { font-weight: var(--weight-semibold); }
+
+.fd-cell[data-selected="true"] { background: var(--surface-sunken); }
+
+/* Leyenda. Existe porque tres colores de punto sin nombre son tres colores
+   de punto, no un lenguaje. */
+.fd-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 0 6px;
+}
+
+.fd-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fd-xs);
+  color: var(--text-muted);
+}
+
+/* Lista de reminders del mes, debajo de la rejilla. */
+.fd-monthlist {
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-label);
+}
+
+.fd-monthlist h2 {
+  margin: 0;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd-remrow {
+  border: 1px solid var(--line);
+  border-left: var(--rail) solid var(--rem);
+  padding: 12px 14px;
+  text-align: left;
+  border-radius: 14px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd-remrow__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-remrow__when {
+  flex: none;
+  font-size: var(--fd-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------- semana ---
+   Una tira de 7 arriba para saltar, y debajo una tarjeta por dia. No es una
+   rejilla de horas: en 390px de ancho, siete columnas de hora no caben sin
+   mentir. La rejilla de horas es el modulo Dia, y el escritorio.         */
+
+.fd-strip {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+  padding: 0 var(--gutter) 12px;
+}
+
+.fd-strip__day {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 58px;
+  padding: 7px 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd-strip__dow {
+  font-size: var(--fd-tiny);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.fd-strip__num {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-strip__day[data-today="true"] {
+  background: var(--tint-task);
+  border-color: var(--task);
+}
+
+.fd-daylist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fd-daycard {
+  flex: none;
+  border: 1px solid var(--line);
+  padding: 0;
+  text-align: left;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd-daycard[data-today="true"] { box-shadow: var(--shadow-card); }
+
+.fd-daycard__head {
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fd-daycard__label {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd-daycard__hint {
+  font-size: var(--fd-small);
+  color: var(--text-faint);
+}
+
+.fd-daycard__chev {
+  font-size: var(--fd-sub);
+  color: var(--text-faint);
+}
+
+.fd-daycard__body {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fd-daycard__rem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 11px;
+  border-radius: 11px;
+  background: var(--rem-soft);
+}
+
+.fd-daycard__rem span:nth-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.fd-daycard__task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fd-daycard__task span:nth-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fd-meta);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-daycard__subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Una materia en la tarjeta de dia es una etiqueta, no un bloque: aqui solo
+   importa que ese rato ya no esta libre. */
+.fd-subchip {
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+  border-left: var(--rail) solid var(--class);
+  font-size: var(--fd-xs);
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------------- dia ---
+   El riel de horas. 56px por hora desde las 7:00. Los bloques van
+   posicionados en absoluto dentro de la columna de la derecha; la columna
+   de la izquierda solo lleva las etiquetas de hora, subidas 6px para que el
+   numero quede a caballo de su linea y no debajo.                        */
+
+.fd-dayhead {
+  flex: 0 0 auto;
+  padding: 0 var(--gutter) 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* La banda del reminder del dia. No es un bloque del riel: un examen a las
+   10:00 no ocupa una hora, define el dia entero. */
+.fd-band {
+  border-radius: 14px;
+  background: var(--rem-soft);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  color: var(--text);
+  text-decoration: none;
+  width: 100%;
+}
+
+.fd-band__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-band__title {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+/* Las tareas sin hora van arriba, en chips. No pueden ir en el riel porque
+   no tienen donde caer, y no pueden desaparecer porque siguen siendo de hoy. */
+.fd-nohour {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd-nohour__label {
+  font-size: var(--fd-xs);
+  color: var(--text-faint);
+}
+
+.fd-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: var(--fd-small);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd-grid {
+  position: relative;
+  display: flex;
+}
+
+.fd-grid__hours {
+  flex: none;
+  width: 46px;
+  display: flex;
+  flex-direction: column;
+}
+
+.fd-grid__hour {
+  height: var(--hour-row);
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 10px;
+}
+
+.fd-grid__hour span {
+  font-size: var(--fd-xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  transform: translateY(-6px);
+}
+
+.fd-grid__col {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+
+.fd-grid__line {
+  height: var(--hour-row);
+  border-top: 1px solid var(--line);
+}
+
+.fd-grid__blocks {
+  position: absolute;
+  inset: 0;
+}
+
+/* Un bloque. La entidad se lee por el riel izquierdo y por el fondo:
+   materia hundida sin borde, reminder ambar, tarea blanca con sombra.
+   El texto de los tres se queda en --text o --text-muted.                */
+.fd-block {
+  position: absolute;
+  right: 0;
+  border-radius: 12px;
+  border-left: var(--rail) solid var(--task);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-align: left;
+  text-decoration: none;
+}
+
+.fd-block__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-block__title {
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-block__meta {
+  font-size: var(--fd-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-block--subject {
+  z-index: 1;
+  left: 0;
+  background: var(--surface-sunken);
+  border-left-color: var(--class);
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+.fd-block--subject .fd-block__title { color: var(--text-muted); }
+
+.fd-block--reminder {
+  z-index: 2;
+  left: 0;
+  background: var(--rem-soft);
+  border: 1px solid var(--line);
+  border-left: var(--rail) solid var(--rem);
+  box-shadow: none;
+}
+
+.fd-block--reminder .fd-block__title { color: var(--text); }
+
+.fd-block--task {
+  z-index: 2;
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: var(--rail) solid var(--task);
+  box-shadow: var(--shadow-card);
+}
+
+.fd-block--task .fd-block__title { color: var(--text); }
+
+/* Una tarea que cae encima de una clase se corre 34px a la derecha: se ve
+   que hay dos cosas a la vez sin tener que dividir la columna. */
+.fd-block--overlap { left: 34px; }
+
+/* La linea de ahora. Solo en el dia de hoy, y cruza tambien la columna de
+   horas (por eso el -46px), porque la hora actual es informacion de la
+   regla, no del contenido. */
+.fd-now {
+  position: absolute;
+  left: -46px;
+  right: 0;
+  height: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.fd-now__label {
+  flex: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--task);
+  font-size: var(--fd-tiny);
+  font-weight: var(--weight-semibold);
+  color: var(--text-on-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-now__line {
+  flex: 1 1 auto;
+  height: 2px;
+  background: var(--task);
+}
+
+/* =============================================================== 5. PENDIENTES */
+
+.fd-pend__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-pend__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+}
+
+.fd-pend__foot {
+  margin: 0 4px;
+  font-size: var(--fd-xs);
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.fd-remlist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* =================================================================== 6. ANADIR */
+
+/* Capturar cuesta 0 friccion (regla 3): un campo, sin etiqueta, sin fecha,
+   sin categoria, con el teclado ya abierto. El campo es grande porque lo
+   que se escribe aqui se escribe de pie y con una mano.                  */
+
+.fd-add {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.fd-add__head {
+  flex: 0 0 auto;
+  padding: 6px var(--gutter) 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fd-add__name {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd-add__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 18px var(--gutter) var(--fd-screen-pb);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fd-add__input {
+  width: 100%;
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.fd-add__input::placeholder { color: var(--text-faint); }
+
+.fd-add__hint {
+  font-size: var(--fd-small);
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.fd-add__saved {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+/* ================================================================ 7. RECURSOS */
+
+.fd-placeholder {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 40px var(--fd-screen-pb);
+  text-align: center;
+}
+
+.fd-placeholder__title {
+  font-size: var(--fd-lead);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.fd-placeholder__text {
+  font-size: var(--fd-meta);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ===================================================================== FOCO */
+
+/* Un anillo, una vez, y solo para quien navega con teclado. `:focus-visible`
+   y no `:focus`: en el iPhone cada toque dejaria el anillo encendido. */
+.fd-app :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ============================================================ MOVIMIENTO OFF */
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-app *,
+  .fd-app *::before,
+  .fd-app *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -1,37 +1,45 @@
 /* ============================================================================
-   Organizer · Inicio  ·  el suelo de F0
+   Organizer · FD4 · Inicio
 
-   ESTA NO ES LA PANTALLA DE INICIO DEL PRODUCTO. La de verdad llega en F1 y
-   esta dibujada en `app/comps/inicio.html`: Hoy, Esta semana, De ayer, y cabe
-   sin scroll. Aqui no se adelanta ninguna de esas decisiones.
+   Esta es la pantalla de verdad. La que habia aqui antes era el suelo de F0:
+   una galeria para comprobar que los cinco componentes portados se veian como
+   en los comps. Ya cumplio y se reemplazo entera, que es lo que decia su
+   propia cabecera que iba a pasar.
 
-   Lo que si hace, que es lo que el brief pide comprobar desde el iPhone:
+   INICIO ES DONDE CAE EL USUARIO AL TOCAR LA NOTIFICACION. No es un panel de
+   control ni un resumen: es la respuesta a tres preguntas, en este orden,
+   porque es el orden en que se hacen a las 8 de la manana.
 
-     - la sesion existe y la ruta esta protegida
-     - la fila de `profiles` esta creada, con su zona horaria
-     - la tipografia, el color y los tres temas son los correctos
-     - los cinco componentes portados se ven como en los comps
+     1. ¿Que hay hoy?              Tareas del dia, marcables de un toque.
+     2. ¿Que se viene?             Reminders, con su preparacion o sin ella.
+     3. ¿Que se me quedo colgando? Lo de ayer, con tres salidas.
 
-   Cuando F1 escriba Inicio de verdad, este archivo se reemplaza entero.
+   Lo que NO hay aqui, y no por falta de tiempo:
+     · ningun contador ("3 de 7 completadas")
+     · ningun grafico, ninguna barra de progreso
+     · ningun "buenos dias, Sebastian"
+   Todo eso ocupa el sitio de una de las tres preguntas y no contesta ninguna.
+
+   La fecha de arriba es un boton: tocarla abre el dia en Calendario. Se
+   escribe como titulo porque es un titulo, pero es la forma mas corta de
+   llegar al riel de horas desde el sitio donde ya estas mirando.
    ========================================================================= */
 
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
-import { ThemeSwitch } from '@/components/ThemeSwitch';
-import { TabBar } from '@/components/TabBar';
-import { Row } from '@/components/Row';
-import { Check } from '@/components/Check';
-import { ReminderFlag } from '@/components/ReminderFlag';
-import { CalBlock } from '@/components/CalBlock';
-import { SignOutButton } from '@/components/SignOutButton';
+import { getHomeData } from '@/lib/home';
+import { TabBar } from '@/components/fd4/TabBar';
+import { DeskSidebar } from '@/components/fd4/DeskSidebar';
+import { getTodayString } from '@/lib/date-utils';
+import { TaskRow } from '@/components/fd4/TaskRow';
+import { ReminderCard } from '@/components/fd4/ReminderCard';
+import { Overdue } from '@/components/fd4/Overdue';
+import { Dot, Flag } from '@/components/fd4/Marks';
 import { Setup } from './Setup';
 
-/* Nunca estatica: depende de la cookie de sesion. Se dice explicitamente
-   porque si se compila sin variables de entorno esta pagina se resuelve en el
-   `<Setup/>` de abajo, que no lee cookies — y Next la congelaria como
-   estatica, dejando la pantalla de "falta configurar" cacheada para siempre. */
+/* Nunca estatica: depende de la cookie de sesion y de la fecha de hoy. */
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
@@ -40,149 +48,96 @@ export default async function HomePage() {
   if (!isSupabaseConfigured()) return <Setup />;
 
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  /* El proxy ya manda a /entrar sin sesion; esto es el cinturon por si
+     alguna vez esta pagina se renderiza fuera de ese camino. */
+  if (!user) return <Setup />;
+
   const { data: profile } = await supabase
     .from('profiles')
-    .select('timezone, created_at')
-    .eq('id', user?.id ?? '')
+    .select('timezone')
+    .eq('id', user.id)
     .maybeSingle();
 
+  const timezone = profile?.timezone ?? DEFAULT_TIMEZONE;
+  const home = await getHomeData(supabase, user.id, timezone);
+
   return (
-    <div className="applayout">
-      <main className="screen">
-        <header className="pagehead">
-          <h1 className="t-title">Organizer</h1>
-          <SignOutButton />
+    <div className="fd-app">
+      <DeskSidebar active="inicio" todayStr={getTodayString(timezone)} />
+
+      <main className="fd-screen">
+        <header className="fd-home__head">
+          <Link href={`/calendario?v=dia&d=${home.todayStr}`} className="fd-home__date">
+            <h1 className="fd-h1">{home.dayTitle}</h1>
+            <span className="fd-sub">{home.monthLabel} · ver el día</span>
+          </Link>
+
+          {/* La racha solo aparece cuando existe. Un "0 dias" en la esquina
+              de la pantalla de inicio es un reproche diario, y esta app no
+              esta para eso. */}
+          {home.streakDays > 0 ? (
+            <span className="fd-pill fd-pill--line fd-home__streak">
+              {home.streakDays} {home.streakDays === 1 ? 'día' : 'días'}
+            </span>
+          ) : null}
         </header>
 
-        <p className="gutter t-meta c-muted">
-          Fundaciones listas. Tareas y Atajo de Siri disponibles:
-        </p>
+        <div className="fd-sections">
+          {/* ------------------------------------------------------- hoy -- */}
+          <section>
+            <div className="fd-seclabel">
+              <Dot entity="task" />
+              <h2>Hoy</h2>
+            </div>
 
-        {/* La puerta a las notificaciones va primero y sola. Hasta que el
-            usuario pase por ahi una vez, la app no le habla — y "push, no
-            pull" es la primera regla del proyecto. Quien reemplace esta
-            pantalla tiene que dejar algun camino a
-            `/ajustes/notificaciones`; esta anotado en `docs/estado-F3.md`. */}
-        <div className="gutter" style={{ marginTop: 'var(--space-4)' }}>
-          <Link href="/ajustes/notificaciones" className="btn btn--primary btn--full">
-            Activar las notificaciones
-          </Link>
+            <div className="fd-card">
+              <span className="fd-card__rail fd-card__rail--task" aria-hidden />
+              <div className="fd-card__body">
+                {home.hoy.length > 0 ? (
+                  home.hoy.map((task) => <TaskRow key={task.id} task={task} />)
+                ) : (
+                  <p className="fd-task">
+                    <span className="fd-task__text">
+                      <span className="fd-empty">Hoy no hay nada con fecha.</span>
+                    </span>
+                  </p>
+                )}
+
+                {/* Siempre visible, incluso con la lista vacia: es la puerta
+                    a lo que se capturo y todavia no tiene dia. */}
+                <Link href="/pendientes" className="fd-more">
+                  <span>El resto está en Pendientes</span>
+                  <span className="fd-more__chev" aria-hidden>
+                    ›
+                  </span>
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* ---------------------------------------------- esta semana -- */}
+          {home.semana.length > 0 ? (
+            <section>
+              <div className="fd-seclabel">
+                <Flag size="xs" />
+                <h2>Esta semana</h2>
+              </div>
+
+              <div className="fd-remlist">
+                {home.semana.map((r) => (
+                  <ReminderCard key={r.id} reminder={r} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {/* ---------------------------------------------------- ayer --- */}
+          <Overdue tasks={home.ayer} todayStr={home.todayStr} />
         </div>
-
-        <div className="gutter mt-3 flex gap-2">
-          <Link href="/tareas" className="btn btn--quiet flex-1">
-            Tareas
-          </Link>
-          <Link href="/dia" className="btn btn--quiet flex-1">
-            Calendario
-          </Link>
-          <Link href="/atajo" className="btn btn--quiet flex-1">
-            Atajo
-          </Link>
-        </div>
-
-        {/* ---------------------------------------------------- la cuenta -- */}
-        <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>
-          Tu cuenta
-        </h2>
-        <Row title={user?.email ?? 'Sin sesion'} meta={['Enlace magico']} />
-        <Row
-          title={profile ? 'Perfil creado' : 'Falta tu fila en profiles'}
-          meta={[
-            profile ? profile.timezone : DEFAULT_TIMEZONE,
-            profile ? 'listo' : 'revisa el esquema en Supabase',
-          ]}
-        />
-
-        {/* ------------------------------------------------------- el tema -- */}
-        <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>
-          Tema
-        </h2>
-        <div className="gutter">
-          <ThemeSwitch />
-          <p className="t-meta c-muted" style={{ marginTop: 'var(--space-3)' }}>
-            Los tres estados tienen que verse bien: claro, oscuro, y lo que diga
-            el sistema. Miralo de dia y de noche.
-          </p>
-        </div>
-
-        {/* --------------------------------------------- las tres entidades --
-            Aqui se comprueba de un vistazo la regla de FD3: el color esta en la
-            casilla, en el banderin y en la barra del bloque. Nunca en la letra. */}
-        <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>
-          Las tres entidades
-        </h2>
-
-        <Row
-          title="Migrar el schema a Supabase"
-          meta={['15:00 – 17:00', 'Proyecto IA']}
-          lead={<Check checked={false} label="Migrar el schema a Supabase" />}
-          now
-        />
-        <Row
-          title="Leer el paper de Anthropic"
-          meta={['9:00', 'Cursos']}
-          lead={<Check checked label="Leer el paper de Anthropic" />}
-          done
-        />
-
-        <div style={{ marginTop: 'var(--space-4)' }}>
-          <ReminderFlag title="Parcial de Calculo" when="viernes 18 · 10:00" />
-          <ReminderFlag title="Quiz de Algebra" when="lunes 28" past />
-        </div>
-
-        {/* Los bloques del calendario van POSICIONADOS dentro del riel de
-            horas: `.calblock` es `position: absolute`. Asi que aqui se dibuja
-            un riel de mentira, con su contenedor relativo y sus alturas, en
-            vez de apilarlos en una columna — que es como se descubre tarde que
-            el componente no encaja donde lo pusiste. */}
-        <div
-          style={{
-            position: 'relative',
-            height: 232,
-            marginTop: 'var(--space-4)',
-            marginInline: 'var(--space-3)',
-          }}
-        >
-          <CalBlock
-            kind="class"
-            title="Calculo III"
-            time="8:00 – 9:30 · Aula 204"
-            style={{ top: 0, height: 72 }}
-          />
-          <CalBlock
-            kind="task"
-            title="Migrar el schema a Supabase"
-            time="15:00 – 17:00"
-            now
-            style={{ top: 80, height: 72 }}
-          />
-          <CalBlock
-            kind="task"
-            title="Terminar el modelo de datos"
-            time="19:00"
-            style={{ top: 160, height: 72 }}
-          />
-        </div>
-
-        {/* -------------------------------------------------- los 5 tamanos -- */}
-        <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>
-          Cinco tamanos, y no hay un sexto
-        </h2>
-        <div className="gutter" style={{ display: 'grid', gap: 'var(--space-2)' }}>
-          <p className="t-title">Jueves 17</p>
-          <p className="t-section">Esto quedo de la semana</p>
-          <p className="t-body">Migrar el schema a Supabase</p>
-          <p className="t-meta c-muted">15:00 – 17:00 · Proyecto IA</p>
-          <p className="t-label c-faint">EL RESTO ESTA EN TAREAS</p>
-        </div>
-
-        <div style={{ height: 'var(--space-16)' }} />
       </main>
 
       <TabBar />

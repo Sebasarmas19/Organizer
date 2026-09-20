@@ -1,0 +1,770 @@
+/* ============================================================================
+   Organizer · FD4 · ESCRITORIO
+
+   Todo este archivo vive dentro de `@media (min-width: 900px)`. Por debajo de
+   ese ancho no aporta ni una declaracion: el telefono carga estas reglas y
+   ninguna se aplica. Esa es la razon de que sea un archivo aparte y no reglas
+   sueltas repartidas por `fd4.css` — para poder leer el telefono sin tropezar
+   con el escritorio, y al reves.
+
+   POR QUE 900px Y NO 768px
+
+   El corte no es un numero de catalogo: es el ancho al que la rejilla semanal
+   de siete columnas deja de mentir. Con la barra lateral de 250px y los 56px
+   del riel de horas, a 900px cada dia recibe 84px. Ahi cabe "Cálculo" y un
+   "9:00" debajo. A 768px recibe 66px y el titulo se parte. El iPad en
+   vertical (768px) se queda, a proposito, con la version de telefono, que en
+   esa proporcion es la que funciona.
+
+   LAS TRES COSAS QUE CAMBIAN, Y NINGUNA MAS
+
+     1. La navegacion pasa de abajo a la izquierda.        (§2)
+     2. El contenido deja de ocupar todo el ancho.         (§3)
+     3. La semana pasa de tarjetas a rejilla de horas.     (§5)
+
+   Lo demas —tarjetas, casillas, colores, banderines, el riel del Dia— es
+   identico. El diseno de telefono no era una version reducida a la que
+   ahora se le quitan las limitaciones: era el diseno. Escritorio le da sitio.
+
+   QUE NO SE HACE AQUI, A PROPOSITO
+
+   No hay una segunda columna de "widgets" ni un panel de estadisticas ni un
+   resumen del mes en la esquina. El ancho que sobra se deja vacio. Llenarlo
+   seria inventar contenido que el usuario no pidio y que la decision 22 del
+   proyecto prohibe expresamente (ningun contador de deuda). El escritorio es
+   "para planificar sentado", y planificar es ver mas dias a la vez, no ver
+   mas numeros.
+
+   ÍNDICE
+     §1  Tokens y armazon
+     §2  Barra lateral
+     §3  Anchos de contenido y cabeceras
+     §4  Inicio y Pendientes
+     §5  Semana · la rejilla de horas
+     §6  Mes
+     §7  Dia
+     §8  Anadir y Recursos
+   ========================================================================= */
+
+/* ----------------------------------------------------------------------------
+   Estas dos son las unicas reglas del archivo que se aplican en el telefono, y
+   van ARRIBA del `@media` a proposito: tienen la misma especificidad que las
+   que las encienden mas abajo, asi que si fueran las ultimas ganarian tambien
+   en escritorio y la barra lateral no aparecerian nunca.
+   ------------------------------------------------------------------------- */
+
+.fd-side,
+.fd-weekgrid {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  /* ======================================================= §1 · ARMAZON === */
+
+  .fd-app {
+    --desk-side: 250px;
+    --desk-rail: 56px;
+    --desk-hour: 48px;
+    --desk-max: 1180px;
+    --desk-pad: 32px;
+
+    /* El telefono reservaba sitio abajo para la barra de pestanas. Aqui no
+       hay barra abajo, asi que ese hueco desaparece: si no, el escritorio
+       arrastraria 110px de aire muerto al pie de cada pantalla. */
+    --fd-screen-pb: var(--desk-pad);
+
+    display: grid;
+    grid-template-columns: var(--desk-side) minmax(0, 1fr);
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--desk);
+  }
+
+  /* La barra de pestanas es la navegacion del pulgar. En un monitor no hay
+     pulgar, y ademas se come el alto, que aqui es el recurso escaso. */
+  .fd-tabbar {
+    display: none;
+  }
+
+  .fd-screen,
+  .fd-screen--split {
+    height: 100dvh;
+    min-height: 0;
+    background: var(--bg);
+    /* La columna de contenido se despega del escritorio con un borde, no con
+       una sombra: en tema oscuro las sombras no existen. */
+    border-left: 1px solid var(--line);
+  }
+
+  .fd-screen {
+    padding: var(--desk-pad) var(--desk-pad) var(--desk-pad);
+  }
+
+  /* ================================================== §2 · BARRA LATERAL === */
+
+  .fd-side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    height: 100dvh;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 24px 16px;
+    background: var(--desk);
+  }
+
+  .fd-side__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+  }
+
+  .fd-side__mark {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--task);
+    flex: 0 0 auto;
+  }
+
+  .fd-side__name {
+    font-size: var(--fd-lead);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  /* Capturar sigue siendo la accion mas barata de la app, tambien aqui. En el
+     telefono es el boton del medio de la barra; en escritorio es lo primero
+     que hay bajo el nombre, antes que cualquier destino. */
+  .fd-side__add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: var(--tap-min);
+    border-radius: 12px;
+    background: var(--task);
+    color: var(--text-on-accent);
+    font-size: var(--fd-body);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .fd-side__add:hover {
+    background: var(--task-press);
+  }
+
+  .fd-side__addmark {
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .fd-side__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .fd-sidelink {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--tap-min);
+    padding: 0 10px;
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: var(--fd-body);
+    font-weight: var(--weight-book);
+    text-decoration: none;
+  }
+
+  .fd-sidelink:hover {
+    background: var(--surface-sunken);
+    color: var(--text);
+  }
+
+  /* El enlace activo se marca con superficie y peso, no con color de texto:
+     decision 63, el color envuelve y no pinta. */
+  .fd-sidelink[aria-current='page'] {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .fd-side__subs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* La linea vertical ata las tres vistas a Calendario sin necesidad de
+       escribir "Calendario" otra vez encima de cada una. */
+    margin: 2px 0 2px 25px;
+    padding-left: 13px;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  .fd-sidesub {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: var(--fd-sub);
+    text-decoration: none;
+  }
+
+  .fd-sidesub:hover {
+    background: var(--surface-sunken);
+    color: var(--text);
+  }
+
+  .fd-sidesub[aria-current='page'] {
+    background: var(--task-soft);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ------------------------------------------------------------ mini-mes -- */
+
+  .fd-side__mini {
+    padding: 12px 8px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .fd-mini__head {
+    padding: 0 4px 8px;
+  }
+
+  .fd-mini__title {
+    font-size: var(--fd-small);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .fd-mini__dow,
+  .fd-mini__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+  }
+
+  .fd-mini__dow span {
+    text-align: center;
+    padding-bottom: 4px;
+    font-size: var(--fd-tiny);
+    font-weight: 600;
+    color: var(--text-faint);
+  }
+
+  .fd-mini__cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border-radius: 7px;
+    font-size: var(--fd-tiny);
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .fd-mini__cell:hover {
+    background: var(--surface-sunken);
+  }
+
+  .fd-mini__cell[data-out='true'] {
+    color: var(--text-faint);
+  }
+
+  /* Hoy se marca con anillo y no con relleno, para que el relleno quede libre
+     para "el dia que estas mirando", que es lo que cambia al navegar. */
+  .fd-mini__cell[data-today='true'] {
+    box-shadow: inset 0 0 0 1.5px var(--line-control);
+    font-weight: 600;
+  }
+
+  .fd-mini__cell[data-selected='true'] {
+    background: var(--task);
+    color: var(--text-on-accent);
+    font-weight: 600;
+  }
+
+  /* ------------------------------------------------------------- leyenda -- */
+
+  .fd-side__legend {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: auto;
+    padding: 0 10px 4px;
+  }
+
+  .fd-side__legend .fd-seclabel {
+    margin: 0 0 2px;
+  }
+
+  .fd-side__legend .fd-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: var(--fd-small);
+    color: var(--text-muted);
+  }
+
+  /* ====================================== §3 · ANCHOS Y CABECERAS ========= */
+
+  /* La regla que justifica el escritorio entero: una linea de texto de 1180px
+     es ilegible, el ojo pierde el renglon al volver. El contenido se centra y
+     el resto del monitor se queda vacio, que es lo correcto. */
+  .fd-sections,
+  .fd-pend__body,
+  .fd-monthlist,
+  .fd-daylist,
+  .fd-home__head {
+    /* Mismo motivo que abajo: `.fd-monthlist` cuelga de un `.fd-scroll` que
+       MonthView pone en flex-column, y sin ancho declarado el margen
+       automatico lo encogeria. `box-sizing: border-box` es global, asi que el
+       100% no pelea con el padding. */
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+
+  .fd-fixedhead {
+    padding: 20px var(--desk-pad) 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .fd-scroll {
+    padding: 18px var(--desk-pad) var(--desk-pad);
+  }
+
+  .fd-h1--screen,
+  .fd-h1--cal {
+    font-size: var(--fd-title-desk);
+  }
+
+  /* `width: 100%` NO sobra. Estos tres son hijos de un contenedor flex en
+     columna, y ahi un `margin-inline: auto` se come TODO el espacio libre
+     antes de que el elemento se estire: sin un ancho declarado colapsan a su
+     minimo y se centran encogidos.
+
+     `.fd-seg` no entra en esta lista aunque tambien haya que limitarlo. Es un
+     hijo flex de `.fd-calhead__seg` que vive de su `flex: 1 1 auto`; un margen
+     automatico ahi le gana al `flex-grow`, el carril se queda en su ancho
+     minimo y los tres enlaces —que llevan `min-width: 0`— se desbordan uno
+     encima de otro. Limitando al padre ya queda limitado el hijo. */
+  .fd-calhead__row,
+  .fd-pend__head,
+  .fd-calhead__seg {
+    width: 100%;
+    max-width: var(--desk-max);
+    margin-inline: auto;
+  }
+
+  /* Los controles dejan de necesitar 44px de dedo, pero se quedan en 44px:
+     bajarlos aqui obligaria a mantener dos tamanos de boton por el resto del
+     proyecto a cambio de ocho pixeles. */
+  .fd-btn--icon:hover,
+  .fd-more:hover {
+    background: var(--surface-sunken);
+  }
+
+  /* ====================================== §4 · INICIO Y PENDIENTES ======== */
+
+  .fd-home__head {
+    padding-top: 6px;
+  }
+
+  /* Pendientes en dos columnas: los grupos son cortos e independientes entre
+     si, asi que apilarlos en una sola columna de 760px en un monitor deja la
+     mitad de abajo en blanco y obliga a hacer scroll para nada. */
+  .fd-pend__body {
+    max-width: var(--desk-max);
+    columns: 2;
+    column-gap: 24px;
+  }
+
+  .fd-pend__body > section {
+    break-inside: avoid;
+    /* `columns` corta por donde quiere; sin esto un grupo empieza al final de
+       la primera columna y termina en la segunda. */
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: var(--gap-section);
+  }
+
+  .fd-pend__foot {
+    column-span: all;
+  }
+
+  /* ============================ §5 · SEMANA · LA REJILLA DE HORAS ========= */
+
+  /* En el telefono esto esta en `display:none` y manda `.fd-daylist`. Aqui se
+     invierte: la rejilla es la verdad y las tarjetas se apagan. Las dos
+     formas viajan en el mismo HTML porque el servidor no sabe el ancho de la
+     ventana; los datos de las dos salen de la MISMA consulta. */
+  .fd-strip,
+  .fd-daylist {
+    display: none;
+  }
+
+  .fd-weekgrid {
+    display: block;
+    max-width: var(--desk-max);
+    margin-inline: auto;
+  }
+
+  .fd-weekgrid__head,
+  .fd-weekgrid__allday {
+    display: grid;
+    grid-template-columns: var(--desk-rail) repeat(7, minmax(0, 1fr));
+  }
+
+  /* La cabecera de dias se queda pegada arriba al bajar por el riel: sin eso,
+     a las 19:00 ya no sabes que columna es el jueves. */
+  .fd-weekgrid__head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .fd-weekgrid__day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 8px 4px 10px;
+    border-left: 1px solid var(--line);
+    text-decoration: none;
+  }
+
+  .fd-weekgrid__day:hover {
+    background: var(--surface-sunken);
+  }
+
+  .fd-weekgrid__dow {
+    font-size: var(--fd-tiny);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  .fd-weekgrid__num {
+    font-size: var(--fd-lead);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  .fd-weekgrid__day[data-today='true'] .fd-weekgrid__num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 27px;
+    height: 27px;
+    border-radius: 999px;
+    background: var(--task);
+    color: var(--text-on-accent);
+  }
+
+  .fd-weekgrid__day[data-today='true'] .fd-weekgrid__dow {
+    color: var(--task);
+  }
+
+  /* --------------------------------------------- la banda de lo sin hora -- */
+
+  /* Reminders y tareas con fecha pero sin hora. Van arriba, fuera del riel,
+     porque colocarlos a una hora inventada seria decir una hora que nadie
+     dijo — y un parcial "a las 9:00" que en realidad no tiene hora es
+     exactamente el tipo de dato falso que hace desconfiar del calendario. */
+  .fd-weekgrid__allday {
+    min-height: 34px;
+    border-bottom: 1px solid var(--line-strong);
+    background: var(--bg);
+  }
+
+  .fd-weekgrid__corner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 8px 0 0;
+    font-size: var(--fd-tiny);
+    color: var(--text-faint);
+  }
+
+  .fd-weekgrid__cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px 4px;
+    border-left: 1px solid var(--line);
+  }
+
+  .fd-weekgrid__rem,
+  .fd-weekgrid__loose {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: var(--fd-tiny);
+    line-height: 1.25;
+    overflow: hidden;
+  }
+
+  .fd-weekgrid__rem {
+    background: var(--rem-soft);
+    color: var(--text);
+  }
+
+  .fd-weekgrid__loose {
+    background: var(--task-soft);
+    color: var(--text);
+  }
+
+  .fd-weekgrid__rem span,
+  .fd-weekgrid__loose span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ----------------------------------------------------------- el riel ---- */
+
+  .fd-weekgrid__body {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--desk-rail) repeat(7, minmax(0, 1fr));
+  }
+
+  .fd-weekgrid__hours {
+    position: relative;
+  }
+
+  .fd-weekgrid__hour {
+    height: var(--desk-hour);
+    /* La etiqueta se sube media linea para que quede a la altura de su raya
+       y no del hueco de debajo. */
+    transform: translateY(-7px);
+    text-align: right;
+    padding-right: 8px;
+    font-size: var(--fd-tiny);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-faint);
+  }
+
+  .fd-weekgrid__hour:first-child {
+    transform: none;
+  }
+
+  .fd-weekgrid__col {
+    position: relative;
+    border-left: 1px solid var(--line);
+  }
+
+  .fd-weekgrid__col[data-today='true'] {
+    background: var(--task-soft);
+  }
+
+  .fd-weekgrid__line {
+    height: var(--desk-hour);
+    border-top: 1px solid var(--line);
+  }
+
+  .fd-weekgrid__line:first-child {
+    border-top: 0;
+  }
+
+  .fd-weekgrid__blocks {
+    position: absolute;
+    inset: 0;
+    padding: 0 3px;
+  }
+
+  .fd-weekblock {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+    padding: 3px 6px;
+    border-radius: 7px;
+    border-left: var(--rail) solid transparent;
+    font-size: var(--fd-tiny);
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  .fd-weekblock__title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fd-weekblock__meta {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+  }
+
+  /* Las materias son el fondo sobre el que se reparte el trabajo, no trabajo.
+     Por eso van en gris y las tareas encima con su color. */
+  .fd-weekblock--subject {
+    background: var(--surface-sunken);
+    border-left-color: var(--class);
+  }
+
+  .fd-weekblock--task {
+    background: var(--task-soft);
+    border-left-color: var(--task);
+  }
+
+  .fd-weekblock--reminder {
+    background: var(--rem-soft);
+    border-left-color: var(--rem);
+  }
+
+  /* ---------------------------------------------------- la linea de ahora - */
+
+  .fd-weeknow {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .fd-weeknow__line {
+    display: block;
+    height: 2px;
+    background: var(--rem);
+    opacity: 0.85;
+  }
+
+  .fd-weeknow__label {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    width: var(--desk-rail);
+    padding-right: 8px;
+    text-align: right;
+    font-size: var(--fd-tiny);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--rem);
+    background: var(--bg);
+  }
+
+  /* ============================================================ §6 · MES === */
+
+  .fd-month {
+    /* Hijo flex del `.fd-scroll` de MonthView: sin ancho declarado el margen
+       automatico gana al estirado y el mes se encogeria a su minimo. */
+    width: 100%;
+    max-width: var(--desk-max);
+    margin-inline: auto;
+  }
+
+  /* Las celdas dejan de ser cuadradas y se estiran: en un monitor el mes
+     entero cabe sin scroll, y eso es justo lo que se viene a mirar. */
+  .fd-cell {
+    min-height: 86px;
+    align-items: flex-start;
+    padding: 7px 8px;
+  }
+
+  .fd-cell__num {
+    font-size: var(--fd-sub);
+  }
+
+  .fd-month__dow span {
+    font-size: var(--fd-small);
+  }
+
+  /* ============================================================ §7 · DIA === */
+
+  .fd-grid {
+    max-width: 900px;
+    margin-inline: auto;
+  }
+
+  /* El riel del Dia se comprime de 56px a 48px por hora. En el telefono los
+     56px daban sitio al dedo; aqui lo que importa es que las quince horas
+     entren de una vez sin scroll. */
+  .fd-grid__hour,
+  .fd-grid__line {
+    height: var(--desk-hour);
+  }
+
+  .fd-grid__blocks .fd-block {
+    /* Las alturas vienen calculadas en el servidor contra 56px/hora. Se
+       reescalan con la misma razon, en vez de mandar dos juegos de numeros. */
+    transform-origin: top left;
+  }
+
+  .fd-dayhead,
+  .fd-band,
+  .fd-nohour {
+    max-width: 900px;
+    margin-inline: auto;
+  }
+
+  /* ============================================= §8 · ANADIR Y RECURSOS === */
+
+  /* Capturar en escritorio sigue siendo un campo y nada mas. Lo unico que
+     cambia es que deja de ocupar la pantalla entera, porque una caja de
+     texto de 1180px de ancho para escribir "comprar cuaderno" es ridicula. */
+  /* `.fd-add` no es un `.fd-screen`, asi que no recibe ni el fondo ni el borde
+     de la columna de contenido: hay que dárselos aqui o la pantalla de
+     capturar se ve sobre el gris del escritorio, despegada de las demas. */
+  .fd-add {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100dvh;
+    min-height: 0;
+    overflow-y: auto;
+    background: var(--bg);
+    border-left: 1px solid var(--line);
+    padding-inline: max(var(--desk-pad), calc((100% - 560px) / 2));
+  }
+
+  .fd-add__head,
+  .fd-add__body {
+    width: 100%;
+    max-width: 560px;
+    margin-inline: auto;
+  }
+
+  /* Arriba del todo y no centrado: el boton de cerrar tiene que estar donde
+     siempre esta, no flotando en medio de la pantalla junto al campo. */
+  .fd-add__head {
+    position: absolute;
+    top: 20px;
+    right: var(--desk-pad);
+    left: auto;
+    width: auto;
+  }
+
+  .fd-add__input {
+    font-size: var(--fd-title-sm);
+  }
+
+  .fd-placeholder {
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+}
