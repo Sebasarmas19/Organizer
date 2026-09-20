@@ -177,6 +177,14 @@ Para probar y validar las notificaciones Web Push:
 
 ---
 
+## 🗺️ Estado del Proyecto & Tareas Pendientes
+
+Para ver en detalle qué está integrado, qué detalles visuales y de UX están pendientes, y la hoja de ruta para colaboradores, consulta:
+
+👉 **[`docs/PENDIENTES.md`](docs/PENDIENTES.md)**
+
+---
+
 ## 📌 Reglas de Contribución
 
 - **Tokens de diseño**: `app/tokens.css` es la fuente de verdad. Si modificas tokens, actualiza ambos (`app/tokens.css` y `web/src/styles/tokens.css`). `npm run verify` fallará si difieren.
