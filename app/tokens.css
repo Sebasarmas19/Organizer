@@ -3,21 +3,24 @@
    Single source of truth for color, type, space, radius and motion.
    Light and dark are both authored. Nothing here is derived at runtime.
 
-   FD3 · EL COLOR DICE QUE TIPO DE COSA ES  (decisiones 63-66)
+   FD4 · LA PALETA SE ENFRIA, LAS TRES ENTIDADES NO CAMBIAN
 
-     tarea     -> azul marino
-     materia   -> verde
-     reminder  -> ambar
+   FD4 (Claude Design, proyecto "Organizer Inicio") reemplaza los neutros
+   calidos de FD3 por una escala fria, sube la superficie a blanco puro y
+   mete la tarjeta como unidad de composicion. Lo que NO toca es la regla
+   que manda sobre todo lo demas, ni los tres colores de entidad:
 
-   Y una regla que manda sobre las tres:
+     tarea     -> azul marino   #1E3A6F   (identico a FD3)
+     materia   -> verde         #2F6B46   (identico a FD3)
+     reminder  -> ambar         #B26B00   (identico a FD3)
 
        EL COLOR ENVUELVE AL TEXTO, NUNCA LO PINTA.
 
-   Barra lateral, fondo tintado, pildora, punto, banderin: todo vale. Texto
-   de color, no. La razon es medible y no es estetica: un ambar que llegue a
-   4.5:1 sobre blanco ha dejado de ser ambar y es marron. Asi que el color se
-   va a la superficie y el texto se queda en --text, que mide ~15:1 encima de
-   cualquiera de los tres tintes.
+   Barra lateral (--rail), fondo tintado, pildora, punto, banderin: todo
+   vale. Texto de color, no. La razon es medible y no es estetica: un ambar
+   que llegue a 4.5:1 sobre blanco ha dejado de ser ambar y es marron. Asi
+   que el color se va a la superficie y el texto se queda en --text, que
+   mide ~14:1 encima de cualquiera de los tres tintes.
 
    La unica excepcion es el azul como TEXTO DE ACCION (enlaces, .taptext).
    Ahi el azul no esta etiquetando una tarea: esta diciendo "esto se toca".
@@ -25,6 +28,13 @@
 
    Contraste: cada par medido con luminancia relativa. Texto >= 4.5:1 (AA),
    indicador no textual >= 3:1. Los ratios van anotados al lado del token.
+
+   DOS TOKENS SE SEPARAN DEL PROTOTIPO, A PROPOSITO:
+     --text-faint  claro   FD4 pedia #8B93A2 -> 2.7:1 sobre --bg. Ilegible.
+                           Aqui #626B7B     -> 4.7:1. Mismo gris, mas hondo.
+     --text-faint  oscuro  FD4 pedia #717A8B -> 4.4:1. Aqui #7B8495 -> 5.0:1.
+   Es el unico sitio donde FD4 no se copia literal, y es porque el prototipo
+   no mide contraste y este archivo si. Revertirlo son dos lineas.
 
    Theme resolution (three states):
      :root                                  -> light (default, always defined)
@@ -36,11 +46,17 @@
   color-scheme: light dark;
 
   /* ---------------------------------------------------------------- type --
-     One family. Five sizes in the whole app. Hierarchy comes from weight
-     and color, never from inventing a sixth size.                         */
+     IBM Plex Sans es la tipografia de FD4. Se carga con `next/font/google`
+     desde el layout, que expone `--font-plex`; si por lo que sea no llega,
+     se cae al stack del sistema y la app sigue leyendose igual.
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
-               "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+     La escala de FD3 (cinco tamanos) se queda: `base.css` entera depende de
+     ella. FD4 anade su propia escala mas fina abajo, en el bloque `--fd-*`,
+     porque el prototipo usa 33/27/25/16/14/13/12/11 y forzarlo a cinco
+     valores seria mentir sobre el diseno aprobado.                        */
+
+  --font-sans: var(--font-plex), "IBM Plex Sans", -apple-system, BlinkMacSystemFont,
+               "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   --text-title: 1.75rem;     /* 28px · nombre de pantalla                   */
   --text-section: 1.25rem;   /* 20px · encabezado de seccion / dia          */
@@ -59,9 +75,26 @@
   --tracking-label: 0.005em;
 
   --weight-regular: 400;
+  --weight-book: 450;        /* FD4 · el peso de la letra chica que no grita */
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
+
+  /* ------------------------------------------------------- type · FD4 ----
+     Los tamanos literales del prototipo. Van en px porque asi estan
+     medidos contra un lienzo de 390pt y el rem aqui no aporta nada.       */
+
+  --fd-display: 33px;        /* "Jueves 17" en Inicio                       */
+  --fd-title: 27px;          /* "Pendientes"                                */
+  --fd-title-sm: 25px;       /* cabecera de Calendario                      */
+  --fd-title-desk: 24px;     /* cabecera del panel de escritorio            */
+  --fd-lead: 17px;           /* titulo de bloque vacio                      */
+  --fd-body: 16px;           /* titulo de tarea, de reminder                */
+  --fd-sub: 15px;            /* titulo dentro de banda, boton primario      */
+  --fd-meta: 14px;           /* fila secundaria, boton, encabezado de lista */
+  --fd-small: 13px;          /* hora, contexto, subtitulo                   */
+  --fd-xs: 12px;             /* leyenda, pildora, chip                      */
+  --fd-tiny: 11px;           /* etiqueta de pestana, dia de la semana       */
 
   /* --------------------------------------------------------------- space --
      Escala de 4px. No hay valores fuera de esta lista.                    */
@@ -83,11 +116,29 @@
   --gutter-wide: 32px;     /* aire lateral en escritorio                    */
   --tap-min: 44px;         /* objetivo tactil minimo                        */
 
+  /* FD4 · ritmo vertical de la pagina. La seccion respira 26 y su etiqueta
+     se pega a 10 de la tarjeta: el titulo pertenece a lo que hay debajo.  */
+  --gap-section: 26px;
+  --gap-label: 10px;
+  --content-max: 760px;    /* ancho de lectura de una columna en escritorio */
+
   /* -------------------------------------------------------------- radius --
-     Dos valores. El circulo del checkbox es una forma, no un tercer radio. */
+     FD3 traia dos. FD4 anade el de la tarjeta, que es una forma nueva: la
+     fila ya no vive pegada al borde de la pantalla, vive dentro de algo.  */
 
   --radius: 12px;          /* filas, botones, campos, bloques de calendario */
   --radius-lg: 20px;       /* hoja de accion, notificacion, selector        */
+  --radius-card: 18px;     /* FD4 · tarjeta de seccion                      */
+  --rail: 3px;             /* FD4 · barra de color al canto de la tarjeta   */
+
+  /* ------------------------------------------------- rejillas de tiempo --
+     La altura de una hora no es decoracion: decide si una clase de 90 min
+     cabe con su aula escrita dentro.                                      */
+
+  --hour-row: 56px;        /* riel de horas en telefono                     */
+  --hour-row-desk: 48px;   /* riel de horas en escritorio (7 columnas)      */
+  --month-cell: 52px;      /* celda de la rejilla de mes en telefono        */
+  --month-dot: 5px;        /* punto de entidad dentro de la celda           */
 
   /* -------------------------------------------------------------- motion --
      150-200ms. Solo para orientar en un cambio de contexto.               */
@@ -100,61 +151,77 @@
 
   /* ---------------------------------------------------- elevation (rara) --
      Solo para lo que de verdad flota. La separacion normal es espacio +
-     linea de 1px.                                                         */
+     linea de 1px. `--shadow-card` es la excepcion de FD4: dos sombras muy
+     abiertas y casi transparentes que despegan la tarjeta del fondo sin
+     que se vea una sombra. En oscuro se apaga entera: alli la tarjeta sube
+     por luz (--surface mas claro que --bg), no por sombra.                */
 
-  --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(28 25 23 / 0.22);
-  --shadow-float: 0 2px 4px -2px rgb(28 25 23 / 0.10), 0 8px 20px -8px rgb(28 25 23 / 0.16);
-  --shadow-fab:   0 4px 10px -4px rgb(28 25 23 / 0.28), 0 12px 28px -10px rgb(28 25 23 / 0.26);
+  --shadow-card:  0 1px 2px rgb(16 24 40 / 0.05), 0 10px 24px -16px rgb(16 24 40 / 0.22);
+  --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(16 24 40 / 0.22);
+  --shadow-float: 0 2px 4px -2px rgb(16 24 40 / 0.10), 0 8px 20px -8px rgb(16 24 40 / 0.16);
+  --shadow-fab:   0 4px 10px -4px rgb(16 24 40 / 0.28), 0 12px 28px -10px rgb(16 24 40 / 0.26);
+  --shadow-frame: 0 30px 70px -30px rgb(8 10 22 / 0.45);
 
   /* ================================================== color · CLARO =======
-     Neutros calidos (no azulados) y tres colores de entidad encima.       */
+     Neutros frios. `--desk` es el lienzo de fuera (solo escritorio), `--bg`
+     el fondo de la app, `--surface` la tarjeta.                           */
 
-  --bg: #FAF8F5;             /* fondo de la app                             */
-  --surface: #FFFFFF;        /* fila, tarjeta, hoja                         */
-  --surface-sunken: #F1EDE7; /* campo, bandeja, agrupador                   */
+  --desk: #E3E7EE;           /* fondo del escritorio, detras del panel      */
+  --bg: #EDF0F5;             /* fondo de la app                             */
+  --surface: #FFFFFF;        /* tarjeta, fila, hoja                         */
+  --surface-sunken: #E2E6EF; /* campo, bandeja, agrupador, bloque de clase  */
 
-  --line: #E4DFD6;           /* hairline 1px entre filas (decorativa)       */
-  --line-strong: #D3CCC0;    /* separador fuerte, borde de bloque           */
-  --line-control: #8E877C;   /* 3.35:1 sobre --bg · borde que SI identifica
+  --line: #E1E5ED;           /* hairline 1px entre filas (decorativa)       */
+  --line-strong: #CDD4E0;    /* separador fuerte, borde de bloque           */
+  --line-control: #79818F;   /* 4.0:1 sobre --bg · borde que SI identifica
                                 un control: casilla, campo, boton fantasma  */
 
-  --text: #1B1917;           /* 16.5:1 sobre --bg · 14.8:1 sobre los tintes */
-  --text-muted: #625B51;     /*  6.3:1 sobre --bg ·  5.7:1 sobre los tintes */
-  --text-faint: #6E675E;     /*  5.3:1 sobre --bg · lo minimo legible       */
-  --text-on-accent: #FFFFFF; /* 11.1:1 sobre --task                         */
+  --text: #14171C;           /* 15.7:1 sobre --bg · 14.3:1 sobre los tintes */
+  --text-muted: #59616F;     /*  5.5:1 sobre --bg ·  5.0:1 sobre los tintes */
+  --text-faint: #626B7B;     /*  4.7:1 sobre --bg · ver la nota de arriba   */
+  --text-on-accent: #EDF0F5; /*  9.7:1 sobre --task                         */
 
   /* --- TAREA · azul marino ---------------------------------------------
      Es tambien el acento del sistema (decision 65): accion primaria, foco,
      racha, "en curso". Si las materias son verdes, el verde ya no puede
      significar "esto se toca".                                            */
-  --task: #1E3A6F;           /* 10.5:1 sobre --bg · vale como texto de accion */
+  --task: #1E3A6F;           /*  9.7:1 sobre --bg · vale como texto de accion */
   --task-press: #16294F;     /* 14.3:1 sobre blanco                         */
-  --task-soft: #E7ECF6;      /* fondo tintado · --text encima mide 14.8:1   */
+  --task-soft: #E9EFF8;      /* fondo tintado · --text encima mide 14.3:1   */
 
   /* --- MATERIA · verde --------------------------------------------------
      Una materia es ausencia de tiempo disponible, no contenido (dec. 52).
      Por eso el verde vive casi siempre en su version suave: identifica,
      no compite.                                                           */
-  --class: #2F6B46;          /* 6.0:1 sobre --bg · barra, punto             */
-  --class-soft: #E4EFE8;     /* fondo del bloque de clase                   */
+  --class: #2F6B46;          /*  5.6:1 sobre --bg · barra, punto            */
+  --class-soft: #E8F1EB;     /* fondo del bloque de clase                   */
 
   /* --- REMINDER · ambar -------------------------------------------------
      El unico color que NUNCA puede ser texto. Banderin, punto del mes,
      barra y fondo de pildora; el titulo encima se queda en --text.        */
-  --rem: #B26B00;            /* 4.0:1 sobre --bg · indicador (>=3 exigido)  */
-  --rem-soft: #FBEBCD;       /* fondo de pildora · --text encima 14.9:1     */
+  --rem: #B26B00;            /*  3.7:1 sobre --bg · indicador (>=3 exigido) */
+  --rem-soft: #FAF0DE;       /* fondo de pildora · --text encima 14.1:1     */
 
-  /* Alias de compatibilidad: el acento ES el azul de tareas.              */
+  /* Alias de compatibilidad. Los de la izquierda son los nombres con que
+     FD4 publico sus tokens; los de la derecha, los que `base.css` ya usa.
+     Existen los dos para que ni el diseno ni el codigo tengan que mentir. */
+  --entity-task: var(--task);
+  --entity-subject: var(--class);
+  --entity-reminder: var(--rem);
+  --tint-task: var(--task-soft);
+  --tint-subject: var(--class-soft);
+  --tint-reminder: var(--rem-soft);
+
   --accent: var(--task);
   --accent-press: var(--task-press);
   --accent-soft: var(--task-soft);
   --surface-class: var(--class-soft);
 
   --focus-ring: #1E3A6F;
-  --scrim: rgb(27 25 23 / 0.32);
+  --scrim: rgb(16 19 28 / 0.32);
 
   /* Pantalla de bloqueo de iOS (la notificacion). No es cromo de la app.  */
-  --lock-bg: #17130F;
+  --lock-bg: #0B0D12;
   --lock-material: rgb(255 255 255 / 0.13);
   --lock-material-line: rgb(255 255 255 / 0.10);
   --lock-text: #FFFFFF;
@@ -163,72 +230,80 @@
 
 /* ================================================== color · OSCURO =======
    Autorizado, no derivado. El uso nocturno (notificacion de cierre del dia)
-   es real, asi que el negro es calido y las superficies suben por luz, no
-   por sombra. Los tres colores de entidad se aclaran: en oscuro un azul
-   marino literal seria invisible.                                         */
+   es real. En FD4 el oscuro es azulado y muy hondo, y la tarjeta SUBE: la
+   superficie es mas clara que el fondo y la sombra se apaga entera. Los
+   tres colores de entidad se aclaran: en oscuro un azul marino literal
+   seria invisible.                                                        */
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121110;
-    --surface: #1B1917;
-    --surface-sunken: #0C0B0A;
+    --desk: #08090C;
+    --bg: #0E1116;
+    --surface: #1A1F28;
+    --surface-sunken: #12161C;
 
-    --line: #2C2825;
-    --line-strong: #3D3833;
-    --line-control: #736C63;   /* 3.6:1 sobre --bg */
+    --line: #272E3A;
+    --line-strong: #39424F;
+    --line-control: #7E8797;   /* 5.2:1 sobre --bg */
 
-    --text: #F3F0EA;           /* 16.6:1 sobre --bg */
-    --text-muted: #A79F93;     /*  7.2:1 sobre --bg */
-    --text-faint: #8C8478;     /*  5.1:1 sobre --bg */
-    --text-on-accent: #0B1220; /*  9.0:1 sobre --task */
+    --text: #F1F3F8;           /* 16.9:1 sobre --bg */
+    --text-muted: #A3ACBC;     /*  8.3:1 sobre --bg */
+    --text-faint: #7B8495;     /*  5.0:1 sobre --bg · ver la nota de arriba */
+    --text-on-accent: #0E1116; /*  5.5:1 sobre --task */
 
-    --task: #93B4F2;           /*  9.0:1 sobre --bg */
-    --task-press: #AAC6F7;
-    --task-soft: #18243D;      /* --text encima: 13.6:1 */
+    --task: #5B8BD0;           /*  5.5:1 sobre --bg */
+    --task-press: #7BA4E0;
+    --task-soft: #1B2634;      /* --text encima: 13.8:1 */
 
-    --class: #79C296;          /*  9.0:1 sobre --bg */
-    --class-soft: #15271C;     /* --text encima: 13.8:1 */
+    --class: #5CA97A;          /*  7.5:1 sobre --bg */
+    --class-soft: #17271D;     /* --text encima: 15.0:1 */
 
-    --rem: #E3B268;            /*  9.7:1 sobre --bg */
-    --rem-soft: #2E2412;       /* --text encima: 13.4:1 */
+    --rem: #D79A33;            /*  8.6:1 sobre --bg */
+    --rem-soft: #2A2115;       /* --text encima: 14.6:1 */
 
-    --focus-ring: #93B4F2;
+    --focus-ring: #5B8BD0;
     --scrim: rgb(0 0 0 / 0.56);
 
+    /* La tarjeta ya no proyecta: se distingue porque es mas clara. */
+    --shadow-card: none;
     --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(0 0 0 / 0.6);
     --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
     --shadow-fab:   0 4px 10px -4px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
+    --shadow-frame: 0 30px 70px -30px rgb(0 0 0 / 0.7);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #121110;
-  --surface: #1B1917;
-  --surface-sunken: #0C0B0A;
+  --desk: #08090C;
+  --bg: #0E1116;
+  --surface: #1A1F28;
+  --surface-sunken: #12161C;
 
-  --line: #2C2825;
-  --line-strong: #3D3833;
-  --line-control: #736C63;
+  --line: #272E3A;
+  --line-strong: #39424F;
+  --line-control: #7E8797;
 
-  --text: #F3F0EA;
-  --text-muted: #A79F93;
-  --text-faint: #8C8478;
-  --text-on-accent: #0B1220;
+  --text: #F1F3F8;
+  --text-muted: #A3ACBC;
+  --text-faint: #7B8495;
+  --text-on-accent: #0E1116;
 
-  --task: #93B4F2;
-  --task-press: #AAC6F7;
-  --task-soft: #18243D;
+  --task: #5B8BD0;
+  --task-press: #7BA4E0;
+  --task-soft: #1B2634;
 
-  --class: #79C296;
-  --class-soft: #15271C;
+  --class: #5CA97A;
+  --class-soft: #17271D;
 
-  --rem: #E3B268;
-  --rem-soft: #2E2412;
+  --rem: #D79A33;
+  --rem-soft: #2A2115;
 
-  --focus-ring: #93B4F2;
+  --focus-ring: #5B8BD0;
   --scrim: rgb(0 0 0 / 0.56);
 
+  --shadow-card: none;
   --shadow-sheet: 0 -1px 0 var(--line), 0 -12px 32px -12px rgb(0 0 0 / 0.6);
   --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
   --shadow-fab:   0 4px 10px -4px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
+  --shadow-frame: 0 30px 70px -30px rgb(0 0 0 / 0.7);
 }

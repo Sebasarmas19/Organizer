@@ -117,6 +117,122 @@ body.comp {
 
 .gutter { padding-inline: var(--gutter); }
 
+/* ====================================================== estructura (FD4) ==
+   Tres clases y un truco. Lo que faltaba no era color ni tipografia: era
+   que las secciones tuvieran un limite visible.
+
+     .pane    el area de trabajo. Nunca mas ancha que --pane, centrada.
+     .stack   el ritmo vertical. Separa por hueco, no por linea.
+     .card    la superficie. Un borde, un radio, y aire dentro.
+
+   El truco: .card re-inflexiona --row-pad-x. Una lista de .row que ya
+   existia entra en una tarjeta sin tocarle una linea de HTML, porque las
+   filas leen su aire lateral de esa variable en vez de --gutter. Eso es lo
+   que permite meter FD4 encima de FD3 sin rehacer los 15 comps.          */
+
+.pane {
+  width: 100%;
+  max-width: var(--pane);
+  margin-inline: auto;
+}
+
+/* El ancho de un parrafo largo. A 1900px una linea de texto se vuelve
+   ilegible porque el ojo pierde el renglon al volver a la izquierda.     */
+.measure { max-width: var(--measure); }
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+}
+.stack--loose { gap: var(--section-gap); }
+
+.card {
+  --row-pad-x: var(--card-pad);
+  margin-inline: var(--gutter);
+  background: var(--card);
+  border: 1px solid var(--card-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;      /* el radio recorta la primera y la ultima fila */
+}
+
+/* La tarjeta hundida: para lo que se resuelve y desaparece (el triage de
+   "De ayer"). No es una seccion permanente, asi que no compite con las que
+   si lo son.                                                             */
+.card--sunken {
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+
+/* El encabezado deja de flotar: pasa a ser el techo de la caja. Y sube de
+   --text-label gris a --text-section en --text, porque ahora tiene algo
+   debajo que encabezar de verdad.                                        */
+.card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--card-pad) var(--card-pad) var(--space-2);
+}
+.card__title {
+  font-size: var(--text-section);
+  line-height: var(--lh-section);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+/* La accion de la derecha del encabezado: "Ver todo", "Editar". */
+.card__action {
+  font-size: var(--text-meta);
+  line-height: var(--lh-meta);
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Contenido suelto dentro de la tarjeta (un parrafo, un formulario). Las
+   listas de .row no lo necesitan: ya traen su propio aire.               */
+.card__body { padding: var(--card-pad); }
+.card__head + .card__body { padding-top: 0; }
+
+/* El pie: el enlace de desborde. Va separado por linea porque es una
+   accion sobre la lista, no un elemento mas de la lista.                 */
+.card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding-inline: var(--card-pad);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+/* Una lista pegada al borde de la tarjeta necesita su propio aire arriba y
+   abajo; si no, la primera fila toca el canto redondeado.                */
+.card__list { padding-block: var(--space-1); margin: 0; list-style: none; }
+.card__head + .card__list { padding-top: 0; }
+
+/* ------------------------------------------------- escritorio: el marco --
+   Barra lateral fija mas area de trabajo. El escritorio es solo para
+   planificar (regla 4 del producto), asi que aqui cabe densidad.         */
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    grid-template-columns: var(--sidebar) minmax(0, 1fr);
+    min-height: 100%;
+  }
+  .shell__aside {
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .shell__main { min-width: 0; padding-inline: var(--gutter-wide); }
+  .shell__main .card { margin-inline: 0; }
+}
+
 /* ------------------------------------------------------------ encabezados */
 
 .pagehead {
@@ -132,7 +248,7 @@ body.comp {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: 0 var(--gutter) var(--space-2);
+  padding: 0 var(--row-pad-x) var(--space-2);
   font-size: var(--text-label);
   line-height: var(--lh-label);
   letter-spacing: var(--tracking-label);
@@ -147,7 +263,7 @@ body.comp {
   align-items: flex-start;
   gap: var(--space-3);
   min-height: 56px;
-  padding: var(--space-3) var(--gutter);
+  padding: var(--space-3) var(--row-pad-x);
   background: transparent;
   transition: background var(--dur-fast) var(--ease-out);
 }
