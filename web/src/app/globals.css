@@ -13,12 +13,18 @@
                        eso es lo que queremos, porque `body` y los controles
                        ya estan resueltos por el sistema de diseno.
      4. web.css      — lo poco que solo existe en la app y no en los comps.
-     5. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
+     5. fd4.css      — la capa de FD4 (Claude Design). Va LA ULTIMA a
+                       proposito: donde FD4 y FD3 se pisan, manda FD4, que es
+                       el diseno vigente. `base.css` sigue viva porque todavia
+                       sostiene Horario, Ajustes, Atajo y Entrar.
+     6. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
    ========================================================================= */
 
 @import "tailwindcss";
 @import "../styles/tokens.css";
 @import "../styles/base.css";
 @import "../styles/web.css";
+@import "../styles/fd4.css";
+@import "../styles/fd4-desk.css";
 
 @config "../../tailwind.config.js";
