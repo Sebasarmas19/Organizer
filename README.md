@@ -121,6 +121,31 @@ Abre en tu navegador:
 
 ---
 
+## 🔐 Autenticación y Colaboradores
+
+La aplicación utiliza **Supabase Auth** con `@supabase/ssr` y maneja dos métodos en `/entrar`:
+
+1. **Google OAuth (Método principal)**:
+   - Inicio de sesión con 1 toque.
+   - Al tocar *"Entrar con Google"*, el navegador viaja a Google, valida la cuenta y redirige a `/auth/callback`.
+   - El servidor intercambia el código por cookies de sesión y crea automáticamente su perfil en `profiles` con la zona horaria predeterminada (`America/Caracas`).
+2. **Enlace al correo / Magic Link (Salida de emergencia)**:
+   - Si Google falla o no está disponible, el usuario ingresa su correo y recibe un enlace de un solo uso válido por 1 hora.
+
+### ¿Cómo entra un compañero de equipo?
+
+- **¿Puede entrar con su propio correo o cuenta de Google?**
+  **Sí, totalmente.** Supabase registrará su cuenta en `auth.users` y creará su fila en `profiles`.
+- **Aislamiento total de datos (Row Level Security - RLS):**
+  La base de datos tiene RLS activo en **todas** las tablas (`items`, `blocks`, `contexts`, `resources`, etc.). Cada consulta filtra estrictamente por `auth.uid()`.
+  Esto significa que **tu compañero NUNCA verá tus tareas, materias ni notas**, y tú no verás las suyas, incluso si ambos comparten la misma instancia de Supabase en desarrollo.
+- **Opción de base de datos propia:**
+  Si el colaborador prefiere trabajar en un entorno totalmente aislado, solo necesita crear un proyecto gratis en Supabase, ejecutar [`docs/schema.sql`](docs/schema.sql) en el SQL Editor y colocar sus propias variables en `web/.env.local`.
+- **Requisito para que no le falle el login local:**
+  Asegurarse de que el puerto o la IP desde donde corre la app esté agregada en **Redirect URLs** en el panel de Supabase (por ejemplo, `http://localhost:3000/**`).
+
+---
+
 ## 📋 Comandos Disponibles
 
 Desde la raíz del repositorio puedes ejecutar:
