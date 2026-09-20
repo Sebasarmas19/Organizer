@@ -1,0 +1,15 @@
+# Organizer — Instrucciones de Contexto para Agentes de IA
+
+Antes de sugerir o generar código en este repositorio, lee los siguientes documentos de referencia:
+1. `AGENTS.md` y `docs/00-problema.md`: Diagnóstico fundamental del problema y filosofía del producto.
+2. `docs/01-decisiones.md`: Registro de 78 decisiones técnicas y de producto ya cerradas. No reabrir ni cambiar estas decisiones.
+3. `docs/02-arquitectura.md`: Arquitectura técnica, restricciones de iOS y flujo de Web Push.
+4. `docs/schema.sql`: Esquema de base de datos con políticas RLS.
+
+## Reglas Innegociables
+- **Push, no pull**: El usuario no entra por iniciativa propia. La notificación ES el producto.
+- **Captura sin fricción**: Ningún campo obligatorio en captura rápida.
+- **Móvil primero**: Diseñado para iPhone (Safari PWA). Mínimo táctil estricto de 44px (`.btn`, `.tapicon`).
+- **Idioma**: La interfaz y textos visibles van en español; el código e identificadores en inglés.
+- **Diseño**: `app/tokens.css` es la fuente de verdad del sistema de tokens.
+- **Verificación**: Toda entrega debe superar `npm run verify` limpiamente.
