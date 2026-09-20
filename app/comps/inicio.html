@@ -14,28 +14,30 @@
 </head>
 
 <!--
-  INICIO · con contenido            (FD2 · decisiones 55, 56, 47-51)
+  INICIO                         (FD4 · estructura · decisiones 22, 47-51, 74)
   ---------------------------------------------------------------------------
-  ORDEN NUEVO: Hoy · De ayer · Esta semana · racha.
-  Lo primero que ves tiene que ser lo que PUEDES HACER AHORA, no la deuda.
-  En FD la pantalla abria con "De ayer": abria con la factura. Corregido.
+  QUE CAMBIA EN FD4, Y POR QUE
 
-  La racha baja al final. Es informacion agradable, no es a lo que vienes, y
-  arriba la convertia en un marcador.
+  El contenido y el orden son los de FD3 y no se tocan: Hoy, Esta semana,
+  De ayer, con la racha en el encabezado (decision 74).
 
-  TRIAGE (decision 56), ahora con logica definida:
-    Hoy       -> sale de "de ayer" y SUBE a la lista de Hoy, en el sitio
-    Otro dia  -> abre el selector (comps/otro-dia.html)
-    Quitar    -> VUELVE al modulo Tareas. Nunca se borra.
+  Lo que cambia es que las tres secciones ahora VIVEN DENTRO DE UNA CAJA.
+  El usuario abrio la app y dijo: "no tiene un orden, todo esta del lado
+  izquierdo y no se entienden las secciones". El diagnostico exacto es que
+  un encabezado gris pequeno encima de filas a sangre no encabeza nada,
+  porque no hay nada debajo con un limite. Ahora lo hay:
 
-  OBJETIVOS TACTILES: los tres botones de triage estaban a 40px y
-  "Se me corrio el dia" a 32. Ahora los cuatro miden 44. Para que siguiera
-  cabiendo sin scroll salio CONTENIDO, no tamano: "Esta semana" pasa de dos
-  lineas a un reminder, que es ademas el unico que importa hoy.
+    - cada seccion es una .card con borde, radio y aire dentro
+    - el titulo pasa de etiqueta gris de 13px a titulo de 20px en --text,
+      porque ya es el techo de algo
+    - las secciones se separan por hueco (--section-gap), no por una linea
+    - el enlace de desborde baja a .card__foot: es una accion SOBRE la
+      lista, no un elemento mas de la lista
 
-  REMINDERS (decision 47): "Esta semana" ya no son tareas con fecha, son
-  reminders. No llevan casilla porque no se completan (decision 49); llevan
-  banderin y su estado de preparacion, que es el dato que ninguna app da.
+  LO QUE NO CAMBIA, Y NO VA A CAMBIAR
+  Ningun contador. Las referencias que el usuario paso estan llenas de
+  "31% completado" y "tienes 3 tareas hoy". Eso no entra (decision 22): es
+  verdad, y es exactamente el dato que le hace cerrar la app.
 -->
 
 <body class="comp">
@@ -44,138 +46,139 @@
 
   <main class="screen screen--fixed flex flex-col">
 
-    <header class="pagehead" style="padding-bottom:var(--space-2)">
+    <header class="pagehead" style="padding-bottom:var(--space-3)">
       <div>
         <h1 class="t-title">Jueves 17</h1>
         <p class="t-meta c-muted">septiembre · semana 1</p>
       </div>
 
-      <!-- LA RACHA, ahora arriba y junto a la fecha. Va en una pastilla de
-           azul suave y NO en texto azul: el color envuelve, no pinta
-           (decisión 63). Y sigue siendo una pastilla pequeña, en tamaño de
-           etiqueta, sin llama y sin número grande — la racha informa, no
-           puntúa. Si un día se rompe, baja a cero sin decir nada. -->
+      <!-- La racha en pastilla de azul suave, no en texto azul: el color
+           envuelve, no pinta (decision 63). Tamano de etiqueta, sin llama y
+           sin numero grande — informa, no puntua. -->
       <span class="streak num">12 días</span>
     </header>
 
-    <!-- 1 · HOY -------------------------------------------------------------
-         Primero. Tareas no fijas del dia (decision 35): las materias viven en
-         el calendario y no ocupan sitio aqui. -->
-    <section aria-labelledby="h-hoy">
-      <!-- "Se me corrió el día" ya no está (decisión 72). No se sustituye
-           por nada: el balance del día lo hacen el repaso de la noche y el
-           triage de "De ayer", que es donde el usuario de verdad mira. -->
-      <div class="sectionhead" style="padding-bottom:0">
-        <h2 id="h-hoy">Hoy</h2>
-      </div>
+    <div class="stack stack--loose">
 
-      <ul class="list-none m-0 p-0">
-        <li class="row row--done">
-          <button class="check" role="checkbox" aria-checked="true" aria-label="Leer el paper de Anthropic, cumplido">
-            <span class="ico" data-icon="check"></span>
-          </button>
-          <div class="row__body">
-            <p class="row__title">Leer el paper de Anthropic</p>
-            <p class="row__meta"><span class="num">9:00</span><span class="sep">·</span>Cursos</p>
-          </div>
-        </li>
-
-        <li class="row row--now">
-          <button class="check" role="checkbox" aria-checked="false" aria-label="Migrar el schema a Supabase, marcar cumplido">
-            <span class="ico" data-icon="check"></span>
-          </button>
-          <div class="row__body">
-            <p class="row__title">Migrar el schema a Supabase</p>
-            <p class="row__meta"><span class="num font-medium">15:00 – 17:00</span><span class="sep">·</span>
-              <span class="ico rem__flag" data-icon="flag" style="width:13px;height:13px;margin:0"></span>Avance de IA</p>
-          </div>
-        </li>
-
-        <!-- Y la de al lado no tiene ningún reminder, y se ve exactamente
-             igual de importante (decisión 51). El banderín informa; no crea
-             una segunda división.
-
-             AQUÍ ESTÁ EL RECORTE. Subir los cuatro controles a 44px dejó la
-             pantalla 16px por encima del límite. Salió esta fila, la cuarta
-             tarea del día, y no el tamaño de ningún botón. Con TDAH tres
-             cosas visibles son mejores que cuatro apretadas, y la que falta
-             está a un toque en "El resto está en Tareas". -->
-        <li class="row">
-          <button class="check" role="checkbox" aria-checked="false" aria-label="Comprar cuadernos, marcar cumplido">
-            <span class="ico" data-icon="check"></span>
-          </button>
-          <div class="row__body">
-            <p class="row__title">Comprar cuadernos</p>
-            <p class="row__meta">Personal</p>
-          </div>
-        </li>
-      </ul>
-
-      <!-- Desborde. Sin numero: un contador seria deuda acumulada. -->
-      <a href="tareas.html" class="flex items-center justify-between gutter t-meta c-muted no-underline" style="min-height:var(--tap-min)">
-        El resto está en Tareas
-        <span class="ico ico--sm c-faint" data-icon="chevron-right"></span>
-      </a>
-    </section>
-
-    <!-- 2 · ESTA SEMANA -----------------------------------------------------
-         Reminders, no tareas. Sin casilla: un parcial no se marca, ocurre.
-         Lo que se muestra no es cuándo es, es si te estás preparando. -->
-    <section class="mt-3" aria-labelledby="h-semana">
-      <div class="sectionhead" style="padding-bottom:var(--space-1)">
-        <h2 id="h-semana">Esta semana</h2>
-      </div>
-
-      <a href="reminder-detalle.html" class="rem no-underline" style="min-height:var(--tap-min);padding-block:var(--space-1);color:var(--text)">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <span class="rem__body">
-          <span class="rem__title" style="font-size:var(--text-meta)">Avance de IA · hoy 23:59</span>
-          <span class="prep">
-            <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
-            te queda migrar el schema
-          </span>
-        </span>
-      </a>
-
-      <!-- El segundo cabe porque "Se me corrió el día" dejó su sitio libre
-           (decisión 72). Y este es el caso bueno: preparado, así que no va a
-           encabezar ninguna notificación (decisión 61). -->
-      <a href="reminder-detalle.html" class="rem no-underline" style="min-height:var(--tap-min);padding-block:var(--space-1);color:var(--text)">
-        <span class="ico ico--sm rem__flag" data-icon="flag"></span>
-        <span class="rem__body">
-          <span class="rem__title" style="font-size:var(--text-meta)">Parcial de Cálculo · viernes 18</span>
-          <span class="prep">
-            <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
-            todo listo
-          </span>
-        </span>
-      </a>
-    </section>
-
-    <!-- 3 · DE AYER ---------------------------------------------------------
-         ÚLTIMO, y eso es el cambio de FD3. Antes iba en segundo lugar;
-         ahora cierra la pantalla. Lo que puedes hacer ahora va arriba, lo que
-         se te viene encima en medio, y lo que no cumpliste al final —donde
-         se ve, se resuelve de un toque y no es lo primero que lees al abrir.
-         Nunca rojo, nunca reproche (decision 22). -->
-    <section class="mt-auto" aria-labelledby="h-ayer">
-      <div class="sectionhead">
-        <h2 id="h-ayer">De ayer</h2>
-      </div>
-
-      <div class="mx-gutter rounded bg-sunken px-4 py-3">
-        <p class="t-body font-medium">Terminar el modelo de datos</p>
-        <p class="t-meta c-muted num mt-0.5">miércoles · 7:00 pm</p>
-
-        <div class="triage mt-3" role="group" aria-label="Qué hacer con: Terminar el modelo de datos">
-          <button class="btn btn--primary">Hoy</button>
-          <button class="btn">Otro día</button>
-          <button class="btn">Quitar</button>
+      <!-- 1 · HOY ------------------------------------------------------------
+           Primero. Tareas no fijas del dia (decision 35): las materias viven
+           en el calendario y no ocupan sitio aqui. -->
+      <section class="card" aria-labelledby="h-hoy">
+        <div class="card__head">
+          <h2 class="card__title" id="h-hoy">Hoy</h2>
         </div>
-      </div>
 
-      <p class="t-label c-faint gutter mt-2">Quitar no borra: vuelve a Tareas.</p>
-    </section>
+        <ul class="card__list">
+          <li class="row row--done">
+            <button class="check" role="checkbox" aria-checked="true" aria-label="Leer el paper de Anthropic, cumplido">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Leer el paper de Anthropic</p>
+              <p class="row__meta"><span class="num">9:00</span><span class="sep">·</span>Cursos</p>
+            </div>
+          </li>
+
+          <li class="row row--now">
+            <button class="check" role="checkbox" aria-checked="false" aria-label="Migrar el schema a Supabase, marcar cumplido">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Migrar el schema a Supabase</p>
+              <p class="row__meta"><span class="num font-medium">15:00 – 17:00</span><span class="sep">·</span>
+                <span class="ico rem__flag" data-icon="flag" style="width:13px;height:13px;margin:0"></span>Avance de IA</p>
+            </div>
+          </li>
+
+          <!-- Y la de al lado no tiene ningun reminder, y se ve exactamente
+               igual de importante (decision 51). El banderin informa; no crea
+               una segunda division. -->
+          <li class="row">
+            <button class="check" role="checkbox" aria-checked="false" aria-label="Comprar cuadernos, marcar cumplido">
+              <span class="ico" data-icon="check"></span>
+            </button>
+            <div class="row__body">
+              <p class="row__title">Comprar cuadernos</p>
+              <p class="row__meta">Personal</p>
+            </div>
+          </li>
+        </ul>
+
+        <!-- Desborde. Sin numero: un contador seria deuda con otro nombre. -->
+        <a href="tareas.html" class="card__foot">
+          El resto está en Tareas
+          <span class="ico ico--sm c-faint" data-icon="chevron-right"></span>
+        </a>
+      </section>
+
+      <!-- 2 · ESTA SEMANA ----------------------------------------------------
+           Reminders, no tareas. Sin casilla: un parcial no se marca, ocurre.
+           Lo que se muestra no es cuando es, es si te estas preparando. -->
+      <section class="card" aria-labelledby="h-semana">
+        <div class="card__head">
+          <h2 class="card__title" id="h-semana">Esta semana</h2>
+        </div>
+
+        <div class="card__list">
+          <a href="reminder-detalle.html" class="rem no-underline"
+             style="min-height:var(--tap-min);padding-inline:var(--card-pad);color:var(--text)">
+            <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+            <span class="rem__body">
+              <span class="rem__title" style="font-size:var(--text-meta)">Avance de IA · hoy 23:59</span>
+              <span class="prep">
+                <span class="prep__bar"><i class="on"></i><i class="on"></i><i></i></span>
+                te queda migrar el schema
+              </span>
+            </span>
+          </a>
+
+          <!-- El caso bueno: preparado, asi que no va a encabezar ninguna
+               notificacion (decision 61). -->
+          <a href="reminder-detalle.html" class="rem no-underline"
+             style="min-height:var(--tap-min);padding-inline:var(--card-pad);color:var(--text)">
+            <span class="ico ico--sm rem__flag" data-icon="flag"></span>
+            <span class="rem__body">
+              <span class="rem__title" style="font-size:var(--text-meta)">Parcial de Cálculo · viernes 18</span>
+              <span class="prep">
+                <span class="prep__bar"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+                todo listo
+              </span>
+            </span>
+          </a>
+        </div>
+      </section>
+
+      <!-- 3 · DE AYER --------------------------------------------------------
+           Ultimo (decision 74). Lo que puedes hacer ahora va arriba, lo que
+           se te viene encima en medio, y lo que no cumpliste al final: donde
+           se ve, se resuelve de un toque, y no es lo primero que lees al
+           abrir. Nunca rojo, nunca reproche (decision 22).
+
+           Va en .card--sunken y no en .card: es algo que se resuelve y
+           desaparece, no una seccion permanente. La superficie hundida lo
+           dice sin escribirlo. -->
+      <section class="mt-auto" aria-labelledby="h-ayer">
+        <div class="card card--sunken">
+          <div class="card__head">
+            <h2 class="card__title" id="h-ayer">De ayer</h2>
+          </div>
+
+          <div class="card__body">
+            <p class="t-body font-medium">Terminar el modelo de datos</p>
+            <p class="t-meta c-muted num mt-0.5">miércoles · 7:00 pm</p>
+
+            <div class="triage mt-3" role="group" aria-label="Qué hacer con: Terminar el modelo de datos">
+              <button class="btn btn--primary">Hoy</button>
+              <button class="btn">Otro día</button>
+              <button class="btn">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="t-label c-faint gutter mt-2">Quitar no borra: vuelve a Tareas.</p>
+      </section>
+
+    </div>
 
   </main>
 
