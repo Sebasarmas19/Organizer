@@ -827,6 +827,12 @@
   gap: 5px;
   color: var(--text);
   text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
 }
 
 .fd-cell__num {
@@ -855,7 +861,16 @@
 
 .fd-cell[data-today="true"] .fd-cell__num { font-weight: var(--weight-semibold); }
 
-.fd-cell[data-selected="true"] { background: var(--surface-sunken); }
+.fd-cell[data-selected="true"] {
+  background: var(--surface-sunken);
+  border-color: var(--line-strong);
+}
+
+.fd-cell[data-today="true"][data-selected="true"] {
+  background: var(--tint-task);
+  border-color: var(--task);
+  box-shadow: 0 0 0 1px var(--task);
+}
 
 /* Leyenda. Existe porque tres colores de punto sin nombre son tres colores
    de punto, no un lenguaje. */
@@ -872,6 +887,123 @@
   gap: 8px;
   font-size: var(--fd-xs);
   color: var(--text-muted);
+}
+
+/* Vista previa del día seleccionado en la vista Mes */
+.fd-dayprev {
+  padding: 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-label);
+}
+
+.fd-dayprev__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fd-dayprev__titlegroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fd-dayprev__title {
+  margin: 0;
+  font-size: var(--fd-lead);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-dayprev__hint {
+  flex: none;
+  font-size: var(--fd-tiny);
+  font-weight: 600;
+  color: var(--task);
+  background: var(--task-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fd-dayprev__more {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--fd-xs);
+  font-weight: var(--weight-medium);
+  color: var(--task);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd-dayprev__more:hover {
+  background: var(--task-soft);
+}
+
+.fd-dayprev__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fd-monthrow {
+  border: 1px solid var(--line);
+  padding: 11px 14px;
+  text-align: left;
+  border-radius: 14px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd-monthrow:hover {
+  background: var(--surface-sunken);
+}
+
+.fd-monthrow--reminder {
+  border-left: var(--rail) solid var(--rem);
+}
+
+.fd-monthrow--task {
+  border-left: var(--rail) solid var(--task);
+}
+
+.fd-monthrow--subject {
+  border-left: var(--rail) solid var(--class);
+}
+
+.fd-monthrow__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fd-monthrow__when {
+  flex: none;
+  font-size: var(--fd-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Lista de reminders del mes, debajo de la rejilla. */

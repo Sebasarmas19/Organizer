@@ -115,25 +115,37 @@ export type MonthCell = {
   dots: Entity[];
 };
 
+export type MonthPreviewItem = {
+  id: string;
+  title: string;
+  kind: Entity;
+  hora?: string;
+};
+
+export type MonthDayPreview = {
+  dateStr: string;
+  label: string;
+  hint: string;
+  events: MonthPreviewItem[];
+};
+
 export type Fd4MonthData = {
   year: number;
   month: number;
   /** "Septiembre 2026" */
   title: string;
+  selectedStr: string;
   cells: MonthCell[];
+  previews: Record<string, MonthDayPreview>;
   reminders: { id: string; title: string; when: string; dateStr: string }[];
 };
 
 /**
- * La rejilla del mes con sus puntos.
+ * La rejilla del mes con sus puntos y vista previa por dia.
  *
- * EL PUNTO DICE QUE HAY ALGO; EL TEXTO DE ABAJO DICE QUE ES. Por eso hay un
- * maximo de tres puntos por dia y ningun numero: poner "4" en una celda
- * convierte el calendario en un tablero de metricas, y lo que se necesita
- * saber de un vistazo es si el jueves esta libre, no cuanto pesa.
- *
- * El orden de los puntos es siempre reminder, tarea, materia. Fijo, para que
- * la posicion signifique algo y el ojo no tenga que leer color por color.
+ * EL PUNTO DICE QUE HAY ALGO; LA VISTA PREVIA DICE QUE ES.
+ * Al tocar cualquier dia de la cuadricula, la vista previa se actualiza
+ * instantaneamente en el cliente sin recargar la pagina.
  */
 export async function getMonthView(
   supabase: SupabaseClient<Database>,
@@ -157,20 +169,21 @@ export async function getMonthView(
   const [blocksRes, itemsRes, remindersRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('starts_at, source')
+      .select('id, title, starts_at, ends_at, source')
       .eq('user_id', userId)
       .gte('starts_at', dayStartUTC(firstStr))
-      .lte('starts_at', dayEndUTC(lastStr)),
+      .lte('starts_at', dayEndUTC(lastStr))
+      .order('starts_at', { ascending: true }),
     supabase
       .from('items')
-      .select('due_on')
+      .select('id, title, due_on')
       .eq('user_id', userId)
       .in('status', ['inbox', 'someday', 'planned'])
       .gte('due_on', firstStr)
       .lte('due_on', lastStr),
     supabase
       .from('reminders')
-      .select('*')
+      .select('id, title, occurs_on, occurs_at')
       .eq('user_id', userId)
       .gte('occurs_on', firstStr)
       .lte('occurs_on', lastStr)
@@ -205,17 +218,76 @@ export async function getMonthView(
     };
   });
 
+  /* Vistas previas de cada dia para interaccion instantanea sin navegacion */
+  const previews: Record<string, MonthDayPreview> = {};
+
+  for (const c of cellsRaw) {
+    const dStr = c.dateStr;
+    const dayReminders = (remindersRes.data ?? [])
+      .filter((r) => r.occurs_on === dStr)
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        kind: 'reminder' as Entity,
+        hora: r.occurs_at ? formatClock(r.occurs_at, timezone) : undefined,
+      }));
+
+    const dayBlocks = (blocksRes.data ?? [])
+      .filter((b) => localDay(b.starts_at, timezone) === dStr)
+      .map((b) => {
+        const start = formatClock(b.starts_at, timezone);
+        const end = b.ends_at ? formatClock(b.ends_at, timezone) : '';
+        return {
+          id: b.id,
+          title: b.title,
+          kind: (b.source === 'template' ? 'subject' : 'task') as Entity,
+          hora: end ? `${start} – ${end}` : start,
+        };
+      });
+
+    const blockTitles = new Set(dayBlocks.map((b) => b.title));
+    const dayTasks = (itemsRes.data ?? [])
+      .filter((t) => t.due_on === dStr && !blockTitles.has(t.title))
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        kind: 'task' as Entity,
+      }));
+
+    const events: MonthPreviewItem[] = [
+      ...dayReminders,
+      ...dayTasks,
+      ...dayBlocks,
+    ];
+
+    const hint =
+      dStr === todayStr
+        ? 'Hoy'
+        : dStr === addDays(todayStr, 1)
+          ? 'Mañana'
+          : dStr === addDays(todayStr, -1)
+            ? 'Ayer'
+            : '';
+
+    previews[dStr] = {
+      dateStr: dStr,
+      label: dayFullLabel(dStr),
+      hint,
+      events,
+    };
+  }
+
   /* La lista de abajo solo trae los reminders DEL MES, no los del desborde:
      es "Reminders del mes" y tiene que poder creerse. */
   const monthFirst = formatDateString(year, month, 1);
   const monthLast = formatDateString(year, month, getDaysInMonth(year, month));
 
-  const reminders = ((remindersRes.data ?? []) as Reminder[])
+  const reminders = ((remindersRes.data ?? []) as { id: string; title: string; occurs_on: string; occurs_at?: string | null }[])
     .filter((r) => r.occurs_on >= monthFirst && r.occurs_on <= monthLast)
     .map((r) => ({
       id: r.id,
       title: r.title,
-      when: formatWhen(r.occurs_on, r.occurs_at, timezone),
+      when: formatWhen(r.occurs_on, r.occurs_at ?? null, timezone),
       dateStr: r.occurs_on,
     }));
 
@@ -223,7 +295,9 @@ export async function getMonthView(
     year,
     month,
     title: `${MONTH_NAMES_CAP_ES[month - 1]} ${year}`,
+    selectedStr: selectedStr || todayStr,
     cells,
+    previews,
     reminders,
   };
 }
