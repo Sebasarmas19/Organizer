@@ -24,9 +24,11 @@
    llamarse Pendientes, porque ahora tambien contiene los recordatorios.
    ========================================================================= */
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TabIcon, PlusMark, type TabIconName } from './TabIcon';
+import { Spinner } from '@/components/Spinner';
 
 type Tab = {
   id: TabIconName;
@@ -57,6 +59,13 @@ export const TABS: Tab[] = [
 
 export function TabBar() {
   const pathname = usePathname();
+  const [pendingId, setPendingId] = useState<TabIconName | null>(null);
+  const [prevPath, setPrevPath] = useState(pathname);
+
+  if (prevPath !== pathname) {
+    setPrevPath(pathname);
+    setPendingId(null);
+  }
 
   const isCurrent = (tab: Tab) =>
     tab.match.some(
@@ -66,7 +75,13 @@ export function TabBar() {
   return (
     <nav className="fd-tabbar" aria-label="Secciones">
       {TABS.slice(0, 2).map((tab) => (
-        <TabLink key={tab.id} tab={tab} current={isCurrent(tab)} />
+        <TabLink
+          key={tab.id}
+          tab={tab}
+          current={isCurrent(tab)}
+          isPending={pendingId === tab.id}
+          onNavigate={() => setPendingId(tab.id)}
+        />
       ))}
 
       {/* Capturar. `aria-label` porque no hay texto visible, y el texto
@@ -79,16 +94,46 @@ export function TabBar() {
       </Link>
 
       {TABS.slice(2).map((tab) => (
-        <TabLink key={tab.id} tab={tab} current={isCurrent(tab)} />
+        <TabLink
+          key={tab.id}
+          tab={tab}
+          current={isCurrent(tab)}
+          isPending={pendingId === tab.id}
+          onNavigate={() => setPendingId(tab.id)}
+        />
       ))}
     </nav>
   );
 }
 
-function TabLink({ tab, current }: { tab: Tab; current: boolean }) {
+function TabLink({
+  tab,
+  current,
+  isPending,
+  onNavigate,
+}: {
+  tab: Tab;
+  current: boolean;
+  isPending: boolean;
+  onNavigate: () => void;
+}) {
+  const active = current || isPending;
   return (
-    <Link href={tab.href} className="fd-tab" aria-current={current ? 'page' : undefined}>
-      <TabIcon name={tab.id} />
+    <Link
+      href={tab.href}
+      className="fd-tab"
+      aria-current={active ? 'page' : undefined}
+      onClick={() => {
+        if (!current) onNavigate();
+      }}
+    >
+      {isPending ? (
+        <span style={{ height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Spinner size={16} />
+        </span>
+      ) : (
+        <TabIcon name={tab.id} />
+      )}
       <span className="fd-tab__label">{tab.label}</span>
     </Link>
   );

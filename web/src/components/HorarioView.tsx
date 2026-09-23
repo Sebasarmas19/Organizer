@@ -326,7 +326,7 @@ export function HorarioView({
         className="flex items-center justify-between gutter"
         style={{ paddingBlock: 'var(--space-2)' }}
       >
-        <Link href="/semana" className="taptext taptext--quiet t-meta no-underline" aria-label="Volver">
+        <Link href="/calendario" className="taptext taptext--quiet t-meta no-underline" aria-label="Volver">
           <Icon name="chevron-left" size="sm" />
           Volver
         </Link>
@@ -365,19 +365,21 @@ export function HorarioView({
       {/* Rango del semestre, una sola vez (decisión 54) */}
       <div className="gutter pb-4">
         <p className="sublabel">El semestre va de</p>
-        <div className="timepair">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <input
             type="date"
-            className="field"
+            className="field flex-1"
             value={activeFrom}
             onChange={(e) => setActiveFrom(e.target.value)}
+            aria-label="Fecha de inicio del semestre"
           />
-          <span className="c-faint">a</span>
+          <span className="c-faint text-center sm:px-1">a</span>
           <input
             type="date"
-            className="field"
+            className="field flex-1"
             value={activeUntil}
             onChange={(e) => setActiveUntil(e.target.value)}
+            aria-label="Fecha de fin del semestre"
           />
         </div>
       </div>
