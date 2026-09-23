@@ -96,6 +96,13 @@ export function dayLabel(dateStr: string): string {
   return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${day}`;
 }
 
+/** "Jueves 24 de septiembre" · el titulo completo de la vista de dia. */
+export function dayFullLabel(dateStr: string): string {
+  const { day, month } = parseDateString(dateStr);
+  const name = WEEKDAY_FULL_ES[getDayOfWeek(dateStr)];
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${day} de ${MONTH_NAMES_ES[month - 1]}`;
+}
+
 /* ================================================================== MES === */
 
 export type MonthCell = {
@@ -647,18 +654,18 @@ export async function getDayView(
     }
   }
 
-  const { month, year } = parseDateString(dateStr);
+  const { year } = parseDateString(dateStr);
   const sub = isToday
     ? `Hoy${nowLabel ? ` · ${nowLabel}` : ''}`
     : dateStr === addDays(todayStr, 1)
       ? 'Mañana'
       : dateStr === addDays(todayStr, -1)
         ? 'Ayer'
-        : `${MONTH_NAMES_CAP_ES[month - 1]} ${year}`;
+        : `${year}`;
 
   return {
     dateStr,
-    title: dayLabel(dateStr),
+    title: dayFullLabel(dateStr),
     sub,
     isToday,
     nowTop,
