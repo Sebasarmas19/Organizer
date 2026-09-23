@@ -67,16 +67,18 @@ export default async function CalendarioPage({
   } = await supabase.auth.getUser();
   if (!user) return <Setup />;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('timezone')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [params, profileRes] = await Promise.all([
+    searchParams,
+    supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', user.id)
+      .maybeSingle(),
+  ]);
 
-  const timezone = profile?.timezone ?? DEFAULT_TIMEZONE;
+  const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
   const todayStr = getTodayString(timezone);
 
-  const params = await searchParams;
   const view = safeView(params.v);
   const dateStr = safeDate(params.d, todayStr);
 

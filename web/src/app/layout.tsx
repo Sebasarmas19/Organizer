@@ -15,10 +15,12 @@
    iOS ademas lo ignora desde hace versiones.
    ========================================================================= */
 
+import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
+import { NavigationProgress } from '@/components/NavigationProgress';
 
 /* IBM Plex Sans es la tipografia de FD4. Se sirve desde el propio dominio
    (eso hace `next/font`), no desde Google: una PWA que arranca sin red tiene
@@ -88,6 +90,9 @@ export default function RootLayout({
         {/* No pinta nada: mantiene vivo el service worker que recibe las
             notificaciones. Ver el propio componente. */}
         <ServiceWorkerRegistrar />
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
       </body>
     </html>
