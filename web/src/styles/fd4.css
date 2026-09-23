@@ -1438,66 +1438,40 @@
   flex-shrink: 0;
 }
 
-/* Barra de progreso de navegación superior (0ms respuesta táctil) */
-.fd-nav-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  z-index: 10000;
-  background: transparent;
-  pointer-events: none;
-}
-
-.fd-nav-progress__bar {
-  height: 100%;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-  width: 0%;
-  animation: fd-nav-load 2s cubic-bezier(0.1, 0.5, 0.1, 1) forwards;
-}
-
-@keyframes fd-nav-load {
-  0% { width: 0%; }
-  25% { width: 45%; }
-  60% { width: 75%; }
-  100% { width: 92%; }
-}
-
-/* Indicador flotante sutil de carga al navegar */
+/* Indicador flotante de carga al navegar estilo iOS Dynamic Island */
 .fd-loading-pill {
   position: fixed;
-  top: max(14px, env(safe-area-inset-top));
+  top: max(18px, calc(env(safe-area-inset-top) + 10px));
   left: 50%;
   transform: translateX(-50%);
-  z-index: 9999;
+  z-index: 99999;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 10px;
+  padding: 8px 18px 8px 14px;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--line-strong);
-  box-shadow: var(--shadow-float);
-  color: var(--text-muted);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14), var(--shadow-float);
+  color: var(--text);
   font-size: var(--fd-tiny);
   font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
   pointer-events: none;
-  animation: fd-fade-in var(--dur-fast) var(--ease-out) forwards;
+  animation: fd-pill-in var(--dur-fast) var(--ease-out) forwards;
 }
 
-@keyframes fd-fade-in {
-  from { opacity: 0; transform: translate(-50%, -6px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+@keyframes fd-pill-in {
+  from { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
 }
 
 /* ============================================================ MOVIMIENTO OFF */
 
 @media (prefers-reduced-motion: reduce) {
-  .fd-app *,
-  .fd-app *::before,
-  .fd-app *::after {
+  .fd-app *:not(.fd-spin),
+  .fd-app *:not(.fd-spin)::before,
+  .fd-app *:not(.fd-spin)::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
