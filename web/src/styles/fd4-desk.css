@@ -414,25 +414,34 @@
     display: none;
   }
 
+  .fd-scroll--week {
+    padding-top: 0;
+  }
+
   .fd-weekgrid {
     display: block;
     max-width: var(--desk-max);
     margin-inline: auto;
   }
 
+  /* La cabecera de dias y la banda de lo sin hora se quedan pegadas arriba al
+     bajar por el riel. Al envolverse en un sticky opaco (z-index: 10), las
+     horas y bloques pasan limpiamente por debajo sin superponerse ni asomar. */
+  .fd-weekgrid__sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+  }
+
   .fd-weekgrid__head,
   .fd-weekgrid__allday {
     display: grid;
     grid-template-columns: var(--desk-rail) repeat(7, minmax(0, 1fr));
+    background: var(--bg);
   }
 
-  /* La cabecera de dias se queda pegada arriba al bajar por el riel: sin eso,
-     a las 19:00 ya no sabes que columna es el jueves. */
   .fd-weekgrid__head {
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    background: var(--bg);
     border-bottom: 1px solid var(--line);
   }
 
@@ -444,6 +453,7 @@
     padding: 8px 4px 10px;
     border-left: 1px solid var(--line);
     text-decoration: none;
+    background: var(--bg);
   }
 
   .fd-weekgrid__day:hover {
@@ -499,6 +509,7 @@
     padding: 0 8px 0 0;
     font-size: var(--fd-tiny);
     color: var(--text-faint);
+    background: var(--bg);
   }
 
   .fd-weekgrid__cell {
@@ -507,6 +518,7 @@
     gap: 3px;
     padding: 5px 4px;
     border-left: 1px solid var(--line);
+    background: var(--bg);
   }
 
   .fd-weekgrid__rem,

@@ -43,7 +43,7 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
         ))}
       </div>
 
-      <div className="fd-scroll">
+      <div className="fd-scroll fd-scroll--week">
         <div className="fd-daylist">
           {data.days.map((d) => (
             <Link
@@ -108,43 +108,45 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
             mismo HTML porque el servidor no sabe el ancho de la ventana, y
             dos listas de texto pesan mucho menos que dos viajes a la base.  */}
         <div className="fd-weekgrid">
-          <div className="fd-weekgrid__head">
-            <span className="fd-weekgrid__corner" />
-            {data.grid.map((d) => (
-              <Link
-                key={d.dateStr}
-                href={`/calendario?v=dia&d=${d.dateStr}`}
-                className="fd-weekgrid__day"
-                data-today={d.isToday ? 'true' : 'false'}
-                scroll={false}
-              >
-                <span className="fd-weekgrid__dow">{d.dow}</span>
-                <span className="fd-weekgrid__num">{d.dayNum}</span>
-              </Link>
-            ))}
-          </div>
+          <div className="fd-weekgrid__sticky">
+            <div className="fd-weekgrid__head">
+              <span className="fd-weekgrid__corner" />
+              {data.grid.map((d) => (
+                <Link
+                  key={d.dateStr}
+                  href={`/calendario?v=dia&d=${d.dateStr}`}
+                  className="fd-weekgrid__day"
+                  data-today={d.isToday ? 'true' : 'false'}
+                  scroll={false}
+                >
+                  <span className="fd-weekgrid__dow">{d.dow}</span>
+                  <span className="fd-weekgrid__num">{d.dayNum}</span>
+                </Link>
+              ))}
+            </div>
 
-          {/* Lo que tiene fecha pero no hora vive fuera del riel. Colocarlo a
-              una hora inventada seria afirmar algo que nadie dijo. */}
-          <div className="fd-weekgrid__allday">
-            <span className="fd-weekgrid__corner">sin hora</span>
-            {data.grid.map((d) => (
-              <div className="fd-weekgrid__cell" key={`ad-${d.dateStr}`}>
-                {d.reminder ? (
-                  <span className="fd-weekgrid__rem">
-                    <Flag size="tiny" />
-                    <span>{d.reminder.title}</span>
-                  </span>
-                ) : null}
+            {/* Lo que tiene fecha pero no hora vive fuera del riel. Colocarlo a
+                una hora inventada seria afirmar algo que nadie dijo. */}
+            <div className="fd-weekgrid__allday">
+              <span className="fd-weekgrid__corner">sin hora</span>
+              {data.grid.map((d) => (
+                <div className="fd-weekgrid__cell" key={`ad-${d.dateStr}`}>
+                  {d.reminder ? (
+                    <span className="fd-weekgrid__rem">
+                      <Flag size="tiny" />
+                      <span>{d.reminder.title}</span>
+                    </span>
+                  ) : null}
 
-                {d.loose.map((t) => (
-                  <span className="fd-weekgrid__loose" key={t.id}>
-                    <Check variant="mini" />
-                    <span>{t.title}</span>
-                  </span>
-                ))}
-              </div>
-            ))}
+                  {d.loose.map((t) => (
+                    <span className="fd-weekgrid__loose" key={t.id}>
+                      <Check variant="mini" />
+                      <span>{t.title}</span>
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="fd-weekgrid__body">
