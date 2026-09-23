@@ -324,6 +324,7 @@
   .fd-sections,
   .fd-pend__body,
   .fd-monthlist,
+  .fd-dayprev,
   .fd-daylist,
   .fd-home__head {
     /* Mismo motivo que abajo: `.fd-monthlist` cuelga de un `.fd-scroll` que
