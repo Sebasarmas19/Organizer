@@ -75,15 +75,9 @@ export function NavigationProgress() {
   if (!isNavigating) return null;
 
   return (
-    <>
-      <div className="fd-nav-progress" aria-hidden="true">
-        <div className="fd-nav-progress__bar" />
-      </div>
-
-      <div className="fd-loading-pill" role="status" aria-live="polite">
-        <Spinner size={14} />
-        <span>Cargando…</span>
-      </div>
-    </>
+    <div className="fd-loading-pill" role="status" aria-live="polite">
+      <Spinner size={18} />
+      <span>Cargando…</span>
+    </div>
   );
 }
