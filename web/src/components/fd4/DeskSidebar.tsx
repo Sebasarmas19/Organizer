@@ -43,8 +43,6 @@ export function DeskSidebar({
   todayStr,
   /** La fecha que mira el calendario, para que el mini-mes la resalte. */
   selectedStr,
-  /** Que vista del calendario esta abierta, si es que hay alguna. */
-  calView,
 }: {
   active: DeskNav;
   todayStr: string;
@@ -87,22 +85,6 @@ export function DeskSidebar({
           <TabIcon name="calendario" />
           Calendario
         </Link>
-
-        {/* Las tres vistas, alcanzables sin entrar primero a Calendario. Es
-            la ventaja concreta de tener el alto de una pantalla apaisada. */}
-        <div className="fd-side__subs">
-          {(['mes', 'semana', 'dia'] as const).map((v) => (
-            <Link
-              key={v}
-              href={`/calendario?v=${v}&d=${anchor}`}
-              className="fd-sidesub"
-              aria-current={active === 'calendario' && calView === v ? 'page' : undefined}
-              scroll={false}
-            >
-              {v === 'dia' ? 'Día' : v === 'mes' ? 'Mes' : 'Semana'}
-            </Link>
-          ))}
-        </div>
 
         <Link
           href="/pendientes"
