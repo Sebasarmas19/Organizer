@@ -108,7 +108,44 @@ export function SignInForm() {
         onClick={signInWithGoogle}
         disabled={state.kind === 'google'}
       >
-        {state.kind === 'google' ? 'Abriendo Google…' : 'Entrar con Google'}
+        <span
+          style={{
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            backgroundColor: '#ffffff',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+          aria-hidden="true"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            focusable="false"
+          >
+            <path
+              fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.24 0 6.02-1.07 8.04-2.91l-3.88-3.05c-1.08.73-2.47 1.16-4.16 1.16-3.19 0-5.9-2.16-6.87-5.06H1.07v3.14C3.12 21.32 7.27 24 12 24Z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.13 14.14c-.25-.73-.39-1.51-.39-2.14s.14-1.41.39-2.14V6.72H1.07C.39 8.08 0 9.77 0 12s.39 3.92 1.07 5.28l4.06-3.14Z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.12 2.68 1.07 6.72l4.06 3.14c.97-2.9 3.68-5.09 6.87-5.09Z"
+            />
+          </svg>
+        </span>
+        <span>{state.kind === 'google' ? 'Abriendo Google…' : 'Entrar con Google'}</span>
       </button>
 
       <p

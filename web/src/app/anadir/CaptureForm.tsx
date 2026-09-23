@@ -67,6 +67,8 @@ export function CaptureForm() {
       <form className="fd-add__body" onSubmit={submit}>
         <input
           ref={inputRef}
+          id="title"
+          name="title"
           className="fd-add__input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

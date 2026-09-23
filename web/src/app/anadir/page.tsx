@@ -18,7 +18,6 @@
    entrar. Pintar uno falso debajo del real seria absurdo.
    ========================================================================= */
 
-import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { getTodayString } from '@/lib/date-utils';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
@@ -32,7 +31,6 @@ export default function AnadirPage() {
       <DeskSidebar active="inicio" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
 
       <CaptureForm />
-      <TabBar />
     </div>
   );
 }
