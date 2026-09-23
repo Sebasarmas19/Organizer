@@ -454,27 +454,31 @@ export function HorarioView({
                 </div>
 
                 {/* Horas e información de aula */}
-                <div className="timepair mt-3">
-                  <input
-                    type="time"
-                    className="field t-body text-ink num"
-                    value={slot.startTime}
-                    onChange={(e) => updateSlotTime(sub.id, slot.id, 'startTime', e.target.value)}
-                  />
-                  <span className="c-faint">–</span>
-                  <input
-                    type="time"
-                    className="field t-body text-ink num"
-                    value={slot.endTime}
-                    onChange={(e) => updateSlotTime(sub.id, slot.id, 'endTime', e.target.value)}
-                  />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3">
+                  <div className="timepair flex-1">
+                    <input
+                      type="time"
+                      className="field t-body text-ink num"
+                      value={slot.startTime}
+                      onChange={(e) => updateSlotTime(sub.id, slot.id, 'startTime', e.target.value)}
+                      aria-label="Hora de inicio"
+                    />
+                    <span className="c-faint">–</span>
+                    <input
+                      type="time"
+                      className="field t-body text-ink num"
+                      value={slot.endTime}
+                      onChange={(e) => updateSlotTime(sub.id, slot.id, 'endTime', e.target.value)}
+                      aria-label="Hora de fin"
+                    />
+                  </div>
                   <input
                     type="text"
-                    className="field t-meta c-muted"
-                    style={{ flex: 1.4 }}
+                    className="field t-meta c-muted sm:w-36"
                     value={slot.room}
                     onChange={(e) => updateSlotTime(sub.id, slot.id, 'room', e.target.value)}
                     placeholder="Aula / Lab"
+                    aria-label="Aula o laboratorio"
                   />
                 </div>
               </div>
