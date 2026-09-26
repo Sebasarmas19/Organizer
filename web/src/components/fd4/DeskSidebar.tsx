@@ -36,7 +36,7 @@ import { Dot } from './Marks';
 import { TabIcon } from './TabIcon';
 
 /** Que enlace de la barra se enciende, segun la pantalla que te trajo. */
-export type DeskNav = 'inicio' | 'calendario' | 'pendientes' | 'recursos';
+export type DeskNav = 'inicio' | 'calendario' | 'pendientes' | 'recursos' | 'ajustes';
 
 export function DeskSidebar({
   active,
@@ -154,6 +154,17 @@ export function DeskSidebar({
           <Dot entity="reminder" size="sm" />
           Recordatorios
         </span>
+      </div>
+
+      <div className="fd-side__settings">
+        <Link
+          href="/ajustes"
+          className="fd-sidelink"
+          aria-current={active === 'ajustes' ? 'page' : undefined}
+        >
+          <span style={{ fontSize: '15px', lineHeight: 1 }} aria-hidden>⚙️</span>
+          <span>Ajustes</span>
+        </Link>
       </div>
     </aside>
   );

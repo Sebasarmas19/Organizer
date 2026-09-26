@@ -76,14 +76,17 @@ export default async function HomePage() {
             <span className="fd-sub">{home.monthLabel} · ver el día</span>
           </Link>
 
-          {/* La racha solo aparece cuando existe. Un "0 dias" en la esquina
-              de la pantalla de inicio es un reproche diario, y esta app no
-              esta para eso. */}
-          {home.streakDays > 0 ? (
-            <span className="fd-pill fd-pill--line fd-home__streak">
-              {home.streakDays} {home.streakDays === 1 ? 'día' : 'días'}
-            </span>
-          ) : null}
+          <div className="fd-home__actions">
+            {home.streakDays > 0 ? (
+              <span className="fd-pill fd-pill--line fd-home__streak">
+                {home.streakDays} {home.streakDays === 1 ? 'día' : 'días'}
+              </span>
+            ) : null}
+
+            <Link href="/ajustes" className="fd-gearbtn" aria-label="Ajustes" title="Ajustes">
+              <span aria-hidden>⚙️</span>
+            </Link>
+          </div>
         </header>
 
         <div className="fd-sections">

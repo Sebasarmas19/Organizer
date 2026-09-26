@@ -60,13 +60,13 @@ export default async function NotificationsSettingsPage() {
 
   return (
     <div className="fd-app">
-      <DeskSidebar active="recursos" todayStr={getTodayString(timezone)} />
+      <DeskSidebar active="ajustes" todayStr={getTodayString(timezone)} />
 
       <main className="fd-screen" style={{ paddingBottom: 'calc(var(--tab-bar-h) + var(--space-6))' }}>
         <div className="calhead">
-          <Link href="/recursos" className="uplevel">
+          <Link href="/ajustes" className="uplevel">
             <Icon name="chevron-left" size="sm" />
-            Recursos
+            Ajustes
           </Link>
         </div>
 

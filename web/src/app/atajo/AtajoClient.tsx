@@ -93,9 +93,9 @@ export function AtajoClient({ token }: { token: string }) {
     <div className="gutter pb-6 pt-2">
       {/* Navegacion superior */}
       <div className="calhead">
-        <Link href="/recursos" className="uplevel">
+        <Link href="/ajustes" className="uplevel">
           <Icon name="chevron-left" size="sm" />
-          Recursos
+          Ajustes
         </Link>
       </div>
 

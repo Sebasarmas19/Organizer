@@ -21,7 +21,7 @@ export default function AtajoPage() {
 
   return (
     <div className="fd-app">
-      <DeskSidebar active="recursos" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
+      <DeskSidebar active="ajustes" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
 
       <main
         className="fd-screen"

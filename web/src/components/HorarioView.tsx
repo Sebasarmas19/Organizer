@@ -13,7 +13,6 @@
    ========================================================================= */
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Icon } from './Icon';
 import type { ClassTemplate } from '@/lib/supabase/database.types';
@@ -326,10 +325,21 @@ export function HorarioView({
         className="flex items-center justify-between gutter"
         style={{ paddingBlock: 'var(--space-2)' }}
       >
-        <Link href="/calendario" className="taptext taptext--quiet t-meta no-underline" aria-label="Volver">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push('/ajustes');
+            }
+          }}
+          className="taptext taptext--quiet t-meta no-underline flex items-center gap-1"
+          aria-label="Volver"
+        >
           <Icon name="chevron-left" size="sm" />
           Volver
-        </Link>
+        </button>
         <button
           type="button"
           onClick={handleSave}

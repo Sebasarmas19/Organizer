@@ -316,6 +316,12 @@
     color: var(--text-muted);
   }
 
+  .fd-side__settings {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
   /* ====================================== §3 · ANCHOS Y CABECERAS ========= */
 
   /* La regla que justifica el escritorio entero: una linea de texto de 1180px
