@@ -130,6 +130,23 @@ export function PushPanel({
   async function sendTest(label = 'Mandando una de prueba…') {
     setStatus({ kind: 'working', label });
     try {
+      // 1. Probar vía /api/push/test (servidor Next.js)
+      const res = await fetch('/api/push/test', { method: 'POST' });
+      if (res.ok) {
+        const report = (await res.json()) as { sent?: unknown[]; failed?: { error: string }[] };
+        if (report?.failed?.length) {
+          throw new Error(report.failed[0].error);
+        }
+        setStatus({
+          kind: 'done',
+          message:
+            'Mandada. Si no la ves en unos segundos, mira que Organizer tenga ' +
+            'permiso en Ajustes → Notificaciones.',
+        });
+        return;
+      }
+
+      // 2. Fallback a Supabase Edge Function
       const supabase = createClient();
       const { data, error } = await supabase.functions.invoke('dispatch-notifications', {
         body: { mode: 'test' },
@@ -137,8 +154,7 @@ export function PushPanel({
 
       if (error) {
         throw new Error(
-          'La función `dispatch-notifications` no contestó. Si todavía no está ' +
-            'desplegada, es el paso 3 del informe de F3. (' + error.message + ')'
+          'La función `dispatch-notifications` no contestó. (' + error.message + ')'
         );
       }
 

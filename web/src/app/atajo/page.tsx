@@ -1,5 +1,12 @@
+/* ============================================================================
+   Organizer · Pantalla de instrucciones del Atajo de iOS (Siri)
+   ========================================================================= */
+
 import { captureToken } from '@/lib/env';
-import { TabBar } from '@/components/TabBar';
+import { TabBar } from '@/components/fd4/TabBar';
+import { DeskSidebar } from '@/components/fd4/DeskSidebar';
+import { getTodayString } from '@/lib/date-utils';
+import { DEFAULT_TIMEZONE } from '@/lib/profile';
 import { AtajoClient } from './AtajoClient';
 
 export const dynamic = 'force-dynamic';
@@ -13,10 +20,16 @@ export default function AtajoPage() {
   }
 
   return (
-    <div className="applayout">
-      <main className="screen">
+    <div className="fd-app">
+      <DeskSidebar active="recursos" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
+
+      <main
+        className="fd-screen"
+        style={{ paddingBottom: 'calc(var(--tab-bar-h) + var(--space-6))' }}
+      >
         <AtajoClient token={token} />
       </main>
+
       <TabBar />
     </div>
   );

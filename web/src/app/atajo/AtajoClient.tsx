@@ -90,12 +90,12 @@ export function AtajoClient({ token }: { token: string }) {
   }
 
   return (
-    <div className="gutter pb-12 pt-2">
+    <div className="gutter pb-6 pt-2">
       {/* Navegacion superior */}
-      <div className="flex items-center justify-between pb-2">
-        <Link href="/tareas" className="taptext taptext--quiet t-meta">
+      <div className="calhead">
+        <Link href="/recursos" className="uplevel">
           <Icon name="chevron-left" size="sm" />
-          <span>Tareas</span>
+          Recursos
         </Link>
       </div>
 
@@ -299,8 +299,8 @@ export function AtajoClient({ token }: { token: string }) {
           >
             <p>{testMessage}</p>
             {testStatus === 'success' ? (
-              <Link href="/tareas" className="taptext text-sm font-semibold mt-1">
-                Ver en Tareas &rarr;
+              <Link href="/pendientes" className="taptext text-sm font-semibold mt-1">
+                Ver en Pendientes &rarr;
               </Link>
             ) : null}
           </div>
@@ -308,8 +308,8 @@ export function AtajoClient({ token }: { token: string }) {
       </section>
 
       <div className="mt-8 text-center">
-        <Link href="/tareas" className="btn btn--quiet w-full" style={{ minHeight: 'var(--tap-min)' }}>
-          Volver a Tareas
+        <Link href="/pendientes" className="btn btn--quiet w-full" style={{ minHeight: 'var(--tap-min)' }}>
+          Volver a Pendientes
         </Link>
       </div>
     </div>

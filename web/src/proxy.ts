@@ -36,7 +36,8 @@ function isPublic(pathname: string): boolean {
   return (
     pathname === SIGN_IN_PATH ||
     pathname.startsWith('/auth') ||
-    pathname.startsWith('/api/capture')
+    pathname.startsWith('/api/capture') ||
+    pathname.startsWith('/api/push/cron')
   );
 }
 

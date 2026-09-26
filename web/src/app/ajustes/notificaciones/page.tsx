@@ -17,6 +17,10 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { Icon } from '@/components/Icon';
+import { TabBar } from '@/components/fd4/TabBar';
+import { DeskSidebar } from '@/components/fd4/DeskSidebar';
+import { getTodayString } from '@/lib/date-utils';
+import { DEFAULT_TIMEZONE } from '@/lib/profile';
 import { PushPanel } from './PushPanel';
 import { TimesForm } from './TimesForm';
 
@@ -44,6 +48,8 @@ export default async function NotificationsSettingsPage() {
     .eq('id', user?.id ?? '')
     .maybeSingle();
 
+  const timezone = profile?.timezone ?? DEFAULT_TIMEZONE;
+
   /* Solo las vivas: una marcada con `failed_at` es un telefono que ya no
      existe y contarla diria que todo va bien cuando no llega nada. */
   const { count } = await supabase
@@ -53,13 +59,16 @@ export default async function NotificationsSettingsPage() {
     .is('failed_at', null);
 
   return (
-    <main className="screen">
-      <div className="calhead">
-        <Link href="/" className="uplevel">
-          <Icon name="chevron-left" size="sm" />
-          Organizer
-        </Link>
-      </div>
+    <div className="fd-app">
+      <DeskSidebar active="recursos" todayStr={getTodayString(timezone)} />
+
+      <main className="fd-screen" style={{ paddingBottom: 'calc(var(--tab-bar-h) + var(--space-6))' }}>
+        <div className="calhead">
+          <Link href="/recursos" className="uplevel">
+            <Icon name="chevron-left" size="sm" />
+            Recursos
+          </Link>
+        </div>
 
       <header className="pagehead">
         <h1 className="t-title">Notificaciones</h1>
@@ -133,6 +142,9 @@ export default async function NotificationsSettingsPage() {
       </div>
 
       <div style={{ height: 'var(--space-16)' }} />
-    </main>
+      </main>
+
+      <TabBar />
+    </div>
   );
 }
