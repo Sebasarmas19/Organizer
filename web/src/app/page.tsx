@@ -56,16 +56,14 @@ export default async function HomePage() {
      alguna vez esta pagina se renderiza fuera de ese camino. */
   if (!user) return <Setup />;
 
-  const [profileRes, home] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('timezone')
-      .eq('id', user.id)
-      .maybeSingle(),
-    getHomeData(supabase, user.id, DEFAULT_TIMEZONE),
-  ]);
+  const profileRes = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
 
   const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
+  const home = await getHomeData(supabase, user.id, timezone);
 
   return (
     <div className="fd-app">

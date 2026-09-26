@@ -46,15 +46,17 @@ export default async function PendientesPage({
   } = await supabase.auth.getUser();
   if (!user) return <Setup />;
 
-  const [params, , data] = await Promise.all([
+  const [params, profileRes] = await Promise.all([
     searchParams,
     supabase
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
       .maybeSingle(),
-    getPendientesData(supabase, user.id, DEFAULT_TIMEZONE),
   ]);
+
+  const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
+  const data = await getPendientesData(supabase, user.id, timezone);
 
   const view: PendView = params.v === 'recordatorios' ? 'recordatorios' : 'tareas';
 
