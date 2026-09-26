@@ -9,6 +9,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ResourceKind } from '@/lib/fd4-resources';
 import { createResourceAction } from '@/lib/resources-actions';
+import { Icon } from '@/components/Icon';
 
 export function CreateResourceModal({
   isOpen,
@@ -67,8 +68,8 @@ export function CreateResourceModal({
       <div className="fd-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="fd-modal-head">
           <h2 className="fd-modal-title">Añadir a Recursos</h2>
-          <button type="button" onClick={onClose} className="fd-modal-close">
-            ✕
+          <button type="button" onClick={onClose} className="fd-modal-close" aria-label="Cerrar">
+            <Icon name="xmark" size="sm" />
           </button>
         </div>
 

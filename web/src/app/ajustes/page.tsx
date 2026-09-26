@@ -41,7 +41,7 @@ export default async function AjustesPage() {
     <div className="fd-app">
       <DeskSidebar active="ajustes" todayStr={todayStr} />
 
-      <main className="fd-screen fd-ajustes" style={{ paddingBottom: 'calc(var(--tab-bar-h) + var(--space-8))' }}>
+      <main className="fd-screen fd-ajustes">
         <div className="calhead">
           <Link href="/" className="uplevel">
             <Icon name="chevron-left" size="sm" />

@@ -30,6 +30,17 @@
 
 /* ============================================================== 1. ARMAZON */
 
+html, body {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (max-width: 899px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* El prototipo dibuja un iPhone de 390x844 con esquinas de 44px. La app real
    ES el iPhone, asi que el marco desaparece y lo unico que sobrevive es lo
    de dentro: una columna a pantalla completa con la barra pegada abajo.
@@ -100,13 +111,19 @@
    `env(safe-area-inset-bottom)`: el indicador de inicio del iPhone se come
    34px que nadie mas va a descontar.                                      */
 .fd-tabbar {
-  flex: 0 0 auto;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
   display: flex;
   align-items: flex-end;
   gap: 2px;
   padding: 8px 10px 12px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   background: var(--bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--line);
 }
 

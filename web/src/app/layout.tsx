@@ -54,6 +54,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   /* El color de la barra del navegador sigue al tema, con los mismos valores
      que `--bg` en tokens.css. Si uno cambia, el otro tambien. FD4 los movio
@@ -75,6 +77,9 @@ const THEME_BOOTSTRAP = `
 try {
   var t = localStorage.getItem('organizer:theme');
   if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+} catch (e) {}
+try {
+  document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
 } catch (e) {}
 `;
 

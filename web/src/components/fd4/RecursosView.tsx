@@ -10,6 +10,7 @@ import type { ResourcesData, ResourceKind } from '@/lib/fd4-resources';
 import { KIND_LABELS } from '@/lib/fd4-resources';
 import { ResourceCard } from './ResourceCard';
 import { CreateResourceModal } from './CreateResourceModal';
+import { Icon } from '@/components/Icon';
 
 export function RecursosView({ data }: { data: ResourcesData }) {
   const [search, setSearch] = useState('');
@@ -65,14 +66,16 @@ export function RecursosView({ data }: { data: ResourcesData }) {
           className="fd-reshead__btn"
           aria-label="Añadir nuevo recurso"
         >
-          <span style={{ fontSize: '15px', fontWeight: 600 }}>+</span>
+          <Icon name="plus" size="sm" />
           <span>Nuevo</span>
         </button>
       </div>
 
       {/* 2. Buscador en tiempo real */}
       <div className="fd-recursos__searchbox">
-        <span className="fd-search__icon" aria-hidden>🔍</span>
+        <span className="fd-search__icon" aria-hidden>
+          <Icon name="search" size="sm" />
+        </span>
         <input
           type="search"
           value={search}
@@ -87,7 +90,7 @@ export function RecursosView({ data }: { data: ResourcesData }) {
             className="fd-search__clear"
             aria-label="Borrar búsqueda"
           >
-            ✕
+            <Icon name="xmark" size="sm" />
           </button>
         ) : null}
       </div>

@@ -14,6 +14,7 @@ import {
   deleteResourceAction,
   planResourceAction,
 } from '@/lib/resources-actions';
+import { Icon } from '@/components/Icon';
 
 export function ResourceCard({
   resource,
@@ -103,7 +104,7 @@ export function ResourceCard({
 
       {domain ? (
         <div className="fd-rescard__domain">
-          <span style={{ opacity: 0.7 }}>↗</span>
+          <span style={{ opacity: 0.7 }}><Icon name="link" size="sm" /></span>
           <span>{domain}</span>
         </div>
       ) : null}
@@ -172,7 +173,7 @@ export function ResourceCard({
               disabled={isPending}
             >
               <span>Abrir enlace</span>
-              <span aria-hidden>↗</span>
+              <Icon name="link" size="sm" />
             </button>
           ) : (
             <button
@@ -192,7 +193,7 @@ export function ResourceCard({
             title="Convertir en tarea en Pendientes"
           >
             <span>Planificar</span>
-            <span aria-hidden>🗓️</span>
+            <Icon name="calendar" size="sm" />
           </button>
         </div>
 
@@ -204,7 +205,7 @@ export function ResourceCard({
           aria-label="Eliminar recurso"
           disabled={isPending}
         >
-          🗑️
+          <Icon name="trash" size="sm" />
         </button>
       </div>
     </article>

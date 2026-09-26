@@ -37,6 +37,7 @@ import { TaskRow } from '@/components/fd4/TaskRow';
 import { ReminderCard } from '@/components/fd4/ReminderCard';
 import { Overdue } from '@/components/fd4/Overdue';
 import { Dot, Flag } from '@/components/fd4/Marks';
+import { Icon } from '@/components/Icon';
 import { Setup } from './Setup';
 
 /* Nunca estatica: depende de la cookie de sesion y de la fecha de hoy. */
@@ -84,7 +85,7 @@ export default async function HomePage() {
             ) : null}
 
             <Link href="/ajustes" className="fd-gearbtn" aria-label="Ajustes" title="Ajustes">
-              <span aria-hidden>⚙️</span>
+              <Icon name="settings" size="md" />
             </Link>
           </div>
         </header>

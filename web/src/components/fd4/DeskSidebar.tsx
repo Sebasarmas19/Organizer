@@ -34,6 +34,7 @@ import { getMonthGrid, MONTH_NAMES_CAP_ES, parseDateString } from '@/lib/date-ut
 import { DOW_INITIALS } from '@/lib/fd4-calendar';
 import { Dot } from './Marks';
 import { TabIcon } from './TabIcon';
+import { Icon } from '@/components/Icon';
 
 /** Que enlace de la barra se enciende, segun la pantalla que te trajo. */
 export type DeskNav = 'inicio' | 'calendario' | 'pendientes' | 'recursos' | 'ajustes';
@@ -62,7 +63,7 @@ export function DeskSidebar({
 
       <Link href="/anadir" className="fd-side__add">
         <span className="fd-side__addmark" aria-hidden>
-          ＋
+          <Icon name="plus" size="sm" />
         </span>
         Añadir
       </Link>
@@ -162,7 +163,7 @@ export function DeskSidebar({
           className="fd-sidelink"
           aria-current={active === 'ajustes' ? 'page' : undefined}
         >
-          <span style={{ fontSize: '15px', lineHeight: 1 }} aria-hidden>⚙️</span>
+          <Icon name="settings" size="md" />
           <span>Ajustes</span>
         </Link>
       </div>
