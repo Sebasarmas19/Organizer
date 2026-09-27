@@ -4,9 +4,9 @@
    sueltas disponibles para asociar.
    ========================================================================= */
 
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { TabBar } from '@/components/TabBar';
+import { TabBar } from '@/components/fd4/TabBar';
 import { ReminderDetailClient } from './ReminderDetailClient';
 
 export const dynamic = 'force-dynamic';
@@ -18,11 +18,19 @@ export default async function ReminderDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/entrar');
+  }
 
   const { data: reminder, error } = await supabase
     .from('reminders')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user.id)
     .maybeSingle();
 
   if (error || !reminder) {
@@ -36,6 +44,7 @@ export default async function ReminderDetailPage({
       .from('contexts')
       .select('*')
       .eq('id', reminder.context_id)
+      .eq('user_id', user.id)
       .maybeSingle();
     context = ctxData;
   }
@@ -45,6 +54,7 @@ export default async function ReminderDetailPage({
     .from('items')
     .select('*')
     .eq('reminder_id', id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: true });
 
   // Cargar tareas sueltas de inbox para sugerir asociacion
@@ -52,6 +62,7 @@ export default async function ReminderDetailPage({
     .from('items')
     .select('*')
     .eq('status', 'inbox')
+    .eq('user_id', user.id)
     .is('reminder_id', null)
     .order('created_at', { ascending: false })
     .limit(10);

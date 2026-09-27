@@ -4,6 +4,7 @@
    ========================================================================= */
 
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
@@ -26,7 +27,7 @@ export default async function AjustesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return <Setup />;
+  if (!user) redirect('/entrar');
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -43,7 +44,7 @@ export default async function AjustesPage() {
 
       <main className="fd-screen fd-ajustes">
         <div className="calhead">
-          <Link href="/" className="uplevel">
+          <Link href="/" prefetch={true} className="uplevel">
             <Icon name="chevron-left" size="sm" />
             Inicio
           </Link>

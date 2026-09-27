@@ -388,19 +388,17 @@
     padding-top: 6px;
   }
 
-  /* Pendientes en dos columnas: los grupos son cortos e independientes entre
-     si, asi que apilarlos en una sola columna de 760px en un monitor deja la
-     mitad de abajo en blanco y obliga a hacer scroll para nada. */
-  .fd-pend__body {
+  /* Pendientes: el reparto a dos columnas de Tareas (clasificador a la
+     izquierda, grupos a la derecha) vive en focus.css. Recordatorios sigue
+     en dos columnas: los grupos son cortos e independientes entre si. */
+  .fd-pend__body:not(.fd-pend__body--tareas) {
     max-width: var(--desk-max);
     columns: 2;
     column-gap: 24px;
   }
 
-  .fd-pend__body > section {
+  .fd-pend__body:not(.fd-pend__body--tareas) > section {
     break-inside: avoid;
-    /* `columns` corta por donde quiere; sin esto un grupo empieza al final de
-       la primera columna y termina en la segunda. */
     -webkit-column-break-inside: avoid;
     page-break-inside: avoid;
     margin-bottom: var(--gap-section);
@@ -768,14 +766,14 @@
     margin-inline: auto;
   }
 
-  /* Arriba del todo y no centrado: el boton de cerrar tiene que estar donde
-     siempre esta, no flotando en medio de la pantalla junto al campo. */
   .fd-add__head {
-    position: absolute;
-    top: 20px;
-    right: var(--desk-pad);
-    left: auto;
-    width: auto;
+    width: 100%;
+    max-width: 560px;
+    margin-inline: auto;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .fd-add__input {

@@ -4,6 +4,7 @@
    ========================================================================= */
 
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
@@ -30,21 +31,20 @@ export default async function RecursosPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return <Setup />;
+  if (!user) redirect('/entrar');
 
-  const [params, profileRes] = await Promise.all([
-    searchParams,
+  const params = await searchParams;
+  const [profileRes, data] = await Promise.all([
     supabase
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
       .maybeSingle(),
+    getResourcesData(supabase, user.id, params),
   ]);
 
   const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
   const todayStr = getTodayString(timezone);
-
-  const data = await getResourcesData(supabase, user.id, params);
 
   return (
     <div className="fd-app">

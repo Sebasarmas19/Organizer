@@ -26,9 +26,14 @@
 
    Las tres acciones son optimistas: la fila sale de la lista en el acto. Si
    el servidor falla, React la devuelve sola.
+
+   4. EN EL TELEFONO VA PLEGADA. Una linea hundida ("Lo de ayer espera que
+      decidas", sin numero: seria un contador de deuda) y se abre al tocarla. Lo de ayer se ve siempre, pero no se
+      come la pantalla antes que "Lo siguiente". En escritorio hay sitio y
+      va abierta (fd4-desk.css).
    ========================================================================= */
 
-import { useOptimistic, useTransition } from 'react';
+import { useOptimistic, useState, useTransition } from 'react';
 import { moveTaskToDate, unscheduleTask } from '@/lib/fd4-actions';
 import type { OverdueTask } from '@/lib/home';
 
@@ -41,6 +46,7 @@ export function Overdue({ tasks, todayStr }: { tasks: OverdueTask[]; todayStr: s
     (prev, id) => [...prev, id]
   );
   const [, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
 
   const visible = tasks.filter((t) => !resolved.includes(t.id));
   if (visible.length === 0) return null;
@@ -53,11 +59,25 @@ export function Overdue({ tasks, todayStr }: { tasks: OverdueTask[]; todayStr: s
   };
 
   return (
-    <section>
-      <div className="fd-seclabel fd-seclabel--quiet">
-        <h2>De ayer</h2>
+    <section className="fd-tray" data-open={open ? 'true' : 'false'}>
+      <button
+        type="button"
+        className="fd-tray__toggle"
+        aria-expanded={open}
+        aria-controls="fd-ayer-body"
+        onClick={() => setOpen(!open)}
+      >
+        <span>
+          <b>Lo de ayer</b> espera que decidas
+        </span>
+        <span className="fd-tray__cta">{open ? 'Cerrar' : 'Decidir'}</span>
+      </button>
+
+      <div className="fd-seclabel fd-seclabel--quiet fd-tray__label">
+        <h2>De ayer · decide</h2>
       </div>
 
+      <div className="fd-tray__body" id="fd-ayer-body">
       <div className="fd-card fd-card--sunken">
         {visible.map((task) => (
           <div className="fd-ayer__item" key={task.id}>
@@ -69,7 +89,7 @@ export function Overdue({ tasks, todayStr }: { tasks: OverdueTask[]; todayStr: s
             <div className="fd-ayer__acts">
               <button
                 type="button"
-                className="fd-btn"
+                className="fd-btn fd-ayer__btn-today"
                 onClick={() => run(task.id, () => moveTaskToDate(task.id, todayStr))}
               >
                 Hoy
@@ -94,6 +114,7 @@ export function Overdue({ tasks, todayStr }: { tasks: OverdueTask[]; todayStr: s
       </div>
 
       <p className="fd-note">Quitar no borra: vuelve a Pendientes.</p>
+      </div>
     </section>
   );
 }

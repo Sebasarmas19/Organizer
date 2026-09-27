@@ -1,0 +1,955 @@
+/* ============================================================================
+   Organizer · "Una cosa a la vez" · Inicio, Pendientes y Recursos
+
+   Rediseno de estructura dentro del sistema FD4. No trae ni un color, ni un
+   tamano de letra, ni un radio nuevo: todo sale de tokens.css. Lo que cambia
+   es la composicion:
+
+     · cada pantalla abre con UNA pieza grande (.fd-lead) que tiene la accion
+       obvia — la siguiente tarea, la siguiente captura por clasificar, el
+       recurso para retomar —
+     · y todo lo demas son filas compactas o bandejas hundidas, plegadas.
+
+   Va despues de fd4.css y fd4-desk.css para poder rehacer la maqueta de
+   escritorio de estas tres pantallas sin tocar la del calendario.
+   ========================================================================= */
+
+/* ============================================================ PIEZAS ==== */
+
+/* Cuenta junto a una etiqueta. Solo para Recursos (una biblioteca no es
+   deuda); en tareas no se usa: prohibicion 2 de DESIGN.md. */
+.fd-seclabel__count {
+  margin-left: auto;
+  font-size: var(--fd-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+kbd {
+  font-family: inherit;
+  font-size: var(--fd-tiny);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--line-control);
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+  box-shadow: 0 1px 0 var(--line);
+  user-select: none;
+}
+
+/* Las teclas solo significan algo con teclado. En el telefono sobran. */
+@media (max-width: 899px), (hover: none) {
+  .fd-app kbd { display: none; }
+}
+
+/* ---------------------------------------------------------- la tarjeta --
+   La unica pieza grande de cada pantalla. Radio de hoja (20px), titulo a
+   24px (--fd-title-desk), y las acciones a 44px de alto. Si hay dos .fd-lead en una pantalla,
+   algo salio mal.                                                         */
+
+.fd-lead {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+}
+
+.fd-lead__when {
+  font-size: var(--fd-small);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-lead__title {
+  margin: 0;
+  font-size: var(--fd-title-desk);
+  line-height: 1.2;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.012em;
+  color: var(--text);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.fd-lead__hint {
+  margin: 0;
+  font-size: var(--fd-meta);
+  line-height: 1.45;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Para que reminder es esta tarea. Ambar de fondo, texto en --text. */
+.fd-lead__rem {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--rem-soft);
+  font-size: var(--fd-small);
+  color: var(--text);
+}
+
+.fd-lead__acts {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.fd-lead__acts .fd-btn {
+  min-height: 48px;
+}
+
+.fd-lead--rest {
+  gap: 14px;
+  box-shadow: none;
+  background: var(--surface);
+  border: 1px dashed var(--line-control);
+  padding: 20px;
+}
+
+.fd-lead__rest-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.fd-lead__rest-badge {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--tint-task);
+  color: var(--task);
+  display: grid;
+  place-items: center;
+}
+
+.fd-lead__rest-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fd-lead__rest-copy .fd-lead__title {
+  font-size: var(--fd-lead);
+  font-weight: var(--weight-semibold);
+}
+
+.fd-lead__rest-acts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.fd-lead__go {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fd-btn[disabled] {
+  cursor: default;
+}
+
+/* El unico movimiento de estas pantallas: cuando Hecho o Despues cambian la
+   tarea de la tarjeta, la nueva entra desde 6px mas abajo. Dice "esta es
+   otra" sin llamar la atencion. */
+.fd-lead--enter {
+  animation: fd-lead-in var(--dur) var(--ease-out);
+}
+
+@keyframes fd-lead-in {
+  from { opacity: 0.4; transform: translateY(6px); }
+  to   { opacity: 1;   transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-lead--enter { animation: none; }
+}
+
+/* ------------------------------------------------------------ deshacer --
+   Una linea, no un toast flotante: aparece justo debajo de lo que se hizo
+   y se queda hasta la siguiente accion. Nada que perseguir con el dedo.   */
+
+.fd-undo {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 4px 4px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd-undo > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fd-undo b {
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.fd-undo__btn {
+  flex: none;
+  min-height: var(--tap-min);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  color: var(--task);
+  cursor: pointer;
+}
+
+.fd-undo__btn:hover {
+  background: var(--surface);
+}
+
+/* ============================================================ INICIO ==== */
+
+.fd-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+}
+
+.fd-focus {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fd-later {
+  margin-top: 8px;
+}
+
+/* ---------------------------------------------------------- la bandeja --
+   "2 cosas de ayer esperan que decidas". Hundida, una linea, se abre al
+   tocarla. Lo de ayer se ve, pero no pasa por delante de lo de hoy.      */
+
+.fd-tray__toggle {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 8px 8px 16px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: inherit;
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fd-tray__toggle b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd-tray__cta {
+  flex: none;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  font-weight: var(--weight-semibold);
+  color: var(--task);
+}
+
+.fd-tray__label {
+  display: none;
+}
+
+.fd-tray__body {
+  display: none;
+  margin-top: 12px;
+}
+
+.fd-tray[data-open="true"] .fd-tray__body {
+  display: block;
+}
+
+.fd-ayer__btn-today {
+  background: var(--tint-task);
+  border-color: var(--task);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.fd-ayer__btn-today:hover {
+  background: var(--task);
+  color: var(--text-on-accent);
+}
+
+/* ======================================================== PENDIENTES ==== */
+
+.fd-pend__body--tareas {
+  gap: var(--gap-section);
+}
+
+.fd-pend__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+}
+
+.fd-task__overdue-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fd-tiny);
+  font-weight: var(--weight-semibold);
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--rem-soft);
+  color: var(--text);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.fd-pend__triage:empty {
+  display: none;
+}
+
+.fd-triage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fd-triage .fd-seclabel {
+  padding-bottom: 0;
+}
+
+.fd-triage__ask {
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+}
+
+.fd-triage__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.fd-triage__opt {
+  min-height: 48px;
+  justify-content: space-between;
+  padding: 0 14px;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), transform 0.08s ease;
+}
+
+.fd-triage__opt:active {
+  transform: scale(0.98);
+}
+
+.fd-triage__opt--today {
+  background: var(--tint-task);
+  border-color: var(--task);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.fd-triage__opt--today:hover {
+  background: var(--task);
+  color: var(--text-on-accent);
+}
+
+.fd-triage__opt--today:hover kbd {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: var(--text-on-accent);
+}
+
+.fd-triage__opt[aria-expanded="true"] {
+  background: var(--tint-task);
+  border-color: var(--task);
+  font-weight: var(--weight-semibold);
+}
+
+.fd-triage__days {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.fd-triage__days .fd-btn {
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-triage__skip {
+  align-self: center;
+}
+
+.fd-triage__next {
+  margin: 0 4px;
+  font-size: var(--fd-small);
+  line-height: 1.45;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+/* ========================================================== RECURSOS ==== */
+
+.fd-reshead__new {
+  min-height: 40px;
+  padding: 0 14px;
+  font-weight: var(--weight-semibold);
+}
+
+.fd-res,
+.fd-res__main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fd-res__main .fd-search__icon {
+  display: inline-flex;
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+.fd-search__input::placeholder {
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------- tipos y filtro */
+
+.fd-reschips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  /* Envuelven, no se desplazan: prohibicion 6 de DESIGN.md. */
+  margin-inline: -4px;
+}
+
+/* Se pinta 36 y mide 44: borde transparente + padding-box, como .chip de
+   DESIGN.md. */
+.fd-reschip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 12px;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  background-color: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font: inherit;
+  font-size: var(--fd-small);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fd-reschip[aria-pressed="true"] {
+  background-color: var(--tint-task);
+  box-shadow: inset 0 0 0 1.5px var(--task);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+.fd-reschip__count {
+  font-size: var(--fd-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+/* -------------------------------------------------------- para retomar */
+
+.fd-resume__acts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.fd-resume__acts .fd-btn {
+  padding: 0 8px;
+}
+
+.fd-res__inline--resume {
+  margin: 4px -18px -18px;
+  border-top: 1px solid var(--line);
+}
+
+/* -------------------------------------------------------------- la fila */
+
+.fd-card--list {
+  flex-direction: column;
+}
+
+.fd-resitem + .fd-resitem {
+  border-top: 1px solid var(--line);
+}
+
+.fd-resrow {
+  width: 100%;
+  min-height: 60px;
+  padding: 12px 16px 12px 12px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd-resrow:active,
+.fd-resrow[data-selected="true"] {
+  background: var(--tint-task);
+}
+
+.fd-resrow__kind {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+}
+
+.fd-resrow__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-resrow__text > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fd-resrow__title {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.3;
+}
+
+/* Sin abrir: un punto azul, como el "no leido" de Mail. Es la tarea que el
+   recurso te pide — abrirlo — asi que va en el azul de tarea. */
+.fd-resrow__new {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--task);
+}
+
+.fd-resrow__count {
+  flex: none;
+  font-size: var(--fd-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------ el detalle */
+
+.fd-res__pane {
+  display: none;
+}
+
+.fd-res__inline {
+  padding: 4px 16px 18px 60px;
+  background: var(--tint-task);
+}
+
+.fd-resdetail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fd-resdetail__kicker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+/* En el telefono el titulo ya esta en la fila de arriba. */
+.fd-res__inline .fd-resdetail__title,
+.fd-res__inline .fd-resdetail__kicker .ico {
+  display: none;
+}
+
+.fd-resdetail__title {
+  margin: 0;
+  font-size: var(--fd-title-desk);
+  line-height: 1.2;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.015em;
+  color: var(--text);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.fd-resdetail__url {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  margin-block: -8px;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--task);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  overflow-wrap: anywhere;
+}
+
+.fd-resdetail__notes {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.fd-resdetail__notes p {
+  margin: 6px 0 0;
+  font-size: var(--fd-body);
+  line-height: 1.5;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 65ch;
+}
+
+.fd-resdetail__label {
+  font-size: var(--fd-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.fd-resdetail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-inline: -4px;
+}
+
+.fd-tagchip {
+  height: 44px;
+  padding: 0 12px;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  background-color: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font: inherit;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.fd-tagchip:hover {
+  color: var(--text);
+}
+
+.fd-resdetail__plan {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.fd-resdetail__planrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fd-resdetail__date {
+  flex: 1 1 150px;
+  min-height: var(--tap-min);
+  padding: 0 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-control);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fd-meta);
+}
+
+.fd-resdetail__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fd-recursos__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.fd-recursos__empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.fd-recursos__emptytitle {
+  margin: 0;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd-recursos__empty .fd-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fd-res__pane-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 280px;
+  gap: 10px;
+  padding: 32px 16px;
+}
+
+.fd-res__pane-empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.fd-res__pane-empty-title {
+  margin: 0;
+  font-size: var(--fd-lead);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* ========================================================= ESCRITORIO ==== */
+
+@media (min-width: 900px) {
+  /* ------------------------------------------------------------ inicio --
+     Tres preguntas, tres columnas: ¿que hago ahora? · ¿que se viene? ·
+     ¿que quedo colgando? Todo a la vista sin scroll.                    */
+
+  .fd-home__head {
+    max-width: var(--desk-max);
+  }
+
+  .fd-home {
+    width: 100%;
+    max-width: var(--desk-max);
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+
+  /* Orden de la decision 55 tambien en escritorio: Hoy · De ayer · Esta
+     semana, de izquierda a derecha, igual que se lee en el telefono. */
+
+  .fd-lead {
+    padding: 22px;
+  }
+
+  .fd-home__focus .fd-lead__title {
+    font-size: var(--fd-title);
+  }
+
+  /* En escritorio lo de ayer va abierto: hay sitio y es una decision de un
+     clic por fila. */
+  .fd-tray__toggle {
+    display: none;
+  }
+
+  .fd-tray__label {
+    display: flex;
+  }
+
+  .fd-tray__body {
+    display: block;
+    margin-top: 0;
+  }
+
+  /* Tres botones en una columna de 300px no caben en fila. */
+  .fd-home__ayer .fd-ayer__acts {
+    flex-wrap: wrap;
+  }
+
+  /* -------------------------------------------------------- pendientes --
+     Clasificador a la izquierda, fijo al hacer scroll; los grupos a la
+     derecha. Es la sesion del domingo: decides con el teclado y ves donde
+     cae cada cosa sin cambiar de pantalla.                              */
+
+  /* Pendientes era la unica pantalla con doble margen: el de .fd-screen mas
+     el de su cabecera fija. Aqui se quita el de fuera, y el titulo cae en la
+     misma x que Inicio y Recursos. La linea bajo la cabecera se queda: es la
+     que separa lo fijo de la lista que se desplaza. Calendario no se toca. */
+  .fd-screen--pend {
+    padding: 0;
+  }
+
+  .fd-screen--pend .fd-fixedhead {
+    padding-top: var(--desk-pad);
+  }
+
+  .fd-pend__body--tareas {
+    max-width: var(--desk-max);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+  }
+
+  .fd-pend__triage {
+    position: sticky;
+    top: 0;
+  }
+
+  .fd-pend__triage:empty + .fd-pend__groups {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .fd-triage__card {
+    padding: 24px;
+  }
+
+  .fd-triage__card .fd-lead__title {
+    font-size: var(--fd-title);
+  }
+
+  /* ---------------------------------------------------------- recursos --
+     Lista a la izquierda, detalle a la derecha. Elegir una fila no abre
+     nada debajo: cambia el panel.                                       */
+
+  .fd-recursos {
+    max-width: var(--desk-max);
+    margin-inline: auto;
+  }
+
+  .fd-res {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    align-items: start;
+    gap: 28px;
+  }
+
+  .fd-res__inline {
+    display: none;
+  }
+
+  /* Una sola pieza grande por pantalla: en escritorio "Para retomar" no es
+     una tarjeta aparte, es lo que el panel enseña de entrada. */
+  .fd-resume {
+    display: none;
+  }
+
+  .fd-resrow[data-current="true"] {
+    background: var(--tint-task);
+  }
+
+  .fd-res__pane {
+    display: block;
+    position: sticky;
+    top: 0;
+    padding: 24px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .fd-res__pane .fd-resdetail__notes {
+    background: var(--bg);
+  }
+
+  .fd-resrow:hover {
+    background: var(--surface-sunken);
+  }
+
+  .fd-resrow[data-selected="true"] {
+    background: var(--tint-task);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fd-resrow {
+    transition: none;
+  }
+}

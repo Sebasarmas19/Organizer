@@ -2,6 +2,8 @@
    Organizer · Pantalla de instrucciones del Atajo de iOS (Siri)
    ========================================================================= */
 
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { captureToken } from '@/lib/env';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
@@ -11,7 +13,16 @@ import { AtajoClient } from './AtajoClient';
 
 export const dynamic = 'force-dynamic';
 
-export default function AtajoPage() {
+export default async function AtajoPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/entrar');
+  }
+
   let token = '';
   try {
     token = captureToken();

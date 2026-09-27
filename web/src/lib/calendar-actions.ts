@@ -45,6 +45,8 @@ export async function createReminderAction(formData: {
   revalidatePath('/dia');
   revalidatePath('/semana');
   revalidatePath('/mes');
+  revalidatePath('/calendario');
+  revalidatePath('/');
   return { ok: true };
 }
 
@@ -89,7 +91,7 @@ export async function planTasksAction(data: {
     const endM = String(endMinutes % 60).padStart(2, '0');
     const endISO = new Date(`${data.dateStr}T${endH}:${endM}:00-04:00`).toISOString();
 
-    await supabase.from('blocks').insert({
+    const { error: blockErr } = await supabase.from('blocks').insert({
       user_id: user.id,
       item_id: newItem.id,
       title: newItem.title,
@@ -99,6 +101,8 @@ export async function planTasksAction(data: {
       status: 'pending',
       source: 'manual',
     });
+
+    if (blockErr) return { ok: false, error: blockErr.message };
   }
 
   // 2. Para cada tarea seleccionada de lo ya anotado
@@ -133,19 +137,24 @@ export async function planTasksAction(data: {
         };
       });
 
-      await supabase.from('blocks').insert(blocksToInsert);
+      const { error: blocksErr } = await supabase.from('blocks').insert(blocksToInsert);
+      if (blocksErr) return { ok: false, error: blocksErr.message };
 
       // Actualizar status de los items a 'planned'
-      await supabase
+      const { error: itemsErr } = await supabase
         .from('items')
         .update({ status: 'planned' })
         .in('id', data.itemIds)
         .eq('user_id', user.id);
+      if (itemsErr) return { ok: false, error: itemsErr.message };
     }
   }
 
   revalidatePath('/dia');
   revalidatePath('/semana');
+  revalidatePath('/calendario');
+  revalidatePath('/pendientes');
+  revalidatePath('/');
   return { ok: true };
 }
 
@@ -186,6 +195,8 @@ export async function toggleBlockStatusAction(
 
   revalidatePath('/dia');
   revalidatePath('/semana');
+  revalidatePath('/calendario');
+  revalidatePath('/');
   return { ok: true };
 }
 
@@ -239,5 +250,7 @@ export async function saveScheduleTemplatesAction(payload: {
   revalidatePath('/dia');
   revalidatePath('/semana');
   revalidatePath('/horario');
+  revalidatePath('/calendario');
+  revalidatePath('/');
   return { ok: true };
 }

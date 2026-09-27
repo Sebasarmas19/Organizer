@@ -15,20 +15,25 @@
    ahi buscando donde marcar el parcial tiene que encontrar la respuesta, no
    un hueco.
 
+   En Tareas, lo capturado sin dia no va a la lista: va al clasificador
+   (<Triage>), de una en una. Cada grupo ensena cinco y pliega el resto.
+
    Igual que Calendario, la solapa vive en la URL (`?v=recordatorios`): atras
    funciona, y se puede enlazar directo desde una notificacion.
    ========================================================================= */
 
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { DEFAULT_TIMEZONE } from '@/lib/profile';
 import { getPendientesData, type PendView } from '@/lib/fd4-pendientes';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
-import { TaskRow } from '@/components/fd4/TaskRow';
+import { TaskGroupCard } from '@/components/fd4/TaskGroupCard';
+import { Triage } from '@/components/fd4/Triage';
 import { ReminderCard } from '@/components/fd4/ReminderCard';
-import { Check, Dot, Flag } from '@/components/fd4/Marks';
+import { CompletedSection } from '@/components/fd4/CompletedSection';
+import { Check, Flag } from '@/components/fd4/Marks';
 import { Setup } from '../Setup';
 
 export const dynamic = 'force-dynamic';
@@ -44,19 +49,12 @@ export default async function PendientesPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return <Setup />;
+  if (!user) redirect('/entrar');
 
-  const [params, profileRes] = await Promise.all([
+  const [params, data] = await Promise.all([
     searchParams,
-    supabase
-      .from('profiles')
-      .select('timezone')
-      .eq('id', user.id)
-      .maybeSingle(),
+    getPendientesData(supabase, user.id),
   ]);
-
-  const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
-  const data = await getPendientesData(supabase, user.id, timezone);
 
   const view: PendView = params.v === 'recordatorios' ? 'recordatorios' : 'tareas';
 
@@ -64,12 +62,16 @@ export default async function PendientesPage({
     <div className="fd-app">
       <DeskSidebar active="pendientes" todayStr={data.todayStr} />
 
-      <main className="fd-screen fd-screen--split">
+      <main className="fd-screen fd-screen--split fd-screen--pend">
         <div className="fd-fixedhead">
           <div className="fd-pend__head">
             <h1 className="fd-h1 fd-h1--screen">Pendientes</h1>
             <span className="fd-sub">
-              {view === 'tareas' ? 'Todo lo que capturaste' : 'Fechas que no dependen de ti'}
+              {view === 'tareas'
+                ? data.inbox.length > 0
+                  ? 'Hay capturas esperando día'
+                  : 'Todo lo que capturaste'
+                : 'Fechas que no dependen de ti'}
             </span>
           </div>
 
@@ -94,30 +96,27 @@ export default async function PendientesPage({
         </div>
 
         <div className="fd-scroll">
-          <div className="fd-pend__body">
+          <div className={`fd-pend__body${view === 'tareas' ? ' fd-pend__body--tareas' : ''}`}>
             {view === 'tareas' ? (
-              data.groups.length > 0 ? (
-                data.groups.map((g) => (
-                  <section key={g.label}>
-                    <div className="fd-seclabel">
-                      <Dot entity="task" />
-                      <h2>{g.label}</h2>
-                    </div>
-
-                    <div className="fd-card">
-                      <span className="fd-card__rail fd-card__rail--task" aria-hidden />
-                      <div className="fd-card__body">
-                        {g.items.map((t) => (
-                          <TaskRow key={t.id} task={t} roomy />
-                        ))}
-                      </div>
-                    </div>
-                  </section>
-                ))
+              data.groups.length > 0 || data.inbox.length > 0 ? (
+                <>
+                  <div className="fd-pend__triage">
+                    <Triage items={data.inbox} days={data.dayOptions} />
+                  </div>
+                  <div className="fd-pend__groups">
+                    {data.groups.map((g) => (
+                      <TaskGroupCard key={g.label} label={g.label} items={g.items} />
+                    ))}
+                  </div>
+                  <CompletedSection items={data.recentCompleted} />
+                </>
               ) : (
-                <p className="fd-empty">
-                  Nada pendiente. Lo que captures desde el botón ＋ aparece aquí.
-                </p>
+                <>
+                  <p className="fd-empty">
+                    Nada pendiente. Lo que captures desde el botón ＋ aparece aquí.
+                  </p>
+                  <CompletedSection items={data.recentCompleted} />
+                </>
               )
             ) : data.reminderGroups.length > 0 ? (
               <>

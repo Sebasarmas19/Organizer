@@ -15,6 +15,7 @@
 
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Icon } from '@/components/Icon';
 import { TabBar } from '@/components/fd4/TabBar';
@@ -42,10 +43,14 @@ export default async function NotificationsSettingsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    redirect('/entrar');
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('notify_morning, notify_evening, notify_weekly_dow, notify_weekly_time, timezone')
-    .eq('id', user?.id ?? '')
+    .eq('id', user.id)
     .maybeSingle();
 
   const timezone = profile?.timezone ?? DEFAULT_TIMEZONE;
@@ -55,7 +60,7 @@ export default async function NotificationsSettingsPage() {
   const { count } = await supabase
     .from('push_subscriptions')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', user?.id ?? '')
+    .eq('user_id', user.id)
     .is('failed_at', null);
 
   return (

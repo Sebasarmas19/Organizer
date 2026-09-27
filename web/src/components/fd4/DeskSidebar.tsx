@@ -61,7 +61,7 @@ export function DeskSidebar({
         <span className="fd-side__name">Organizer</span>
       </div>
 
-      <Link href="/anadir" className="fd-side__add">
+      <Link href="/anadir" prefetch={true} className="fd-side__add">
         <span className="fd-side__addmark" aria-hidden>
           <Icon name="plus" size="sm" />
         </span>
@@ -71,6 +71,7 @@ export function DeskSidebar({
       <nav className="fd-side__nav">
         <Link
           href="/"
+          prefetch={true}
           className="fd-sidelink"
           aria-current={active === 'inicio' ? 'page' : undefined}
         >
@@ -80,6 +81,7 @@ export function DeskSidebar({
 
         <Link
           href="/calendario"
+          prefetch={true}
           className="fd-sidelink"
           aria-current={active === 'calendario' ? 'page' : undefined}
         >
@@ -89,6 +91,7 @@ export function DeskSidebar({
 
         <Link
           href="/pendientes"
+          prefetch={true}
           className="fd-sidelink"
           aria-current={active === 'pendientes' ? 'page' : undefined}
         >
@@ -98,6 +101,7 @@ export function DeskSidebar({
 
         <Link
           href="/recursos"
+          prefetch={true}
           className="fd-sidelink"
           aria-current={active === 'recursos' ? 'page' : undefined}
         >
@@ -160,6 +164,7 @@ export function DeskSidebar({
       <div className="fd-side__settings">
         <Link
           href="/ajustes"
+          prefetch={true}
           className="fd-sidelink"
           aria-current={active === 'ajustes' ? 'page' : undefined}
         >

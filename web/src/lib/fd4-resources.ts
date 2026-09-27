@@ -30,14 +30,26 @@ export interface ResourcesData {
   searchQuery: string;
 }
 
-export const KIND_LABELS: Record<ResourceKind | 'all', { label: string; icon: string }> = {
-  all: { label: 'Todos', icon: '📚' },
-  tool: { label: 'Herramientas', icon: '🛠️' },
-  skill: { label: 'Skills', icon: '🧠' },
-  article: { label: 'Artículos', icon: '📄' },
-  repo: { label: 'Repos', icon: '💻' },
-  video: { label: 'Videos', icon: '🎬' },
-  other: { label: 'Otros', icon: '📌' },
+/* Sin emoji: DESIGN.md prohibe glifos haciendo de icono. El icono de cada
+   tipo vive en `<KindIcon>`, dibujado con el mismo trazo que Reicon. */
+export const KIND_LABELS: Record<ResourceKind | 'all', { label: string }> = {
+  all: { label: 'Todos' },
+  tool: { label: 'Herramientas' },
+  skill: { label: 'Skills' },
+  article: { label: 'Artículos' },
+  repo: { label: 'Repos' },
+  video: { label: 'Videos' },
+  other: { label: 'Otros' },
+};
+
+/** Singular, para la etiqueta de un recurso suelto. */
+export const KIND_SINGULAR: Record<ResourceKind, string> = {
+  tool: 'Herramienta',
+  skill: 'Skill',
+  article: 'Artículo',
+  repo: 'Repo',
+  video: 'Video',
+  other: 'Otro',
 };
 
 export async function getResourcesData(
@@ -69,17 +81,15 @@ export async function getResourcesData(
     query = query.eq('open_count', 0);
   }
 
-  const { data: rawItems } = await query;
-  const allRows = rawItems ?? [];
-
-  // 2. Conteo global sin filtros secundarios
-  const { data: statsRows } = await supabase
+  const statsQuery = supabase
     .from('resources')
     .select('kind, open_count')
     .eq('user_id', userId)
     .is('archived_at', null);
 
-  const stats = statsRows ?? [];
+  const [rawItemsRes, statsRowsRes] = await Promise.all([query, statsQuery]);
+  const allRows = rawItemsRes.data ?? [];
+  const stats = statsRowsRes.data ?? [];
   const unopenedCount = stats.filter((s) => s.open_count === 0).length;
   const countsByKind: Record<ResourceKind | 'all', number> = {
     all: stats.length,

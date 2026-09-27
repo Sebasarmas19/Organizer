@@ -28,6 +28,7 @@ export type TaskRowData = {
   /** Titulo del reminder del que cuelga esta tarea, si cuelga de alguno. */
   rem?: string;
   done: boolean;
+  isOverdue?: boolean;
 };
 
 export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: boolean }) {
@@ -54,7 +55,10 @@ export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: bo
     >
       <Check on={done} />
       <span className={`fd-task__text${roomy ? ' fd-task__text--roomy' : ''}`}>
-        <span className="fd-task__title">{task.title}</span>
+        <span className="fd-task__title">
+          {task.isOverdue ? <span className="fd-task__overdue-tag">Atrasada</span> : null}
+          {task.title}
+        </span>
         {task.meta ? <span className="fd-meta">{task.meta}</span> : null}
         {task.rem ? (
           <span className="fd-task__rem">

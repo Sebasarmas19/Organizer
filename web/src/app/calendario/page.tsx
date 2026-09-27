@@ -20,6 +20,7 @@
    notificacion, y ahi el enlace ya trae la fecha.
    ========================================================================= */
 
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
@@ -65,42 +66,35 @@ export default async function CalendarioPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return <Setup />;
+  if (!user) redirect('/entrar');
 
-  const [params, profileRes] = await Promise.all([
-    searchParams,
+  const params = await searchParams;
+  const view = safeView(params.v);
+  const dateStr = safeDate(params.d, getTodayString(DEFAULT_TIMEZONE));
+  const { year, month } = parseDateString(dateStr);
+
+  const [profileRes, [title, subtitle, body]] = await Promise.all([
     supabase
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
       .maybeSingle(),
+    (async (): Promise<[string, string, React.ReactNode]> => {
+      if (view === 'mes') {
+        const data = await getMonthView(supabase, user.id, year, month, dateStr, DEFAULT_TIMEZONE);
+        return [data.title, 'Toca un día para abrirlo', <MonthView key="m" data={data} />];
+      }
+      if (view === 'semana') {
+        const data = await getWeekView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
+        return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />];
+      }
+      const data = await getDayView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
+      return [data.title, data.sub, <DayView key="d" data={data} />];
+    })(),
   ]);
 
   const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
   const todayStr = getTodayString(timezone);
-
-  const view = safeView(params.v);
-  const dateStr = safeDate(params.d, todayStr);
-
-  /* Solo se consulta la vista que se va a pintar. Las tres comparten
-     cabecera, pero pedir mes + semana + dia en cada navegacion serian tres
-     viajes a Supabase para tirar dos. */
-  const { year, month } = parseDateString(dateStr);
-
-  const [title, subtitle, body] = await (async (): Promise<
-    [string, string, React.ReactNode]
-  > => {
-    if (view === 'mes') {
-      const data = await getMonthView(supabase, user.id, year, month, dateStr, timezone);
-      return [data.title, 'Toca un día para abrirlo', <MonthView key="m" data={data} />];
-    }
-    if (view === 'semana') {
-      const data = await getWeekView(supabase, user.id, dateStr, timezone);
-      return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />];
-    }
-    const data = await getDayView(supabase, user.id, dateStr, timezone);
-    return [data.title, data.sub, <DayView key="d" data={data} />];
-  })();
 
   return (
     <div className="fd-app">

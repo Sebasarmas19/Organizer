@@ -36,6 +36,11 @@ export function NavigationProgress() {
       const target = (e.target as HTMLElement).closest('a');
       if (!target) return;
 
+      // Si el clic ocurrió sobre o dentro de un botón, formulario o elemento con data-no-nav, ignorar
+      if ((e.target as HTMLElement).closest('button, input, select, textarea, [data-no-nav]')) {
+        return;
+      }
+
       const href = target.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) {
         return;

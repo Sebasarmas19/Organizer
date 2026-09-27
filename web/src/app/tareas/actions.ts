@@ -65,7 +65,8 @@ export async function toggleTaskAction(id: string, nextChecked: boolean) {
       status: nextChecked ? 'done' : 'inbox',
       completed_at: nextChecked ? new Date().toISOString() : null,
     })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -96,7 +97,11 @@ export async function updateTaskAction(
   if (updates.context_id !== undefined) patch.context_id = updates.context_id;
   if (updates.status !== undefined) patch.status = updates.status;
 
-  const { error } = await supabase.from('items').update(patch).eq('id', id);
+  const { error } = await supabase
+    .from('items')
+    .update(patch)
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -117,7 +122,8 @@ export async function dropTaskAction(id: string) {
       status: 'dropped',
       dropped_at: new Date().toISOString(),
     })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -132,7 +138,11 @@ export async function deleteTaskAction(id: string) {
 
   if (!user) throw new Error('No autorizado');
 
-  const { error } = await supabase.from('items').delete().eq('id', id);
+  const { error } = await supabase
+    .from('items')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -150,7 +160,8 @@ export async function associateTaskToReminderAction(taskId: string, reminderId: 
   const { error } = await supabase
     .from('items')
     .update({ reminder_id: reminderId })
-    .eq('id', taskId);
+    .eq('id', taskId)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -202,7 +213,11 @@ export async function updateContextAction(
   if (updates.name !== undefined) patch.name = updates.name.trim();
   if (updates.kind !== undefined) patch.kind = updates.kind;
 
-  const { error } = await supabase.from('contexts').update(patch).eq('id', id);
+  const { error } = await supabase
+    .from('contexts')
+    .update(patch)
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -220,7 +235,8 @@ export async function archiveContextAction(id: string) {
   const { error } = await supabase
     .from('contexts')
     .update({ archived_at: new Date().toISOString() })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
@@ -236,9 +252,17 @@ export async function deleteContextAction(id: string) {
   if (!user) throw new Error('No autorizado');
 
   // Primero desasociamos las tareas de este contexto para no romper nada
-  await supabase.from('items').update({ context_id: null }).eq('context_id', id);
+  await supabase
+    .from('items')
+    .update({ context_id: null })
+    .eq('context_id', id)
+    .eq('user_id', user.id);
 
-  const { error } = await supabase.from('contexts').delete().eq('id', id);
+  const { error } = await supabase
+    .from('contexts')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 

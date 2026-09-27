@@ -17,7 +17,9 @@
                        proposito: donde FD4 y FD3 se pisan, manda FD4, que es
                        el diseno vigente. `base.css` sigue viva porque todavia
                        sostiene Horario, Ajustes, Atajo y Entrar.
-     6. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
+     6. focus.css    — "Una cosa a la vez": la estructura de Inicio,
+                       Pendientes y Recursos, solo con tokens de FD4.
+     7. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
    ========================================================================= */
 
 @import "tailwindcss";
@@ -26,5 +28,6 @@
 @import "../styles/web.css";
 @import "../styles/fd4.css";
 @import "../styles/fd4-desk.css";
+@import "../styles/focus.css";
 
 @config "../../tailwind.config.js";

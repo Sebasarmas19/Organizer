@@ -569,8 +569,10 @@ html, body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -727,6 +729,8 @@ html, body {
   line-height: 1.3;
   color: var(--text);
   text-wrap: pretty;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .fd-remcard__chev {
@@ -988,7 +992,8 @@ html, body {
   font-weight: var(--weight-medium);
   color: var(--task);
   text-decoration: none;
-  padding: 4px 8px;
+  padding: 8px 12px;
+  min-height: 40px;
   border-radius: 8px;
   transition: background var(--dur-fast) var(--ease-out);
 }
@@ -1295,27 +1300,38 @@ html, body {
    no tienen donde caer, y no pueden desaparecer porque siguen siendo de hoy. */
 .fd-nohour {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   align-items: center;
   gap: 8px;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fd-nohour::-webkit-scrollbar {
+  display: none;
 }
 
 .fd-nohour__label {
   font-size: var(--fd-xs);
   color: var(--text-faint);
+  flex-shrink: 0;
 }
 
 .fd-chip {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 11px;
+  padding: 8px 14px;
+  min-height: 40px;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--line);
   font-size: var(--fd-small);
   color: var(--text);
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .fd-grid {
@@ -1615,10 +1631,10 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Indicador flotante de carga al navegar estilo iOS Dynamic Island */
+/* Indicador flotante de carga al navegar estilo iOS HUD */
 .fd-loading-pill {
   position: fixed;
-  top: max(18px, calc(env(safe-area-inset-top) + 10px));
+  bottom: calc(var(--tab-bar-h, 60px) + env(safe-area-inset-bottom) + 16px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 99999;
@@ -1638,8 +1654,18 @@ html, body {
   animation: fd-pill-in var(--dur-fast) var(--ease-out) forwards;
 }
 
+@media (min-width: 769px) {
+  .fd-loading-pill {
+    bottom: auto;
+    top: 24px;
+    right: 24px;
+    left: auto;
+    transform: none;
+  }
+}
+
 @keyframes fd-pill-in {
-  from { opacity: 0; transform: translate(-50%, -10px) scale(0.95); }
+  from { opacity: 0; transform: translate(-50%, 8px) scale(0.95); }
   to { opacity: 1; transform: translate(-50%, 0) scale(1); }
 }
 
@@ -1658,26 +1684,6 @@ html, body {
   justify-content: space-between;
   gap: 12px;
   padding: 6px 0 12px;
-}
-
-.fd-reshead__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: var(--radius-sm);
-  background: var(--task);
-  color: var(--text-on-accent);
-  font-size: var(--fd-small);
-  font-weight: 600;
-  border: 0;
-  cursor: pointer;
-  transition: opacity var(--dur-fast) var(--ease-out);
-}
-
-.fd-reshead__btn:hover {
-  opacity: 0.9;
 }
 
 /* Buscador */
@@ -1730,261 +1736,8 @@ html, body {
   cursor: pointer;
 }
 
-/* Selector horizontal de tipos */
-.fd-recursos__kinds {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.fd-recursos__kinds::-webkit-scrollbar {
-  display: none;
-}
-
-.fd-kindpill {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  color: var(--text-muted);
-  font-size: var(--fd-small);
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--dur-fast) var(--ease-out);
-}
-
-.fd-kindpill:hover {
-  background: var(--surface-hover);
-  color: var(--text);
-}
-
-.fd-kindpill[data-active="true"] {
-  background: var(--task);
-  border-color: var(--task);
-  color: var(--text-on-accent);
-  font-weight: 600;
-}
-
-.fd-kindpill__count {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.12);
-}
-
-.fd-kindpill[data-active="true"] .fd-kindpill__count {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* Sorter & Higiene */
-.fd-recursos__sorter {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 2px;
-}
-
-.fd-unopened-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--surface-sunken);
-  border: 1px solid var(--line);
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-out);
-}
-
-.fd-unopened-toggle[data-active="true"] {
-  background: var(--tint-warn);
-  border-color: var(--warn);
-  color: var(--text);
-  font-weight: 600;
-}
-
-.fd-unopened-count {
-  font-weight: 700;
-  color: var(--warn);
-}
-
-/* Lista de Tarjetas */
-.fd-recursos__list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.fd-rescard {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-card);
-  transition: border-color var(--dur-fast) var(--ease-out);
-}
-
-.fd-rescard:hover {
-  border-color: var(--line-strong);
-}
-
-.fd-rescard__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.fd-pill--kind {
-  background: var(--surface-sunken);
-  color: var(--text);
-  font-weight: 500;
-  gap: 5px;
-}
-
-.fd-pill--unopened {
-  background: var(--tint-warn);
-  color: var(--warn);
-  font-size: 11px;
-  font-weight: 600;
-  border: 1px solid rgba(224, 160, 48, 0.3);
-}
-
-.fd-rescard__title {
-  margin: 0;
-  font-size: var(--fd-lead);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--text);
-}
-
-.fd-rescard__domain {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: var(--task);
-  font-family: monospace;
-}
-
-.fd-rescard__notes {
-  margin: 0;
-  font-size: var(--fd-body);
-  line-height: 1.5;
-  color: var(--text-muted);
-  white-space: pre-wrap;
-}
-
-.fd-rescard__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.fd-rescard__tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: var(--surface-sunken);
-  border: 1px solid var(--line);
-  color: var(--text-faint);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-out);
-}
-
-.fd-rescard__tag:hover {
-  color: var(--text);
-  border-color: var(--line-strong);
-}
-
-.fd-rescard__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-}
-
-.fd-resbtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: var(--surface-sunken);
-  border: 1px solid var(--line);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--dur-fast) var(--ease-out);
-}
-
-.fd-resbtn:hover {
-  background: var(--surface-hover);
-  border-color: var(--line-strong);
-}
-
-.fd-resbtn--open {
-  background: var(--task-soft);
-  color: var(--task);
-  border-color: transparent;
-  font-weight: 600;
-}
-
-.fd-resbtn--open:hover {
-  background: var(--task);
-  color: var(--text-on-accent);
-}
-
-.fd-resbtn--del {
-  padding: 0 8px;
-  opacity: 0.6;
-}
-
-.fd-resbtn--del:hover {
-  opacity: 1;
-  background: rgba(220, 38, 38, 0.1);
-  border-color: rgba(220, 38, 38, 0.3);
-}
-
-.fd-rescard__planform {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  border: 1px solid var(--line);
-}
-
-/* Estado vacío */
-.fd-recursos__empty {
-  text-align: center;
-  padding: 48px 16px;
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  border: 1px dashed var(--line-strong);
-}
+/* Los tipos, la lista, el detalle y "Para retomar" viven en focus.css
+   desde el rediseno "Una cosa a la vez". */
 
 /* Modal */
 .fd-modal-backdrop {

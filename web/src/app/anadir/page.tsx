@@ -18,6 +18,8 @@
    entrar. Pintar uno falso debajo del real seria absurdo.
    ========================================================================= */
 
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { getTodayString } from '@/lib/date-utils';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
@@ -25,7 +27,16 @@ import { CaptureForm } from './CaptureForm';
 
 export const dynamic = 'force-dynamic';
 
-export default function AnadirPage() {
+export default async function AnadirPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/entrar');
+  }
+
   return (
     <div className="fd-app">
       <DeskSidebar active="inicio" todayStr={getTodayString(DEFAULT_TIMEZONE)} />

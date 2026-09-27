@@ -87,7 +87,7 @@ export function TabBar() {
       {/* Capturar. `aria-label` porque no hay texto visible, y el texto
           visible no se pone porque el boton mide 56 y la etiqueta no cabe
           sin empujar a las otras cuatro. */}
-      <Link href="/anadir" className="fd-fab" aria-label="Añadir">
+      <Link href="/anadir" prefetch={true} className="fd-fab" aria-label="Añadir">
         <span className="fd-fab__mark" style={{ position: 'relative' }}>
           <PlusMark />
         </span>
@@ -121,6 +121,7 @@ function TabLink({
   return (
     <Link
       href={tab.href}
+      prefetch={true}
       className="fd-tab"
       aria-current={active ? 'page' : undefined}
       onClick={() => {

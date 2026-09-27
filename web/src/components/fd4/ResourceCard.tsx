@@ -1,211 +1,228 @@
 'use client';
 
 /* ============================================================================
-   Organizer · FD4 · <ResourceCard>
-   Tarjeta de un recurso (herramienta, skill, artículo, repo, etc.)
+   Organizer · Recursos · <ResourceRow> y <ResourceDetail>
+
+   La tarjeta alta de antes (tipo, dominio, notas, etiquetas y tres botones)
+   dejaba ver dos recursos y medio por pantalla. Ahora hay dos piezas:
+
+     <ResourceRow>     una fila de 56px: icono, titulo, dominio y etiqueta.
+                       Se escanea, que es lo que se hace en una biblioteca.
+     <ResourceDetail>  todo lo demas, al elegir una fila. En el telefono se
+                       abre debajo de la fila; en escritorio, en el panel de
+                       la derecha.
+
+   Archivar no pregunta con `confirm()` (bloquea y no se puede deshacer):
+   archiva en el acto y la vista enseña "Deshacer". Regla del sistema.
    ========================================================================= */
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ResourceItem } from '@/lib/fd4-resources';
-import { KIND_LABELS } from '@/lib/fd4-resources';
-import {
-  trackResourceOpenAction,
-  deleteResourceAction,
-  planResourceAction,
-} from '@/lib/resources-actions';
+import { KIND_SINGULAR } from '@/lib/fd4-resources';
+import { trackResourceOpenAction, planResourceAction } from '@/lib/resources-actions';
 import { Icon } from '@/components/Icon';
+import { KindIcon } from './KindIcon';
 
-export function ResourceCard({
+export function isSafeHttpUrl(url: string | null): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export function domainOf(url: string | null): string {
+  if (!url || !isSafeHttpUrl(url)) return '';
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+export function savedAgo(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return 'hoy';
+  if (days === 1) return 'ayer';
+  return `hace ${days} días`;
+}
+
+function tomorrowLocal(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/* ------------------------------------------------------------------ fila */
+
+export function ResourceRow({
   resource,
-  onTagClick,
+  current = false,
+  selected,
+  onSelect,
 }: {
   resource: ResourceItem;
-  onTagClick?: (tag: string) => void;
+  /** El que enseña el panel de escritorio, aunque nadie lo haya tocado. */
+  current?: boolean;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const domain = domainOf(resource.url);
+  const sub = [domain || KIND_SINGULAR[resource.kind], resource.tags[0] ? `#${resource.tags[0]}` : '']
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <button
+      type="button"
+      className="fd-resrow"
+      aria-expanded={selected}
+      data-selected={selected ? 'true' : 'false'}
+      data-current={current ? 'true' : 'false'}
+      onClick={onSelect}
+    >
+      <span className="fd-resrow__kind">
+        <KindIcon kind={resource.kind} />
+      </span>
+      <span className="fd-resrow__text">
+        <span className="fd-resrow__title">{resource.title}</span>
+        <span className="fd-meta">{sub}</span>
+      </span>
+      {resource.openCount === 0 ? (
+        <span className="fd-resrow__new" title="Sin abrir">
+          <span className="sr-only">Sin abrir</span>
+        </span>
+      ) : (
+        <span className="fd-resrow__count">{resource.openCount}×</span>
+      )}
+    </button>
+  );
+}
+
+/* --------------------------------------------------------------- detalle */
+
+export function ResourceDetail({
+  resource,
+  onTagClick,
+  onArchive,
+}: {
+  resource: ResourceItem;
+  onTagClick: (tag: string) => void;
+  onArchive: (resource: ResourceItem) => void;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [showPlanDialog, setShowPlanDialog] = useState(false);
-  const [planDate, setPlanDate] = useState(() => {
-    // Sugerir mañana por defecto
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().slice(0, 10);
-  });
-  const [plannedSuccess, setPlannedSuccess] = useState(false);
+  const [planning, setPlanning] = useState(false);
+  const [planDate, setPlanDate] = useState(tomorrowLocal);
+  const [planned, setPlanned] = useState<string | null>(null);
 
-  const kindInfo = KIND_LABELS[resource.kind] ?? KIND_LABELS.other;
+  const domain = domainOf(resource.url);
 
-  let domain = '';
-  if (resource.url) {
-    try {
-      domain = new URL(resource.url).hostname.replace(/^www\./, '');
-    } catch {
-      domain = resource.url;
-    }
-  }
-
-  const handleOpen = () => {
+  const open = () => {
     startTransition(async () => {
       await trackResourceOpenAction(resource.id);
       router.refresh();
     });
-    if (resource.url) {
+    if (resource.url && isSafeHttpUrl(resource.url)) {
       window.open(resource.url, '_blank', 'noopener,noreferrer');
     }
   };
 
-  const handleDelete = () => {
-    if (confirm(`¿Eliminar el recurso "${resource.title}"?`)) {
-      startTransition(async () => {
-        await deleteResourceAction(resource.id);
-        router.refresh();
-      });
-    }
-  };
-
-  const handlePlanSubmit = (e: React.FormEvent) => {
+  const plan = (e: React.FormEvent) => {
     e.preventDefault();
     if (!planDate) return;
-
     startTransition(async () => {
       await planResourceAction(resource.id, resource.title, planDate);
-      setPlannedSuccess(true);
+      setPlanned(planDate);
+      setPlanning(false);
       router.refresh();
-      setTimeout(() => {
-        setShowPlanDialog(false);
-        setPlannedSuccess(false);
-      }, 1500);
     });
   };
 
   return (
-    <article className="fd-rescard">
-      <div className="fd-rescard__top">
-        <span className="fd-pill fd-pill--kind">
-          <span aria-hidden>{kindInfo.icon}</span>
-          <span>{kindInfo.label}</span>
-        </span>
+    <article className="fd-resdetail">
+      <h2 className="fd-resdetail__title">{resource.title}</h2>
 
-        <div className="fd-rescard__meta">
-          {resource.openCount === 0 ? (
-            <span className="fd-pill fd-pill--unopened" title="Guardado y nunca abierto">
-              Sin abrir
-            </span>
-          ) : (
-            <span className="fd-sub" style={{ fontSize: '12px' }}>
-              {resource.openCount} {resource.openCount === 1 ? 'consulta' : 'consultas'}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <h3 className="fd-rescard__title">{resource.title}</h3>
+      <span className="fd-resdetail__kicker">
+        <KindIcon kind={resource.kind} size="sm" />
+        {KIND_SINGULAR[resource.kind]} · guardado{' '}
+        <span suppressHydrationWarning>{savedAgo(resource.createdAt)}</span> ·{' '}
+        {resource.openCount === 0
+          ? 'sin abrir'
+          : `${resource.openCount} ${resource.openCount === 1 ? 'consulta' : 'consultas'}`}
+      </span>
 
       {domain ? (
-        <div className="fd-rescard__domain">
-          <span style={{ opacity: 0.7 }}><Icon name="link" size="sm" /></span>
-          <span>{domain}</span>
-        </div>
+        <a className="fd-resdetail__url" href={resource.url ?? undefined} target="_blank" rel="noreferrer" onClick={(e) => { e.preventDefault(); open(); }}>
+          <Icon name="link" size="sm" />
+          {domain}
+        </a>
       ) : null}
 
       {resource.notes ? (
-        <p className="fd-rescard__notes">{resource.notes}</p>
+        <div className="fd-resdetail__notes">
+          <span className="fd-resdetail__label">Por qué lo guardaste</span>
+          <p>{resource.notes}</p>
+        </div>
       ) : null}
 
       {resource.tags.length > 0 ? (
-        <div className="fd-rescard__tags">
+        <div className="fd-resdetail__tags">
           {resource.tags.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className="fd-rescard__tag"
-              onClick={() => onTagClick?.(t)}
-            >
+            <button key={t} type="button" className="fd-tagchip" onClick={() => onTagClick(t)}>
               #{t}
             </button>
           ))}
         </div>
       ) : null}
 
-      {/* Planificar modal / barra emergente */}
-      {showPlanDialog ? (
-        <form onSubmit={handlePlanSubmit} className="fd-rescard__planform">
-          <span className="fd-sub" style={{ fontSize: '13px', color: 'var(--text)' }}>
-            Planificar sesión en Tareas para:
-          </span>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      {planning ? (
+        <form className="fd-resdetail__plan" onSubmit={plan}>
+          <label htmlFor={`plan-${resource.id}`} className="fd-resdetail__label">
+            Crear una tarea para consultarlo el
+          </label>
+          <div className="fd-resdetail__planrow">
             <input
+              id={`plan-${resource.id}`}
               type="date"
               value={planDate}
               onChange={(e) => setPlanDate(e.target.value)}
-              className="field"
-              style={{ height: '36px', fontSize: '13px', padding: '0 8px' }}
+              className="fd-resdetail__date"
               required
             />
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn btn--primary"
-              style={{ minHeight: '36px', height: '36px', padding: '0 12px', fontSize: '13px' }}
-            >
-              {plannedSuccess ? '✓ Agendado' : isPending ? '...' : 'Agendar'}
+            <button type="submit" className="fd-btn fd-btn--primary" disabled={isPending}>
+              {isPending ? 'Agendando…' : 'Agendar'}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowPlanDialog(false)}
-              className="btn btn--quiet"
-              style={{ minHeight: '36px', height: '36px', padding: '0 8px', fontSize: '13px' }}
-            >
+            <button type="button" className="fd-btn fd-btn--quiet" onClick={() => setPlanning(false)}>
               Cancelar
             </button>
           </div>
         </form>
       ) : null}
 
-      <div className="fd-rescard__footer">
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {resource.url ? (
-            <button
-              type="button"
-              onClick={handleOpen}
-              className="fd-resbtn fd-resbtn--open"
-              disabled={isPending}
-            >
-              <span>Abrir enlace</span>
-              <Icon name="link" size="sm" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleOpen}
-              className="fd-resbtn"
-              disabled={isPending}
-            >
-              <span>Consultar notas</span>
-            </button>
-          )}
+      {planned ? (
+        <p className="fd-note" role="status">
+          Tarea creada en Pendientes para el {planned.split('-').reverse().join('/')}.
+        </p>
+      ) : null}
 
-          <button
-            type="button"
-            onClick={() => setShowPlanDialog(!showPlanDialog)}
-            className="fd-resbtn"
-            title="Convertir en tarea en Pendientes"
-          >
-            <span>Planificar</span>
+      <div className="fd-resdetail__acts">
+        <button type="button" className="fd-btn fd-btn--primary" onClick={open} disabled={isPending}>
+          {resource.url ? 'Abrir enlace' : 'Marcar consultado'}
+        </button>
+        {!planning ? (
+          <button type="button" className="fd-btn" onClick={() => setPlanning(true)}>
             <Icon name="calendar" size="sm" />
+            Planificar
           </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDelete}
-          className="fd-resbtn fd-resbtn--del"
-          title="Eliminar recurso"
-          aria-label="Eliminar recurso"
-          disabled={isPending}
-        >
-          <Icon name="trash" size="sm" />
+        ) : null}
+        <button type="button" className="fd-btn fd-btn--quiet" onClick={() => onArchive(resource)}>
+          Archivar
         </button>
       </div>
     </article>
