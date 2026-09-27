@@ -1,21 +1,9 @@
 'use server';
 
-/* ============================================================================
-   Organizer · FD4 · las mutaciones que hacen las pantallas nuevas
-
-   POR QUE ESTE ARCHIVO EXISTE Y NO REUSO `app/tareas/actions.ts`
-   Aquel modulo revalida `/tareas`, que es la ruta de F1. FD4 mueve las
-   pantallas a `/`, `/calendario` y `/pendientes`, y una accion que revalida
-   la ruta equivocada no falla: simplemente deja la pantalla mintiendo hasta
-   la siguiente navegacion. Eso es peor que fallar.
-
-   Asi que las mutaciones de FD4 viven aqui y revalidan las rutas de FD4.
-   `app/tareas/actions.ts` se queda intacto sosteniendo las rutas viejas
-   mientras existan.
-
-   Todas pasan por el cliente de usuario, o sea por RLS. Ninguna toca la
-   clave de servicio: si una politica esta mal, aqui se nota.
-   ========================================================================= */
+/**
+ * Organizer · Server mutations for FD4 UI actions.
+ * All mutations run through authenticated user client (RLS) and revalidate active routes.
+ */
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
@@ -40,7 +28,7 @@ async function requireUser() {
 
 /** Marcar o desmarcar una tarea. Es la unica accion de un solo toque. */
 export async function toggleTask(id: string, done: boolean) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
 
   const { error } = await supabase
     .from('items')
@@ -48,11 +36,87 @@ export async function toggleTask(id: string, done: boolean) {
       status: done ? 'done' : 'inbox',
       completed_at: done ? new Date().toISOString() : null,
     })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
   revalidateFd4();
 }
+
+/**
+ * Quitar un reminder.
+ * Regla 5 del proyecto ("nada se pierde en silencio"): las tareas que colgaban
+ * de este reminder NO se borran — simplemente se desvinculan (reminder_id = null)
+ * y siguen existiendo en Pendientes.
+ */
+export async function deleteReminder(id: string) {
+  const { supabase, user } = await requireUser();
+
+  // 1. Desvincular tareas asociadas
+  const { error: unlinkError } = await supabase
+    .from('items')
+    .update({ reminder_id: null })
+    .eq('reminder_id', id)
+    .eq('user_id', user.id);
+
+  if (unlinkError) throw new Error(unlinkError.message);
+
+  // 2. Eliminar el reminder
+  const { error } = await supabase
+    .from('reminders')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) throw new Error(error.message);
+  revalidateFd4();
+}
+
+/**
+ * Marcar o desmarcar una tarea desde el Calendario (riel de horas o chip sin hora).
+ * Mantiene sincronizados `blocks` y `items`.
+ */
+export async function toggleBlockTask(
+  blockId: string | null,
+  itemId: string | null,
+  done: boolean
+) {
+  const { supabase, user } = await requireUser();
+
+  let resolvedItemId = itemId;
+
+  if (blockId) {
+    const { data: b, error: blockError } = await supabase
+      .from('blocks')
+      .update({ status: done ? 'done' : 'pending' })
+      .eq('id', blockId)
+      .eq('user_id', user.id)
+      .select('item_id')
+      .maybeSingle();
+
+    if (blockError) throw new Error(blockError.message);
+
+    if (b?.item_id && !resolvedItemId) {
+      resolvedItemId = b.item_id;
+    }
+  }
+
+  if (resolvedItemId) {
+    const { error: itemError } = await supabase
+      .from('items')
+      .update({
+        status: done ? 'done' : 'planned',
+        completed_at: done ? new Date().toISOString() : null,
+      })
+      .eq('id', resolvedItemId)
+      .eq('user_id', user.id);
+
+    if (itemError) throw new Error(itemError.message);
+  }
+
+  revalidateFd4();
+}
+
 
 /* ------------------------------------------------------------- de ayer ----
    Las tres salidas del bloque "De ayer". Ninguna borra nada, que es la
@@ -61,12 +125,13 @@ export async function toggleTask(id: string, done: boolean) {
 
 /** "Hoy" · la tarea se mueve a la fecha de hoy. */
 export async function moveTaskToDate(id: string, dateStr: string | null) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
 
   const { error } = await supabase
     .from('items')
     .update({ due_on: dateStr, status: 'inbox' })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
   revalidateFd4();
@@ -76,12 +141,13 @@ export async function moveTaskToDate(id: string, dateStr: string | null) {
     NO es borrar y no es descartar: la tarea sigue existiendo y sigue
     apareciendo, solo que ya no reclama un dia concreto. */
 export async function unscheduleTask(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
 
   const { error } = await supabase
     .from('items')
     .update({ due_on: null, status: 'someday' })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
   revalidateFd4();

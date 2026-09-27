@@ -1,24 +1,11 @@
-/* ============================================================================
-   Organizer · FD4 · los datos de Inicio
-
-   Inicio es la unica pantalla que el usuario ve sin haber decidido verla: es
-   donde cae al abrir la app desde la notificacion. Asi que responde tres
-   preguntas y ni una mas:
-
-     1. ¿Que hay hoy?              -> `hoy`
-     2. ¿Que se viene?             -> `semana` (reminders, con su preparacion)
-     3. ¿Que se me quedo colgando? -> `ayer`
-
-   Lo de "y ni una mas" es literal. Cualquier cosa que se anada aqui compite
-   con las tres, y la pantalla tiene que caber sin scroll en un iPhone.
-
-   Todo se resuelve en el servidor y en una sola tanda de consultas. Nada de
-   esto es reactivo: Inicio se pinta con lo que hay y se revalida cuando una
-   accion la cambia (ver `fd4-actions.ts`).
-   ========================================================================= */
+/**
+ * Organizer · Lógica de datos de Inicio (FD4)
+ * Consulta en una sola tanda: tareas del día ('hoy'), próximos recordatorios ('semana') y pendientes ('ayer').
+ */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
+import { DEFAULT_TIMEZONE } from './profile';
 import {
   MONTH_NAMES_CAP_ES,
   WEEKDAY_FULL_ES,
@@ -33,6 +20,8 @@ export type HomeTask = {
   title: string;
   /** "15:00 – 17:00 · Proyecto IA". Cadena vacia si la tarea no tiene hora. */
   meta: string;
+  /** Titulo del reminder que prepara, si prepara alguno. */
+  rem?: string;
   done: boolean;
 };
 
@@ -57,6 +46,7 @@ export type OverdueTask = {
 
 export type HomeData = {
   todayStr: string;
+  timezone: string;
   /** "Jueves 17" */
   dayTitle: string;
   /** "Septiembre" */
@@ -137,20 +127,27 @@ export function formatDistance(todayStr: string, dateStr: string): string {
 export async function getHomeData(
   supabase: SupabaseClient<Database>,
   userId: string,
-  timezone = 'America/Caracas'
+  userTimezone?: string
 ): Promise<HomeData> {
+  let timezone = userTimezone;
+  if (!timezone) {
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', userId)
+      .maybeSingle();
+    timezone = prof?.timezone ?? DEFAULT_TIMEZONE;
+  }
+
   const todayStr = getTodayString(timezone);
   const horizonStr = addDays(todayStr, 45);
 
-  /* El dia local en UTC. La app fija Caracas (UTC-4, sin horario de verano)
-     igual que hace `calendar.ts`; cuando `profiles.timezone` deje de ser
-     siempre Caracas, este offset sale de ahi y no de una constante. */
+  /* El dia local en UTC. La app fija Caracas (UTC-4, sin horario de verano) */
   const dayStartUTC = new Date(`${todayStr}T00:00:00-04:00`).toISOString();
   const dayEndUTC = new Date(`${todayStr}T23:59:59-04:00`).toISOString();
 
   const [blocksRes, itemsRes, remindersRes, contextsRes, doneRes] = await Promise.all([
-    /* Bloques de hoy que son de una tarea (no de una materia): son los que
-       le ponen hora a lo que se ve en "Hoy". */
+    /* Bloques de hoy que son de una tarea manual */
     supabase
       .from('blocks')
       .select('id, item_id, title, starts_at, ends_at, context_id, source')
@@ -160,20 +157,20 @@ export async function getHomeData(
       .lte('starts_at', dayEndUTC)
       .order('starts_at', { ascending: true }),
 
-    /* Todo lo que sigue vivo y tiene fecha hasta hoy: lo de hoy y lo que se
-       quedo atras. Una sola consulta para las dos secciones. */
+    /* Items hasta hoy: solo campos necesarios para renderizar Inicio */
     supabase
       .from('items')
-      .select('*')
+      .select('id, title, status, due_on, reminder_id, context_id')
       .eq('user_id', userId)
       .in('status', ['inbox', 'someday', 'planned', 'done'])
       .not('due_on', 'is', null)
       .lte('due_on', todayStr)
       .order('due_on', { ascending: false }),
 
+    /* Próximos reminders: solo campos necesarios */
     supabase
       .from('reminders')
-      .select('*')
+      .select('id, title, occurs_on, occurs_at, notice_days')
       .eq('user_id', userId)
       .gte('occurs_on', todayStr)
       .lte('occurs_on', horizonStr)
@@ -182,8 +179,7 @@ export async function getHomeData(
 
     supabase.from('contexts').select('id, name').eq('user_id', userId),
 
-    /* Para la racha. 90 dias es el techo: mas alla el numero deja de
-       significar nada y la consulta empieza a costar. */
+    /* Para la racha (90 días) */
     supabase
       .from('items')
       .select('completed_at')
@@ -194,8 +190,8 @@ export async function getHomeData(
   ]);
 
   const blocks = blocksRes.data ?? [];
-  const items = (itemsRes.data ?? []) as Task[];
-  const reminders = (remindersRes.data ?? []) as Reminder[];
+  const items = (itemsRes.data ?? []) as unknown as Task[];
+  const reminders = (remindersRes.data ?? []) as unknown as Reminder[];
 
   const contextName = new Map((contextsRes.data ?? []).map((c) => [c.id, c.name]));
 
@@ -207,8 +203,43 @@ export async function getHomeData(
   }
 
   /* --------------------------------------------------------------- hoy -- */
-  const hoy: HomeTask[] = items
-    .filter((t) => t.due_on === todayStr)
+  const todayItems = items.filter((t) => t.due_on === todayStr);
+
+  /* La tarjeta "Lo siguiente" dice para que sirve la tarea ("Parcial de
+     Calculo · vie 2"). Los reminders de arriba solo traen los tres
+     proximos, asi que los que cuelgan de hoy se piden aparte.
+     Se lanzan en paralelo con la preparacion de reminders para no encadenar
+     dos viajes de red seguidos. */
+  const remIds = [...new Set(todayItems.map((t) => t.reminder_id).filter((v): v is string => Boolean(v)))];
+
+  const [remRowsRes, prepRowsRes] = await Promise.all([
+    remIds.length > 0
+      ? supabase
+          .from('reminders')
+          .select('id, title, occurs_on')
+          .eq('user_id', userId)
+          .in('id', remIds)
+      : Promise.resolve({ data: null }),
+    reminders.length > 0
+      ? supabase
+          .from('items')
+          .select('title, reminder_id')
+          .eq('user_id', userId)
+          .in(
+            'reminder_id',
+            reminders.map((r) => r.id)
+          )
+          .neq('status', 'dropped')
+          .order('due_on', { ascending: true, nullsFirst: false })
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const remTitle = new Map<string, string>();
+  for (const r of remRowsRes.data ?? []) {
+    remTitle.set(r.id, `${r.title} · ${formatWhen(r.occurs_on, null, timezone)}`);
+  }
+
+  const hoy: HomeTask[] = todayItems
     .map((t) => {
       const block = blockByItem.get(t.id);
       const ctx = t.context_id ? contextName.get(t.context_id) : undefined;
@@ -225,6 +256,7 @@ export async function getHomeData(
         id: t.id,
         title: t.title,
         meta: [when, ctx].filter(Boolean).join(' · '),
+        rem: t.reminder_id ? remTitle.get(t.reminder_id) : undefined,
         done: t.status === 'done',
       };
     })
@@ -237,24 +269,13 @@ export async function getHomeData(
     });
 
   /* ------------------------------------------------------- esta semana -- */
-  let prepByReminder = new Map<string, string[]>();
-  if (reminders.length > 0) {
-    const { data: prepRows } = await supabase
-      .from('items')
-      .select('title, reminder_id')
-      .eq('user_id', userId)
-      .in('reminder_id', reminders.map((r) => r.id))
-      .neq('status', 'dropped')
-      .order('due_on', { ascending: true, nullsFirst: false });
-
-    prepByReminder = (prepRows ?? []).reduce((acc, row) => {
-      if (!row.reminder_id) return acc;
-      const list = acc.get(row.reminder_id) ?? [];
-      list.push(row.title);
-      acc.set(row.reminder_id, list);
-      return acc;
-    }, new Map<string, string[]>());
-  }
+  const prepByReminder = (prepRowsRes.data ?? []).reduce((acc, row) => {
+    if (!row.reminder_id) return acc;
+    const list = acc.get(row.reminder_id) ?? [];
+    list.push(row.title);
+    acc.set(row.reminder_id, list);
+    return acc;
+  }, new Map<string, string[]>());
 
   const semana: HomeReminder[] = reminders.map((r) => {
     const prep = prepByReminder.get(r.id) ?? [];
@@ -309,6 +330,7 @@ export async function getHomeData(
 
   return {
     todayStr,
+    timezone,
     dayTitle: formatDayHeading(todayStr),
     monthLabel: MONTH_NAMES_CAP_ES[month - 1],
     streakDays,

@@ -31,3 +31,4 @@ npm-debug.log*
 
 # worktrees de los agentes en paralelo
 .worktrees/
+.impeccable/

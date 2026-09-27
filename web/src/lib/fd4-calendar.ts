@@ -1,24 +1,7 @@
-/* ============================================================================
-   Organizer · FD4 · los datos de Calendario
-
-   FD4 fusiona Dia, Semana y Mes en UN modulo con un conmutador arriba. Las
-   tres vistas miran los mismos datos desde distinta altura, pero no piden lo
-   mismo, y por eso hay tres funciones y no una con banderas:
-
-     Mes     · ¿que dias tienen algo?     -> puntos por entidad, sin detalle
-     Semana  · ¿como viene la semana?     -> una tarjeta por dia, con titulos
-     Dia     · ¿que hago ahora?           -> riel de horas con bloques
-
-   POR QUE NO REUSO `calendar.ts` TAL CUAL
-   Aquel modulo es de F2 y sirve a `/dia`, `/semana` y `/mes`, que siguen
-   existiendo como redirecciones. Su `getMonthData` devuelve SOLO reminders,
-   porque en F2 el mes no pintaba tareas ni materias (decision 53). FD4 si:
-   la rejilla lleva hasta tres puntos por dia, uno por entidad presente. Pedir
-   eso a la funcion vieja seria cambiarla para todos.
-
-   Lo que si se reusa es `materializeScheduleTemplates`: las materias se
-   convierten en bloques reales de forma idempotente y eso no se duplica.
-   ========================================================================= */
+/**
+ * Organizer · Calendario data access.
+ * Queries and computes aggregated data for Day, Week, and Month views.
+ */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
@@ -422,7 +405,7 @@ export async function getWeekView(
       .lte('due_on', sundayStr),
     supabase
       .from('reminders')
-      .select('*')
+      .select('id, title, occurs_on, occurs_at, notice_days, context_id, notes')
       .eq('user_id', userId)
       .gte('occurs_on', mondayStr)
       .lte('occurs_on', sundayStr)
@@ -568,6 +551,7 @@ export async function getWeekView(
 
 export type DayBlockView = {
   id: string;
+  itemId?: string | null;
   kind: Entity;
   title: string;
   meta: string;
@@ -576,6 +560,13 @@ export type DayBlockView = {
   /** Una tarea que cae encima de una clase se corre a la derecha. */
   overlap: boolean;
   showMeta: boolean;
+  done?: boolean;
+};
+
+export type DayNoHourTask = {
+  id: string;
+  title: string;
+  done: boolean;
 };
 
 export type Fd4DayData = {
@@ -591,7 +582,7 @@ export type Fd4DayData = {
   nowLabel: string;
   band: { title: string; meta: string } | null;
   /** Tareas del dia sin hora: no caben en el riel y no pueden desaparecer. */
-  noHour: { id: string; title: string }[];
+  noHour: DayNoHourTask[];
   blocks: DayBlockView[];
 };
 
@@ -612,20 +603,20 @@ export async function getDayView(
   const [blocksRes, itemsRes, remindersRes, contextsRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('id, item_id, title, starts_at, ends_at, source, context_id')
+      .select('id, item_id, title, starts_at, ends_at, source, context_id, status')
       .eq('user_id', userId)
       .gte('starts_at', dayStartUTC(dateStr))
       .lte('starts_at', dayEndUTC(dateStr))
       .order('starts_at', { ascending: true }),
     supabase
       .from('items')
-      .select('id, title, due_on, context_id')
+      .select('id, title, due_on, context_id, status')
       .eq('user_id', userId)
-      .in('status', ['inbox', 'someday', 'planned'])
+      .in('status', ['inbox', 'someday', 'planned', 'done'])
       .eq('due_on', dateStr),
     supabase
       .from('reminders')
-      .select('*')
+      .select('id, title, occurs_on, occurs_at, notice_days, context_id, notes')
       .eq('user_id', userId)
       .eq('occurs_on', dateStr)
       .order('occurs_at', { ascending: true, nullsFirst: false }),
@@ -633,7 +624,7 @@ export async function getDayView(
   ]);
 
   const rawBlocks = blocksRes.data ?? [];
-  const items = (itemsRes.data ?? []) as Pick<Task, 'id' | 'title' | 'due_on' | 'context_id'>[];
+  const items = (itemsRes.data ?? []) as Pick<Task, 'id' | 'title' | 'due_on' | 'context_id' | 'status'>[];
   const reminders = (remindersRes.data ?? []) as Reminder[];
   const contextName = new Map((contextsRes.data ?? []).map((c) => [c.id, c.name]));
 
@@ -662,6 +653,7 @@ export async function getDayView(
 
     blocks.push({
       id: b.id,
+      itemId: b.item_id,
       kind: isSubject ? 'subject' : 'task',
       title: b.title,
       meta: [mins >= 60 ? `${start} – ${end}` : start, ctx].filter(Boolean).join(' · '),
@@ -671,6 +663,7 @@ export async function getDayView(
       height: Math.max((mins / 60) * HOUR_PX, 50),
       overlap: !isSubject && subjectSpans.some((s) => from < s.to && s.from < to),
       showMeta: mins >= 60 || !isSubject,
+      done: b.status === 'done',
     });
   }
 
@@ -703,9 +696,9 @@ export async function getDayView(
     : null;
 
   const blockItemIds = new Set(rawBlocks.map((b) => b.item_id).filter(Boolean) as string[]);
-  const noHour = items
+  const noHour: DayNoHourTask[] = items
     .filter((t) => !blockItemIds.has(t.id))
-    .map((t) => ({ id: t.id, title: t.title }));
+    .map((t) => ({ id: t.id, title: t.title, done: t.status === 'done' }));
 
   /* La linea de ahora. Solo hoy, y solo si la hora actual cae dentro del riel:
      a las 6 de la manana no hay donde dibujarla y forzarla al borde de arriba
