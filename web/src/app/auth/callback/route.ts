@@ -18,9 +18,19 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code');
 
   /* `next` permite volver a donde estabas. Solo se aceptan rutas internas:
-     una URL absoluta aqui seria un redirector abierto de manual. */
+     una URL absoluta o con caracteres de escape seria un redirector abierto. */
   const requested = searchParams.get('next') ?? '/';
-  const next = requested.startsWith('/') && !requested.startsWith('//') ? requested : '/';
+  let next = '/';
+  if (requested.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\')) {
+    try {
+      const parsed = new URL(requested, origin);
+      if (parsed.origin === origin) {
+        next = parsed.pathname + parsed.search + parsed.hash;
+      }
+    } catch {
+      next = '/';
+    }
+  }
 
   if (!code) {
     return NextResponse.redirect(origin + '/auth/error?motivo=sin-codigo');

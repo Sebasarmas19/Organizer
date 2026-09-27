@@ -55,6 +55,13 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!endpoint.startsWith('https://')) {
+    return NextResponse.json(
+      { error: 'El endpoint de suscripción debe utilizar HTTPS' },
+      { status: 400 }
+    );
+  }
+
   const { error } = await supabase.from('push_subscriptions').upsert(
     {
       user_id: user.id,
@@ -72,7 +79,8 @@ export async function POST(request: Request) {
   );
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error al guardar suscripción push:', error);
+    return NextResponse.json({ error: 'Error al registrar la suscripción' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
@@ -99,6 +107,9 @@ export async function DELETE(request: Request) {
     .eq('user_id', user.id)
     .eq('endpoint', endpoint);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('Error al eliminar suscripción push:', error);
+    return NextResponse.json({ error: 'Error al eliminar la suscripción' }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

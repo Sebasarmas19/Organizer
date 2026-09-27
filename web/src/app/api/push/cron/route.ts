@@ -3,11 +3,13 @@
 
    Ejecuta el despachador de notificaciones programadas (mañana, noche,
    revisión semanal, avisos anticipados).
-   Protegido por Bearer token (SUPABASE_SERVICE_ROLE_KEY o CRON_SECRET).
+   Protegido por Bearer token (SUPABASE_SERVICE_ROLE_KEY o CRON_SECRET)
+   con comparación en tiempo constante.
    ========================================================================= */
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { dispatchDue, type DispatchEnvironment } from '@/lib/push/server/dispatch';
+import { timingSafeCompare } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,10 +18,15 @@ async function handleCron(request: NextRequest) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const cronSecret = process.env.CRON_SECRET;
 
-  const validTokens = [serviceRoleKey, cronSecret].filter(Boolean);
+  const validTokens = [serviceRoleKey, cronSecret].filter((t): t is string => Boolean(t));
   const providedToken = authHeader?.replace(/^Bearer\s+/i, '').trim();
 
-  if (!providedToken || !validTokens.includes(providedToken)) {
+  if (!providedToken) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  const isAuthorized = validTokens.some((tok) => timingSafeCompare(providedToken, tok));
+  if (!isAuthorized) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
@@ -51,8 +58,9 @@ async function handleCron(request: NextRequest) {
     const report = await dispatchDue(env);
     return NextResponse.json(report);
   } catch (error) {
+    console.error('Error en despachador cron:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error en despachador cron' },
+      { error: 'Error en despachador cron' },
       { status: 500 }
     );
   }
