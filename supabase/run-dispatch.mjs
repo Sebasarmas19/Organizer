@@ -8,7 +8,7 @@
 
    POR QUE EXISTE
    --------------
-   La Edge Function solo usa `fetch`, `crypto.subtle` y `Deno.env`. Node 24
+   El despachador solo usa `fetch`, `crypto.subtle` y `Deno.env`. Node 24
    trae los dos primeros, asi que el MISMO codigo que se despliega se puede
    ejecutar aqui. Eso permite comprobar contra la base en linea —claves VAPID,
    consultas, idempotencia, texto compuesto— antes de desplegar nada y sin
@@ -72,9 +72,9 @@ const environment = {
 };
 
 const { dispatchDue, dispatchTest } = await import(
-  './functions/dispatch-notifications/dispatch.ts'
+  '../web/src/lib/push/server/dispatch.ts'
 );
-const { previewDay } = await import('./functions/dispatch-notifications/dispatch.ts');
+const { previewDay } = await import('../web/src/lib/push/server/dispatch.ts');
 
 if (mode === 'preview') {
   const preview = await previewDay(environment, flag('user'));

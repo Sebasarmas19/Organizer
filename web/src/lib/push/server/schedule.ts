@@ -214,9 +214,18 @@ export interface NotifyProfile {
   /** 0 = domingo. */
   notify_weekly_dow: number;
   notify_weekly_time: string;
+  /** Recurso para leer, martes y sábado. `undefined` cuenta como apagado. */
+  notify_resources?: boolean;
 }
 
-export type NotificationKind = 'morning' | 'evening' | 'weekly_review';
+export type NotificationKind = 'morning' | 'evening' | 'weekly_review' | 'resource';
+
+/** Martes y sábado: dos veces por semana es leer sin volverse ruido. */
+export const RESOURCE_WEEKDAYS = [2, 6];
+export const RESOURCE_TIME = '19:00';
+
+/** Días antes de un reminder SIN tareas en que se avisa. */
+export const PREP_ALERT_DAYS = [7, 3, 1];
 
 export interface DueNotification {
   kind: NotificationKind;
@@ -273,7 +282,34 @@ export function dueNotifications(
     });
   }
 
+  if (
+    profile.notify_resources &&
+    RESOURCE_WEEKDAYS.includes(local.weekday) &&
+    inWindow(local.minutes, minutesOfDay(RESOURCE_TIME))
+  ) {
+    due.push({ kind: 'resource', dedupeKey: 'resource:' + local.date, date: local.date });
+  }
+
   return due;
+}
+
+/**
+ * Aviso "X minutos antes" de una clase o una tarea con hora.
+ *
+ * Devuelve los minutos que faltan si AHORA toca avisar, o `null`. La ventana
+ * va desde `reminderMin` antes hasta el inicio: si el cron se retrasa, el
+ * aviso sale igual mientras no haya empezado. Pasado el inicio ya no se
+ * manda: un "en 15 min" que llega tarde es peor que ninguno.
+ */
+export function minutesBeforeStart(
+  instant: Date,
+  startsAt: string,
+  reminderMin: number | null
+): number | null {
+  if (!reminderMin || reminderMin <= 0) return null;
+  const left = (Date.parse(startsAt) - instant.getTime()) / 60000;
+  if (left <= 0 || left > reminderMin) return null;
+  return Math.max(1, Math.round(left));
 }
 
 /* ───────────────────────────────────────────────────── horas para leer ── */

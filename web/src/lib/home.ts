@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
 import { DEFAULT_TIMEZONE } from './profile';
+import { dayRangeUtc, formatTimeOfDay } from './tz';
 import {
   MONTH_NAMES_CAP_ES,
   WEEKDAY_FULL_ES,
@@ -75,7 +76,10 @@ export function formatWhen(dateStr: string, timeStr: string | null, timezone: st
   const { day } = parseDateString(dateStr);
   const base = `${WEEKDAY_FULL_ES[getDayOfWeek(dateStr)]} ${day}`;
   if (!timeStr) return base;
-  return `${base} · ${formatClock(timeStr, timezone)}`;
+  /* `reminders.occurs_at` es una columna `time` ("10:00:00"), no un instante:
+     no se convierte de zona. Un `timestamptz` si. */
+  const clock = timeStr.includes('T') ? formatClock(timeStr, timezone) : formatTimeOfDay(timeStr);
+  return clock ? `${base} · ${clock}` : base;
 }
 
 /** Un `timestamptz` a "15:00" en la zona del usuario. Sin cero delante. */
@@ -142,9 +146,10 @@ export async function getHomeData(
   const todayStr = getTodayString(timezone);
   const horizonStr = addDays(todayStr, 45);
 
-  /* El dia local en UTC. La app fija Caracas (UTC-4, sin horario de verano) */
-  const dayStartUTC = new Date(`${todayStr}T00:00:00-04:00`).toISOString();
-  const dayEndUTC = new Date(`${todayStr}T23:59:59-04:00`).toISOString();
+  /* El dia local en UTC, con la zona del perfil. */
+  const range = dayRangeUtc(todayStr, timezone);
+  const dayStartUTC = range.start;
+  const dayEndUTC = new Date(Date.parse(range.end) - 1).toISOString();
 
   const [blocksRes, itemsRes, remindersRes, contextsRes, doneRes] = await Promise.all([
     /* Bloques de hoy que son de una tarea manual */
@@ -223,7 +228,7 @@ export async function getHomeData(
     reminders.length > 0
       ? supabase
           .from('items')
-          .select('title, reminder_id')
+          .select('title, reminder_id, status')
           .eq('user_id', userId)
           .in(
             'reminder_id',
@@ -269,23 +274,35 @@ export async function getHomeData(
     });
 
   /* ------------------------------------------------------- esta semana -- */
-  const prepByReminder = (prepRowsRes.data ?? []).reduce((acc, row) => {
-    if (!row.reminder_id) return acc;
-    const list = acc.get(row.reminder_id) ?? [];
+  /* En la tarjeta solo se listan los pasos que faltan; los hechos cuentan
+     para saber si "no hay nada" es porque ya está todo preparado. */
+  const prepByReminder = new Map<string, string[]>();
+  const doneByReminder = new Map<string, number>();
+  for (const row of prepRowsRes.data ?? []) {
+    if (!row.reminder_id) continue;
+    if (row.status === 'done') {
+      doneByReminder.set(row.reminder_id, (doneByReminder.get(row.reminder_id) ?? 0) + 1);
+      continue;
+    }
+    const list = prepByReminder.get(row.reminder_id) ?? [];
     list.push(row.title);
-    acc.set(row.reminder_id, list);
-    return acc;
-  }, new Map<string, string[]>());
+    prepByReminder.set(row.reminder_id, list);
+  }
 
   const semana: HomeReminder[] = reminders.map((r) => {
     const prep = prepByReminder.get(r.id) ?? [];
+    const allDone = prep.length === 0 && (doneByReminder.get(r.id) ?? 0) > 0;
     return {
       id: r.id,
       title: r.title,
       when: formatWhen(r.occurs_on, r.occurs_at, timezone),
       dateStr: r.occurs_on,
       prep,
-      emptyLabel: prep.length ? '' : `${formatDistance(todayStr, r.occurs_on)} · nada planificado`,
+      emptyLabel: prep.length
+        ? ''
+        : allDone
+          ? `${formatDistance(todayStr, r.occurs_on)} · todo preparado`
+          : `${formatDistance(todayStr, r.occurs_on)} · nada planificado`,
     };
   });
 

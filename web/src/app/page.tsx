@@ -73,20 +73,30 @@ export default async function HomePage() {
             <Overdue tasks={home.ayer} todayStr={home.todayStr} />
           </div>
           {/* 3 · Lo que se viene: reminders con su preparacion o sin ella. */}
-          {home.semana.length > 0 ? (
-            <section className="fd-home__week">
-              <div className="fd-seclabel">
+          <section className="fd-home__week">
+            <div className="fd-seclabel" style={{ justifyContent: 'space-between' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 <Flag size="xs" />
-                <h2>Esta semana</h2>
-              </div>
+                <h2>Próximos</h2>
+              </span>
+              <Link href="/reminders/nuevo" className="pl-back" style={{ minHeight: 36, paddingRight: 10 }}>
+                <Icon name="plus" size="sm" />
+                Reminder
+              </Link>
+            </div>
 
+            {home.semana.length > 0 ? (
               <div className="fd-remlist">
                 {home.semana.map((r) => (
                   <ReminderCard key={r.id} reminder={r} />
                 ))}
               </div>
-            </section>
-          ) : null}
+            ) : (
+              <p className="fd-empty" style={{ padding: '0 4px' }}>
+                Nada marcado. Añade parciales y entregas para que te avise con tiempo.
+              </p>
+            )}
+          </section>
 
         </div>
       </main>

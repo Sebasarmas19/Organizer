@@ -29,5 +29,6 @@
 @import "../styles/fd4.css";
 @import "../styles/fd4-desk.css";
 @import "../styles/focus.css";
+@import "../styles/planner.css";
 
 @config "../../tailwind.config.js";

@@ -30,11 +30,13 @@ export function TimesForm({
   evening,
   weeklyTime,
   weeklyDow,
+  resources,
 }: {
   morning: string;
   evening: string;
   weeklyTime: string;
   weeklyDow: number;
+  resources: boolean;
 }) {
   const [result, action, pending] = useActionState<SaveResult | null, FormData>(
     saveNotificationTimes,
@@ -91,6 +93,27 @@ export function TimesForm({
           </div>
         </div>
       </div>
+
+      <label
+        htmlFor="resources"
+        style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minHeight: 44, cursor: 'pointer' }}
+      >
+        <input
+          id="resources"
+          type="checkbox"
+          name="resources"
+          defaultChecked={resources}
+          style={{ width: 22, height: 22, marginTop: 2, accentColor: 'var(--task)', flex: 'none' }}
+        />
+        <span>
+          <span className="t-label c-muted" style={{ fontWeight: 600, display: 'block' }}>
+            Algo para leer
+          </span>
+          <span className="t-meta c-faint">
+            Martes y sábado a las 19:00, uno de tus Recursos guardados que nunca abriste.
+          </span>
+        </span>
+      </label>
 
       <button type="submit" className="btn btn--full" disabled={pending}>
         {pending ? 'Guardando…' : 'Guardar las horas'}

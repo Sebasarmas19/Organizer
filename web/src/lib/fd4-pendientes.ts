@@ -135,8 +135,15 @@ export async function getPendientesData(
      ahorra un viaje de red completo a Supabase. */
   const reminderIdSet = new Set(reminders.map((r) => r.id));
   const prepByReminder = new Map<string, string[]>();
+  const doneByReminder = new Map<string, number>();
   for (const item of items) {
     if (item.reminder_id && reminderIdSet.has(item.reminder_id)) {
+      /* Solo se listan los pasos que faltan. */
+      if (item.status === 'done') {
+        doneByReminder.set(item.reminder_id, (doneByReminder.get(item.reminder_id) ?? 0) + 1);
+        continue;
+      }
+      if (item.status === 'dropped') continue;
       const list = prepByReminder.get(item.reminder_id) ?? [];
       list.push(item.title);
       prepByReminder.set(item.reminder_id, list);
@@ -151,7 +158,11 @@ export async function getPendientesData(
       when: formatWhen(r.occurs_on, r.occurs_at, timezone),
       dateStr: r.occurs_on,
       prep,
-      emptyLabel: prep.length ? '' : `${formatDistance(todayStr, r.occurs_on)} · nada planificado`,
+      emptyLabel: prep.length
+        ? ''
+        : (doneByReminder.get(r.id) ?? 0) > 0
+          ? `${formatDistance(todayStr, r.occurs_on)} · todo preparado`
+          : `${formatDistance(todayStr, r.occurs_on)} · nada planificado`,
     };
   };
 

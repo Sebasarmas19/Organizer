@@ -4,7 +4,7 @@
    Organizer · Guardar las horas de notificación
 
    Decision 25: las horas se editan DENTRO de la app, no se codifican a mano.
-   El despachador (`supabase/functions/dispatch-notifications/`) lee estas
+   El despachador (`src/lib/push/server/dispatch.ts`) lee estas
    cuatro columnas de `profiles` y no conoce ninguna hora por su cuenta, asi
    que cambiar esto aqui cambia de verdad cuando llega la notificacion.
 
@@ -37,6 +37,7 @@ export async function saveNotificationTimes(
   const evening = String(formData.get('evening') ?? '');
   const weeklyTime = String(formData.get('weeklyTime') ?? '');
   const weeklyDow = Number(formData.get('weeklyDow'));
+  const resources = formData.get('resources') === 'on';
 
   /* `<input type="time">` ya obliga al formato en el navegador, pero esto es
      una accion de servidor: puede llegar cualquier cosa y una hora invalida
@@ -55,6 +56,7 @@ export async function saveNotificationTimes(
       notify_evening: evening,
       notify_weekly_time: weeklyTime,
       notify_weekly_dow: weeklyDow,
+      notify_resources: resources,
     })
     .eq('id', user.id);
 

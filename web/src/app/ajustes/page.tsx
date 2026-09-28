@@ -14,6 +14,7 @@ import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { Icon } from '@/components/Icon';
 import { Setup } from '../Setup';
+import { signOutAction } from './actions';
 
 export const metadata: Metadata = { title: 'Ajustes · Organizer' };
 
@@ -130,7 +131,7 @@ export default async function AjustesPage() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Zona horaria</span>
-                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{timezone} (UTC−4)</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{timezone}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Modo</span>
@@ -138,6 +139,12 @@ export default async function AjustesPage() {
                 </div>
               </div>
             </div>
+
+            <form action={signOutAction} style={{ marginTop: 12 }}>
+              <button type="submit" className="fd-btn fd-btn--ghost pl-signout">
+                Cerrar sesión
+              </button>
+            </form>
           </section>
         </div>
       </main>

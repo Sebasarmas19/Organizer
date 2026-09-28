@@ -49,7 +49,7 @@ export default async function NotificationsSettingsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('notify_morning, notify_evening, notify_weekly_dow, notify_weekly_time, timezone')
+    .select('notify_morning, notify_evening, notify_weekly_dow, notify_weekly_time, notify_resources, timezone')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -101,6 +101,7 @@ export default async function NotificationsSettingsPage() {
           evening={toInputTime(profile.notify_evening, '21:00')}
           weeklyTime={toInputTime(profile.notify_weekly_time, '19:00')}
           weeklyDow={profile.notify_weekly_dow ?? 0}
+          resources={profile.notify_resources ?? true}
         />
       ) : (
         <p className="gutter t-meta c-muted">

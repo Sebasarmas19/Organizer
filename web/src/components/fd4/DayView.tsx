@@ -2,17 +2,24 @@
 
 /* ============================================================================
    Organizer · FD4 · Calendario · Día
-   El riel de horas interactivo: responde a "¿qué hago ahora?".
-   Permite marcar tareas cumplidas tanto en chips "Sin hora" como en el riel.
+   El riel de horas: responde a "¿qué hago ahora?" y es donde se planifica.
+
+   · La casilla de una tarea la marca; su texto la abre para editarla.
+   · Tocar una hora vacía crea una tarea a esa hora.
+   · La banda y los bloques de reminder abren el reminder.
    ========================================================================= */
 
 import { useOptimistic, useTransition } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Fd4DayData, DayBlockView, DayNoHourTask } from '@/lib/fd4-calendar';
 import { DAY_HOURS } from '@/lib/fd4-calendar';
 import { Check, Flag } from './Marks';
+import { Icon } from '@/components/Icon';
 import { toggleBlockTask, toggleTask } from '@/lib/fd4-actions';
 
 export function DayView({ data }: { data: Fd4DayData }) {
+  const router = useRouter();
   const [, startTransition] = useTransition();
 
   const [doneBlockIds, toggleDoneBlock] = useOptimistic<
@@ -48,54 +55,86 @@ export function DayView({ data }: { data: Fd4DayData }) {
     });
   };
 
+  const newTaskAt = (hour: string) => {
+    const [h] = hour.split(':');
+    router.push(`/tareas/nueva?d=${data.dateStr}&t=${h.padStart(2, '0')}:00`);
+  };
+
   return (
     <>
-      {data.band || data.noHour.length > 0 ? (
-        <div className="fd-dayhead">
-          {data.band ? (
-            <div className="fd-band">
-              <Flag />
-              <span className="fd-band__text">
-                <span className="fd-band__title">{data.band.title}</span>
-                <span className="fd-meta">{data.band.meta}</span>
-              </span>
-            </div>
-          ) : null}
+      <div className="fd-dayhead">
+        <div className="pl-addbar">
+          <Link href={`/tareas/nueva?d=${data.dateStr}`} className="fd-btn">
+            <Icon name="plus" size="sm" />
+            Tarea
+          </Link>
+          <Link href={`/reminders/nuevo?d=${data.dateStr}`} className="fd-btn">
+            <Flag size="xs" />
+            Reminder
+          </Link>
+        </div>
 
-          {data.noHour.length > 0 ? (
-            <div className="fd-nohour">
-              <span className="fd-nohour__label">Sin hora</span>
-              {data.noHour.map((t) => {
-                const isDone = Boolean(doneNoHourIds[t.id]);
-                return (
+        {data.band ? (
+          <Link href={`/reminders/${data.band.id}`} className="fd-band">
+            <Flag />
+            <span className="fd-band__text">
+              <span className="fd-band__title">{data.band.title}</span>
+              <span className="fd-meta">{data.band.meta}</span>
+            </span>
+          </Link>
+        ) : null}
+
+        {data.noHour.length > 0 ? (
+          <div className="fd-nohour">
+            <span className="fd-nohour__label">Sin hora</span>
+            {data.noHour.map((t) => {
+              const isDone = Boolean(doneNoHourIds[t.id]);
+              return (
+                <span
+                  className="fd-chip"
+                  key={t.id}
+                  style={{
+                    padding: 0,
+                    border: '1px solid var(--line)',
+                    background: isDone ? 'var(--surface-sunken)' : 'var(--surface)',
+                    opacity: isDone ? 0.65 : 1,
+                  }}
+                >
                   <button
                     type="button"
-                    className="fd-chip"
-                    key={t.id}
                     onClick={() => handleToggleNoHour(t)}
                     aria-pressed={isDone}
+                    aria-label={isDone ? `Desmarcar ${t.title}` : `Marcar ${t.title}`}
                     style={{
+                      background: 'none',
+                      border: 0,
+                      padding: '8px 4px 8px 12px',
+                      display: 'inline-flex',
                       cursor: 'pointer',
-                      border: '1px solid var(--line)',
-                      background: isDone ? 'var(--surface-sunken)' : 'var(--surface)',
-                      opacity: isDone ? 0.65 : 1,
                     }}
                   >
                     <Check on={isDone} variant="chip" />
-                    <span style={{ textDecoration: isDone ? 'line-through' : 'none' }}>
-                      {t.title}
-                    </span>
                   </button>
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+                  <Link
+                    href={`/tareas/${t.id}`}
+                    style={{
+                      padding: '8px 14px 8px 4px',
+                      color: 'inherit',
+                      textDecoration: isDone ? 'line-through' : 'none',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {t.title}
+                  </Link>
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
 
       <div className="fd-scroll">
         <div className="fd-grid">
-          {/* Columna de horas */}
           <div className="fd-grid__hours">
             {DAY_HOURS.map((h) => (
               <div className="fd-grid__hour" key={h}>
@@ -105,24 +144,45 @@ export function DayView({ data }: { data: Fd4DayData }) {
           </div>
 
           <div className="fd-grid__col">
+            {/* Cada hora es un botón: tocar un hueco crea una tarea ahí. */}
             {DAY_HOURS.map((h) => (
-              <div className="fd-grid__line" key={h} />
+              <button
+                type="button"
+                className="fd-grid__line pl-slot"
+                key={h}
+                onClick={() => newTaskAt(h)}
+                aria-label={`Nueva tarea a las ${h}`}
+              />
             ))}
 
-            <div className="fd-grid__blocks">
+            <div className="fd-grid__blocks pl-blocks">
               {data.blocks.map((b) => {
                 const isTask = b.kind === 'task';
                 const isDone = isTask && Boolean(doneBlockIds[b.id]);
+                const href =
+                  b.kind === 'reminder'
+                    ? `/reminders/${b.id}`
+                    : isTask && b.itemId
+                      ? `/tareas/${b.itemId}`
+                      : null;
+
+                const text = (
+                  <>
+                    <span
+                      className="fd-block__title"
+                      style={{ textDecoration: isDone ? 'line-through' : 'none' }}
+                    >
+                      {b.title}
+                    </span>
+                    {b.showMeta && b.meta ? <span className="fd-block__meta">{b.meta}</span> : null}
+                  </>
+                );
 
                 return (
                   <div
                     key={b.id}
                     className={`fd-block fd-block--${b.kind}${b.overlap ? ' fd-block--overlap' : ''}`}
-                    style={{
-                      top: b.top,
-                      height: b.height,
-                      opacity: isDone ? 0.6 : 1,
-                    }}
+                    style={{ top: b.top, height: b.height, opacity: isDone ? 0.6 : 1 }}
                   >
                     {b.kind === 'reminder' ? <Flag size="sm" /> : null}
 
@@ -147,21 +207,13 @@ export function DayView({ data }: { data: Fd4DayData }) {
                       </button>
                     ) : null}
 
-                    <span
-                      className="fd-block__text"
-                      onClick={isTask ? () => handleToggleBlock(b) : undefined}
-                      style={{ cursor: isTask ? 'pointer' : 'default' }}
-                    >
-                      <span
-                        className="fd-block__title"
-                        style={{ textDecoration: isDone ? 'line-through' : 'none' }}
-                      >
-                        {b.title}
-                      </span>
-                      {b.showMeta && b.meta ? (
-                        <span className="fd-block__meta">{b.meta}</span>
-                      ) : null}
-                    </span>
+                    {href ? (
+                      <Link href={href} className="fd-block__text" style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {text}
+                      </Link>
+                    ) : (
+                      <span className="fd-block__text">{text}</span>
+                    )}
                   </div>
                 );
               })}
@@ -179,4 +231,3 @@ export function DayView({ data }: { data: Fd4DayData }) {
     </>
   );
 }
-
