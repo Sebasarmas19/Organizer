@@ -43,3 +43,12 @@ export async function ensureProfile(
      la fila solo cuando de verdad la ha insertado. Vacio = ya existia. */
   return { created: (data?.length ?? 0) > 0, error: null };
 }
+
+/** La zona del perfil, o la de por defecto si todavía no hay fila. */
+export async function getProfileTimezone(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<string> {
+  const { data } = await supabase.from('profiles').select('timezone').eq('id', userId).maybeSingle();
+  return data?.timezone ?? DEFAULT_TIMEZONE;
+}

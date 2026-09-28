@@ -3,13 +3,15 @@
 
    Ejecuta el despachador de notificaciones programadas (mañana, noche,
    revisión semanal, avisos anticipados).
-   Protegido por Bearer token (SUPABASE_SERVICE_ROLE_KEY o CRON_SECRET)
+   Protegido por Bearer token (CRON_SECRET; se acepta tambien la service role)
    con comparación en tiempo constante.
    ========================================================================= */
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { dispatchDue, type DispatchEnvironment } from '@/lib/push/server/dispatch';
 import { timingSafeCompare } from '@/lib/security';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { materializeScheduleTemplates } from '@/lib/calendar';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +44,7 @@ async function handleCron(request: NextRequest) {
     );
   }
 
+  const admin = createAdminClient();
   const env: DispatchEnvironment = {
     db: {
       url: supabaseUrl,
@@ -52,6 +55,10 @@ async function handleCron(request: NextRequest) {
       privateKey: vapidPrivateKey,
       subject: vapidSubject,
     },
+    /* Las clases de las próximas dos semanas se generan aquí, cada mañana,
+       para que la notificación las traiga aunque nadie abra el calendario. */
+    materialize: (userId, from, to, timezone) =>
+      materializeScheduleTemplates(admin, userId, from, to, timezone),
   };
 
   try {

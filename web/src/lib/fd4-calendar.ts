@@ -7,6 +7,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
 import { materializeScheduleTemplates } from './calendar';
 import { formatClock, formatWhen } from './home';
+import { dayRangeUtc, formatTimeOfDay, timeToMinutes } from './tz';
 import {
   MONTH_NAMES_CAP_ES,
   MONTH_NAMES_ES,
@@ -27,9 +28,9 @@ import {
 export type CalView = 'mes' | 'semana' | 'dia';
 export type Entity = 'task' | 'subject' | 'reminder';
 
-/** El riel del telefono: 7:00 a 21:00. Quince filas de `--hour-row`. */
+/** El riel del telefono: 7:00 a 23:00. Una fila de `--hour-row` por hora. */
 export const DAY_START_HOUR = 7;
-export const DAY_END_HOUR = 21;
+export const DAY_END_HOUR = 23;
 export const HOUR_PX = 56;
 
 export const DAY_HOURS = Array.from(
@@ -68,9 +69,11 @@ function localMinutes(iso: string, timezone: string): number {
 /* La app fija Caracas (UTC-4, sin horario de verano), igual que `calendar.ts`.
    Cuando `profiles.timezone` deje de ser siempre Caracas, este offset sale de
    ahi. Esta escrito en un solo sitio para que ese cambio sea uno. */
-const UTC_OFFSET = '-04:00';
-const dayStartUTC = (d: string) => new Date(`${d}T00:00:00${UTC_OFFSET}`).toISOString();
-const dayEndUTC = (d: string) => new Date(`${d}T23:59:59${UTC_OFFSET}`).toISOString();
+const TZ_FOR_RANGES = 'America/Caracas';
+const dayStartUTC = (d: string, tz = TZ_FOR_RANGES) => dayRangeUtc(d, tz).start;
+/* Fin EXCLUSIVO menos 1 ms: las consultas usan `lte`. */
+const dayEndUTC = (d: string, tz = TZ_FOR_RANGES) =>
+  new Date(Date.parse(dayRangeUtc(d, tz).end) - 1).toISOString();
 
 /** "Lunes 14" · el titulo de una tarjeta de dia. */
 export function dayLabel(dateStr: string): string {
@@ -103,6 +106,8 @@ export type MonthPreviewItem = {
   title: string;
   kind: Entity;
   hora?: string;
+  /** A dónde lleva tocarlo: el reminder, la tarea o el día. */
+  href: string;
 };
 
 export type MonthDayPreview = {
@@ -152,7 +157,7 @@ export async function getMonthView(
   const [blocksRes, itemsRes, remindersRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('id, title, starts_at, ends_at, source')
+      .select('id, item_id, title, starts_at, ends_at, source')
       .eq('user_id', userId)
       .gte('starts_at', dayStartUTC(firstStr))
       .lte('starts_at', dayEndUTC(lastStr))
@@ -212,7 +217,8 @@ export async function getMonthView(
         id: r.id,
         title: r.title,
         kind: 'reminder' as Entity,
-        hora: r.occurs_at ? formatClock(r.occurs_at, timezone) : undefined,
+        hora: r.occurs_at ? formatTimeOfDay(r.occurs_at) : undefined,
+        href: `/reminders/${r.id}`,
       }));
 
     const dayBlocks = (blocksRes.data ?? [])
@@ -225,6 +231,7 @@ export async function getMonthView(
           title: b.title,
           kind: (b.source === 'template' ? 'subject' : 'task') as Entity,
           hora: end ? `${start} – ${end}` : start,
+          href: b.item_id ? `/tareas/${b.item_id}` : `/calendario?v=dia&d=${dStr}`,
         };
       });
 
@@ -235,6 +242,7 @@ export async function getMonthView(
         id: t.id,
         title: t.title,
         kind: 'task' as Entity,
+        href: `/tareas/${t.id}`,
       }));
 
     const events: MonthPreviewItem[] = [
@@ -442,7 +450,7 @@ export async function getWeekView(
       hint: dateStr === todayStr ? 'hoy' : '',
       isToday: dateStr === todayStr,
       reminder: rem
-        ? { title: rem.title, hora: rem.occurs_at ? formatClock(rem.occurs_at, timezone) : '' }
+        ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
       tasks,
       subjects,
@@ -513,7 +521,7 @@ export async function getWeekView(
       dayNum: day,
       isToday: dateStr === todayStr,
       reminder: rem
-        ? { title: rem.title, hora: rem.occurs_at ? formatClock(rem.occurs_at, timezone) : '' }
+        ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
       loose,
       blocks: positioned,
@@ -580,7 +588,7 @@ export type Fd4DayData = {
   nowTop: number | null;
   /** "8:52" */
   nowLabel: string;
-  band: { title: string; meta: string } | null;
+  band: { id: string; title: string; meta: string } | null;
   /** Tareas del dia sin hora: no caben en el riel y no pueden desaparecer. */
   noHour: DayNoHourTask[];
   blocks: DayBlockView[];
@@ -671,12 +679,12 @@ export async function getDayView(
      es a las 10, el riel tiene que enseñar que a las 10 no hay hueco. */
   for (const r of reminders) {
     if (!r.occurs_at) continue;
-    const from = localMinutes(r.occurs_at, timezone);
+    const from = timeToMinutes(r.occurs_at);
     blocks.push({
       id: r.id,
       kind: 'reminder',
       title: r.title,
-      meta: formatClock(r.occurs_at, timezone),
+      meta: formatTimeOfDay(r.occurs_at),
       top: toPx(from),
       height: 50,
       overlap: false,
@@ -688,9 +696,10 @@ export async function getDayView(
      "a las 10 estas ocupado", la banda dice "hoy es el dia del parcial". */
   const band = reminders[0]
     ? {
+        id: reminders[0].id,
         title: reminders[0].title,
         meta: `${dayLabel(dateStr).toLowerCase()} · ${
-          reminders[0].occurs_at ? formatClock(reminders[0].occurs_at, timezone) : 'sin hora'
+          reminders[0].occurs_at ? formatTimeOfDay(reminders[0].occurs_at) : 'sin hora'
         }`,
       }
     : null;

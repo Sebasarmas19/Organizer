@@ -12,9 +12,7 @@ import { createClient } from '@/lib/supabase/server';
    Pendientes y puede cambiar el punto de un dia en Calendario. Revalidar las
    tres es mas barato que razonar cual se salvo. */
 function revalidateFd4() {
-  revalidatePath('/');
-  revalidatePath('/calendario');
-  revalidatePath('/pendientes');
+  revalidatePath('/', 'layout');
 }
 
 async function requireUser() {
@@ -40,6 +38,16 @@ export async function toggleTask(id: string, done: boolean) {
     .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
+
+  /* El bloque de la hora sigue a la tarea. Sin esto, una tarea marcada en
+     Inicio seguia "pendiente" en el calendario y en el cierre de la noche. */
+  await supabase
+    .from('blocks')
+    .update({ status: done ? 'done' : 'pending' })
+    .eq('item_id', id)
+    .eq('user_id', user.id)
+    .eq('source', 'manual');
+
   revalidateFd4();
 }
 
@@ -129,11 +137,22 @@ export async function moveTaskToDate(id: string, dateStr: string | null) {
 
   const { error } = await supabase
     .from('items')
-    .update({ due_on: dateStr, status: 'inbox' })
+    .update({ due_on: dateStr, status: dateStr ? 'planned' : 'inbox' })
     .eq('id', id)
     .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
+
+  /* Si tenia hora, esa hora era de OTRO dia. Se suelta en vez de arrastrarla:
+     la tarea queda "sin hora" en su nuevo dia y se le pone hora si hace falta. */
+  await supabase
+    .from('blocks')
+    .delete()
+    .eq('item_id', id)
+    .eq('user_id', user.id)
+    .eq('source', 'manual')
+    .eq('status', 'pending');
+
   revalidateFd4();
 }
 
@@ -150,6 +169,13 @@ export async function unscheduleTask(id: string) {
     .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
+  await supabase
+    .from('blocks')
+    .delete()
+    .eq('item_id', id)
+    .eq('user_id', user.id)
+    .eq('source', 'manual')
+    .eq('status', 'pending');
   revalidateFd4();
 }
 

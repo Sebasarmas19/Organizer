@@ -34,14 +34,17 @@
 
 import {
   composeAdvanceNotice,
+  composeBeforeBlock,
   composeEvening,
+  composePrepAlert,
+  composeResource,
   composeMorning,
   composeTest,
   composeWeeklyReview,
   type DaySlot,
   type NotificationText,
-} from './compose';
-import { inList, insertUnique, select, update, type PostgrestConfig } from './db';
+} from './compose.ts';
+import { inList, insertUnique, select, update, type PostgrestConfig } from './db.ts';
 import {
   capitalize,
   daysBetween,
@@ -49,14 +52,16 @@ import {
   formatLocalTime,
   localDayRangeUtc,
   localNow,
+  minutesBeforeStart,
+  PREP_ALERT_DAYS,
   relativeDayLabel,
   shiftDate,
   weekdayLabel,
   weekdayOf,
   dayNumberOf,
   type NotifyProfile,
-} from './schedule';
-import { sendPush, type PushSubscription, type VapidKeys } from './webpush';
+} from './schedule.ts';
+import { sendPush, type PushSubscription, type VapidKeys } from './webpush.ts';
 
 /* ───────────────────────────────────────────────────── filas de la base ── */
 
@@ -91,6 +96,27 @@ interface SubscriptionRow extends PushSubscription {
   id: string;
 }
 
+interface ResourceRow {
+  id: string;
+  title: string;
+  notes: string | null;
+  created_at: string;
+}
+
+interface BeforeBlockRow {
+  id: string;
+  item_id: string | null;
+  template_id: string | null;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  source: string;
+  reminder_min: number | null;
+}
+
+const PROFILE_COLUMNS =
+  'id,timezone,notify_morning,notify_evening,notify_weekly_dow,notify_weekly_time,notify_resources';
+
 /** Decision 60: sin valor, un dia. Seis dias serian seis avisos y ruido. */
 const DEFAULT_NOTICE_DAYS = 1;
 
@@ -102,6 +128,11 @@ export interface DispatchEnvironment {
   vapid: VapidKeys;
   /** Inyectable para poder probar con una hora concreta. */
   now?: Date;
+  /**
+   * Reparte las materias en bloques para un rango. La inyecta la ruta de
+   * Next (usa supabase-js); sin ella, la mañana usa lo que ya haya.
+   */
+  materialize?: (userId: string, from: string, to: string, timezone: string) => Promise<void>;
 }
 
 export interface DispatchReport {
@@ -128,18 +159,38 @@ export async function dispatchDue(env: DispatchEnvironment): Promise<DispatchRep
 
   const profiles = await select<NotifyProfile>(
     env.db,
-    'profiles?select=id,timezone,notify_morning,notify_evening,notify_weekly_dow,notify_weekly_time'
+    'profiles?select=' + PROFILE_COLUMNS
   );
   report.profiles = profiles.length;
 
   for (const profile of profiles) {
     const local = localNow(now, profile.timezone);
     const due_ = dueNotifications(now, profile);
+    const isMorning = due_.some((due) => due.kind === 'morning');
+
+    /* Las clases de las dos próximas semanas, ANTES de componer la mañana:
+       así la notificación las trae aunque nadie haya abierto el calendario. */
+    if (env.materialize && isMorning) {
+      try {
+        await env.materialize(profile.id, local.date, shiftDate(local.date, 14), profile.timezone);
+      } catch (error) {
+        report.skipped.push('materialize (' + (error instanceof Error ? error.message : 'error') + ')');
+      }
+    }
 
     for (const due of due_) {
       let text: NotificationText;
+      let url = '/';
       if (due.kind === 'morning') text = await buildMorning(env, profile, due.date);
-      else if (due.kind === 'evening') {
+      else if (due.kind === 'resource') {
+        const pick = await buildResource(env, profile, now);
+        if (!pick) {
+          report.skipped.push(due.dedupeKey + ' (no hay recursos sin abrir)');
+          continue;
+        }
+        text = pick.text;
+        url = '/api/resources/' + pick.id + '/open';
+      } else if (due.kind === 'evening') {
         const evening = await buildEvening(env, profile, due.date);
         /* Un dia en el que no habia nada que hacer no merece un repaso por la
            noche: seria la notificacion vacia que el proyecto existe para no
@@ -149,17 +200,36 @@ export async function dispatchDue(env: DispatchEnvironment): Promise<DispatchRep
           continue;
         }
         text = evening;
-      } else text = await buildWeeklyReview(env, profile, due.date);
+        url = '/pendientes';
+      } else {
+        text = await buildWeeklyReview(env, profile, due.date);
+        url = '/pendientes';
+      }
 
-      await deliver(env, profile.id, due.kind, due.dedupeKey, text, report);
+      await deliver(env, profile.id, due.kind, due.dedupeKey, text, report, { url });
     }
 
     /* La excepcion de la decision 33. Se evalua dentro de la ventana de la
        manana para que no llegue de madrugada. */
-    if (due_.some((due) => due.kind === 'morning')) {
+    if (isMorning) {
       for (const notice of await buildAdvanceNotices(env, profile, local.date)) {
         await deliver(env, profile.id, 'advance_notice', notice.dedupeKey, notice.text, report);
       }
+      /* v2 · reminders que se acercan sin ninguna tarea. */
+      for (const notice of await buildPrepAlerts(env, profile, local.date)) {
+        await deliver(env, profile.id, 'prep_alert', notice.dedupeKey, notice.text, report, {
+          url: notice.url,
+          tag: notice.dedupeKey,
+        });
+      }
+    }
+
+    /* v2 · minutos antes de una clase o una tarea con hora. Cada pasada. */
+    for (const notice of await buildBeforeBlocks(env, profile, now)) {
+      await deliver(env, profile.id, 'before', notice.dedupeKey, notice.text, report, {
+        url: notice.url,
+        tag: notice.dedupeKey,
+      });
     }
   }
 
@@ -193,7 +263,7 @@ export async function dispatchTest(
   const [profile] = await select<NotifyProfile>(
     env.db,
     'profiles?id=eq.' + userId +
-      '&select=id,timezone,notify_morning,notify_evening,notify_weekly_dow,notify_weekly_time'
+      '&select=' + PROFILE_COLUMNS
   );
   if (!profile) throw new Error('No hay fila en `profiles` para ' + userId);
 
@@ -226,7 +296,7 @@ export async function previewDay(
   const profiles = await select<NotifyProfile>(
     env.db,
     'profiles?' + (userId ? 'id=eq.' + userId + '&' : '') +
-      'select=id,timezone,notify_morning,notify_evening,notify_weekly_dow,notify_weekly_time'
+      'select=' + PROFILE_COLUMNS
   );
   const profile = profiles[0];
   if (!profile) throw new Error('No hay ninguna fila en `profiles`.');
@@ -266,7 +336,7 @@ async function deliver(
   dedupeKey: string,
   text: NotificationText,
   report: DispatchReport,
-  options: { url?: string } = {}
+  options: { url?: string; tag?: string } = {}
 ): Promise<void> {
   /* 1 · la clave primero. Si ya estaba, otra pasada del cron gano la carrera. */
   const claim = await insertUnique(env.db, 'notification_log', {
@@ -298,7 +368,7 @@ async function deliver(
     body: text.body,
     /* Una por tipo: la nueva sustituye a la del dia anterior en vez de
        apilarse (decision 33). */
-    tag: kind,
+    tag: options.tag ?? kind,
     url: options.url ?? '/',
   };
 
@@ -467,9 +537,17 @@ async function buildMorning(
   profile: NotifyProfile,
   date: string
 ): Promise<NotificationText> {
-  const [slots, reminder] = await Promise.all([
+  const [slots, reminder, overdue] = await Promise.all([
     buildDaySlots(env, profile, date),
     findLeadReminder(env, profile, date),
+    /* v2 · lo atrasado entra como recuento: nada se pierde en silencio. */
+    select<{ id: string }>(
+      env.db,
+      'items?user_id=eq.' + profile.id +
+        '&due_on=lt.' + date +
+        '&status=in.' + OPEN_ITEM_STATUSES +
+        '&select=id'
+    ),
   ]);
 
   return composeMorning({
@@ -477,6 +555,7 @@ async function buildMorning(
     dayNumber: dayNumberOf(date),
     slots,
     reminder,
+    overdue: overdue.length,
   });
 }
 
@@ -604,4 +683,136 @@ async function buildAdvanceNotices(
   }
 
   return out;
+}
+
+/* ══════════════════════════════════════════════════════════ v2 · 2026-09 ══ */
+
+/**
+ * Reminders que se acercan SIN ninguna tarea. Uno por reminder, solo los
+ * días de `PREP_ALERT_DAYS` (7, 3 y 1 antes). En cuanto tiene una tarea,
+ * deja de avisar: ya se está preparando.
+ */
+async function buildPrepAlerts(
+  env: DispatchEnvironment,
+  profile: NotifyProfile,
+  today: string
+): Promise<{ dedupeKey: string; text: NotificationText; url: string }[]> {
+  const horizon = shiftDate(today, Math.max(...PREP_ALERT_DAYS));
+  const reminders = await select<ReminderRow>(
+    env.db,
+    'reminders?user_id=eq.' + profile.id +
+      '&occurs_on=gt.' + today +
+      '&occurs_on=lte.' + horizon +
+      '&select=id,title,occurs_on,occurs_at,notice_days'
+  );
+  const candidates = reminders.filter((r) =>
+    PREP_ALERT_DAYS.includes(daysBetween(today, r.occurs_on))
+  );
+  if (candidates.length === 0) return [];
+
+  const tasks = await select<{ reminder_id: string }>(
+    env.db,
+    'items?user_id=eq.' + profile.id +
+      '&reminder_id=in.' + inList(candidates.map((r) => r.id)) +
+      '&status=neq.dropped&select=reminder_id'
+  );
+  const withTasks = new Set(tasks.map((t) => t.reminder_id));
+
+  return candidates
+    .filter((r) => !withTasks.has(r.id))
+    .map((r) => ({
+      dedupeKey: 'prep_alert:' + r.id + ':' + today,
+      text: composePrepAlert({ title: r.title, daysAway: daysBetween(today, r.occurs_on) }),
+      url: '/reminders/' + r.id,
+    }));
+}
+
+/**
+ * El recurso de hoy: el que nunca se abrió y hace más tiempo que no se
+ * propone. Se marca como propuesto ANTES de mandarlo, para que la próxima
+ * vez salga otro aunque este no se abra.
+ */
+async function buildResource(
+  env: DispatchEnvironment,
+  profile: NotifyProfile,
+  now: Date
+): Promise<{ id: string; text: NotificationText } | null> {
+  const [resource] = await select<ResourceRow>(
+    env.db,
+    'resources?user_id=eq.' + profile.id +
+      '&archived_at=is.null&open_count=eq.0' +
+      '&order=last_suggested_at.asc.nullsfirst,created_at.asc&limit=1' +
+      '&select=id,title,notes,created_at'
+  );
+  if (!resource) return null;
+
+  await update(env.db, 'resources?id=eq.' + resource.id, {
+    last_suggested_at: now.toISOString(),
+  });
+
+  const today = localNow(now, profile.timezone).date;
+  const saved = localNow(new Date(resource.created_at), profile.timezone).date;
+
+  return {
+    id: resource.id,
+    text: composeResource({
+      title: resource.title,
+      notes: resource.notes,
+      savedDaysAgo: daysBetween(saved, today),
+    }),
+  };
+}
+
+/** Avisos "X minutos antes" que tocan en esta pasada. */
+async function buildBeforeBlocks(
+  env: DispatchEnvironment,
+  profile: NotifyProfile,
+  now: Date
+): Promise<{ dedupeKey: string; text: NotificationText; url: string }[]> {
+  const from = now.toISOString();
+  const to = new Date(now.getTime() + 121 * 60000).toISOString();
+  const blocks = await select<BeforeBlockRow>(
+    env.db,
+    'blocks?user_id=eq.' + profile.id +
+      '&status=eq.pending&reminder_min=not.is.null' +
+      '&starts_at=gt.' + encodeURIComponent(from) +
+      '&starts_at=lte.' + encodeURIComponent(to) +
+      '&order=starts_at.asc' +
+      '&select=id,item_id,template_id,title,starts_at,ends_at,source,reminder_min'
+  );
+
+  const due = blocks
+    .map((block) => ({ block, left: minutesBeforeStart(now, block.starts_at, block.reminder_min) }))
+    .filter((x): x is { block: BeforeBlockRow; left: number } => x.left !== null);
+  if (due.length === 0) return [];
+
+  const templateIds = due
+    .map((d) => d.block.template_id)
+    .filter((v): v is string => Boolean(v));
+  const locations = new Map<string, string | null>();
+  if (templateIds.length > 0) {
+    const rows = await select<{ id: string; location: string | null }>(
+      env.db,
+      'schedule_templates?id=in.' + inList(templateIds) + '&select=id,location'
+    );
+    for (const row of rows) locations.set(row.id, row.location);
+  }
+
+  return due.map(({ block, left }) => {
+    const date = localNow(new Date(block.starts_at), profile.timezone).date;
+    return {
+      dedupeKey: 'before:' + block.id,
+      text: composeBeforeBlock({
+        title: block.title,
+        minutesLeft: left,
+        range:
+          formatLocalTime(block.starts_at, profile.timezone) +
+          ' – ' +
+          formatLocalTime(block.ends_at, profile.timezone),
+        location: block.template_id ? locations.get(block.template_id) ?? null : null,
+        isClass: block.source === 'template',
+      }),
+      url: block.item_id ? '/tareas/' + block.item_id : '/calendario?v=dia&d=' + date,
+    };
+  });
 }

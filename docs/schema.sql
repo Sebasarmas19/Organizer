@@ -220,19 +220,10 @@ create policy "own notification log" on notification_log
 -- service role, que se salta RLS por diseño.
 
 -- ─────────────────────────────────────────────────────────── cron
--- Cada 5 minutos. La Edge Function decide qué toca enviar.
--- Reemplazar <PROJECT_REF> y <SERVICE_ROLE_KEY> antes de ejecutar.
---
--- select cron.schedule(
---   'dispatch-notifications',
---   '*/5 * * * *',
---   $$
---   select net.http_post(
---     url     := 'https://<PROJECT_REF>.supabase.co/functions/v1/dispatch-notifications',
---     headers := '{"Authorization": "Bearer <SERVICE_ROLE_KEY>", "Content-Type": "application/json"}'::jsonb
---   );
---   $$
--- );
+-- Cada 5 minutos pg_cron + pg_net llaman a la app en Vercel
+-- (POST <APP_URL>/api/push/cron con Bearer CRON_SECRET), y la app decide
+-- qué toca enviar. Ya no hay Edge Function: el despachador vive en
+-- web/src/lib/push/server/. El SQL listo para pegar está en supabase/cron.sql.
 
 -- ═══════════════════════════════════════════════════════════════════
 -- MÓDULO RECURSOS (decisión #20)
@@ -319,3 +310,21 @@ alter table items add column reminder_id uuid references reminders on delete set
 
 -- "de este reminder, cuántas tareas llevo" y "este reminder no tiene ninguna"
 create index on items (reminder_id) where reminder_id is not null;
+
+-- ═══════════════════════════════════════════════════════════════════
+-- v2 · planificador y notificaciones (2026-09-27)
+-- Aplicada en Supabase como migración `planner_notifications_v2`.
+-- ═══════════════════════════════════════════════════════════════════
+
+-- Recursos para leer: aviso martes y sábado. Se puede apagar en Ajustes.
+alter table profiles add column if not exists notify_resources boolean not null default true;
+
+-- Rotación del recurso sugerido: el que hace más tiempo que no se propuso.
+alter table resources add column if not exists last_suggested_at timestamptz;
+
+-- Aula / laboratorio de cada materia. Va en el aviso antes de clase.
+alter table schedule_templates add column if not exists location text;
+
+-- Avisos "X minutos antes" de clases y tareas con hora (blocks.reminder_min).
+create index if not exists blocks_reminder_pending_idx
+  on blocks (starts_at) where reminder_min is not null and status = 'pending';

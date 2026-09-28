@@ -137,7 +137,9 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
             <h2 id="fd-lead-label">Lo siguiente</h2>
           </div>
           <div className="fd-lead fd-lead--enter" key={now.id}>
-          <p className="fd-lead__title">{now.title}</p>
+          <Link href={`/tareas/${now.id}`} className="fd-lead__title" style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
+            {now.title}
+          </Link>
           {now.meta ? <span className="fd-lead__when">{now.meta}</span> : null}
           {now.rem ? (
             <span className="fd-lead__rem">

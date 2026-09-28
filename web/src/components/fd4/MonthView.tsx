@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import type { Fd4MonthData } from '@/lib/fd4-calendar';
 import { DOW_INITIALS } from '@/lib/fd4-calendar';
 import { Check, Dot, Flag } from './Marks';
+import { Icon } from '@/components/Icon';
 
 export function MonthView({ data }: { data: Fd4MonthData }) {
   const router = useRouter();
@@ -113,7 +114,7 @@ export function MonthView({ data }: { data: Fd4MonthData }) {
             preview.events.map((ev) => (
               <Link
                 key={ev.id}
-                href={`/calendario?v=dia&d=${selectedDate}`}
+                href={ev.href}
                 className={`fd-monthrow fd-monthrow--${ev.kind}`}
                 scroll={false}
               >
@@ -134,6 +135,17 @@ export function MonthView({ data }: { data: Fd4MonthData }) {
             </div>
           )}
         </div>
+
+        <div className="pl-addbar" style={{ marginTop: 12 }}>
+          <Link href={`/reminders/nuevo?d=${selectedDate}`} className="fd-btn">
+            <Flag size="xs" />
+            Reminder este día
+          </Link>
+          <Link href={`/tareas/nueva?d=${selectedDate}`} className="fd-btn">
+            <Icon name="plus" size="sm" />
+            Tarea
+          </Link>
+        </div>
       </section>
 
       {/* Reminders del mes */}
@@ -144,7 +156,7 @@ export function MonthView({ data }: { data: Fd4MonthData }) {
             data.reminders.map((r) => (
               <Link
                 key={r.id}
-                href={`/calendario?v=dia&d=${r.dateStr}`}
+                href={`/reminders/${r.id}`}
                 className="fd-remrow"
                 scroll={false}
               >

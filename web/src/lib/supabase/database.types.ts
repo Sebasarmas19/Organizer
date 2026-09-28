@@ -69,6 +69,7 @@ export interface Database {
           notify_evening: string;
           notify_weekly_dow: number;
           notify_weekly_time: string;
+          notify_resources: boolean;
           streak_current: number;
           streak_best: number;
           grace_remaining: number;
@@ -84,6 +85,7 @@ export interface Database {
           notify_evening?: string;
           notify_weekly_dow?: number;
           notify_weekly_time?: string;
+          notify_resources?: boolean;
           streak_current?: number;
           streak_best?: number;
           grace_remaining?: number;
@@ -211,6 +213,7 @@ export interface Database {
           reminder_min: number | null;
           active_from: string;
           active_until: string | null;
+          location: string | null;
           created_at: string;
         };
         Insert: {
@@ -224,6 +227,7 @@ export interface Database {
           reminder_min?: number | null;
           active_from?: string;
           active_until?: string | null;
+          location?: string | null;
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['schedule_templates']['Insert']>;
@@ -331,6 +335,7 @@ export interface Database {
           created_at: string;
           opened_at: string | null;
           open_count: number;
+          last_suggested_at: string | null;
           /* columna generada (tsvector). Solo lectura: no va en Insert ni
              en Update. Verificado contra la base en linea. */
           search: unknown;
@@ -347,6 +352,7 @@ export interface Database {
           created_at?: string;
           opened_at?: string | null;
           open_count?: number;
+          last_suggested_at?: string | null;
         };
         Update: Partial<Database['public']['Tables']['resources']['Insert']>;
         Relationships: [];

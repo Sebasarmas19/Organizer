@@ -161,9 +161,23 @@ export interface MorningInput {
    * ya aplico ese filtro; aqui llega `null`.
    */
   reminder: LeadReminder | null;
+  /**
+   * Tareas con fecha anterior a hoy que siguen abiertas. Van al FINAL del
+   * cuerpo como un recuento: "nada se pierde en silencio" (regla 5), pero
+   * sin quitarle sitio a lo de hoy.
+   */
+  overdue?: number;
+}
+
+/** ` · 2 atrasadas` · vacío si no hay ninguna. */
+export function overdueSuffix(count: number | undefined): string {
+  if (!count || count <= 0) return '';
+  return SEPARATOR + count + (count === 1 ? ' atrasada' : ' atrasadas');
 }
 
 export function composeMorning(input: MorningInput): NotificationText {
+  const suffix = overdueSuffix(input.overdue);
+
   if (input.reminder) {
     const prefix = input.reminder.whenLabel + ': ';
     const title = fitText(prefix + input.reminder.title, TITLE_MAX);
@@ -171,8 +185,12 @@ export function composeMorning(input: MorningInput): NotificationText {
     /* `Hoy: ` delante, porque el titulo ya esta hablando de otro dia y sin la
        marca la lista se leeria como si fuera del dia del parcial. */
     const lead = 'Hoy: ';
-    const day = renderDay(input.slots, BODY_MAX - lead.length);
-    const body = day ? lead + day : 'Hoy no tienes nada planificado para eso.';
+    const day = renderDay(input.slots, BODY_MAX - lead.length - suffix.length);
+    const body = day
+      ? lead + day + suffix
+      : suffix
+        ? 'Hoy nada planificado' + suffix
+        : 'Hoy no tienes nada planificado para eso.';
     return { title, body: fitText(body, BODY_MAX) };
   }
 
@@ -180,8 +198,18 @@ export function composeMorning(input: MorningInput): NotificationText {
     'Hoy, ' + input.weekdayLabel + ' ' + input.dayNumber,
     TITLE_MAX
   );
-  const day = renderDay(input.slots, BODY_MAX);
-  return { title, body: day || 'Hoy no tienes nada planificado.' };
+  const day = renderDay(input.slots, BODY_MAX - suffix.length);
+  if (day) return { title, body: day + suffix };
+  if (suffix) {
+    const n = input.overdue ?? 0;
+    return {
+      title,
+      body:
+        'Nada planificado para hoy. ' +
+        (n === 1 ? 'Queda 1 tarea atrasada.' : 'Quedan ' + n + ' tareas atrasadas.'),
+    };
+  }
+  return { title, body: 'Hoy no tienes nada planificado.' };
 }
 
 /* ──────────────────────────────────────────────────────────── 2 · noche ── */
@@ -329,6 +357,74 @@ export function composeWeekArmed(): NotificationText {
     title: 'La semana ya está armada',
     body: 'Puse tus clases y lo que quedó pendiente. Ajústala cuando quieras.',
   };
+}
+
+/* ─────────────────────────────── 7 · reminder sin preparar (v2) ── */
+
+export interface PrepAlertInput {
+  title: string;
+  daysAway: number;
+}
+
+/**
+ * Un parcial o una entrega que se acerca y NO tiene ninguna tarea. Es la
+ * distancia entre "lo sé" y "me estoy preparando" (docs/08). Sale 7, 3 y 1
+ * días antes; si ya tiene tareas, no sale.
+ */
+export function composePrepAlert(input: PrepAlertInput): NotificationText {
+  const when =
+    input.daysAway <= 0 ? 'Hoy' : input.daysAway === 1 ? 'Mañana' : 'En ' + input.daysAway + ' días';
+  return {
+    title: fitText(when + ': ' + input.title, TITLE_MAX),
+    body: 'Todavía no tiene ninguna tarea. Tócala y pártelo en 3 o 4 pasos con fecha.',
+  };
+}
+
+/* ───────────────────────────────────── 8 · algo para leer (v2) ── */
+
+export interface ResourceInput {
+  title: string;
+  notes: string | null;
+  /** Días desde que se guardó. */
+  savedDaysAgo: number;
+}
+
+/**
+ * Un recurso guardado y nunca abierto. El problema que resuelve es el mismo
+ * del proyecto entero: se guarda para después y después no llega nunca.
+ */
+export function composeResource(input: ResourceInput): NotificationText {
+  const title = fitText('Para leer: ' + input.title, TITLE_MAX);
+  const when =
+    input.savedDaysAgo <= 0
+      ? 'Lo guardaste hoy'
+      : input.savedDaysAgo === 1
+        ? 'Lo guardaste ayer'
+        : 'Lo guardaste hace ' + input.savedDaysAgo + ' días';
+  const note = input.notes?.trim();
+  const body = note
+    ? fitText(note, BODY_MAX - when.length - 2) + ' · ' + when
+    : when + ' y no lo has abierto. Toca para leerlo ahora.';
+  return { title, body: fitText(body, BODY_MAX) };
+}
+
+/* ─────────────────────────────── 9 · minutos antes de una hora (v2) ── */
+
+export interface BeforeBlockInput {
+  title: string;
+  minutesLeft: number;
+  /** `8:00 – 10:00` */
+  range: string;
+  location: string | null;
+  isClass: boolean;
+}
+
+export function composeBeforeBlock(input: BeforeBlockInput): NotificationText {
+  const lead =
+    input.minutesLeft <= 1 ? 'Ya: ' : 'En ' + input.minutesLeft + ' min: ';
+  const parts = [input.range, input.location?.trim()].filter(Boolean);
+  const body = parts.join(SEPARATOR) || (input.isClass ? 'Clase' : 'Tarea');
+  return { title: fitText(lead + input.title, TITLE_MAX), body: fitText(body, BODY_MAX) };
 }
 
 /* ──────────────────────────────────────────── 6 · la prueba inmediata ── */

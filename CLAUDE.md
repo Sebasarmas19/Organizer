@@ -7,10 +7,10 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | Planificación — plan sin aprobar, sin código escrito |
-| Código existente | Ninguno (solo `reicon-demo.html`, no relacionado) |
-| Fecha de este snapshot | 2026-09-12 |
-| Deadline duro | Semestre empieza **2026-09-15** (3 días) |
+| Fase actual | App funcional en local; falta desplegar (ver `docs/PENDIENTES.md`) |
+| Código existente | `web/` (Next.js) + Supabase; notificaciones en `web/src/lib/push/server/` |
+| Fecha de este snapshot | 2026-09-27 |
+| Semestre | Empezó el 2026-09-15 |
 | Dueño | Sebastián (`saap1219@gmail.com`), usuario único |
 
 ## Índice de documentos

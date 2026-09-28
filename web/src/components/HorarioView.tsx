@@ -114,17 +114,21 @@ export function HorarioView({
     let idx = 1;
     for (const [title, tmpls] of byTitle.entries()) {
       // Agrupar por horario (start_time + end_time)
-      const slotsMap = new Map<string, { days: number[]; startTime: string; endTime: string }>();
+      const slotsMap = new Map<
+        string,
+        { days: number[]; startTime: string; endTime: string; room: string }
+      >();
       let hasNotify = false;
 
       for (const t of tmpls) {
-        const timeKey = `${t.start_time}-${t.end_time}`;
+        const timeKey = `${t.start_time}-${t.end_time}-${t.location ?? ''}`;
         if (t.reminder_min && t.reminder_min > 0) hasNotify = true;
 
         const s = slotsMap.get(timeKey) || {
           days: [],
           startTime: t.start_time.slice(0, 5),
           endTime: t.end_time.slice(0, 5),
+          room: t.location ?? '',
         };
         s.days.push(t.weekday);
         slotsMap.set(timeKey, s);
@@ -139,7 +143,7 @@ export function HorarioView({
           days: s.days,
           startTime: s.startTime,
           endTime: s.endTime,
-          room: '',
+          room: s.room,
         })),
       });
     }
@@ -283,6 +287,7 @@ export function HorarioView({
       weekday: number;
       startTime: string;
       endTime: string;
+      location: string | null;
       reminderMin?: number | null;
     }[] = [];
 
@@ -296,6 +301,7 @@ export function HorarioView({
             weekday: dow,
             startTime: sl.startTime,
             endTime: sl.endTime,
+            location: sl.room.trim() || null,
             reminderMin: s.notify ? 15 : null,
           });
         }
@@ -367,7 +373,7 @@ export function HorarioView({
       {savedSuccess ? (
         <div className="gutter mb-2">
           <p className="t-label text-green-700 font-medium">
-            ✓ Horario guardado y materializado para todo el semestre.
+            ✓ Guardado. Tus clases ya están en el calendario hasta el final del semestre.
           </p>
         </div>
       ) : null}
@@ -514,7 +520,7 @@ export function HorarioView({
               onClick={() => toggleSubjectNotify(sub.id)}
               style={{ paddingInline: 0 }}
             >
-              <span className="toggle__label">Avisarme antes de clase</span>
+              <span className="toggle__label">Avisarme 15 min antes de clase</span>
               <span className="toggle__switch" aria-hidden="true" />
             </button>
           </div>

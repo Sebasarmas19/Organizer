@@ -36,7 +36,7 @@ import {
   concatBytes,
   uint32BE,
   utf8,
-} from './bytes';
+} from './bytes.ts';
 
 /* ─────────────────────────────────────────────────────────────── tipos ── */
 

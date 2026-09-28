@@ -55,7 +55,7 @@ export function ReminderCard({
         <div className="fd-remcard__body">
           <div className="fd-remcard__head">
             <Link
-              href={`/calendario?v=dia&d=${reminder.dateStr}`}
+              href={`/reminders/${reminder.id}`}
               className="fd-remcard__mainlink"
               style={{
                 display: 'flex',
@@ -152,7 +152,7 @@ export function ReminderCard({
                 </button>
                 {chevron ? (
                   <Link
-                    href={`/calendario?v=dia&d=${reminder.dateStr}`}
+                    href={`/reminders/${reminder.id}`}
                     className="fd-remcard__chev"
                     aria-hidden
                     style={{ textDecoration: 'none' }}
@@ -165,7 +165,7 @@ export function ReminderCard({
           </div>
 
           <Link
-            href={`/calendario?v=dia&d=${reminder.dateStr}`}
+            href={`/reminders/${reminder.id}`}
             className="fd-remcard__preplink"
             style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
           >
