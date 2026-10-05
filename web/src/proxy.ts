@@ -6,6 +6,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { isAllowedEmail } from '@/lib/allowlist';
 
 /** La unica ruta que se ve sin sesion. En espanol porque el usuario la lee. */
 const SIGN_IN_PATH = '/entrar';
@@ -71,8 +72,26 @@ export async function proxy(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims);
   const { pathname } = request.nextUrl;
+
+  /* Una sesión con un correo que no es el del dueño se cierra en el acto. */
+  if (data?.claims && !isAllowedEmail(data.claims.email as string | undefined)) {
+    await supabase.auth.signOut();
+    if (pathname.startsWith('/api/')) {
+      return applySecurityHeaders(NextResponse.json({ error: 'No autorizado' }, { status: 403 }));
+    }
+    if (pathname !== '/auth/error') {
+      const target = request.nextUrl.clone();
+      target.pathname = '/auth/error';
+      target.search = '?motivo=no-autorizado';
+      const redirect = NextResponse.redirect(target);
+      for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
+      return applySecurityHeaders(redirect);
+    }
+    return applySecurityHeaders(response);
+  }
+
+  const signedIn = Boolean(data?.claims);
 
   if (!signedIn && !isPublic(pathname)) {
     if (pathname.startsWith('/api/')) {
