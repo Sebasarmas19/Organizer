@@ -18,6 +18,10 @@ const REASONS: Record<string, { title: string; body: string }> = {
     title: 'Entraste, pero falta tu perfil',
     body: 'La sesion esta bien; lo que fallo fue crear tu fila en la base de datos. Casi siempre es que el esquema todavia no se ejecuto en Supabase.',
   },
+  'no-autorizado': {
+    title: 'Esta app es privada',
+    body: 'Solo puede entrar la cuenta de su dueño. Se cerró la sesión.',
+  },
 };
 
 const FALLBACK = {

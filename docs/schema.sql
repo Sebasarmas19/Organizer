@@ -328,3 +328,32 @@ alter table schedule_templates add column if not exists location text;
 -- Avisos "X minutos antes" de clases y tareas con hora (blocks.reminder_min).
 create index if not exists blocks_reminder_pending_idx
   on blocks (starts_at) where reminder_min is not null and status = 'pending';
+
+-- ═══════════════════════════════════════════════════════════════════
+-- APP PRIVADA (2026-10-05, migración owner_only_signup)
+-- Solo los correos de allowed_emails pueden tener cuenta. El trigger
+-- sobre auth.users bloquea cualquier alta (enlace mágico, Google, admin).
+-- Para dar acceso a alguien: insert into allowed_emails values ('x@y.z');
+-- y añadirlo también a ALLOWED_EMAILS en Vercel.
+-- ═══════════════════════════════════════════════════════════════════
+
+create table if not exists public.allowed_emails (
+  email text primary key check (email = lower(email))
+);
+alter table public.allowed_emails enable row level security;
+
+create or replace function public.enforce_allowed_signup()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.email is null
+     or not exists (select 1 from public.allowed_emails a where a.email = lower(new.email)) then
+    raise exception 'Registro no permitido para este correo' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.enforce_allowed_signup() from public, anon, authenticated;
+
+create trigger enforce_allowed_signup
+  before insert or update of email on auth.users
+  for each row execute function public.enforce_allowed_signup();

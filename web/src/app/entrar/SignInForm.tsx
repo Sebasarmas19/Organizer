@@ -82,10 +82,19 @@ export function SignInForm() {
       const supabase = createClient();
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin + '/auth/callback' },
+        /* La app es privada: el enlace solo se manda a una cuenta que ya
+           existe. Los correos desconocidos no crean cuenta. */
+        options: {
+          emailRedirectTo: window.location.origin + '/auth/callback',
+          shouldCreateUser: false,
+        },
       });
       if (error) {
-        setState({ kind: 'error', message: error.message });
+        const blocked = /signups? not allowed|database error|not found/i.test(error.message);
+        setState({
+          kind: 'error',
+          message: blocked ? 'Esta app es privada: ese correo no tiene acceso.' : error.message,
+        });
         return;
       }
       setState({ kind: 'sent', email });
