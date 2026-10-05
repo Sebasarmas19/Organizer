@@ -108,8 +108,10 @@ html, body {
    estar, es una accion. Los otros cuatro llevan icono Y etiqueta, que es la
    regla de siempre: esta app se usa de reojo.
 
-   `env(safe-area-inset-bottom)`: el indicador de inicio del iPhone se come
-   34px que nadie mas va a descontar.                                      */
+   `env(safe-area-inset-bottom)`: el indicador de inicio del iPhone ocupa
+   34px. Se respeta casi entero, pero sin sumarle un margen propio encima:
+   con los dos, los iconos quedaban a ~65px del borde y la barra parecia
+   flotar. Las barras nativas de iOS dejan ~20px bajo las etiquetas.      */
 .fd-tabbar {
   position: fixed;
   bottom: 0;
@@ -119,8 +121,8 @@ html, body {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  padding: 8px 10px 12px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding: 6px 10px 10px;
+  padding-bottom: max(10px, calc(env(safe-area-inset-bottom) - 14px));
   background: var(--bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

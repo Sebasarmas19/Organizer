@@ -26,15 +26,17 @@
 
 Pruebas: `npm run test:push` (70). Verificación completa: `npm run verify`.
 
-## 2. Despliegue (falta, ~20 min)
+## 2. Despliegue (hecho el 2026-09-27)
 
-1. **Vercel**: importar el repo con `web` como Root Directory. Variables: las de
-   `web/.env.local.example`, incluidas `CRON_SECRET` y las VAPID.
-2. **Supabase**: pegar `supabase/cron.sql` en el SQL Editor, cambiando
-   `<APP_URL>` y `<CRON_SECRET>`.
-3. **Supabase Auth**: añadir la URL de Vercel en Redirect URLs.
-4. **iPhone**: abrir la URL en Safari → Compartir → Añadir a inicio → abrir
-   desde el icono → Ajustes → Notificaciones → *Activar notificaciones*.
+| Pieza | Dónde |
+|---|---|
+| App | https://organizer-sebas-projects1901.vercel.app · proyecto Vercel `organizer`, Root Directory `web`, deploy automático al hacer push a `main` |
+| Variables | Las 8 de `web/.env.local.example`, cargadas en Vercel |
+| Protección Vercel | Solo en previews; producción es pública (lo protege el login de Supabase) |
+| Cron | `pg_cron` job `dispatch-notifications`, cada 5 min → `/api/push/cron` |
+
+Falta a mano: añadir la URL en Supabase → Authentication → URL Configuration
+(Site URL + Redirect URLs `https://organizer-sebas-projects1901.vercel.app/**`).
 
 ## 3. Pendiente de producto
 
