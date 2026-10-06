@@ -885,3 +885,421 @@
   border-color: var(--task);
   background: var(--task);
 }
+
+/* ================================================ DETALLE DEL REMINDER ==== */
+
+.fd5-rhead {
+  padding-top: 6px;
+}
+
+.fd5-rhead h1 {
+  margin: 12px 0 0;
+  font-size: var(--fd-page);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.fd5-rhead p {
+  margin: 6px 0 0;
+  font-size: var(--fd-sub);
+  color: var(--text-muted);
+}
+
+.fd5-rhead .fd5-rhead__notes {
+  margin-top: 10px;
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.fd5-rprog {
+  margin-top: 18px;
+}
+
+.fd5-seg--lg {
+  margin-top: 0;
+}
+
+.fd5-seg--lg i {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.fd5-rprog__text {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+}
+
+.fd5-rprog__text b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* Sin pasos todavia: una franja hundida, sin alarma. */
+.fd5-ralert {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: var(--radius-strip);
+  background: var(--surface-sunken);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-ralert .ico {
+  margin-top: 3px;
+}
+
+.fd5-rsec {
+  margin-top: var(--gap-section);
+}
+
+/* La linea de estaciones. */
+.fd5-route {
+  display: flex;
+  flex-direction: column;
+}
+
+.fd5-stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 60px;
+}
+
+/* Dos medias lineas por estacion, centradas en la columna de 34px. */
+.fd5-stop[data-up]::before,
+.fd5-stop[data-down]::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  width: 4px;
+  background: var(--rem-track);
+}
+
+.fd5-stop[data-up]::before {
+  top: 0;
+  height: 50%;
+}
+
+.fd5-stop[data-down]::after {
+  top: 50%;
+  bottom: 0;
+}
+
+.fd5-stop[data-up="on"]::before,
+.fd5-stop[data-down="on"]::after {
+  background: var(--rem);
+}
+
+.fd5-stop__check {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  margin: 0 -5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.fd5-stop__ck {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--accent-text);
+  display: grid;
+  place-items: center;
+  color: var(--text-on-accent);
+}
+
+.fd5-stop[data-done="true"] .fd5-stop__ck {
+  background: var(--task);
+  box-shadow: none;
+}
+
+.fd5-stop__body {
+  min-width: 0;
+  min-height: 60px;
+  padding: 8px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  gap: 8px;
+  align-items: center;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd5-stop__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd5-stop__text b {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.fd5-stop__text small {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-stop__text em {
+  font-style: normal;
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd5-stop[data-done="true"] .fd5-stop__text b {
+  font-weight: var(--weight-regular);
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.fd5-stop__chev {
+  color: var(--text-faint);
+}
+
+/* El final de la linea: el reminder, cuadrado ambar con banderin blanco. */
+.fd5-stop--term {
+  min-height: 56px;
+}
+
+.fd5-stop--term .fd5-stop__text {
+  padding: 8px 0;
+}
+
+.fd5-stop--term .fd5-stop__text b {
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-stop__flag {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--rem);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+}
+
+/* Anadir un paso: tarjeta blanca, campo de 46px, chips de fecha de 36px
+   (44px al dedo). "Anadir" con filete: el bloque saturado no es este. */
+.fd5-qadd {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd5-qadd__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.fd5-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.fd5-input::placeholder {
+  color: var(--text-faint);
+}
+
+.fd5-input:focus {
+  box-shadow: inset 0 0 0 1.5px var(--accent-text), 0 0 0 3px var(--task-soft);
+}
+
+.fd5-input--date {
+  color: var(--text-muted);
+}
+
+.fd5-btn--accent {
+  min-height: 46px;
+  border-radius: var(--radius);
+  color: var(--accent-text);
+}
+
+.fd5-btn--accent:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.fd5-btn--quiet {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+
+.fd5-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+}
+
+.fd5-datechip {
+  position: relative;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+.fd5-datechip::before {
+  content: "";
+  position: absolute;
+  inset: -4px -1px;
+}
+
+.fd5-datechip[aria-pressed="true"] {
+  background: var(--task-soft);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 35%, transparent);
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-hint {
+  margin: 0;
+  font-size: var(--fd-small);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-rcand {
+  margin-top: 6px;
+}
+
+.fd5-rowbtn {
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  box-shadow: inset 0 -1px 0 var(--line);
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: inherit;
+  font-size: var(--fd-sub);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fd5-rowbtn .ico {
+  color: var(--text-faint);
+}
+
+.fd5-pick {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fd5-pick + .fd5-pick {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-pick .ico {
+  color: var(--accent-text);
+}
+
+.fd5-pick__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fd5-pick__text b {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+}
+
+.fd5-pick__text small {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-rfoot {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.fd5-rfoot .fd5-btn {
+  min-height: 44px;
+  border-radius: var(--radius);
+}
+
+.fd5-rfoot + .fd5-hint {
+  margin-top: 8px;
+}
+
+@media (min-width: 900px) {
+  .fd5-pagetop,
+  .fd5-rhead,
+  .fd5-rprog,
+  .fd5-ralert,
+  .fd5-rsec,
+  .fd5-qadd,
+  .fd5-rcand,
+  .fd5-rfoot,
+  .fd5-rfoot + .fd5-hint {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+}
