@@ -1456,9 +1456,69 @@ html, body {
 
 .fd-block--task .fd-block__title { color: var(--text); }
 
-/* Una tarea que cae encima de una clase se corre 34px a la derecha: se ve
-   que hay dos cosas a la vez sin tener que dividir la columna. */
-.fd-block--overlap { left: 34px; }
+/* La hora de clase en Dia (#53): franja gris sin nombre, detras de todo.
+   Solo dice "ese rato no esta libre"; las tareas se pintan encima. */
+.fd-classband {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  border-radius: 10px;
+  background: var(--surface-sunken);
+  padding: 4px 10px;
+  pointer-events: none;
+}
+
+.fd-classband span {
+  font-size: var(--fd-xs);
+  color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------- clases ---
+   La pestana Clases: una fila por clase, la hora delante. */
+.fd-classrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  margin: 0 -10px;
+  border-radius: 11px;
+  border-left: var(--rail) solid transparent;
+}
+
+.fd-classrow[data-status] {
+  background: var(--surface-sunken);
+  border-left-color: var(--class);
+}
+
+.fd-classrow__hours {
+  flex: none;
+  min-width: 92px;
+  font-size: var(--fd-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd-classrow__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd-classrow__title {
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.fd-classrow__tag {
+  flex: none;
+  font-size: var(--fd-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
 
 /* La linea de ahora. Solo en el dia de hoy, y cruza tambien la columna de
    horas (por eso el -46px), porque la hora actual es informacion de la

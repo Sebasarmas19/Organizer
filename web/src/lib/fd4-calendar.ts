@@ -25,7 +25,7 @@ import {
   parseDateString,
 } from './date-utils';
 
-export type CalView = 'mes' | 'semana' | 'dia';
+export type CalView = 'mes' | 'semana' | 'dia' | 'clases';
 export type Entity = 'task' | 'subject' | 'reminder';
 
 /** El riel del telefono: 7:00 a 23:00. Una fila de `--hour-row` por hora. */
@@ -97,7 +97,7 @@ export type MonthCell = {
   inMonth: boolean;
   isToday: boolean;
   isSelected: boolean;
-  /** Hasta tres, en orden fijo: reminder, tarea, materia. */
+  /** Hasta dos, en orden fijo: reminder, tarea. Las materias no salen aquí. */
   dots: Entity[];
 };
 
@@ -180,12 +180,12 @@ export async function getMonthView(
 
   const hasReminder = new Set((remindersRes.data ?? []).map((r) => r.occurs_on));
   const hasTask = new Set<string>();
-  const hasSubject = new Set<string>();
 
-  for (const b of blocksRes.data ?? []) {
-    const d = localDay(b.starts_at, timezone);
-    if (b.source === 'template') hasSubject.add(d);
-    else hasTask.add(d);
+  /* Las clases no entran al calendario (#53): tienen su pestaña, Clases. */
+  const taskBlocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template');
+
+  for (const b of taskBlocks) {
+    hasTask.add(localDay(b.starts_at, timezone));
   }
   for (const t of itemsRes.data ?? []) {
     if (t.due_on) hasTask.add(t.due_on);
@@ -195,7 +195,6 @@ export async function getMonthView(
     const dots: Entity[] = [];
     if (hasReminder.has(c.dateStr)) dots.push('reminder');
     if (hasTask.has(c.dateStr)) dots.push('task');
-    if (hasSubject.has(c.dateStr)) dots.push('subject');
     return {
       dateStr: c.dateStr,
       dayNum: c.dayNum,
@@ -221,7 +220,7 @@ export async function getMonthView(
         href: `/reminders/${r.id}`,
       }));
 
-    const dayBlocks = (blocksRes.data ?? [])
+    const dayBlocks = taskBlocks
       .filter((b) => localDay(b.starts_at, timezone) === dStr)
       .map((b) => {
         const start = formatClock(b.starts_at, timezone);
@@ -229,7 +228,7 @@ export async function getMonthView(
         return {
           id: b.id,
           title: b.title,
-          kind: (b.source === 'template' ? 'subject' : 'task') as Entity,
+          kind: 'task' as Entity,
           hora: end ? `${start} – ${end}` : start,
           href: b.item_id ? `/tareas/${b.item_id}` : `/calendario?v=dia&d=${dStr}`,
         };
@@ -300,7 +299,7 @@ export type WeekStripDay = {
   dayNum: number;
   dow: string;
   isToday: boolean;
-  /** El punto de la tira: manda el reminder, luego la tarea, luego la materia. */
+  /** El punto de la tira: manda el reminder, luego la tarea. */
   dot: Entity | 'none';
 };
 
@@ -313,8 +312,6 @@ export type WeekDayCard = {
   isToday: boolean;
   reminder: { title: string; hora: string } | null;
   tasks: { title: string; hora: string }[];
-  /** "Cálculo III 8:00" */
-  subjects: string[];
   free: boolean;
 };
 
@@ -420,22 +417,18 @@ export async function getWeekView(
       .order('occurs_at', { ascending: true, nullsFirst: false }),
   ]);
 
-  const blocks = blocksRes.data ?? [];
+  /* Las clases no entran al calendario (#53): tienen su pestaña, Clases. */
+  const blocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template');
   const items = itemsRes.data ?? [];
   const reminders = (remindersRes.data ?? []) as Reminder[];
 
   const cards: WeekDayCard[] = days.map((dateStr) => {
     const dayBlocks = blocks.filter((b) => localDay(b.starts_at, timezone) === dateStr);
-    const subjects = dayBlocks
-      .filter((b) => b.source === 'template')
-      .map((b) => `${b.title} ${formatClock(b.starts_at, timezone)}`);
 
     /* Una tarea puede llegar por dos caminos: tiene bloque ese dia, o tiene
        `due_on` ese dia y todavia no se planifico. Las dos son tareas del dia
        y las dos se ensenan; la del bloque trae hora. */
-    const blockTasks = dayBlocks
-      .filter((b) => b.source !== 'template')
-      .map((b) => ({ title: b.title, hora: formatClock(b.starts_at, timezone) }));
+    const blockTasks = dayBlocks.map((b) => ({ title: b.title, hora: formatClock(b.starts_at, timezone) }));
     const blockTitles = new Set(blockTasks.map((t) => t.title));
     const looseTasks = items
       .filter((t) => t.due_on === dateStr && !blockTitles.has(t.title))
@@ -453,8 +446,7 @@ export async function getWeekView(
         ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
       tasks,
-      subjects,
-      free: !rem && tasks.length === 0 && subjects.length === 0,
+      free: !rem && tasks.length === 0,
     };
   });
 
@@ -463,7 +455,6 @@ export async function getWeekView(
     let dot: Entity | 'none' = 'none';
     if (c.reminder) dot = 'reminder';
     else if (c.tasks.length) dot = 'task';
-    else if (c.subjects.length) dot = 'subject';
     return {
       dateStr: c.dateStr,
       dayNum: day,
@@ -498,7 +489,7 @@ export async function getWeekView(
       return [
         {
           id: b.id,
-          kind: (b.source === 'template' ? 'subject' : 'task') as Entity,
+          kind: 'task' as Entity,
           title: b.title,
           meta: formatClock(b.starts_at, timezone),
           top: ((from - railStart) / 60) * DESK_HOUR_PX,
@@ -565,8 +556,6 @@ export type DayBlockView = {
   meta: string;
   top: number;
   height: number;
-  /** Una tarea que cae encima de una clase se corre a la derecha. */
-  overlap: boolean;
   showMeta: boolean;
   done?: boolean;
 };
@@ -592,6 +581,9 @@ export type Fd4DayData = {
   /** Tareas del dia sin hora: no caben en el riel y no pueden desaparecer. */
   noHour: DayNoHourTask[];
   blocks: DayBlockView[];
+  /** Las horas de clase como franja gris "En clase", sin nombre (#53). Solo
+      dicen que ese rato no está libre; el horario vive en la pestaña Clases. */
+  classBands: { id: string; top: number; height: number }[];
 };
 
 export async function getDayView(
@@ -638,22 +630,22 @@ export async function getDayView(
 
   const toPx = (minutes: number) => ((minutes - DAY_START_HOUR * 60) / 60) * HOUR_PX;
 
-  /* Las clases primero: son las que marcan donde NO hay hueco, y hacen falta
-     ya resueltas para saber que tarea se solapa con cual. */
-  const subjectSpans = rawBlocks
+  /* Las clases solo marcan dónde NO hay hueco: una franja gris sin nombre. */
+  const classBands = rawBlocks
     .filter((b) => b.source === 'template')
-    .map((b) => ({
-      from: localMinutes(b.starts_at, timezone),
-      to: localMinutes(b.ends_at, timezone),
-    }));
+    .map((b) => {
+      const from = localMinutes(b.starts_at, timezone);
+      const to = localMinutes(b.ends_at, timezone);
+      return { id: b.id, top: toPx(from), height: (Math.max(to - from, 15) / 60) * HOUR_PX };
+    });
 
   const blocks: DayBlockView[] = [];
 
   for (const b of rawBlocks) {
+    if (b.source === 'template') continue;
     const from = localMinutes(b.starts_at, timezone);
     const to = localMinutes(b.ends_at, timezone);
     const mins = Math.max(to - from, 30);
-    const isSubject = b.source === 'template';
 
     const start = formatClock(b.starts_at, timezone);
     const end = formatClock(b.ends_at, timezone);
@@ -662,15 +654,14 @@ export async function getDayView(
     blocks.push({
       id: b.id,
       itemId: b.item_id,
-      kind: isSubject ? 'subject' : 'task',
+      kind: 'task',
       title: b.title,
       meta: [mins >= 60 ? `${start} – ${end}` : start, ctx].filter(Boolean).join(' · '),
       top: toPx(from),
       /* 50px de suelo: por debajo de eso el titulo no cabe y el bloque se
          convierte en una raya de color sin informacion. */
       height: Math.max((mins / 60) * HOUR_PX, 50),
-      overlap: !isSubject && subjectSpans.some((s) => from < s.to && s.from < to),
-      showMeta: mins >= 60 || !isSubject,
+      showMeta: true,
       done: b.status === 'done',
     });
   }
@@ -687,7 +678,6 @@ export async function getDayView(
       meta: formatTimeOfDay(r.occurs_at),
       top: toPx(from),
       height: 50,
-      overlap: false,
       showMeta: true,
     });
   }
@@ -749,6 +739,110 @@ export async function getDayView(
     band,
     noHour,
     blocks: blocks.sort((a, b) => a.top - b.top),
+    classBands,
+  };
+}
+
+/* =============================================================== CLASES === */
+
+export type ClassSlot = {
+  id: string;
+  title: string;
+  /** "8:00 – 9:30" */
+  hours: string;
+  location: string | null;
+  /** La clase en curso o la siguiente; las demás, null. */
+  status: 'now' | 'next' | null;
+};
+
+export type ClassDay = {
+  weekday: number;
+  /** "Lunes" */
+  label: string;
+  isToday: boolean;
+  slots: ClassSlot[];
+};
+
+export type Fd4ClassesData = {
+  days: ClassDay[];
+  /** "15 sep – 20 feb", o vacío si no hay horario. */
+  range: string;
+};
+
+/**
+ * El horario del semestre, por día de la semana.
+ *
+ * Sale de `schedule_templates` y no de `blocks`: es el mismo todas las
+ * semanas, así que no hay fecha que recorrer. Solo días con clase.
+ */
+export async function getClassesView(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  timezone = 'America/Caracas'
+): Promise<Fd4ClassesData> {
+  const todayStr = getTodayString(timezone);
+  const todayDow = getDayOfWeek(todayStr);
+  const nowMin = getCurrentTimeMinutes(timezone);
+
+  const { data } = await supabase
+    .from('schedule_templates')
+    .select('id, title, weekday, start_time, end_time, location, active_from, active_until')
+    .eq('user_id', userId)
+    .or(`active_until.is.null,active_until.gte.${todayStr}`)
+    .order('start_time', { ascending: true });
+
+  const templates = data ?? [];
+
+  /* Lunes primero: la semana del estudiante empieza ahí. */
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const days: ClassDay[] = order
+    .map((weekday) => ({
+      weekday,
+      label: WEEKDAY_FULL_ES[weekday].charAt(0).toUpperCase() + WEEKDAY_FULL_ES[weekday].slice(1),
+      isToday: weekday === todayDow,
+      slots: templates
+        .filter((t) => t.weekday === weekday)
+        .map((t) => ({
+          id: t.id,
+          title: t.title,
+          hours: `${formatTimeOfDay(t.start_time)} – ${formatTimeOfDay(t.end_time)}`,
+          location: t.location,
+          status: null as ClassSlot['status'],
+        })),
+    }))
+    .filter((d) => d.slots.length > 0);
+
+  /* En curso, o si no la siguiente: hoy después de ahora, o el próximo día. */
+  const semesterOn = templates.some((t) => t.active_from <= todayStr);
+  if (semesterOn) {
+    const current = templates.find(
+      (t) =>
+        t.weekday === todayDow &&
+        timeToMinutes(t.start_time) <= nowMin &&
+        nowMin < timeToMinutes(t.end_time)
+    );
+    let next = current ? undefined : templates.find((t) => t.weekday === todayDow && timeToMinutes(t.start_time) > nowMin);
+    for (let i = 1; !current && !next && i <= 7; i++) {
+      next = templates.find((t) => t.weekday === (todayDow + i) % 7);
+    }
+    const mark = current ?? next;
+    for (const d of days) {
+      for (const slot of d.slots) {
+        if (slot.id === mark?.id) slot.status = current ? 'now' : 'next';
+      }
+    }
+  }
+
+  const from = templates.map((t) => t.active_from).sort()[0];
+  const until = templates.map((t) => t.active_until).filter(Boolean).sort().pop();
+  const short = (d: string) => {
+    const { month, day } = parseDateString(d);
+    return `${day} ${MONTH_NAMES_ES[month - 1].slice(0, 3)}`;
+  };
+
+  return {
+    days,
+    range: from ? (until ? `${short(from)} – ${short(until)}` : `desde el ${short(from)}`) : '',
   };
 }
 
@@ -763,6 +857,8 @@ export async function getDayView(
  * una cabecera de 390px de ancho.
  */
 export function stepDate(view: CalView, dateStr: string, delta: number): string {
+  /* El horario es el mismo todas las semanas: Clases no tiene "anterior". */
+  if (view === 'clases') return dateStr;
   if (view === 'dia') return addDays(dateStr, delta);
   if (view === 'semana') return addDays(getMondayOfWeek(dateStr), delta * 7);
 
