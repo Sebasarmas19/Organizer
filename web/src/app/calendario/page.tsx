@@ -7,9 +7,9 @@
    gastar tres de las cuatro restantes en el mismo calendario dejaria fuera a
    Pendientes o a Recursos.
 
-   EL ESTADO VIVE EN LA URL: `?v=mes|semana|dia|clases&d=YYYY-MM-DD`.
-   Clases es el horario del semestre: las materias no salen en las otras
-   vistas (#53), solo como franja gris "En clase" en Dia.
+   EL ESTADO VIVE EN LA URL: `?v=mes|semana|dia&d=YYYY-MM-DD`.
+   Las materias no salen aqui (#79), solo como franja gris "En clase" en
+   Dia. El horario vive en Inicio y en /clases.
 
    No es una preferencia de estilo. Es lo que hace que:
      · el boton de atras del iPhone deshaga la navegacion del calendario
@@ -28,7 +28,6 @@ import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
 import { getTodayString, parseDateString } from '@/lib/date-utils';
 import {
-  getClassesView,
   getDayView,
   getMonthView,
   getWeekView,
@@ -40,7 +39,6 @@ import { CalHeader } from '@/components/fd4/CalHeader';
 import { MonthView } from '@/components/fd4/MonthView';
 import { WeekView } from '@/components/fd4/WeekView';
 import { DayView } from '@/components/fd4/DayView';
-import { ClassesView } from '@/components/fd4/ClassesView';
 import { Setup } from '../Setup';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +54,7 @@ function safeDate(raw: string | undefined, fallback: string): string {
 }
 
 function safeView(raw: string | undefined): CalView {
-  return raw === 'mes' || raw === 'dia' || raw === 'clases' ? raw : 'semana';
+  return raw === 'mes' || raw === 'dia' ? raw : 'semana';
 }
 
 export default async function CalendarioPage({
@@ -73,6 +71,8 @@ export default async function CalendarioPage({
   if (!user) redirect('/entrar');
 
   const params = await searchParams;
+  /* La pestaña Clases existió un día: el enlace viejo lleva a su sitio. */
+  if (params.v === 'clases') redirect('/clases');
   const view = safeView(params.v);
   const dateStr = safeDate(params.d, getTodayString(DEFAULT_TIMEZONE));
   const { year, month } = parseDateString(dateStr);
@@ -91,10 +91,6 @@ export default async function CalendarioPage({
       if (view === 'semana') {
         const data = await getWeekView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
         return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />];
-      }
-      if (view === 'clases') {
-        const data = await getClassesView(supabase, user.id, DEFAULT_TIMEZONE);
-        return ['Clases', data.range || 'Tu horario del semestre', <ClassesView key="c" data={data} />];
       }
       const data = await getDayView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
       return [data.title, data.sub, <DayView key="d" data={data} />];

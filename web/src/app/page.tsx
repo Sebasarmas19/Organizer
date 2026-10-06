@@ -8,12 +8,14 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { getHomeData } from '@/lib/home';
+import { getClassesView } from '@/lib/fd4-calendar';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { getTodayString } from '@/lib/date-utils';
 import { FocusToday } from '@/components/fd4/FocusToday';
 import { ReminderCard } from '@/components/fd4/ReminderCard';
 import { Overdue } from '@/components/fd4/Overdue';
+import { TodayClasses } from '@/components/fd4/TodayClasses';
 import { Flag } from '@/components/fd4/Marks';
 import { Icon } from '@/components/Icon';
 import { Setup } from './Setup';
@@ -37,6 +39,7 @@ export default async function HomePage() {
 
   const home = await getHomeData(supabase, user.id);
   const timezone = home.timezone;
+  const classes = await getClassesView(supabase, user.id, timezone);
 
   return (
     <div className="fd-app">
@@ -63,9 +66,11 @@ export default async function HomePage() {
         </header>
 
         <div className="fd-home">
-          {/* 1 · Lo siguiente, y el resto de hoy plegado debajo. */}
+          {/* 1 · Lo siguiente, el resto de hoy plegado debajo, y las clases
+                de hoy (#79): en escritorio se quedan en la misma columna. */}
           <div className="fd-home__focus">
             <FocusToday tasks={home.hoy} todayStr={home.todayStr} />
+            <TodayClasses data={classes} />
           </div>
 
           {/* 2 · Lo de ayer, plegado en el telefono: va antes que lo que se viene. */}
