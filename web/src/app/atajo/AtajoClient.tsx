@@ -28,7 +28,7 @@ export function AtajoClient({ token }: { token: string }) {
   const [copiedToken, setCopiedToken] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const origin = useSyncExternalStore(subscribeToOrigin, getClientOrigin, getServerOrigin);
-  const [testText, setTestText] = useState('Comprar cuadernos de prueba');
+  const [testText, setTestText] = useState('Entregar informe el viernes a las 3');
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
 
@@ -77,7 +77,7 @@ export function AtajoClient({ token }: { token: string }) {
 
       if (res.ok) {
         setTestStatus('success');
-        setTestMessage(`Guardada en ${elapsed} ms: "${data.title}" ya esta en Tareas.`);
+        setTestMessage(`${data.message ?? `Guardada: ${data.title}`} (${elapsed} ms)`);
         setTestText('');
       } else {
         setTestStatus('error');
@@ -107,6 +107,34 @@ export function AtajoClient({ token }: { token: string }) {
           </p>
         </div>
       </header>
+
+      {/* Que entiende */}
+      <section className="rounded bg-sunken p-4 mb-6">
+        <h2 className="t-section mb-2" style={{ fontSize: 'var(--text-body)' }}>
+          Qué puedes decir
+        </h2>
+        <ul className="t-meta c-muted space-y-2 m-0 pl-4 list-disc">
+          <li>
+            <strong>&ldquo;Comprar pan&rdquo;</strong> → tarea sin fecha, a la bandeja.
+          </li>
+          <li>
+            <strong>&ldquo;Llamar al banco mañana&rdquo;</strong> → tarea para mañana.
+          </li>
+          <li>
+            <strong>&ldquo;Entregar informe el viernes a las 3&rdquo;</strong> → tarea el viernes 15:00, en el
+            calendario y con aviso 15 min antes.
+          </li>
+          <li>
+            <strong>&ldquo;Recordatorio parcial de cálculo el 15 de octubre&rdquo;</strong> → reminder (empieza con
+            &ldquo;recordatorio&rdquo;).
+          </li>
+        </ul>
+        <p className="t-meta c-muted mt-2">
+          Entiende hoy, mañana, pasado mañana, días de la semana, &ldquo;el 15&rdquo;, &ldquo;15 de octubre&rdquo;,
+          &ldquo;15/10&rdquo;, &ldquo;en 3 días&rdquo;, &ldquo;a las 3&rdquo;, &ldquo;a las 8 de la mañana&rdquo;,
+          &ldquo;y media&rdquo;. &ldquo;A las 3&rdquo; sin más se entiende como de la tarde.
+        </p>
+      </section>
 
       {/* Credenciales y URL */}
       <section className="rounded bg-sunken p-4 mb-6">
@@ -235,6 +263,23 @@ export function AtajoClient({ token }: { token: string }) {
               4
             </span>
             <div>
+              <p className="t-body font-medium">Que Siri te confirme</p>
+              <p className="t-meta c-muted mt-0.5">
+                Anade <strong>&ldquo;Obtener valor del diccionario&rdquo;</strong> con clave <code>message</code>, y
+                despues <strong>&ldquo;Mostrar resultado&rdquo;</strong> con ese valor. Siri te leera lo que guardo:
+                <em> &ldquo;Tarea para el viernes 9 a las 15:00: Entregar informe.&rdquo;</em>
+              </p>
+            </div>
+          </li>
+
+          <li className="flex gap-3 items-start">
+            <span
+              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
+              style={{ width: 28, height: 28 }}
+            >
+              5
+            </span>
+            <div>
               <p className="t-body font-medium">Nombra el atajo &ldquo;Anota&rdquo;</p>
               <p className="t-meta c-muted mt-0.5">
                 Toca el titulo del atajo arriba y escribe <strong>Anota</strong>. Esto activa de inmediato el comando de voz:{' '}
@@ -248,7 +293,7 @@ export function AtajoClient({ token }: { token: string }) {
               className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
               style={{ width: 28, height: 28 }}
             >
-              5
+              6
             </span>
             <div>
               <p className="t-body font-medium">Acceso rapido (opcional)</p>
@@ -285,7 +330,7 @@ export function AtajoClient({ token }: { token: string }) {
             className="btn btn--primary w-full"
             style={{ minHeight: 'var(--tap-min)' }}
           >
-            {testStatus === 'loading' ? 'Enviando...' : 'Enviar tarea de prueba'}
+            {testStatus === 'loading' ? 'Enviando...' : 'Enviar prueba'}
           </button>
         </form>
 
