@@ -645,3 +645,243 @@
     display: none;
   }
 }
+
+/* ============================================================ HORARIO ==== */
+
+/* Cabecera de pantalla de detalle: volver a la izquierda, accion con borde
+   a la derecha. */
+.fd5-pagetop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  margin-left: -8px;
+}
+
+.fd5-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--tap-min);
+  padding: 0 8px 0 2px;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  color: var(--accent-text);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.fd5-ptitle {
+  padding-top: 2px;
+}
+
+.fd5-ptitle h1 {
+  margin: 0;
+  font-size: var(--fd-page);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+}
+
+.fd5-ptitle p {
+  margin: 3px 0 0;
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+}
+
+.fd5-days {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.fd5-dcard {
+  padding: 0 16px 4px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.fd5-dcard[data-today="true"] {
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 45%, transparent);
+}
+
+.fd5-dcard__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 0 6px;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+.fd5-dcard__head small {
+  font-size: var(--fd-small);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.fd5-cls {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 52px;
+  padding: 8px 0;
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-cls__hours {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fd5-cls__hours .fd5-classdot {
+  transform: none;
+}
+
+.fd5-cls__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fd5-cls__text b {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.fd5-cls__text small {
+  margin-top: 1px;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-cls[data-past="true"] .fd5-cls__text b {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.fd5-tag {
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fd-xs);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.fd5-tag--now {
+  background: color-mix(in srgb, var(--class) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--class) 50%, transparent);
+  color: var(--text);
+}
+
+.fd5-tag--next {
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-muted);
+}
+
+@media (min-width: 900px) {
+  .fd5-clases {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-top: 14px;
+  }
+}
+
+/* =========================================================== VISTA DIA ==== */
+
+/* El modulo Calendario se queda como estaba (le gusta al usuario); FD5 solo
+   ajusta el tamano del titulo, los controles a 44px con radio 14, y como se
+   pintan la franja "En clase" y los bloques de tarea. */
+.fd-h1--cal {
+  font-size: var(--fd-day);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.fd-calhead__nav .fd-btn--icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: var(--radius-control);
+}
+
+.fd-calhead__seg .fd-seg {
+  min-height: 44px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+}
+
+.fd-calhead__seg .fd-seg a {
+  border-radius: var(--radius-sm);
+}
+
+.fd-calhead__seg > .fd-btn,
+.fd-dayhead .pl-addbar .fd-btn {
+  min-height: 44px;
+  border-radius: var(--radius-control);
+}
+
+.fd-dayhead .pl-addbar .fd-btn {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+}
+
+/* "En clase": gris neutro, sin nombre ni aula, detras de las tareas y sin
+   toque (#53). */
+.fd-classband {
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  padding: 7px 12px;
+  pointer-events: none;
+}
+
+.fd-classband span {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+/* Tarea en el riel: azul suave con filete, el texto en --text. */
+.fd-block--task {
+  background: var(--task-soft);
+  border: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-text) 22%, transparent);
+  border-radius: var(--radius);
+}
+
+.fd-block--task .fd-block__title {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+/* La casilla de la tarea en el riel es el circulo de check, como en todas
+   partes: la forma dice "tarea". */
+.fd-block--task .fd-check--mini {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border-color: var(--accent-text);
+}
+
+.fd-block--task .fd-check--mini[data-on="true"] {
+  border-color: var(--task);
+  background: var(--task);
+}

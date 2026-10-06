@@ -206,8 +206,10 @@ export function DayView({ data }: { data: Fd4DayData }) {
                         style={{
                           background: 'none',
                           border: 'none',
-                          padding: '6px',
-                          margin: '-6px 2px -6px -4px',
+                          alignSelf: 'stretch',
+                          minWidth: 44,
+                          padding: '0 8px 0 12px',
+                          margin: '-8px -4px -8px -12px',
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',

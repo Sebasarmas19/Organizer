@@ -1,5 +1,5 @@
 /* ============================================================================
-   Organizer · Clases
+   Organizer · Clases (FD5: "Horario")
 
    El horario del semestre entero, una tarjeta por día con clase. Se llega
    desde "Clases de hoy" en Inicio (#79). Solo se lee: editar es en /horario.
@@ -11,7 +11,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
-import { getTodayString } from '@/lib/date-utils';
+import { getCurrentTimeMinutes, getTodayString } from '@/lib/date-utils';
 import { getClassesView } from '@/lib/fd4-calendar';
 import { Icon } from '@/components/Icon';
 import { TabBar } from '@/components/fd4/TabBar';
@@ -19,7 +19,7 @@ import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { ClassesView } from '@/components/fd4/ClassesView';
 import { Setup } from '../Setup';
 
-export const metadata: Metadata = { title: 'Clases · Organizer' };
+export const metadata: Metadata = { title: 'Horario · Organizer' };
 export const dynamic = 'force-dynamic';
 
 export default async function ClasesPage() {
@@ -37,28 +37,24 @@ export default async function ClasesPage() {
     <div className="fd-app">
       <DeskSidebar active="inicio" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
 
-      <main className="fd-screen fd-screen--split">
-        <div className="fd-fixedhead">
-          <div className="fd-calhead__row">
-            <Link href="/" className="pl-back">
-              <Icon name="chevron-left" size="sm" />
+      <main className="fd-screen">
+        <div className="fd5-clases">
+          <div className="fd5-pagetop">
+            <Link href="/" className="fd5-back">
+              <Icon name="chevron-left" size="md" />
               Inicio
             </Link>
+            <Link href="/horario" className="fd5-smallbtn">
+              Editar
+            </Link>
           </div>
-          <div className="fd-calhead__row">
-            <div className="fd-calhead__title">
-              <h1 className="fd-h1 fd-h1--cal">Clases</h1>
-              <span className="fd-sub">{data.range || 'Tu horario del semestre'}</span>
-            </div>
-            <div className="fd-calhead__nav">
-              <Link href="/horario" className="fd-btn">
-                Editar
-              </Link>
-            </div>
+          <div className="fd5-ptitle">
+            <h1>Horario</h1>
+            <p>{data.range ? `Tu semana de clases · ${data.range}` : 'Tu semana de clases'}</p>
           </div>
-        </div>
 
-        <ClassesView data={data} />
+          <ClassesView data={data} nowMin={getCurrentTimeMinutes(DEFAULT_TIMEZONE)} />
+        </div>
       </main>
 
       <TabBar />
