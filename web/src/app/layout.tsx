@@ -3,6 +3,7 @@
  * Carga estilos globales (Tailwind, tokens, FD4), tipografía IBM Plex Sans y bootstrap de tema.
  */
 
+import { LiveRefresh } from '@/components/LiveRefresh';
 import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Sans } from 'next/font/google';
@@ -75,6 +76,8 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>
+        {/* Recarga los datos si cambian por fuera (Siri, cron, otro equipo). */}
+        <LiveRefresh />
         {children}
       </body>
     </html>
