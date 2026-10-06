@@ -1502,7 +1502,6 @@ html, body {
 
 /* ------------------------------------------------------------- clases ---
    Clases de hoy (Inicio) y /clases: una fila por clase, la hora delante. */
-.fd-todayclasses { margin-top: var(--gap-section); }
 
 .fd-classrow {
   display: flex;
