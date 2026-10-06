@@ -94,3 +94,14 @@ test('el título conserva tildes y mayúsculas del dictado', () => {
 test('fechas imposibles no se inventan', () => {
   assert.equal(p('algo el 31 de febrero').date, null);
 });
+
+test('casos reales que fallaron con Siri', () => {
+  assert.deepEqual(p('ponme un reminder para dos semanas del parcial de física'), {
+    kind: 'reminder',
+    title: 'Parcial de física',
+    date: '2026-10-19',
+    time: null,
+  });
+  assert.equal(p('un reminder para dos semanas').kind, 'reminder');
+  assert.equal(p('repasar para dos semanas').date, '2026-10-19');
+});

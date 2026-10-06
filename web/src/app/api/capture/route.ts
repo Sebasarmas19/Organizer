@@ -2,7 +2,8 @@
    Organizer · POST /api/capture
    Endpoint invocado por el Atajo de iOS ("Oye Siri, anota...").
 
-   Lee la frase dictada (src/lib/capture/parse.ts):
+   Lee la frase dictada con Gemini (src/lib/capture/llm.ts); si no responde,
+   con las reglas de src/lib/capture/parse.ts:
    · con fecha            → tarea planificada ese día
    · con hora             → además, bloque en el calendario y aviso 15 min antes
    · empieza "recordatorio" y trae fecha → reminder
@@ -16,6 +17,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { captureToken } from '@/lib/env';
 import { timingSafeCompare } from '@/lib/security';
 import { parseCapture, type ParsedCapture } from '@/lib/capture/parse';
+import { interpretWithLlm } from '@/lib/capture/llm';
 import { localDateOf, localTimeOf, timeToMinutes, zonedIso } from '@/lib/tz';
 
 const BLOCK_MINUTES = 60;
@@ -139,10 +141,11 @@ export async function POST(request: NextRequest) {
   const timezone = profile.timezone || 'America/Caracas';
   const nowIso = new Date().toISOString();
   const today = localDateOf(nowIso, timezone);
-  const parsed = parseCapture(text, {
-    date: today,
-    minutes: timeToMinutes(localTimeOf(nowIso, timezone)),
-  });
+  const now = { date: today, minutes: timeToMinutes(localTimeOf(nowIso, timezone)) };
+  /* El modelo entiende frases libres; las reglas quedan de respaldo. */
+  const fromLlm = await interpretWithLlm(text, now, timezone);
+  const parsed = fromLlm ?? parseCapture(text, now);
+  const source = fromLlm ? 'llm' : 'rules';
 
   /* 5a. Reminder: solo si trae fecha. Sin fecha no es un reminder. */
   if (parsed.kind === 'reminder' && parsed.date) {
@@ -166,6 +169,7 @@ export async function POST(request: NextRequest) {
       {
         id: reminder.id,
         kind: 'reminder',
+        source,
         title: reminder.title,
         date: parsed.date,
         time: parsed.time,
@@ -225,6 +229,7 @@ export async function POST(request: NextRequest) {
     {
       id: item.id,
       kind,
+      source,
       title: item.title,
       date: planned ? parsed.date : null,
       time: planned ? parsed.time : null,

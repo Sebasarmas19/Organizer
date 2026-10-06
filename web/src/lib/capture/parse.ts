@@ -125,7 +125,7 @@ function findDate(folded: string, today: string): DateHit | null {
     [/\b(?:para\s+)?hoy\b/, () => today],
     [/\b(?:para\s+)?(?<!la\s)(?<!por\s)manana\b/, () => addDays(today, 1)],
     [
-      new RegExp(`\\b(?:en|dentro\\s+de)\\s+${NUM}\\s+(dias?|semanas?)\\b`),
+      new RegExp(`\\b(?:en|dentro\\s+de|para|de\\s+aqui\\s+a)\\s+${NUM}\\s+(dias?|semanas?)\\b`),
       (m) => {
         const n = toNumber(m[1]);
         if (!Number.isFinite(n)) return null;
@@ -246,7 +246,8 @@ export function parseCapture(input: string, now: CaptureNow): ParsedCapture {
   let folded = fold(text);
   let kind: ParsedCapture['kind'] = 'task';
 
-  const prefix = /^\s*(?:recordatorio|reminder)\b[\s:,-]*(?:de\s+|para\s+)?/.exec(folded);
+  const prefix =
+    /^\s*(?:(?:ponme|pon|crea|crear|anota|agrega|anade)\s+)?(?:un\s+|el\s+)?(?:recordatorio|reminder)\b[\s:,-]*(?:de\s+|del\s+)?/.exec(folded);
   if (prefix) {
     kind = 'reminder';
     [text, folded] = cut(text, folded, { start: 0, end: prefix[0].length });
