@@ -13,7 +13,8 @@
     "gen:app-icons": "node scripts/gen-app-icons.mjs",
     "test:push": "node --test \"src/lib/push/server/tests/*.test.ts\"",
     "test:capture": "node --test src/lib/capture/parse.test.ts",
-    "test:plan": "node --test src/lib/plan/slots.test.ts",
+    "test:plan": "node --test src/lib/plan/slots.test.ts src/lib/plan/validate.test.ts",
+    "eval:plan": "npx --yes tsx --env-file=.env.local --tsconfig tsconfig.json scripts/eval-plan.mts",
     "verify": "npm run check:design && npm run lint && npm run typecheck && npm run test:push && npm run test:capture && npm run test:plan && npm run build"
   },
   "dependencies": {

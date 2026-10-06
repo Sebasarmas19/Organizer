@@ -3,20 +3,21 @@
 /* ============================================================================
    Organizer · <PlanClient> · "¿Dónde lo pongo?"
 
-   Escribes lo que quieres hacer, el asistente mira tu agenda y propone. Nada
-   se guarda hasta que tocas "Ponerlo así" en una propuesta.
+   Una conversación corta: escribes qué quieres hacer, el asistente mira tu
+   agenda y propone; puedes ajustar ("mejor en las mañanas") y recuerda lo
+   anterior. Nada se guarda hasta que tocas "Ponerlo así".
    ========================================================================= */
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { acceptPlan, proposePlan } from '@/lib/plan/actions';
-import type { PlanAnswer, PlanOption } from '@/lib/plan/llm';
+import type { ChatTurn, PlanAnswer, PlanOption } from '@/lib/plan/llm';
 
 const EXAMPLES = [
   'Quiero leer Atomic Habits',
   'Estudiar para el próximo parcial',
   'Ir al gym 3 veces por semana',
-  '¿Cómo tengo la semana?',
+  '¿Qué tengo mañana?',
 ];
 
 const WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
@@ -29,26 +30,50 @@ function when(date: string, start: string, minutes: number): string {
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} · ${h}:${String(m).padStart(2, '0')}–${endClock}`;
 }
 
+/** Lo que se ve de los turnos anteriores: tu frase y la respuesta corta. */
+type Shown = { you: string; reply: string };
+
 export function PlanClient() {
   const [text, setText] = useState('');
+  const [history, setHistory] = useState<ChatTurn[]>([]);
+  const [past, setPast] = useState<Shown[]>([]);
   const [answer, setAnswer] = useState<PlanAnswer | null>(null);
+  const [lastAsk, setLastAsk] = useState('');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<number | null>(null);
   const [thinking, startThinking] = useTransition();
   const [saving, startSaving] = useTransition();
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const reset = () => {
+    setHistory([]);
+    setPast([]);
+    setAnswer(null);
+    setLastAsk('');
+    setError('');
+    setText('');
+    inputRef.current?.focus();
+  };
 
   const ask = (value: string) => {
     const v = value.trim();
     if (!v || thinking) return;
     setError('');
     setSaved(null);
-    setAnswer(null);
     startThinking(async () => {
       try {
-        const res = await proposePlan(v);
-        if (res.ok) setAnswer(res.answer);
-        else setError(res.error);
+        const res = await proposePlan(v, history);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        /* La respuesta anterior pasa al historial visible, compacta. */
+        if (answer) setPast((p) => [...p, { you: lastAsk, reply: answer.reply }]);
+        setHistory((h) => [...h, { role: 'user' as const, text: v }, { role: 'model' as const, text: res.memory }].slice(-8));
+        setAnswer(res.answer);
+        setLastAsk(v);
+        setText('');
       } catch {
         setError('No se pudo preguntar. Revisa la conexión y prueba otra vez.');
       }
@@ -63,8 +88,10 @@ export function PlanClient() {
         const res = await acceptPlan(opt.sessions);
         if (res.ok) {
           setSaved(res.count);
+          setHistory([]);
+          setPast([]);
           setAnswer(null);
-          setText('');
+          setLastAsk('');
         } else setError(res.error);
       } catch {
         setError('No se pudo guardar. Prueba otra vez.');
@@ -73,71 +100,28 @@ export function PlanClient() {
     });
   };
 
+  const inConversation = answer !== null;
+
   return (
     <div className="fd-scroll">
       <div className="fd-plan">
-        <form
-          className="fd-plan__form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            ask(text);
-          }}
-        >
-          <textarea
-            className="fd-plan__input"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="¿Qué quieres hacer? Ej.: leer un libro, estudiar para Física, ir al gym…"
-            aria-label="Qué quieres hacer"
-            rows={3}
-            maxLength={1000}
-            autoCapitalize="sentences"
-          />
-          <button type="submit" className="fd-btn fd-btn--primary" disabled={!text.trim() || thinking}>
-            {thinking ? 'Mirando tu agenda…' : '¿Dónde lo pongo?'}
-          </button>
-        </form>
-
-        {!answer && !thinking && saved === null ? (
-          <div className="fd-plan__examples">
-            {EXAMPLES.map((ex) => (
-              <button
-                key={ex}
-                type="button"
-                className="fd-secbtn"
-                onClick={() => {
-                  setText(ex);
-                  ask(ex);
-                }}
-              >
-                {ex}
-              </button>
-            ))}
+        {past.map((t, i) => (
+          <div className="fd-plan__past" key={i}>
+            <span className="fd-plan__you">{t.you}</span>
+            <span className="fd-meta">{t.reply}</span>
           </div>
-        ) : null}
-
-        {error ? (
-          <p className="fd-plan__error" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        {saved !== null ? (
-          <div className="fd-daycard">
-            <span className="fd-daycard__body">
-              <span className="fd-classrow__title">
-                Listo: {saved} {saved === 1 ? 'sesión' : 'sesiones'} en tu calendario, con aviso 15 min antes.
-              </span>
-              <Link href="/calendario?v=semana" className="fd-secbtn" style={{ alignSelf: 'flex-start' }}>
-                Ver la semana
-              </Link>
-            </span>
-          </div>
-        ) : null}
+        ))}
 
         {answer ? (
           <>
-            {answer.reply ? <p className="fd-plan__reply">{answer.reply}</p> : null}
+            <span className="fd-plan__you">{lastAsk}</span>
+            <p className="fd-plan__reply">{answer.reply}</p>
+
+            {answer.intent === 'edit' ? (
+              <Link href="/pendientes" className="fd-secbtn" style={{ alignSelf: 'flex-start' }}>
+                Abrir Pendientes
+              </Link>
+            ) : null}
 
             {answer.options.map((opt, i) => (
               <section className="fd-daycard" key={i}>
@@ -158,7 +142,7 @@ export function PlanClient() {
                     type="button"
                     className="fd-btn fd-btn--primary"
                     onClick={() => accept(opt, i)}
-                    disabled={saving}
+                    disabled={saving || thinking}
                   >
                     {saving && savingIdx === i ? 'Guardando…' : 'Ponerlo así'}
                   </button>
@@ -166,6 +150,69 @@ export function PlanClient() {
               </section>
             ))}
           </>
+        ) : null}
+
+        {saved !== null ? (
+          <div className="fd-daycard">
+            <span className="fd-daycard__body">
+              <span className="fd-classrow__title">
+                Listo: {saved} {saved === 1 ? 'sesión' : 'sesiones'} en tu calendario, con aviso 15 min antes.
+              </span>
+              <Link href="/calendario?v=semana" className="fd-secbtn" style={{ alignSelf: 'flex-start' }}>
+                Ver la semana
+              </Link>
+            </span>
+          </div>
+        ) : null}
+
+        {error ? (
+          <p className="fd-plan__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <form
+          className="fd-plan__form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            ask(text);
+          }}
+        >
+          <textarea
+            ref={inputRef}
+            className="fd-plan__input"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={
+              inConversation
+                ? 'Ajusta: "mejor en las mañanas", "solo 20 minutos"…'
+                : '¿Qué quieres hacer? Ej.: leer un libro, estudiar para Física, ir al gym…'
+            }
+            aria-label="Qué quieres hacer"
+            rows={inConversation ? 2 : 3}
+            maxLength={1000}
+            autoCapitalize="sentences"
+          />
+          <div className="fd-plan__actions">
+            <button type="submit" className="fd-btn fd-btn--primary" disabled={!text.trim() || thinking}>
+              {thinking ? 'Mirando tu agenda…' : inConversation ? 'Enviar' : '¿Dónde lo pongo?'}
+            </button>
+            {inConversation ? (
+              <button type="button" className="fd-btn" onClick={reset} disabled={thinking}>
+                Nueva consulta
+              </button>
+            ) : null}
+          </div>
+        </form>
+
+        {!inConversation && !thinking && saved === null ? (
+          <div className="fd-plan__examples">
+            {EXAMPLES.map((ex) => (
+              <button key={ex} type="button" className="fd-secbtn" onClick={() => ask(ex)}>
+                {ex}
+              </button>
+            ))}
+          </div>
         ) : null}
       </div>
     </div>

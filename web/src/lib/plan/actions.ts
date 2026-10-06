@@ -3,7 +3,7 @@
 /* ============================================================================
    Organizer · Acciones del asistente de planificar
 
-   proposePlan: pide propuestas. No escribe nada.
+   proposePlan: pide propuestas (con los turnos anteriores). No escribe nada.
    acceptPlan:  guarda la propuesta que elegiste. Vuelve a calcular los huecos
                 antes de escribir: si entre medias algo ocupó esa hora, no se
                 guarda nada y se dice. Cada sesión es una tarea planificada con
@@ -16,6 +16,7 @@ import { DEFAULT_TIMEZONE } from '@/lib/profile';
 import { zonedIso } from '@/lib/tz';
 import { loadPlanContext } from './context';
 import { proposeWithLlm, type PlanAnswer, type PlanSession } from './llm';
+import { sanitizeHistory, summarizeAnswer } from './validate';
 import { fitsInSlots, fromClock, toClock } from './slots';
 
 const REMIND_BEFORE_MIN = 15;
@@ -36,18 +37,20 @@ async function requireUser() {
 }
 
 export async function proposePlan(
-  request: string
-): Promise<{ ok: true; answer: PlanAnswer } | { ok: false; error: string }> {
-  const text = request.trim().slice(0, MAX_REQUEST);
+  request: string,
+  history: unknown = []
+): Promise<{ ok: true; answer: PlanAnswer; memory: string } | { ok: false; error: string }> {
+  const text = typeof request === 'string' ? request.trim().slice(0, MAX_REQUEST) : '';
   if (!text) return { ok: false, error: 'Escribe qué quieres hacer.' };
 
   const { supabase, user, timezone } = await requireUser();
   const ctx = await loadPlanContext(supabase, user.id, timezone);
-  const answer = await proposeWithLlm(text, ctx);
+  const answer = await proposeWithLlm(text, ctx, sanitizeHistory(history));
   if (!answer) {
     return { ok: false, error: 'El asistente no respondió. Prueba otra vez en un minuto.' };
   }
-  return { ok: true, answer };
+  /* `memory` es cómo se recuerda esta respuesta en el turno siguiente. */
+  return { ok: true, answer, memory: summarizeAnswer(answer) };
 }
 
 export async function acceptPlan(
