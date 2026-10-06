@@ -1945,3 +1945,49 @@ html, body {
   }
 }
 
+/* ------------------------------------------------------------ planear ---
+   "¿Donde lo pongo?": un campo, ejemplos, y las propuestas como tarjetas. */
+.fd-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 24px;
+}
+
+.fd-plan__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd-plan__input {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  font: inherit;
+  font-size: 16px; /* 16px: iOS no hace zoom al enfocar */
+  color: var(--text);
+  resize: vertical;
+}
+
+.fd-plan__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fd-plan__reply {
+  margin: 0;
+  font-size: var(--fd-body);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.fd-plan__error {
+  margin: 0;
+  font-size: var(--fd-meta);
+  color: var(--text);
+}

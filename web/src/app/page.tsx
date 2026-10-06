@@ -53,6 +53,9 @@ export default async function HomePage() {
           </Link>
 
           <div className="fd-home__actions">
+            <Link href="/planear" className="fd-secbtn" title="El asistente mira tu agenda y te propone cuándo">
+              Planear
+            </Link>
             {home.streakDays > 0 ? (
               <span className="fd-pill fd-pill--line fd-home__streak">
                 {home.streakDays} {home.streakDays === 1 ? 'día' : 'días'}

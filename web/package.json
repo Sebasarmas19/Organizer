@@ -13,7 +13,8 @@
     "gen:app-icons": "node scripts/gen-app-icons.mjs",
     "test:push": "node --test \"src/lib/push/server/tests/*.test.ts\"",
     "test:capture": "node --test src/lib/capture/parse.test.ts",
-    "verify": "npm run check:design && npm run lint && npm run typecheck && npm run test:push && npm run test:capture && npm run build"
+    "test:plan": "node --test src/lib/plan/slots.test.ts",
+    "verify": "npm run check:design && npm run lint && npm run typecheck && npm run test:push && npm run test:capture && npm run test:plan && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
