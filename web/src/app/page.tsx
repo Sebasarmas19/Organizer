@@ -84,7 +84,7 @@ export default async function HomePage() {
                 <Flag size="xs" />
                 <h2>Próximos</h2>
               </span>
-              <Link href="/reminders/nuevo" className="pl-back" style={{ minHeight: 36, paddingRight: 10 }}>
+              <Link href="/reminders/nuevo" className="fd-secbtn">
                 <Icon name="plus" size="sm" />
                 Reminder
               </Link>

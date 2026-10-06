@@ -21,7 +21,7 @@ export function TodayClasses({ data }: { data: Fd4ClassesData }) {
     <section className="fd-todayclasses">
       <div className="fd-seclabel" style={{ justifyContent: 'space-between' }}>
         <h2>{today ? 'Clases de hoy' : 'Clases'}</h2>
-        <Link href="/clases" className="pl-back" style={{ minHeight: 36, paddingRight: 10 }}>
+        <Link href="/clases" className="fd-secbtn">
           Ver horario
         </Link>
       </div>
