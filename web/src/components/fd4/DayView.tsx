@@ -7,6 +7,7 @@
    · La casilla de una tarea la marca; su texto la abre para editarla.
    · Tocar una hora vacía crea una tarea a esa hora.
    · La banda y los bloques de reminder abren el reminder.
+   · Las clases son una franja gris "En clase", sin nombre ni toque (#53).
    ========================================================================= */
 
 import { useOptimistic, useTransition } from 'react';
@@ -156,6 +157,17 @@ export function DayView({ data }: { data: Fd4DayData }) {
             ))}
 
             <div className="fd-grid__blocks pl-blocks">
+              {data.classBands.map((c) => (
+                <div
+                  key={c.id}
+                  className="fd-classband"
+                  style={{ top: c.top, height: c.height }}
+                  aria-hidden
+                >
+                  {c.height >= 24 ? <span>En clase</span> : null}
+                </div>
+              ))}
+
               {data.blocks.map((b) => {
                 const isTask = b.kind === 'task';
                 const isDone = isTask && Boolean(doneBlockIds[b.id]);
@@ -181,7 +193,7 @@ export function DayView({ data }: { data: Fd4DayData }) {
                 return (
                   <div
                     key={b.id}
-                    className={`fd-block fd-block--${b.kind}${b.overlap ? ' fd-block--overlap' : ''}`}
+                    className={`fd-block fd-block--${b.kind}`}
                     style={{ top: b.top, height: b.height, opacity: isDone ? 0.6 : 1 }}
                   >
                     {b.kind === 'reminder' ? <Flag size="sm" /> : null}

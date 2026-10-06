@@ -17,7 +17,7 @@
    Dentro de cada tarjeta el orden es fijo y significa algo:
      1. el reminder, en banda ambar    -> lo que no depende de ti
      2. las tareas, con su casilla     -> lo que si
-     3. las materias, como etiquetas   -> el rato que ya no esta libre
+   Las materias no salen aqui (#53): viven en la pestana Clases.
    ========================================================================= */
 
 import Link from 'next/link';
@@ -83,16 +83,6 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
                     {t.hora ? <span className="fd-remrow__when">{t.hora}</span> : null}
                   </span>
                 ))}
-
-                {d.subjects.length > 0 ? (
-                  <span className="fd-daycard__subs">
-                    {d.subjects.map((m, i) => (
-                      <span className="fd-subchip" key={`${d.dateStr}-m${i}`}>
-                        {m}
-                      </span>
-                    ))}
-                  </span>
-                ) : null}
 
                 {d.free ? <span className="fd-empty">Sin nada planificado</span> : null}
               </span>
