@@ -12,7 +12,6 @@
 import { useState } from 'react';
 import type { TaskRowData } from './TaskRow';
 import { TaskRow } from './TaskRow';
-import { Dot } from './Marks';
 import { Icon } from '@/components/Icon';
 
 const VISIBLE = 5;
@@ -23,14 +22,12 @@ export function TaskGroupCard({ label, items }: { label: string; items: TaskRowD
   const hidden = items.length - shown.length;
 
   return (
-    <section>
-      <div className="fd-seclabel">
-        <Dot entity="task" />
+    <section className="fd5-group">
+      <div className="fd5-sec__head">
         <h2>{label}</h2>
       </div>
 
-      <div className="fd-card">
-        <span className="fd-card__rail fd-card__rail--task" aria-hidden />
+      <div className="fd-card fd5-card">
         <div className="fd-card__body">
           {shown.map((t) => (
             <TaskRow key={t.id} task={t} roomy />

@@ -94,7 +94,7 @@ export function ReminderCard({
                     height: '36px',
                     padding: '0 12px',
                     fontSize: 'var(--fd-small)',
-                    color: 'var(--text-loud)',
+                    color: 'var(--text)',
                     border: '1px solid var(--line-control)',
                     borderRadius: 'var(--radius-pill)',
                   }}
