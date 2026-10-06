@@ -11,7 +11,7 @@ import type { CSSProperties } from 'react';
 
 export function Spinner({
   size = 20,
-  color = 'var(--accent)',
+  color = 'var(--accent-text)',
   className,
   style,
 }: {

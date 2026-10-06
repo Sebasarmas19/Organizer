@@ -390,7 +390,7 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
           placeItems: 'center',
           borderRadius: 999,
           background: 'var(--accent-soft)',
-          color: 'var(--accent)',
+          color: 'var(--accent-text)',
           fontWeight: 600,
         }}
       >

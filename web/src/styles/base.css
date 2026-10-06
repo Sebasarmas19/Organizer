@@ -27,13 +27,13 @@ body {
 
 /* Superficies del navegador que no dibujamos pero que igual son diseno. */
 ::selection { background: var(--accent-soft); color: var(--text); }
-:root { accent-color: var(--accent); caret-color: var(--accent); }
+:root { accent-color: var(--accent); caret-color: var(--accent-text); }
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 *::-webkit-scrollbar { width: 6px; height: 6px; }
 *::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
 *::-webkit-scrollbar-track { background: transparent; }
 
-:where(a) { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+:where(a) { color: var(--accent-text); text-decoration-thickness: 1px; text-underline-offset: 2px; }
 
 :where(button, a, input, [tabindex]):focus-visible {
   outline: 2px solid var(--focus-ring);
@@ -55,7 +55,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 
 .c-muted { color: var(--text-muted); }
 .c-faint { color: var(--text-faint); }
-.c-accent { color: var(--accent); }
+.c-accent { color: var(--accent-text); }
 
 /* --------------------------------------------- lo que NO se copio de app/
    Aqui iba el andamiaje de los comps: `body.comp`, `.device` (el marco de
@@ -216,7 +216,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   padding-inline: var(--space-2);
   margin-inline: calc(var(--space-2) * -1);
   border-radius: var(--radius);
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: var(--weight-medium);
   transition: background var(--dur-fast) var(--ease-out);
 }
@@ -254,7 +254,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   white-space: nowrap;
 }
 .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; }
 
 .field {
   display: flex;
@@ -268,7 +268,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   color: var(--text-muted);
   transition: border-color var(--dur-fast) var(--ease-out);
 }
-.field--focus { border-color: var(--accent); background: var(--surface); }
+.field--focus { border-color: var(--accent-text); background: var(--surface); }
 .field input {
   flex: 1 1 auto; min-width: 0;
   font: inherit; font-size: var(--text-body);
@@ -277,7 +277,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .field input::placeholder { color: var(--text-faint); }
 
 .caret {
-  width: 2px; height: 21px; background: var(--accent); border-radius: 1px;
+  width: 2px; height: 21px; background: var(--accent-text); border-radius: 1px;
   animation: caret 1.06s steps(1) infinite;
 }
 @keyframes caret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
@@ -294,7 +294,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   background: var(--surface-sunken);
 }
 .undo button {
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: var(--weight-medium);
   min-height: var(--tap-min);
   padding-inline: var(--space-3);
@@ -332,7 +332,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   letter-spacing: 0;
   transition: color var(--dur-fast) var(--ease-out);
 }
-.tab[aria-current="page"] { color: var(--accent); }
+.tab[aria-current="page"] { color: var(--accent-text); }
 
 /* --------------------------------------------------------------- calendario */
 
@@ -354,11 +354,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .cal__now { position: absolute; left: 0; right: 0; height: 0; z-index: 3; pointer-events: none; }
 .cal__now::before {
   content: ""; position: absolute; left: 0; right: 0; top: -1px;
-  border-top: 1.5px solid var(--accent);
+  border-top: 1.5px solid var(--accent-text);
 }
 .cal__now::after {
   content: ""; position: absolute; left: -4px; top: -4.5px;
-  width: 8px; height: 8px; border-radius: 999px; background: var(--accent);
+  width: 8px; height: 8px; border-radius: 999px; background: var(--accent-text);
 }
 
 .calblock {
@@ -384,27 +384,27 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .calblock--task {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--task);
+  border-left: 3px solid var(--accent-text);
   z-index: 2;
 }
 /* En curso: el mismo azul, ahora tambien de fondo. Sigue sin texto azul. */
-.calblock--now { background: var(--task-soft); border-color: var(--task-soft); border-left-color: var(--task); }
+.calblock--now { background: var(--task-soft); border-color: var(--task-soft); border-left-color: var(--accent-text); }
 .calblock--now .calblock__time { color: var(--text-muted); font-weight: var(--weight-medium); }
 
 /* Estado de arrastre: el bloque sigue al dedo, el destino se dibuja debajo. */
 .calblock--dragging { box-shadow: var(--shadow-float); transform: scale(1.02); z-index: 5; }
 .calblock--ghost {
   background: transparent;
-  border: 1.5px dashed var(--accent);
+  border: 1.5px dashed var(--accent-text);
   z-index: 4;
   display: flex; align-items: center;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: var(--text-label);
   font-weight: var(--weight-medium);
 }
 .calblock__grip {
   position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%);
-  width: 28px; height: 3px; border-radius: 999px; background: var(--accent); opacity: .5;
+  width: 28px; height: 3px; border-radius: 999px; background: var(--accent-text); opacity: .5;
 }
 
 /* ------------------------------------------------------------------ hoja */
@@ -628,7 +628,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .agday__date { text-align: center; padding-top: 2px; }
 .agday__dow { display: block; font-size: var(--text-label); color: var(--text-muted); }
 .agday__num { display: block; font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
-.agday--today .agday__dow, .agday--today .agday__num { color: var(--accent); }
+.agday--today .agday__dow, .agday--today .agday__num { color: var(--accent-text); }
 .agday__body { min-width: 0; display: grid; gap: var(--space-1); }
 .agday__none { font-size: var(--text-meta); color: var(--text-faint); }
 
@@ -644,7 +644,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .agclass { font-size: var(--text-meta); color: var(--text-faint); }
 
 /* Arrastre entre dias: el destino se marca, no se abre ningun formulario. */
-.agday--target { box-shadow: inset 0 0 0 1.5px var(--accent); border-radius: var(--radius); }
+.agday--target { box-shadow: inset 0 0 0 1.5px var(--accent-text); border-radius: var(--radius); }
 
 /* ------------------------------------------------------------------- mes
    Solo reminders (decision 53). Meterle tareas la arruinaria.             */
@@ -861,7 +861,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .daystrip__d[aria-current="date"] .daystrip__w { color: var(--text-on-accent); }
 /* Hoy sin estar seleccionado: numero en negrita y un subrayado azul. */
 .daystrip__d--today:not([aria-current="date"]) .daystrip__n { font-weight: var(--weight-bold); }
-.daystrip__d--today:not([aria-current="date"]) { box-shadow: inset 0 -2px 0 var(--task); }
+.daystrip__d--today:not([aria-current="date"]) { box-shadow: inset 0 -2px 0 var(--accent-text); }
 /* Punto ambar: ese dia tiene un reminder. Mismo lenguaje que el Mes. */
 .daystrip__dot { width: 5px; height: 5px; border-radius: 999px; background: var(--rem); margin-top: 1px; }
 .daystrip__d[aria-current="date"] .daystrip__dot { background: var(--text-on-accent); }
@@ -917,7 +917,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   border-radius: 999px;
   background: var(--line-strong);
 }
-.ev--task  .ev__bar { background: var(--task); }
+.ev--task  .ev__bar { background: var(--accent-text); }
 .ev--rem   .ev__bar { background: var(--rem); }
 .ev--class .ev__bar { background: var(--class); }
 /* La materia se hunde de tres maneras a la vez, y las tres hacen falta:
@@ -1003,7 +1003,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
    que se lea cual se esta apagando sin tener que leer la palabra.           */
 
 .layerdot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
-.layerdot--task  { background: var(--task); }
+.layerdot--task  { background: var(--accent-text); }
 .layerdot--rem   { background: var(--rem); }
 .layerdot--class { background: var(--class); }
 .chip[aria-pressed="false"] .layerdot { opacity: .3; }
@@ -1033,7 +1033,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   transition: background var(--dur-fast) var(--ease-out);
 }
 .sidetask:hover { background: var(--surface); }
-.sidetask__bar { width: 4px; align-self: stretch; min-height: 20px; border-radius: 999px; background: var(--task); flex: 0 0 auto; }
+.sidetask__bar { width: 4px; align-self: stretch; min-height: 20px; border-radius: 999px; background: var(--accent-text); flex: 0 0 auto; }
 .sidetask__grip { color: var(--text-faint); margin-left: auto; opacity: 0; }
 .sidetask:hover .sidetask__grip { opacity: 1; }
 /* Mientras se arrastra, el original se queda apagado en su sitio: asi se ve
@@ -1054,14 +1054,14 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   pointer-events: none;
   transform: rotate(-1.5deg);
 }
-.dragchip__bar { width: 4px; align-self: stretch; min-height: 18px; border-radius: 999px; background: var(--task); }
+.dragchip__bar { width: 4px; align-self: stretch; min-height: 18px; border-radius: 999px; background: var(--accent-text); }
 
 /* El hueco de destino. Dice la hora a la que va a caer: el usuario suelta
    sabiendo el resultado, no esperando a verlo. */
 .dropslot {
   position: absolute;
   border-radius: var(--radius);
-  border: 1.5px dashed var(--task);
+  border: 1.5px dashed var(--accent-text);
   background: var(--task-soft);
   display: flex; align-items: center;
   padding-inline: var(--space-2);
@@ -1086,7 +1086,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .dmday:hover { box-shadow: 0 0 0 1px var(--line-control); }
 .dmday--out { background: transparent; box-shadow: none; }
 .dmday--out .dmday__n { color: var(--text-faint); }
-.dmday--sel { box-shadow: 0 0 0 2px var(--task); }
+.dmday--sel { box-shadow: 0 0 0 2px var(--accent-text); }
 .dmday__n { font-size: var(--text-section); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
 .dmday--today .dmday__n {
   align-self: flex-start;

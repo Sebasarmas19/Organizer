@@ -3,6 +3,13 @@
    Single source of truth for color, type, space, radius and motion.
    Light and dark are both authored. Nothing here is derived at runtime.
 
+   FD5 · CALMA · UN SOLO ELEMENTO SATURADO POR PANTALLA
+
+   FD5 (aprobado el 2026-10-06, `app/DESIGN.md`) aclara los neutros, separa
+   el azul de RELLENO (--task) del azul de TEXTO (--accent-text) y lleva el
+   oscuro a un azul noche donde el azul marino vuelve a llevar texto blanco.
+   Lo que sigue es la historia de FD4, que FD5 no contradice:
+
    FD4 · LA PALETA SE ENFRIA, LAS TRES ENTIDADES NO CAMBIAN
 
    FD4 (Claude Design, proyecto "Organizer Inicio") reemplaza los neutros
@@ -26,15 +33,17 @@
    Ahi el azul no esta etiquetando una tarea: esta diciendo "esto se toca".
    Por eso se mide como texto (>=4.5:1) y no como indicador.
 
+   FD5 · DOS AZULES. --task es el RELLENO (bloque de lo siguiente, boton +,
+   check marcado, boton primario) y siempre lleva --text-on-accent (blanco).
+   --accent-text es el azul que se LEE sobre el fondo: enlaces, anillos de
+   check, lineas finas, estado activo. En claro son el mismo hex; en oscuro
+   no: el azul marino de relleno mide 2.5:1 sobre --bg y no vale como linea.
+
    Contraste: cada par medido con luminancia relativa. Texto >= 4.5:1 (AA),
    indicador no textual >= 3:1. Los ratios van anotados al lado del token.
 
-   DOS TOKENS SE SEPARAN DEL PROTOTIPO, A PROPOSITO:
-     --text-faint  claro   FD4 pedia #8B93A2 -> 2.7:1 sobre --bg. Ilegible.
-                           Aqui #626B7B     -> 4.7:1. Mismo gris, mas hondo.
-     --text-faint  oscuro  FD4 pedia #717A8B -> 4.4:1. Aqui #7B8495 -> 5.0:1.
-   Es el unico sitio donde FD4 no se copia literal, y es porque el prototipo
-   no mide contraste y este archivo si. Revertirlo son dos lineas.
+   --text-faint: la maqueta de FD5 pedia #6E7585 -> 4.3:1 sobre --bg, que
+   no llega a AA. Aqui #666D7C -> 4.85:1. Mismo gris, un punto mas hondo.
 
    Theme resolution (three states):
      :root                                  -> light (default, always defined)
@@ -96,6 +105,14 @@
   --fd-xs: 12px;             /* leyenda, pildora, chip                      */
   --fd-tiny: 11px;           /* etiqueta de pestana, dia de la semana       */
 
+  /* FD5 · los tamanos que FD5 anade. El resto de la escala se reutiliza. */
+  --fd-daynum: 56px;         /* el "5" de Inicio                            */
+  --fd-page: 30px;           /* Pendientes, Horario, titulo del reminder    */
+  --fd-day: 26px;            /* "Lunes 5 de octubre" en la vista Dia        */
+  --fd-leadtitle: 25px;      /* titulo del bloque de lo siguiente           */
+  --fd-capture: 24px;        /* titulo en la tarjeta de clasificar          */
+  --fd-weekday: 20px;        /* "Lunes" junto al numero                     */
+
   /* --------------------------------------------------------------- space --
      Escala de 4px. No hay valores fuera de esta lista.                    */
 
@@ -116,9 +133,9 @@
   --gutter-wide: 32px;     /* aire lateral en escritorio                    */
   --tap-min: 44px;         /* objetivo tactil minimo                        */
 
-  /* FD4 · ritmo vertical de la pagina. La seccion respira 26 y su etiqueta
-     se pega a 10 de la tarjeta: el titulo pertenece a lo que hay debajo.  */
-  --gap-section: 26px;
+  /* Ritmo vertical de la pagina. FD5: la seccion respira 28 y su etiqueta
+     se pega a lo de debajo: el titulo pertenece a lo que hay debajo.      */
+  --gap-section: 28px;
   --gap-label: 10px;
   --content-max: 760px;    /* ancho de lectura de una columna en escritorio */
 
@@ -129,6 +146,12 @@
   --radius: 12px;          /* filas, botones, campos, bloques de calendario */
   --radius-lg: 20px;       /* hoja de accion, notificacion, selector        */
   --radius-card: 18px;     /* FD4 · tarjeta de seccion                      */
+  --radius-sm: 10px;       /* FD5 · franja "En clase", chip pequeno         */
+  --radius-btn-sm: 11px;   /* FD5 · boton con borde de 36px                 */
+  --radius-control: 14px;  /* FD5 · botones y segmentados de 44-48px        */
+  --radius-strip: 16px;    /* FD5 · franja "Lo de ayer"                     */
+  --radius-lead: 22px;     /* FD5 · bloque de lo siguiente, tarjeta grande  */
+  --radius-pill: 999px;    /* pastillas y etiquetas                         */
   --rail: 3px;             /* FD4 · barra de color al canto de la tarjeta   */
 
   /* ------------------------------------------------- rejillas de tiempo --
@@ -161,46 +184,54 @@
   --shadow-float: 0 2px 4px -2px rgb(16 24 40 / 0.10), 0 8px 20px -8px rgb(16 24 40 / 0.16);
   --shadow-fab:   0 4px 10px -4px rgb(16 24 40 / 0.28), 0 12px 28px -10px rgb(16 24 40 / 0.26);
   --shadow-frame: 0 30px 70px -30px rgb(8 10 22 / 0.45);
+  /* FD5 · las dos unicas sombras con intencion: el bloque de lo siguiente
+     y la tarjeta de clasificar. Todo lo demas se separa con filete.       */
+  --shadow-lead:  0 12px 28px -16px rgb(30 58 111 / 0.5);
+  --shadow-classify: 0 10px 26px -16px rgb(14 17 22 / 0.3);
 
   /* ================================================== color · CLARO =======
      Neutros frios. `--desk` es el lienzo de fuera (solo escritorio), `--bg`
      el fondo de la app, `--surface` la tarjeta.                           */
 
-  --desk: #E3E7EE;           /* fondo del escritorio, detras del panel      */
-  --bg: #EDF0F5;             /* fondo de la app                             */
+  --desk: #E6E9EE;           /* fondo del escritorio, detras del panel      */
+  --bg: #F6F7F9;             /* fondo de la app                             */
   --surface: #FFFFFF;        /* tarjeta, fila, hoja                         */
-  --surface-sunken: #E2E6EF; /* campo, bandeja, agrupador, bloque de clase  */
+  --surface-sunken: #EEF0F3; /* campo, franja "Lo de ayer", "En clase"      */
 
-  --line: #E1E5ED;           /* hairline 1px entre filas (decorativa)       */
-  --line-strong: #CDD4E0;    /* separador fuerte, borde de bloque           */
-  --line-control: #79818F;   /* 4.0:1 sobre --bg · borde que SI identifica
+  --line: #E2E5EA;           /* hairline 1px entre filas (decorativa)       */
+  --line-strong: #CFD4DD;    /* separador fuerte, borde de bloque           */
+  --line-control: #79818F;   /* 3.7:1 sobre --bg · borde que SI identifica
                                 un control: casilla, campo, boton fantasma  */
 
-  --text: #14171C;           /* 15.7:1 sobre --bg · 14.3:1 sobre los tintes */
-  --text-muted: #59616F;     /*  5.5:1 sobre --bg ·  5.0:1 sobre los tintes */
-  --text-faint: #626B7B;     /*  4.7:1 sobre --bg · ver la nota de arriba   */
-  --text-on-accent: #EDF0F5; /*  9.7:1 sobre --task                         */
+  --text: #0E1116;           /* 17.6:1 sobre --bg · 16.1:1 sobre los tintes */
+  --text-muted: #596070;     /*  5.9:1 sobre --bg ·  5.4:1 sobre los tintes */
+  --text-faint: #666D7C;     /*  4.85:1 sobre --bg · 4.55:1 sobre sunken    */
+  --text-on-accent: #FFFFFF; /* 11.1:1 sobre --task                         */
+  --text-on-accent-sub: #CAD6EE; /* 7.6:1 sobre --task · meta en el bloque  */
 
   /* --- TAREA · azul marino ---------------------------------------------
      Es tambien el acento del sistema (decision 65): accion primaria, foco,
      racha, "en curso". Si las materias son verdes, el verde ya no puede
      significar "esto se toca".                                            */
-  --task: #1E3A6F;           /*  9.7:1 sobre --bg · vale como texto de accion */
+  --task: #1E3A6F;           /* RELLENO · 10.4:1 sobre --bg                 */
   --task-press: #16294F;     /* 14.3:1 sobre blanco                         */
-  --task-soft: #E9EFF8;      /* fondo tintado · --text encima mide 14.3:1   */
+  --task-soft: #E7EDF7;      /* fondo tintado · --text encima mide 16.1:1   */
+  --accent-text: #1E3A6F;    /* TEXTO/LINEA azul · 10.4:1 sobre --bg        */
 
   /* --- MATERIA · verde --------------------------------------------------
      Una materia es ausencia de tiempo disponible, no contenido (dec. 52).
      Por eso el verde vive casi siempre en su version suave: identifica,
      no compite.                                                           */
-  --class: #2F6B46;          /*  5.6:1 sobre --bg · barra, punto            */
+  --class: #2F6B46;          /*  5.9:1 sobre --bg · punto de 7px, etiqueta  */
   --class-soft: #E8F1EB;     /* fondo del bloque de clase                   */
 
   /* --- REMINDER · ambar -------------------------------------------------
      El unico color que NUNCA puede ser texto. Banderin, punto del mes,
      barra y fondo de pildora; el titulo encima se queda en --text.        */
-  --rem: #B26B00;            /*  3.7:1 sobre --bg · indicador (>=3 exigido) */
-  --rem-soft: #FAF0DE;       /* fondo de pildora · --text encima 14.1:1     */
+  --rem: #B26B00;            /*  3.9:1 sobre --bg · indicador (>=3 exigido) */
+  --rem-soft: #FBEFD9;       /* fondo de pildora                            */
+  --rem-track: #EED9B4;      /* FD5 · segmento/tramo pendiente              */
+  --text-on-rem-soft: #3A2A08; /* 12.2:1 sobre --rem-soft                   */
 
   /* Alias de compatibilidad. Los de la izquierda son los nombres con que
      FD4 publico sus tokens; los de la derecha, los que `base.css` ya usa.
@@ -212,7 +243,7 @@
   --tint-subject: var(--class-soft);
   --tint-reminder: var(--rem-soft);
 
-  --accent: var(--task);
+  --accent: var(--task);           /* RELLENO. Para texto: --accent-text */
   --accent-press: var(--task-press);
   --accent-soft: var(--task-soft);
   --surface-class: var(--class-soft);
@@ -230,38 +261,42 @@
 
 /* ================================================== color · OSCURO =======
    Autorizado, no derivado. El uso nocturno (notificacion de cierre del dia)
-   es real. En FD4 el oscuro es azulado y muy hondo, y la tarjeta SUBE: la
-   superficie es mas clara que el fondo y la sombra se apaga entera. Los
-   tres colores de entidad se aclaran: en oscuro un azul marino literal
-   seria invisible.                                                        */
+   es real. En FD5 el oscuro es azul noche y la tarjeta SUBE: la superficie
+   es mas clara que el fondo y la sombra se apaga. El azul marino de relleno
+   se aclara solo lo justo para seguir llevando texto blanco; todo lo que es
+   linea o texto azul usa --accent-text.                                                        */
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --desk: #08090C;
-    --bg: #0E1116;
-    --surface: #1A1F28;
-    --surface-sunken: #12161C;
+    --desk: #070A12;
+    --bg: #0C111D;
+    --surface: #151C2C;
+    --surface-sunken: #121927;
 
-    --line: #272E3A;
-    --line-strong: #39424F;
+    --line: #232D44;
+    --line-strong: #33405C;
     --line-control: #7E8797;   /* 5.2:1 sobre --bg */
 
-    --text: #F1F3F8;           /* 16.9:1 sobre --bg */
-    --text-muted: #A3ACBC;     /*  8.3:1 sobre --bg */
-    --text-faint: #7B8495;     /*  5.0:1 sobre --bg · ver la nota de arriba */
-    --text-on-accent: #0E1116; /*  5.5:1 sobre --task */
+    --text: #ECEFF5;           /* 16.4:1 sobre --bg */
+    --text-muted: #A3ABBC;     /*  8.2:1 sobre --bg · 7.4:1 sobre --surface */
+    --text-faint: #8E97AA;     /*  6.4:1 sobre --bg */
+    --text-on-accent: #FFFFFF; /*  7.6:1 sobre --task */
+    --text-on-accent-sub: #D5DFF3; /* 5.7:1 sobre --task */
 
-    --task: #5B8BD0;           /*  5.5:1 sobre --bg */
-    --task-press: #7BA4E0;
-    --task-soft: #1B2634;      /* --text encima: 13.8:1 */
+    --task: #2C5299;           /* RELLENO · nunca linea fina (2.5:1 sobre --bg) */
+    --task-press: #244682;
+    --task-soft: #1B2945;      /* --text encima: 12.6:1 */
+    --accent-text: #9DB7F0;    /*  9.4:1 sobre --bg · 8.5:1 sobre --surface */
 
-    --class: #5CA97A;          /*  7.5:1 sobre --bg */
-    --class-soft: #17271D;     /* --text encima: 15.0:1 */
+    --class: #54B485;          /*  7.4:1 sobre --bg */
+    --class-soft: #14271D;     /* --text encima: 13.6:1 */
 
-    --rem: #D79A33;            /*  8.6:1 sobre --bg */
-    --rem-soft: #2A2115;       /* --text encima: 14.6:1 */
+    --rem: #E8A53A;            /*  8.9:1 sobre --bg */
+    --rem-soft: #3A2B10;       /* --text encima: 11.9:1 */
+    --rem-track: #4A3A1E;
+    --text-on-rem-soft: #F7E9CF; /* 11.4:1 sobre --rem-soft */
 
-    --focus-ring: #5B8BD0;
+    --focus-ring: #9DB7F0;
     --scrim: rgb(0 0 0 / 0.56);
 
     /* La tarjeta ya no proyecta: se distingue porque es mas clara. */
@@ -270,35 +305,41 @@
     --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
     --shadow-fab:   0 4px 10px -4px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
     --shadow-frame: 0 30px 70px -30px rgb(0 0 0 / 0.7);
+    --shadow-lead:  0 12px 28px -16px rgb(0 0 0 / 0.7);
+    --shadow-classify: 0 10px 26px -16px rgb(0 0 0 / 0.6);
   }
 }
 
 :root[data-theme="dark"] {
-  --desk: #08090C;
-  --bg: #0E1116;
-  --surface: #1A1F28;
-  --surface-sunken: #12161C;
+  --desk: #070A12;
+  --bg: #0C111D;
+  --surface: #151C2C;
+  --surface-sunken: #121927;
 
-  --line: #272E3A;
-  --line-strong: #39424F;
+  --line: #232D44;
+  --line-strong: #33405C;
   --line-control: #7E8797;
 
-  --text: #F1F3F8;
-  --text-muted: #A3ACBC;
-  --text-faint: #7B8495;
-  --text-on-accent: #0E1116;
+  --text: #ECEFF5;
+  --text-muted: #A3ABBC;
+  --text-faint: #8E97AA;
+  --text-on-accent: #FFFFFF;
+  --text-on-accent-sub: #D5DFF3;
 
-  --task: #5B8BD0;
-  --task-press: #7BA4E0;
-  --task-soft: #1B2634;
+  --task: #2C5299;
+  --task-press: #244682;
+  --task-soft: #1B2945;
+  --accent-text: #9DB7F0;
 
-  --class: #5CA97A;
-  --class-soft: #17271D;
+  --class: #54B485;
+  --class-soft: #14271D;
 
-  --rem: #D79A33;
-  --rem-soft: #2A2115;
+  --rem: #E8A53A;
+  --rem-soft: #3A2B10;
+  --rem-track: #4A3A1E;
+  --text-on-rem-soft: #F7E9CF;
 
-  --focus-ring: #5B8BD0;
+  --focus-ring: #9DB7F0;
   --scrim: rgb(0 0 0 / 0.56);
 
   --shadow-card: none;
@@ -306,4 +347,6 @@
   --shadow-float: 0 2px 4px -2px rgb(0 0 0 / 0.4), 0 8px 20px -8px rgb(0 0 0 / 0.5);
   --shadow-fab:   0 4px 10px -4px rgb(0 0 0 / 0.5), 0 12px 28px -10px rgb(0 0 0 / 0.6);
   --shadow-frame: 0 30px 70px -30px rgb(0 0 0 / 0.7);
+  --shadow-lead:  0 12px 28px -16px rgb(0 0 0 / 0.7);
+  --shadow-classify: 0 10px 26px -16px rgb(0 0 0 / 0.6);
 }

@@ -1,534 +1,394 @@
-# Sistema visual de Organizer
+---
+name: Organizer · FD5 «Calma»
+description: PWA de planificación personal, iPhone primero. Un solo elemento saturado por pantalla.
+colors:
+  # ---------- claro
+  bg: "#F6F7F9"
+  surface: "#FFFFFF"
+  sunken: "#EEF0F3"
+  line: "#E2E5EA"
+  ink: "#0E1116"
+  muted: "#596070"
+  faint: "#666D7C"
+  navy: "#1E3A6F"
+  on-navy: "#FFFFFF"
+  navy-sub: "#CAD6EE"
+  navy-soft: "#E7EDF7"
+  accent-text: "#1E3A6F"
+  amber: "#B26B00"
+  amber-soft: "#FBEFD9"
+  amber-track: "#EED9B4"
+  on-amber-soft: "#3A2A08"
+  green: "#2F6B46"
+  # ---------- oscuro
+  bg-dark: "#0C111D"
+  surface-dark: "#151C2C"
+  sunken-dark: "#121927"
+  line-dark: "#232D44"
+  ink-dark: "#ECEFF5"
+  muted-dark: "#A3ABBC"
+  faint-dark: "#8E97AA"
+  navy-dark: "#2C5299"
+  navy-sub-dark: "#D5DFF3"
+  navy-soft-dark: "#1B2945"
+  accent-text-dark: "#9DB7F0"
+  amber-dark: "#E8A53A"
+  amber-soft-dark: "#3A2B10"
+  amber-track-dark: "#4A3A1E"
+  on-amber-soft-dark: "#F7E9CF"
+  green-dark: "#54B485"
+typography:
+  day-number:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "56px"
+    fontWeight: 700
+    lineHeight: 1
+    letterSpacing: "-0.045em"
+  page-title:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "30px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.022em"
+  lead-title:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "25px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.022em"
+  weekday:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "20px"
+    fontWeight: 600
+    lineHeight: 1.1
+    letterSpacing: "-0.015em"
+  body:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 500
+    lineHeight: 1.3
+    letterSpacing: "-0.01em"
+  secondary:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "15px"
+    fontWeight: 400
+    lineHeight: 1.4
+  time:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "14px"
+    fontWeight: 600
+    lineHeight: 1.3
+  meta:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.4
+  section-label:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "0.01em"
+  tab-label:
+    fontFamily: "IBM Plex Sans, -apple-system, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 500
+    lineHeight: 1.2
+rounded:
+  pill: "999px"
+  sm: "10px"
+  md: "12px"
+  control: "14px"
+  strip: "16px"
+  card: "18px"
+  lead: "22px"
+spacing:
+  "1": "4px"
+  "2": "8px"
+  "3": "12px"
+  "4": "16px"
+  gutter: "20px"
+  "6": "24px"
+  section: "28px"
+  tap: "44px"
+components:
+  lead-block:
+    backgroundColor: "{colors.navy}"
+    textColor: "{colors.on-navy}"
+    typography: "{typography.lead-title}"
+    rounded: "{rounded.lead}"
+    padding: "18px"
+  button-done:
+    backgroundColor: "#FFFFFF"
+    textColor: "{colors.navy}"
+    rounded: "{rounded.control}"
+    height: "48px"
+  button-later:
+    backgroundColor: "transparent"
+    textColor: "{colors.on-navy}"
+    rounded: "{rounded.control}"
+    height: "48px"
+  button-outline-small:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    rounded: "11px"
+    height: "36px"
+    padding: "0 14px"
+  tab-add:
+    backgroundColor: "{colors.navy}"
+    textColor: "{colors.on-navy}"
+    rounded: "15px"
+    width: "52px"
+    height: "46px"
+  reminder-chip:
+    backgroundColor: "{colors.amber-soft}"
+    textColor: "{colors.on-amber-soft}"
+    rounded: "{rounded.pill}"
+    padding: "5px 10px 5px 8px"
+  card:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.card}"
+    padding: "16px"
+  yesterday-strip:
+    backgroundColor: "{colors.sunken}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.strip}"
+    padding: "4px 4px 4px 16px"
+  busy-band:
+    backgroundColor: "{colors.sunken}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.sm}"
+    padding: "7px 12px"
+---
 
-> Escrito por la sesión de diseño. **Actualizado en FD3** con el sistema de
-> color por entidad y el calendario de tres niveles. Deriva de
-> `briefs/FD-diseno.md`, `briefs/FD2-correcciones.md`,
-> `briefs/FD3-calendario-color.md`, `docs/00-problema.md`,
-> `docs/08-modelo-tareas-reminders.md` y las 73 decisiones de
-> `docs/01-decisiones.md`.
+# Design System: Organizer · FD5 «Calma»
+
+> Aprobado por Sebastián el 2026-10-06 tras cuatro rondas de maquetas.
+> Sustituye a FD3/FD4 como contrato visual de `web/`. La versión anterior de
+> este archivo (FD3) sigue en el historial de git; el resto de `app/comps/` queda como
+> historia: no describe lo que se construye a partir de ahora.
+> La funcionalidad no cambia con FD5: solo cómo se ve.
+> Referencia visual aprobada: `app/comps/fd5/index.html` (ábrelo en el navegador).
 >
-> Los comps de `app/comps/` son la referencia visual. Esto es el contrato:
-> si un comp y este documento se contradicen, gana el comp y hay que corregir
-> aquí.
+> Los valores viven en `app/tokens.css` (copia exacta en
+> `web/src/styles/tokens.css`, vigilada por `npm run check:design`). La tabla
+> de abajo dice qué nombre CSS lleva cada token.
 
----
+## Overview
 
-## Lo que el diseño tiene que conseguir
+Organizer se abre desde una notificación, casi siempre de pie o caminando, por
+alguien con TDAH. Abrir la app tiene que bajar la ansiedad. FD5 lo resuelve con
+una sola idea: **cada pantalla tiene un único elemento que grita** (el bloque
+azul marino de la tarea siguiente en Inicio) y todo lo demás es calma: listas con
+filetes finos, títulos de sección pequeños y grises, mucho aire entre secciones.
 
-El usuario no tiene un problema de captura, tiene un problema de **relectura**
-(`docs/00-problema.md`). De ahí salen tres consecuencias visuales, y no son
-preferencias estéticas:
+Base clara, esquinas redondeadas, azul marino como color principal. IBM Plex
+Sans e iconos Reicon Outline (grosor 1.5) son fijos. Hay modo claro y modo
+oscuro, ambos completos.
 
-1. **Abrir la app tiene que bajar la ansiedad.** Si la primera sensación en
-   `Inicio` es "cuánto debo", el diseño falló aunque sea bonito. Su patrón de
-   fracaso documentado es dejar de abrir lo que le genera culpa.
-2. **`Inicio` cabe en una pantalla sin scroll.** Con TDAH, una lista de 12
-   elementos equivale a una vacía.
-3. **La notificación es el producto**, no una feature. Su texto se escribe con
-   presupuesto de caracteres, no con lo que quepa.
+## Colors
 
----
+Estrategia **restringida**: neutros fríos + un azul marino que lleva la acción, y
+dos colores de entidad (ámbar = reminder, verde = clase) que solo aparecen como
+superficie, punto, banderín o segmento.
 
-## Las tres entidades
+### Primary
+- **Azul marino** `navy` `#1E3A6F` (oscuro `#2C5299`): el bloque de la tarea
+  siguiente, el botón **+** de la barra, la línea de «Ahora», el estado activo.
+- **Texto de acción** `accent-text` `#1E3A6F` (oscuro `#9DB7F0`): enlaces como
+  «Horario», «Ver el día», «Decidir», «Volver». Es la única forma en que un color
+  toca el texto.
 
-`docs/08-modelo-tareas-reminders.md` las define; esto es cómo se ven.
+### Entidades
+- **Reminder · ámbar** `amber` `#B26B00` (oscuro `#E8A53A`): banderín, segmentos
+  de preparación, línea de estaciones del detalle. La pastilla usa `amber-soft`
+  con texto `on-amber-soft`.
+- **Clase · verde** `green` `#2F6B46` (oscuro `#54B485`): un punto de 7px junto a
+  la clase, la etiqueta «Ahora» del horario. Nunca un bloque verde con nombre.
+- **Tarea**: no tiene color propio fuera del azul marino; su marca es la forma
+  (círculo de check).
 
-| | Qué es | Forma visual | Color (FD3) | ¿Se completa? |
-|---|---|---|---|---|
-| **Materia** | El horario fijo del semestre | Superficie de fondo | **Verde** | No |
-| **Reminder** | Parcial, entrega, defensa | **Banderín**, sin casilla | **Ámbar** | **No.** Pasa la fecha y queda listo |
-| **Tarea** | Lo que haces | **Círculo de check** | **Azul marino** | Sí |
+### Neutral
+`bg` `#F6F7F9` · `surface` `#FFFFFF` · `sunken` `#EEF0F3` · `line` `#E2E5EA` ·
+`ink` `#0E1116` · `muted` `#596070` · `faint` `#666D7C`.
+Oscuro: `#0C111D` · `#151C2C` · `#121927` · `#232D44` · `#ECEFF5` · `#A3ABBC` · `#8E97AA`.
 
-**La diferencia se ve sin color, y además con color.** Una tarea lleva casilla;
-un reminder lleva banderín y no tiene nada que marcar; una materia es una
-superficie que no se toca. El color de FD3 es una segunda codificación que
-reafirma la forma —nunca la sustituye—, así que la app se sigue leyendo en
-escala de grises y para alguien que no distinga el verde del ámbar.
+### Nombres en `tokens.css`
+El YAML de arriba usa nombres cortos; el CSS conserva los de FD4 para no
+romper las capas que ya existen.
 
-### Las tres reglas que el diseño tiene que sostener
-
-1. **Ninguna pantalla pregunta "¿esto es tarea o reminder?"** (decisión 48).
-   El lugar donde entras lo determina: Siri y el módulo Tareas hacen tareas,
-   tocar un día del calendario hace un reminder, el formulario de horario hace
-   materias. Por eso la pestaña de Reminders **no tiene botón de añadir**: esa
-   ausencia es la decisión hecha interfaz.
-2. **Las tareas sin reminder no son de segunda clase** (decisión 51). El módulo
-   Tareas abre en la pestaña de Tareas, y una tarea con banderín y una sin él
-   se dibujan con el mismo peso, una debajo de la otra. El banderín informa; no
-   crea una segunda división.
-3. **Un reminder pasado no es deuda** (decisión 49). Baja al histórico solo:
-   se apaga (`.rem--past`), no se tacha, no lleva insignia y no se persigue.
-   Es tiempo que pasó, no una falta del usuario.
-
-### La relación es el producto
-
-Guardar una fecha lo hace cualquier app. Lo que ninguna da:
-
-```
-Parcial de Cálculo — viernes 18
-  ✓ Resolver la guía del capítulo 3
-  ✓ Resumen de derivadas
-  □ Repaso final                         falta 1
-```
-
-y su contrario:
-
-```
-Defensa del proyecto — en 6 días
-  Sin tareas todavía                     [Planificar]
-```
-
-Eso responde *"¿me estoy preparando, o solo lo sé?"*, que es la distancia
-entre anotar y cumplir — el problema que origina el proyecto.
-
-**Cómo se dibuja la alerta sin alarmar.** El caso "sin tareas todavía" tiene
-que notarse y **no puede llevar rojo**: no es una falta del usuario, todavía
-está a tiempo. La solución del sistema:
-
-- la señal la da el **peso tipográfico** (`.prep--none` sube a color de texto
-  pleno y peso medio, frente al gris del resto),
-- el icono de aviso va en `--text-muted`, nunca en un color de alarma,
-- y **el acento aparece como acción** — el botón "Planificar" — no como
-  advertencia.
-
-La preparación se cuenta con tres puntos y una frase (`.prep`), nunca con un
-porcentaje ni una barra de progreso.
-
-### Materias = ausencia de tiempo disponible
-
-En palabras del usuario: *"no es que por tener Sistemas Operativos a las 8
-cambiemos la planificación; nos importa más el tiempo que tenemos disponible"*.
-
-Por eso una materia no es contenido: es un hueco ocupado. Gris, plana, texto
-subordinado, sin borde de color, y **apagable**. Al apagar la capa Materias en
-`Semana`, el sábado deja de ser "sin clases" y pasa a leerse como "día entero
-libre", que es lo que estabas buscando al planificar.
-
----
-
-## El calendario: tres vistas, tres preguntas
-
-No es el mismo contenido en letra más chica.
-
-Y desde FD3 tampoco son tres pantallas sueltas: son **tres niveles de zoom de
-la misma escalera**, Mes → Semana → Día, que se suben con un botón de nivel en
-la esquina superior izquierda (`.uplevel`), al estilo del Calendar de iOS.
-
-| Nivel | Pregunta | Muestra | No muestra | Comp |
-|---|---|---|---|---|
-| **Día** | ¿Qué hago ahora? | Tira de 7 días arriba + carril de horas a la izquierda + banda ámbar de reminders | — | `dia.html` |
-| **Semana** | ¿Cómo reparto el trabajo? | Carril de días a la izquierda con el plan completo: tareas, reminders y materias juntos (decisión 69) | Horas | `semana.html` |
-| **Mes** | ¿Qué se me viene encima? | **Solo reminders**, en puntos ámbar | Tareas y materias | `mes.html` |
-
-**La cabecera es idéntica en los tres niveles**, y ahí está lo que hace que se
-sientan una sola pantalla y no tres:
-
-```
-[ subir de nivel ] ·············· [ Hoy ] [ ‹ ] [ › ] [ + ]
-```
-
-En Mes, que es el techo de la escalera, el título ocupa el sitio exacto del
-botón de subir, así que al cambiar de nivel la cabecera no se mueve un píxel.
-
-**Las flechas viven en la cabecera y no flanqueando la tira de días**, aunque
-la referencia las pusiera ahí. La razón es aritmética y manda sobre la
-referencia: 44 + 44 de flechas más siete días de 44 son 396px en una pantalla
-de 390. Flanquear la tira obligaba a dejar los días en 36px, que es
-exactamente el fallo que FD2 corrigió. Sale la colocación, no el control.
-
-**Un solo sitio para crear:** el `+` de la cabecera y el botón flotante abren
-`anadir.html`.
-
-### El escritorio
-
-| Vista | Qué añade | Comp |
-|---|---|---|
-| **Semana** | Rejilla horas × días con un panel de **tareas sin planificar** que se arrastran a la rejilla | `semana-escritorio.html` |
-| **Mes** | Panel flotante al seleccionar un día —anclado **al lado** del día, nunca encima— con formulario de añadir | `mes-escritorio.html` |
-
-El panel de "Sin planificar" va a la **izquierda** de la rejilla: es el origen
-del gesto, y en lectura de izquierda a derecha el origen va antes que el
-destino. Un panel a la derecha obliga a arrastrar hacia atrás.
-
-**La vista Semana en el teléfono no es una rejilla**, y eso resuelve la
-pregunta que quedó abierta en `docs/estado-FD.md` §3.1: siete columnas por
-horas a 390px son ilegibles, pero es que además "¿cómo reparto el trabajo?" no
-necesita horas. Siete filas responden mejor y se arrastran con el pulgar. La
-rejilla completa sigue existiendo en escritorio, donde sí cabe.
-
-**En Mes no hay control de capas**: ahí siempre son reminders. Meterle tareas
-o materias arruinaría la única pregunta que responde.
-
-### Las capas
-
-Un solo control hace de filtro y de interruptor de materias: tres pastillas
-que se encienden por separado (`Tareas · Reminders · Materias`). Da
-"solo tareas", "solo reminders", "ambos" y, sobre todo, apagar las materias.
-Un control, no dos vocabularios.
-
----
-
-## Archivos
-
-| Archivo | Qué es |
+| FD5 | CSS |
 |---|---|
-| `tokens.css` | **Fuente de verdad.** Color, tipografía, espacio, radios, motion. Light y dark autorizados, ninguno derivado |
-| `base.css` | Componentes construidos solo con tokens. En la app real esto es `@layer components` |
-| `tailwind.preset.js` | Expone los tokens como clases de Tailwind. Portar un comp es copiar el marcado |
-| `icons.js` | Set de iconos (Reicon Outline, 1.5px) resuelto desde el MCP de reicon |
-| `chrome.js` | Barra de pestañas, barra de estado y barra de inicio |
-| `theme.js` | Los tres estados de tema: sistema, claro, oscuro |
-| `index.html` | Galería de comps, con su marco de dispositivo |
-| `revision.html` | Índice de revisión. Se abre desde el iPhone (decisión 46) |
-| `_audit.html` | **Arnés de verificación.** No es app. Ver abajo |
-| `comps/` | Las pantallas. Un archivo puede contener **dos dispositivos** cuando el sentido está en comparar dos estados (`tareas`, `reminder-detalle`, `anadir`, `mes-escritorio`) |
+| bg · surface · sunken | `--bg` · `--surface` · `--surface-sunken` |
+| line | `--line` (filete) · `--line-control` (borde que identifica un control) |
+| ink · muted · faint | `--text` · `--text-muted` · `--text-faint` |
+| navy (relleno) | `--task` · alias `--accent` |
+| on-navy · navy-sub | `--text-on-accent` · `--text-on-accent-sub` |
+| navy-soft | `--task-soft` · alias `--tint-task` |
+| accent-text | `--accent-text` (texto, anillos, líneas finas) |
+| amber · amber-soft · amber-track · on-amber-soft | `--rem` · `--rem-soft` · `--rem-track` · `--text-on-rem-soft` |
+| green | `--class` |
 
-### `_audit.html`
+**Dos azules.** `--task` es relleno y siempre lleva texto blanco encima.
+`--accent-text` es el azul que se lee sobre el fondo. En claro coinciden; en
+oscuro no (`#2C5299` mide 2.5:1 sobre el fondo y no sirve como línea ni texto).
 
-Carga los 15 comps en iframes, les fuerza el tema y **mide cada elemento
-interactivo**: reporta todo lo que baje de 43.5px, todo desbordamiento
-horizontal y todo `.screen--fixed` que desborde de alto. Se corre sin ojo
-humano:
-
-```sh
-chrome --headless=new --dump-dom --virtual-time-budget=9000 \
-       "http://localhost:PORT/_audit.html?theme=light"
-```
-
-Tiene tres exclusiones, las tres documentadas dentro del archivo: el `input`
-dentro de `.field` (el objetivo táctil es el campo entero, de 44px), `.seg
-button` (mide 38 porque el carril le suma 3+3) y `.sr-only`. **Se queda en el
-repo**: la regla de los 44px se incumplió dos veces por no tener con qué
-comprobarla.
-
----
-
-## Color
-
-**Neutros cálidos y tres colores que dicen QUÉ TIPO DE COSA ES** (decisiones
-63–66). El color dejó de significar "contexto" y pasó a significar entidad:
-
-| Entidad | Color | Token |
+### Contraste medido (AA)
+| Par | Claro | Oscuro |
 |---|---|---|
-| **Tarea** | Azul marino | `--task` |
-| **Materia** | Verde | `--class` |
-| **Reminder** | Ámbar | `--rem` |
+| ink / bg | 17.6 | 16.4 |
+| muted / bg | 5.9 | 8.2 |
+| muted / surface | 6.3 | 7.4 |
+| faint / bg | 4.85 | 6.4 |
+| muted / sunken | 5.5 | 7.6 |
+| accent-text / bg | 10.4 | 9.4 |
+| blanco / navy | 11.1 | 7.6 |
+| navy-sub / navy | 7.6 | 5.7 |
+| on-amber-soft / amber-soft | 12.2 | 11.4 |
+| ámbar (icono) / bg · no texto, ≥3:1 | 3.9 | 8.9 |
+| verde (punto) / bg · no texto, ≥3:1 | 5.9 | 7.4 |
 
-### La regla que manda sobre las tres
+### Named Rules
+- **Un solo elemento saturado por pantalla.** En Inicio es el bloque de la tarea
+  siguiente. La única excepción fija es el botón **+** de la barra inferior
+  (acción principal de la app, presente en todas las pantallas).
+- **El ámbar nunca es color de texto.** Va en superficie (pastilla con texto
+  oscuro), banderín, segmento o línea.
+- **Sin rojo.** Nada se dibuja como alarma ni deuda; un reminder pasado se apaga.
+- **Las clases van en gris con punto verde.** Texto `muted`, punto `green` de 7px
+  y el aula detrás («Electricidad y magnetismo · L027»).
 
-> **El color envuelve al texto, nunca lo pinta.**
+## Typography
 
-Barra lateral, fondo tintado, píldora, punto, banderín: todo vale. Texto de
-color, no. La razón es medible y no es estética: **un ámbar que llegue a 4.5:1
-sobre blanco ha dejado de ser ámbar y es marrón.** Así que el color se va a la
-superficie y el texto se queda en `--text`, que mide ~14.8:1 encima de
-cualquiera de los tres tintes suaves. El resultado es que los tres colores
-pueden ser colores de verdad —reconocibles de un vistazo— sin negociar con el
-contraste ni una sola vez.
+IBM Plex Sans (cargada con `next/font`, cae al stack del sistema). Cifras
+tabulares en toda hora y fecha (`font-variant-numeric: tabular-nums`).
 
-**Una sola excepción: el azul como texto de acción.** En un enlace o un
-`.taptext`, el azul no está etiquetando una tarea: está diciendo "esto se
-toca". Por eso `--task` se mide como texto (10.5:1) y no como indicador.
-
-### El acento es el azul de tareas
-
-El acento del sistema era petróleo; ahora **es `--task`** (decisión 65). No es
-un cambio de gusto: si las materias son verdes, el verde ya no puede
-significar "esto se toca" sin ambigüedad, y añadir un cuarto color sólo para
-"acción" rompería la regla de un acento. `--accent` queda como alias de
-`--task`.
-
-Sigue usándose en exactamente tres sitios y en ninguno más: la acción primaria
-de la pantalla, el bloque **en curso**, y la racha.
-
-Y siguen en pie:
-
-- **No existe un rojo en la paleta.** Una tarea no cumplida se muestra en tono
-  neutro con la pregunta de qué hacer (decisión 22). En el calendario, un
-  bloque que pasó sin cerrarse lleva contorno punteado neutro, no color.
-- **Cumplido no es acento… pero la casilla sí.** La casilla marcada se rellena
-  de `--task`, porque **la casilla ES la tarea**: es el único sitio donde el
-  azul identifica en vez de celebrar. El título baja a `--text-faint` y se
-  tacha con una línea de 1px; no hay insignia, ni confeti, ni cambio de color
-  en el resto de la fila.
-- **Las materias no compiten.** Verde suave de fondo, título en `--text-muted`
-  y a tamaño meta. Identifica; no es contenido (decisión 52).
-
-### Lo que se borró
-
-`--ctx-1` … `--ctx-6` ya no existen. **El contexto pasa a ser texto plano**
-(decisión 64). Seis colores desaturados para "Universidad / Personal /
-Trabajo…" competían con los tres que sí significan algo, y además ninguno de
-los seis resistía la pregunta "¿cuál era el morado?". Un color que hay que
-recordar no está comunicando nada.
-
-### Contraste medido
-
-Cada par está medido con luminancia relativa, no estimado. Texto ≥ 4.5:1 (AA);
-indicador no textual ≥ 3:1 (WCAG 1.4.11). Los ratios también van anotados al
-lado de cada token en `tokens.css`.
-
-**Claro** — `--bg` = `#FAF8F5`
-
-| Token | Valor | Sobre | Ratio | Exigido |
-|---|---|---|---|---|
-| `--text` | `#1B1917` | `--bg` | **16.5:1** | 4.5 |
-| `--text` | `#1B1917` | los tres tintes suaves | **14.8:1** | 4.5 |
-| `--text-muted` | `#625B51` | `--bg` | **6.3:1** | 4.5 |
-| `--text-faint` | `#6E675E` | `--bg` | **5.3:1** | 4.5 |
-| `--text-on-accent` | `#FFFFFF` | `--task` | **11.1:1** | 4.5 |
-| `--task` | `#1E3A6F` | `--bg` | **10.5:1** | 4.5 · es texto de acción |
-| `--task-press` | `#16294F` | blanco | **14.3:1** | 4.5 |
-| `--class` | `#2F6B46` | `--bg` | **6.0:1** | 3 |
-| `--rem` | `#B26B00` | `--bg` | **4.0:1** | 3 |
-| `--line-control` | `#8E877C` | `--bg` | **3.35:1** | 3 |
-
-**Oscuro** — `--bg` = `#121110`
-
-| Token | Valor | Sobre | Ratio | Exigido |
-|---|---|---|---|---|
-| `--text` | `#F3F0EA` | `--bg` | **16.6:1** | 4.5 |
-| `--text-muted` | `#A79F93` | `--bg` | **7.2:1** | 4.5 |
-| `--text-faint` | `#8C8478` | `--bg` | **5.1:1** | 4.5 |
-| `--text-on-accent` | `#0B1220` | `--task` | **9.0:1** | 4.5 |
-| `--task` | `#93B4F2` | `--bg` | **9.0:1** | 4.5 |
-| `--class` | `#79C296` | `--bg` | **9.0:1** | 3 |
-| `--rem` | `#E3B268` | `--bg` | **9.7:1** | 3 |
-| `--line-control` | `#736C63` | `--bg` | **3.6:1** | 3 |
-| `--text` | `#F3F0EA` | `--task-soft` `#18243D` | **13.6:1** | 4.5 |
-| `--text` | `#F3F0EA` | `--class-soft` `#15271C` | **13.8:1** | 4.5 |
-| `--text` | `#F3F0EA` | `--rem-soft` `#2E2412` | **13.4:1** | 4.5 |
-
-En oscuro los tres colores se aclaran: un azul marino literal sobre negro es
-invisible. **No son derivados** del claro — están autorizados uno a uno, y
-medidos uno a uno.
-
-### `--line-control`, el tercer gris de línea
-
-Un borde que es **la única señal de que algo es un control** —la casilla
-vacía, el borde de un campo, un botón fantasma— no es decoración: es un
-indicador no textual y necesita 3:1 (WCAG 1.4.11). `--line` (`#E4DFD6`) no
-llega ni de lejos, y estaba haciendo ese trabajo. Por eso existe un tercer
-gris, y por eso `--line` se queda sólo para separar filas.
-
----
-
-## Tipografía
-
-Una sola familia, la del sistema (SF Pro en iOS, Inter de reserva).
-**Cinco tamaños en toda la app**, y no hay un sexto:
-
-| Token | px / peso | Para qué |
+### Hierarchy
+| Rol | Tamaño / peso | Dónde |
 |---|---|---|
-| `--text-title` | 28 / 700 | Nombre de pantalla o fecha |
-| `--text-section` | 20 / 600 | Encabezado de sección |
-| `--text-body` | 17 / 400–500 | **Contenido.** Título de tarea |
-| `--text-meta` | 15 / 400 | Hora, contexto, subordinados |
-| `--text-label` | 13 / 500–600 | Etiquetas, navegación, encabezados de lista |
+| day-number | 56 / 700, −0.045em | El «5» de Inicio, alineado con «Lunes / octubre» |
+| page-title | 30 / 700 | Pendientes, Horario, título del reminder |
+| (día) | 26 / 700 | «Lunes 5 de octubre» en la vista Día |
+| lead-title | 25 / 700, `text-wrap: balance` | Título del bloque de la tarea siguiente |
+| (captura) | 24 / 700 | Título en la tarjeta de clasificar |
+| weekday | 20 / 600 | «Lunes» junto al número |
+| body | 16 / 500 | Títulos de fila, tareas, terminales |
+| secondary | 15 / 400 | Clases (gris), notas, botones de día |
+| time | 14 / 600 | Columna de hora, enlaces |
+| meta | 13 / 400 | Subtítulos, «Siguiente: …», aula |
+| section-label | 13 / 600, `muted` | «Resto de hoy», «Se viene», «Para prepararlo» |
+| tab-label | 12 / 500 | Etiquetas de la barra inferior y pastillas |
 
-La jerarquía la hacen el **peso y el color**, no tamaños nuevos. El título de
-una tarea es el elemento más importante de su fila; hora y contexto van
-siempre subordinados.
+Ningún texto legible baja de 12px; los nombres de estaciones del detalle van a 16/13px.
 
-17px es el mínimo de cualquier texto de contenido. 15 y 13 se reservan a
-metadatos y etiquetas, que es donde iOS también baja.
+## Layout
 
----
+- Lienzo de diseño: **390px** (iPhone). Escritorio es secundario.
+- Margen lateral `gutter` **20px**. Escala de 4px: 4 · 8 · 12 · 16 · 20 · 24 · 28.
+- Entre secciones **28px** por encima del título de sección y 4px por debajo: el
+  título pertenece a lo que tiene debajo.
+- Filas de lista ≥48px de alto con filete de 1px `line` entre ellas.
+- Toda zona táctil mide **≥44×44px**. Los botones visualmente pequeños (36px:
+  «Planear», «Planificar», «Editar») amplían su área con un pseudo-elemento.
+- Barra inferior de 84px con 5 posiciones: Inicio · Calendario · **+** · Pendientes · Recursos.
 
-## Espacio, radios, superficie
+### Inicio, de arriba abajo
+1. Cabecera: «5» + «Lunes / octubre» · botón con borde «Planear» · engranaje (sin caja).
+2. Bloque de la tarea siguiente (lo único saturado): título, hora, pastilla del
+   reminder, **Hecho** (1.6fr) / **Después** (1fr).
+3. «Resto de hoy» con enlaces «Horario» y «Ver el día»: lista con hora a la
+   izquierda; una fila discreta «10:40 Ahora» con línea fina azul; clases en gris
+   con punto verde y aula. Sin clases: «Sin clases hoy» + «Mañana empieza con…».
+4. Franja «Lo de ayer espera que decidas · Decidir» (solo si hay tareas de ayer sin hacer).
+5. «Se viene»: una fila por parcial o entrega: banderín + título + fecha; barra
+   de 3 segmentos y «Siguiente: … · hoy». Sin preparación: «Sin preparación» +
+   «Planificar» pequeño con borde.
 
-- Escala de **4px**. No hay valores fuera de la escala.
-- **Mínimo 16px de aire lateral** a cualquier ancho. El gutter de móvil es
-  20px; el del calendario, 16 a la izquierda y 8+8 a la derecha.
-- **Dos radios:** 12px (filas, botones, campos, bloques) y 20px (hoja de
-  acción, notificación). El círculo del checkbox es una forma, no un radio.
-- **La separación es espacio y línea de 1px, nunca sombra.** Lo único que
-  flota de verdad: la hoja de acción y el selector de fecha.
-- **44×44px de área táctil mínima, sin excepción.** En FD esto estaba escrito
-  en `tokens.css` y luego incumplido justo en los controles más usados —el
-  triage, "se me corrió el día", el deshacer— que eran los más pequeños de la
-  app. Corregido en FD2, y con una regla que lo impide en adelante:
+### Materias en el sistema
+- Las clases de **hoy** solo aparecen en Inicio, dentro de «Resto de hoy».
+- El horario **completo** es `/clases`: una tarjeta por día con hora, materia y
+  aula; etiquetas «Ahora» y «Siguiente»; «Editar» arriba.
+- **El Calendario (Mes, Semana, Día) no muestra materias.** En la vista Día una
+  clase es una franja gris neutra (`busy-band`) con el texto «En clase», sin
+  nombre ni aula, detrás de las tareas y sin interacción.
 
-  > **Si al respetar los 44px algo deja de caber, sale contenido, nunca el
-  > tamaño del control.**
+## Elevation & Depth
 
-  El sistema ofrece tres formas de conseguirlos sin engordar la tipografía:
+Casi plano. Dos sombras solamente:
+- Bloque de la tarea siguiente: `0 12px 28px -16px rgba(30,58,111,.5)` (oscuro: `rgba(0,0,0,.7)`).
+- Tarjeta de clasificar: `0 10px 26px -16px rgba(14,17,22,.3)` más el filete.
 
-  | Cuando el control es | Usa | Cómo llega a 44 |
-  |---|---|---|
-  | Un enlace de texto ("Clasificar", "Editar") | `.taptext` | alto 44 con margen negativo, el texto sigue alineado |
-  | Solo un icono | `.tapicon` | caja de 44 con el icono de 20 centrado |
-  | Una pastilla pequeña (filtros) | `.chip` | borde transparente de 5px + `background-clip: padding-box`: **se pinta 34 y mide 44** |
+Tarjetas, franjas y controles se separan con un filete de 1–1.5px `line`, no con sombra.
 
-  El `.chip` usa borde transparente y no un `::before` absoluto a propósito:
-  así la caja de layout es la real y dos filas de pastillas no pueden solapar
-  sus áreas táctiles por mucho que se apriete el `gap`.
+## Shapes
 
----
+Redondeado suave y coherente: 10 (franja «En clase», chips pequeños) · 11
+(botones con borde de 36px) · 12 (bloques del calendario, inputs) · 14 (botones
+y segmentados de 44–48px) · 16 (franja «Lo de ayer») · 18 (tarjetas) · 22
+(bloque de la tarea siguiente) · píldora para pastillas y etiquetas.
 
-## Iconos
+Formas por entidad: tarea = círculo de check (2px), reminder = banderín Reicon,
+clase = punto de 7px. El terminal de la línea de estaciones es un cuadrado
+ámbar de radio 8 con banderín blanco.
 
-Reicon Outline, grosor 1.5, un solo estilo. Vienen del MCP declarado en
-`.mcp.json`; `icons.js` los resuelve. Reglas:
+## Components
 
-- El icono **acompaña** al texto, no lo sustituye. La barra de pestañas lleva
-  icono **y** etiqueta.
-- Nada de emoji ni glifos Unicode haciendo de icono, ni siquiera en el teclado
-  dibujado del comp de Recursos.
-- Icono junto a texto visible → `aria-hidden`. Control de solo icono →
-  `aria-label` en el botón.
+### Buttons
+- **Hecho**: blanco sobre el bloque azul, texto azul marino, 48px, radio 14.
+- **Después**: transparente con borde blanco al 55%, 48px.
+- **Con borde pequeño** («Planear», «Planificar», «Editar»): 36px visibles, borde
+  1.5px `line`, texto `ink` (o `accent-text` en «Planificar»), área táctil 44px.
+- **+ de la barra**: azul marino relleno, icono blanco, 52×46, radio 15.
 
----
+### Chips
+- Pastilla de reminder: `amber-soft`, banderín ámbar de 13px, texto `on-amber-soft` 13/600.
+- Etiqueta de clase «Ahora»: verde al 14% sobre la superficie, borde verde al 50%,
+  texto `ink`. «Siguiente»: solo borde `line`, texto `muted`.
 
-## Movimiento
+### Cards / Containers
+- Tarjeta: `surface`, radio 18, filete `line`. La tarjeta de hoy en `/clases`
+  lleva el filete en azul marino al 45%.
+- Listas de Inicio: sin tarjeta, directamente sobre `bg` con filetes.
 
-- **150–200 ms**, solo para orientar en un cambio de contexto. Nada que se
-  note como animación.
-- Marcar cumplido responde **en el sitio**: sin modal, sin navegación.
-- `prefers-reduced-motion` está respetado en `base.css` (incluido el caret del
-  buscador).
+### Inputs / Fields
+46px, radio 12, borde 1.5px `line`, placeholder `faint`. Chips de fecha de 36px en píldora.
 
----
+### Navigation
+Barra inferior fija de 84px, fondo `bg`, filete superior. Activo: icono y texto
+en `accent-text`. Pantallas de detalle: «‹ Volver» a la izquierda, acción con
+borde a la derecha.
 
-## Reglas de comportamiento que el diseño ya fija
+### Clasificar (Pendientes)
+Tarjeta con el título de la captura, «Capturado hace N días», «¿Cuándo lo
+haces?» y cuatro botones de día en filas de 52px con la fecha a la derecha:
+«Hoy · lun 5», «Mañana · mar 6», «Próximos días · mié – dom», «Algún día · sin
+fecha». Debajo, «Dejar sin fecha por ahora» como enlace de 44px. Sin letras de
+atajo en móvil (los atajos H/M/P/A siguen en escritorio).
 
-| Regla | Dónde se ve |
-|---|---|
-| Triage en **un toque** por tarea (hoy / otro día / quitar) | `inicio.html`, `domingo.html` |
-| Toda acción destructiva es **reversible con deshacer visible**; ningún diálogo que bloquee | `domingo.html` |
-| **"Se me corrió el día"** es un control visible, nunca un elemento de menú | `inicio.html`, `semana.html`, `semana-escritorio.html` |
-| Arrastrar y redimensionar **sin formulario** | `semana.html` (estado de arrastre dibujado) |
-| Ningún gesto es la única vía: deslizar revela acciones, tocar abre las mismas | `tareas.html` |
-| **Ningún contador de deuda.** Ni badges, ni "23 pendientes", ni barras de progreso semanal | toda la app |
-| Los estados vacíos son un logro | `inicio-vacio.html` |
-| Búsqueda primero, cursor dentro al abrir | `recursos.html` |
-| **Orden de `Inicio`: Hoy → De ayer → Esta semana → racha** (decisión 55) | `inicio.html` |
-| **Triage:** Hoy sube a la lista en el sitio · Otro día abre el selector · **Quitar devuelve a Tareas, no borra** (decisión 56) | `inicio.html`, `otro-dia.html` |
-| Elegir fecha empieza por palabras ("mañana", "el sábado"), no por un calendario | `otro-dia.html` |
-| Crear un reminder = tocar un día del calendario. Nunca un desplegable de tipo | `mes.html`, `dia.html` |
-| Asociar una tarea a un reminder es una pastilla apagada que se ignora con intro | `tareas.html` |
-| El horario se carga una vez: un nombre, varios días, y se repite 5 meses | `horario.html` |
+### Línea de estaciones (detalle del reminder)
+Línea vertical ámbar de 4px: tramo lleno hasta la última tarea hecha y tramo
+`amber-track` el resto. Cada estación es el círculo de check de la tarea (30px;
+lleno azul marino con check blanco si está hecha) con título 16px y fecha 13px.
+Termina en el cuadrado ámbar del reminder. Encima, la barra segmentada (6px) y
+«1 de 3 tareas hechas». Solo aquí se ve la línea completa; en Inicio se resume
+en 3 segmentos y una línea «Siguiente».
 
----
+## Do's and Don'ts
 
-## La notificación: el contrato de copy
+### Do:
+- **Do** dejar un solo elemento saturado por pantalla (más el **+** de la barra).
+- **Do** poner las clases en texto `muted` con punto verde de 7px y el aula.
+- **Do** usar cifras tabulares en horas y fechas.
+- **Do** medir 44×44px de zona táctil en todo lo que se toca.
+- **Do** separar con filetes de 1px y aire (28px entre secciones) antes que con cajas.
+- **Do** mantener el modo oscuro con los tokens `-dark`; la línea y los enlaces
+  usan `accent-text-dark` para leerse sobre el azul noche.
 
-iOS muestra la notificación **plegada**: 1 línea de título y 2 de cuerpo. A
-15px en una tarjeta de ~334px son unos 44 caracteres por línea.
-
-```
-título   <= 38 caracteres
-cuerpo   <= 88 caracteres
-```
-
-Pasado ese techo iOS corta con puntos suspensivos y la notificación vuelve a
-ser "tienes cosas, abre la app", que es justo lo que el proyecto existe para
-no hacer.
-
-Por eso el cuerpo se compone en el servidor con presupuesto de caracteres: si
-el día no cabe, **se quitan bloques** (los más tardíos), nunca se corta una
-frase a la mitad.
-
-Diferencia deliberada con `Inicio`: **la notificación sí incluye las clases.**
-`Inicio` es para decidir y las clases no se deciden (decisión 35); la
-notificación es para saber qué pasa hoy, y a las 8:00 lo que pasa es Cálculo.
-
-**El reminder manda** (decisión 57). Si hay un parcial o una entrega cerca,
-ocupa el **título** y las tareas se recortan para que quepa, nunca al revés:
-con 88 caracteres, un parcial mañana es lo más importante del día.
-
-```
-Mañana: Parcial de Cálculo                                    26
-Hoy: 8:00 Cálculo · 15:00 Migrar el schema · 20:00 Repaso     63
-```
-
-Y sin ningún símbolo de alarma —ni triángulo, ni "ojo"—: la urgencia la da la
-frase, no un glifo.
-
-Los seis textos, con su largo real, están en `comps/notificacion.html`.
-
----
-
-## Navegación
-
-Cuatro módulos, siempre en este orden: **`Inicio · Semana · Tareas · Recursos`**
-(decisiones 30 y 34).
-
-- **< 1024px:** barra de pestañas inferior, 49px + área segura, icono y
-  etiqueta, el actual en acento.
-- **≥ 1024px:** los mismos cuatro pasan a barra lateral. Mismo orden, mismo
-  icono, misma etiqueta.
-
----
-
-## Presupuesto de altura de `Inicio`
-
-iPhone 390×844:
-
-```
-  47 px   barra de estado
- 714 px   la pantalla          <- todo tiene que caber aquí
-  83 px   pestañas (49) + área segura (34)
-```
-
-`inicio.html` lleva el contenedor en `overflow: hidden` a propósito: si algo
-deja de caber, se rompe a la vista en vez de convertirse en scroll silencioso.
-
-El comp con contenido ocupa los 710px disponibles con **desbordamiento 0**,
-verificado en navegador con `_audit.html` y no a ojo.
-
-**Orden nuevo en FD3** (decisión 71): Hoy → Esta semana → De ayer.
-
-| Bloque | px |
-|---|---|
-| Encabezado: fecha **+ la racha a su derecha** | 66 |
-| **1 · "Hoy"**: encabezado + 3 filas + salida a Tareas | 260 |
-| **2 · "Esta semana"**: dos reminders con su preparación | 140 |
-| **3 · "De ayer"** con el triage a 44px, pegado abajo | 190 |
-
-**Por qué cambió el orden.** "De ayer" estaba en segundo lugar, a media
-pantalla, y eso lo convertía en lo segundo que se lee al abrir: la deuda antes
-que el plan. Ahora cierra la pantalla. Sigue estando —nada se pierde en
-silencio— pero se lee después de lo que sí se puede hacer hoy. El bloque lleva
-`margin-top: auto`, así que se ancla abajo tenga el contenido que tenga.
-
-**La racha se subió al encabezado** (decisión 63 aplicada): pastilla de azul
-suave junto a la fecha, no una línea al final. Abajo era lo último que se leía
-—el sitio de una conclusión— y una racha no concluye nada; arriba es un dato
-de estado, al lado de otro dato de estado.
-
-**"Se me corrió el día" se eliminó** (decisión 72), y **no se sustituyó por
-nada**. Era un botón que pedía declarar el fracaso del día entero antes de
-haber hecho nada. El triage de "De ayer" ya hace ese trabajo, tarea a tarea y
-sin ceremonia.
-
-**Qué se recortó y por qué.** Subir el triage de 40 a 44 dejó la pantalla por
-encima del límite en FD2, y salió la cuarta tarea del día — contenido, no
-tamaño de control. En FD3, quitar el botón liberó sitio para un segundo
-reminder en "Esta semana".
-
-Si hay más tareas de las que caben, **no se hace scroll**: se muestra la
-salida "El resto está en Tareas". Sin número: un número ahí sería un contador
-de deuda.
-
----
-
-## Lo que este sistema prohíbe
-
-Sale del brief, y cada prohibición tiene una razón, no un gusto:
-
-1. Rojo, alarma o reproche para lo no cumplido.
-2. Contadores de deuda acumulada, badges numéricos, barras de progreso semanal.
-3. Gamificación: insignias, puntos, confeti, niveles. La racha es una pastilla
-   de azul suave con el texto en `--text`: informa, no puntúa. **No es texto
-   azul** — eso la leería como una tarea (decisión 63).
-4. Ilustraciones y mascotas.
-5. Gradientes y sombras decorativas.
-6. Scroll horizontal en el cuerpo (por eso los filtros de Recursos envuelven).
-7. Más de un color de acento. Tarea, materia y reminder **no son tres
-   acentos**: son tres etiquetas de tipo. El acento —lo que dice "esto se
-   toca"— sigue siendo uno solo.
-8. Que las materias compitan con las tareas.
-9. **Texto ámbar y texto verde.** El color de entidad va a la superficie.
-10. Color como única señal de nada. Casilla, banderín y superficie distinguen
-    las tres entidades sin él.
+### Don't:
+- **Don't** usar el ámbar como color de texto.
+- **Don't** usar rojo, insignias de deuda ni contadores de «atrasadas».
+- **Don't** pintar materias en Mes, Semana ni Día; en Día solo la franja «En clase».
+- **Don't** poner un segundo bloque saturado en Inicio (ni la línea de metro, ni
+  tarjetas de color, ni el número del día en grande compitiendo).
+- **Don't** usar emoji ni glifos unicode como iconos; solo Reicon Outline.
+- **Don't** bajar de 12px en texto legible.

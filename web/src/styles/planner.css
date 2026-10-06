@@ -104,7 +104,7 @@
 .pl-progress__fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--task);
+  background: var(--accent-text);
   transition: width var(--dur) var(--ease-out);
 }
 
@@ -222,7 +222,7 @@
 .pl-input:focus,
 .pl-select:focus,
 .pl-textarea:focus {
-  border-color: var(--task);
+  border-color: var(--accent-text);
   box-shadow: 0 0 0 3px var(--task-soft);
 }
 
@@ -277,7 +277,7 @@
 }
 
 .pl-chip[aria-pressed="true"] {
-  border-color: var(--task);
+  border-color: var(--accent-text);
   background: var(--task-soft);
   font-weight: var(--weight-semibold);
 }
@@ -362,7 +362,7 @@
   display: grid;
   place-items: center;
   background: var(--task-soft);
-  color: var(--task);
+  color: var(--accent-text);
   font-weight: var(--weight-semibold);
 }
 

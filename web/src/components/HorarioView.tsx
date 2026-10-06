@@ -351,7 +351,7 @@ export function HorarioView({
           onClick={handleSave}
           disabled={isPending}
           className="taptext t-meta font-semibold"
-          style={{ color: 'var(--task)' }}
+          style={{ color: 'var(--accent-text)' }}
         >
           {isPending ? 'Guardando...' : 'Listo'}
         </button>
