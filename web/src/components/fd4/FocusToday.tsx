@@ -1,14 +1,18 @@
 'use client';
 
 /* ============================================================================
-   Organizer · <FocusToday>  ·  "Lo siguiente" + "Luego, hoy"
+   Organizer · <FocusToday>  ·  "Lo siguiente" + "Resto de hoy"
 
    UNA COSA A LA VEZ. Con TDAH una lista de siete tareas de igual peso se lee
-   como ninguna. Esta pieza saca UNA — la siguiente — a una tarjeta grande con
-   dos salidas, y pliega el resto debajo:
+   como ninguna. Esta pieza saca UNA — la siguiente — a un bloque grande con
+   dos salidas, y deja el resto debajo:
 
      Hecho    -> la marca, de un toque, y sube la siguiente
      Despues  -> la manda al final de la cola de hoy, sin tocar su fecha
+
+   FD5: el bloque de lo siguiente es lo unico saturado de Inicio. Debajo va
+   una lista calmada, con la hora a la izquierda, donde se mezclan las tareas
+   que quedan y las clases de hoy (gris, punto verde, aula).
 
    "Despues" no escribe nada en el servidor a proposito. Cambiar la fecha es
    decidir; saltar es solo "ahora no". La cola saltada vive en localStorage
@@ -20,14 +24,15 @@
    ========================================================================= */
 
 import Link from 'next/link';
-import { useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react';
+import { Fragment, useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react';
 import { toggleTask } from '@/lib/fd4-actions';
 import type { HomeTask } from '@/lib/home';
-import { TaskRow } from './TaskRow';
-import { Flag } from './Marks';
+import { RestTaskRow } from './RestRow';
+import { minToClock, splitTaskMeta, type ClassNote, type RestClass } from './homeSchedule';
 import { Icon } from '@/components/Icon';
 
-const LATER_VISIBLE = 3;
+/* Filas visibles de "Resto de hoy" antes de "Ver el resto de hoy". */
+const REST_VISIBLE = 6;
 
 /* La cola saltada vive en localStorage, que es un sistema externo: se lee
    con useSyncExternalStore. En el servidor no hay saltos ('[]'), asi que el
@@ -60,7 +65,26 @@ function writeSkipped(key: string, ids: string[]) {
   window.dispatchEvent(new Event(SKIP_EVENT));
 }
 
-export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: string }) {
+type Row =
+  | { kind: 'task'; key: string; startMin: number; task: HomeTask }
+  | { kind: 'class'; key: string; startMin: number; cls: RestClass };
+
+export function FocusToday({
+  tasks,
+  todayStr,
+  classes,
+  note,
+  nowMin,
+}: {
+  tasks: HomeTask[];
+  todayStr: string;
+  /** Clases de hoy que aun no terminaron. */
+  classes: RestClass[];
+  /** Frase cuando hoy ya no queda clase. `null` si no hay horario. */
+  note: ClassNote;
+  /** Minutos desde medianoche en la zona del usuario, para la fila "Ahora". */
+  nowMin: number;
+}) {
   const storageKey = `fd-skip-${todayStr}`;
   const skippedRaw = useSyncExternalStore(
     subscribe,
@@ -78,7 +102,7 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
   const [lastDone, setLastDone] = useState<HomeTask | null>(null);
   const [, startTransition] = useTransition();
 
-  /* Las marcadas desde la tarjeta se adelantan aqui; el servidor manda en
+  /* Las marcadas desde el bloque se adelantan aqui; el servidor manda en
      cuanto revalida. */
   const [doneIds, markDone] = useOptimistic<string[], { id: string; done: boolean }>(
     [],
@@ -98,9 +122,6 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
   }, [tasks, skipped, doneIds]);
 
   const now = queue[0];
-  const rest = [...queue.slice(1), ...tasks.filter((t) => isDone(t))];
-  const visibleRest = showAll ? rest : rest.slice(0, LATER_VISIBLE);
-  const hidden = rest.length - visibleRest.length;
 
   const onDone = () => {
     if (!now) return;
@@ -129,31 +150,100 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
     setLastDone(null);
   };
 
+  /* "Resto de hoy": lo que queda de la cola y las clases que quedan, en una
+     sola lista por hora. Las tareas sin hora van detras; las hechas, al
+     final y tachadas. La fila "Ahora" cae justo despues de lo que ya
+     empezo. */
+  const pendingRest: Row[] = queue.slice(1).map((t) => ({
+    kind: 'task',
+    key: t.id,
+    startMin: splitTaskMeta(t.meta).startMin,
+    task: t,
+  }));
+  const classRows: Row[] = classes.map((c) => ({
+    kind: 'class',
+    key: c.id,
+    startMin: c.startMin,
+    cls: c,
+  }));
+  const timed = [...pendingRest, ...classRows]
+    .filter((r) => !Number.isNaN(r.startMin))
+    .sort((a, b) => a.startMin - b.startMin);
+  const untimed = pendingRest.filter((r) => Number.isNaN(r.startMin));
+  const doneRows: Row[] = tasks
+    .filter((t) => isDone(t))
+    .map((t) => ({ kind: 'task', key: t.id, startMin: NaN, task: t }));
+  const rows = [...timed, ...untimed, ...doneRows];
+  const visibleRows = showAll ? rows : rows.slice(0, REST_VISIBLE);
+  const hidden = rows.length - visibleRows.length;
+  const hasTimedTask = timed.some((r) => r.kind === 'task');
+
+  /* Sin nada con hora ni frase de clases, "Ahora" no ordena nada: no va. */
+  const nowIndex =
+    timed.length > 0 || note ? timed.filter((r) => r.startMin <= nowMin).length : -1;
+
+  const nowRow = (
+    <div className="fd5-li fd5-li--now">
+      <time className="fd5-li__time">{minToClock(nowMin)}</time>
+      <span className="fd5-li__body">Ahora</span>
+    </div>
+  );
+
+  const renderRow = (r: Row) => {
+    if (r.kind === 'class') {
+      const where = r.cls.location ? ` · ${r.cls.location}` : '';
+      return (
+        <div className="fd5-li fd5-li--cls">
+          <time className="fd5-li__time">{r.cls.start}</time>
+          <span className="fd5-li__body">
+            <i className="fd5-classdot" aria-hidden />
+            <span>
+              {r.cls.title}
+              {where}
+              {r.cls.now ? <span className="fd5-sr"> (en curso)</span> : null}
+            </span>
+          </span>
+        </div>
+      );
+    }
+    const meta = splitTaskMeta(r.task.meta);
+    return (
+      <RestTaskRow
+        id={r.task.id}
+        title={r.task.title}
+        start={meta.start}
+        ctx={meta.ctx}
+        rem={r.task.rem}
+        done={isDone(r.task)}
+      />
+    );
+  };
+
   return (
-    <div className="fd-focus">
+    <div className="fd5-focus">
       {now ? (
-        <section aria-labelledby="fd-lead-label">
-          <div className="fd-seclabel">
-            <h2 id="fd-lead-label">Lo siguiente</h2>
-          </div>
-          <div className="fd-lead fd-lead--enter" key={now.id}>
-          <Link href={`/tareas/${now.id}`} className="fd-lead__title" style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}>
+        <section className="fd5-next fd-lead--enter" key={now.id} aria-label="Lo siguiente">
+          <Link href={`/tareas/${now.id}`} className="fd5-next__title">
             {now.title}
           </Link>
-          {now.meta ? <span className="fd-lead__when">{now.meta}</span> : null}
-          {now.rem ? (
-            <span className="fd-lead__rem">
-              <Flag size="xs" />
-              {now.rem}
-            </span>
+          {now.meta || now.rem ? (
+            <div className="fd5-next__meta">
+              {now.meta ? <span>{now.meta}</span> : null}
+              {now.rem ? (
+                <span className="fd5-chip">
+                  <Icon name="flag" size="sm" className="fd5-flag" />
+                  {now.rem}
+                </span>
+              ) : null}
+            </div>
           ) : null}
-          <div className="fd-lead__acts">
-            <button type="button" className="fd-btn fd-btn--primary" onClick={onDone}>
+          <div className="fd5-next__acts">
+            <button type="button" className="fd5-next__done" onClick={onDone}>
               Hecho
             </button>
             <button
               type="button"
-              className="fd-btn fd-btn--ghost"
+              className="fd5-next__later"
               onClick={onLater}
               disabled={queue.length < 2}
               title={queue.length < 2 ? 'Es la única que queda hoy' : 'Mandarla al final de hoy'}
@@ -161,30 +251,22 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
               Después
             </button>
           </div>
-          </div>
         </section>
       ) : (
-        <section className="fd-lead fd-lead--rest">
-          <div className="fd-lead__rest-top">
-            <span className="fd-lead__rest-badge" aria-hidden>
-              <Icon name={tasks.length > 0 ? 'check' : 'calendar'} size="md" />
-            </span>
-            <div className="fd-lead__rest-copy">
-              <h2 className="fd-lead__title">
-                {tasks.length > 0 ? 'Hoy está cerrado' : 'Hoy no hay nada con fecha'}
-              </h2>
-              <p className="fd-lead__hint">
-                {tasks.length > 0
-                  ? 'Buen trabajo. Si quieres avanzar más, clasifica pendientes o anota algo nuevo.'
-                  : 'Día despejado. Si capturaste algo rápido, espera en Pendientes para ponerle día.'}
-              </p>
-            </div>
-          </div>
-          <div className="fd-lead__rest-acts">
-            <Link href="/pendientes" className="fd-btn fd-btn--primary fd-lead__go">
+        <section className="fd5-rest">
+          <h2 className="fd5-rest__title">
+            {tasks.length > 0 ? 'Hoy está cerrado' : 'Hoy no hay nada con fecha'}
+          </h2>
+          <p className="fd5-rest__hint">
+            {tasks.length > 0
+              ? 'Buen trabajo. Si quieres avanzar más, clasifica pendientes o anota algo nuevo.'
+              : 'Día despejado. Si capturaste algo rápido, espera en Pendientes para ponerle día.'}
+          </p>
+          <div className="fd5-rest__acts">
+            <Link href="/pendientes" className="fd5-btn fd5-btn--primary">
               Ir a Pendientes
             </Link>
-            <Link href="/anadir" className="fd-btn fd-lead__go">
+            <Link href="/anadir" className="fd5-btn">
               <Icon name="plus" size="sm" />
               Anotar para hoy
             </Link>
@@ -193,7 +275,7 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
       )}
 
       {lastDone ? (
-        <p className="fd-undo" role="status">
+        <p className="fd-undo fd5-undo" role="status">
           <span>
             Hecho: <b>{lastDone.title}</b>
           </span>
@@ -204,31 +286,62 @@ export function FocusToday({ tasks, todayStr }: { tasks: HomeTask[]; todayStr: s
         </p>
       ) : null}
 
-      {rest.length > 0 ? (
-        <section className="fd-later">
-          <div className="fd-seclabel">
-            <h2>Luego, hoy</h2>
-          </div>
-          <div className="fd-card">
-            <div className="fd-card__body">
-              {visibleRest.map((t) => (
-                <TaskRow key={t.id} task={{ ...t, done: isDone(t) }} />
-              ))}
-              {hidden > 0 ? (
-                <button type="button" className="fd-more" onClick={() => setShowAll(true)}>
-                  <span>Ver el resto de hoy</span>
-                  <Icon name="chevron-right" size="sm" className="fd-more__chev" />
-                </button>
-              ) : (
-                <Link href="/pendientes" className="fd-more">
-                  <span>El resto está en Pendientes</span>
-                  <Icon name="chevron-right" size="sm" className="fd-more__chev" />
-                </Link>
-              )}
+      <section className="fd5-sec" aria-labelledby="fd5-rest-label">
+        <div className="fd5-sec__head">
+          <h2 id="fd5-rest-label">Resto de hoy</h2>
+          <span className="fd5-sec__links">
+            <Link href="/clases" prefetch={true}>
+              Horario
+            </Link>
+            <Link href={`/calendario?v=dia&d=${todayStr}`} prefetch={true}>
+              Ver el día
+            </Link>
+          </span>
+        </div>
+
+        <div className="fd5-list">
+          {visibleRows.map((r, i) => (
+            <Fragment key={r.key}>
+              {i === nowIndex ? nowRow : null}
+              {renderRow(r)}
+            </Fragment>
+          ))}
+          {nowIndex >= visibleRows.length && hidden === 0 ? nowRow : null}
+
+          {note ? (
+            <>
+              <div className="fd5-li fd5-li--note">
+                <span className="fd5-li__time" />
+                <span className="fd5-li__body">
+                  {note.line}
+                  {hasTimedTask ? '.' : '. Nada más con hora.'}
+                </span>
+              </div>
+              {note.next ? (
+                <div className="fd5-li fd5-li--note">
+                  <span className="fd5-li__time" />
+                  <span className="fd5-li__body">
+                    <Icon name="sunrise" size="sm" />
+                    {note.next}
+                  </span>
+                </div>
+              ) : null}
+            </>
+          ) : rows.length === 0 ? (
+            <div className="fd5-li fd5-li--note">
+              <span className="fd5-li__time" />
+              <span className="fd5-li__body">Nada más para hoy.</span>
             </div>
-          </div>
-        </section>
-      ) : null}
+          ) : null}
+
+          {hidden > 0 ? (
+            <button type="button" className="fd5-more" onClick={() => setShowAll(true)}>
+              Ver el resto de hoy
+              <Icon name="chevron-down" size="sm" />
+            </button>
+          ) : null}
+        </div>
+      </section>
     </div>
   );
 }

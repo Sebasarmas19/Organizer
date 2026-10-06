@@ -143,7 +143,7 @@
 
 .navitem[aria-current="page"] {
   background: var(--task-soft);
-  color: var(--task);
+  color: var(--accent-text);
 }
 
 .plan {
@@ -253,7 +253,7 @@
 .calblock--open {
   background: transparent;
   border: 1px dashed var(--line-control);
-  border-left: 3px solid var(--task);
+  border-left: 3px solid var(--accent-text);
 }
 
 .calblock--open .calblock__title {

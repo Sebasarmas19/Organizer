@@ -1,0 +1,1492 @@
+/* ============================================================================
+   Organizer · FD5 «Calma»
+
+   La capa del rediseno visual aprobado el 2026-10-06 (`app/DESIGN.md`,
+   maqueta en `app/comps/fd5/index.html`). Va LA ULTIMA en globals.css: donde
+   pisa a FD4, manda FD5.
+
+   Una idea gobierna todo: cada pantalla tiene UN elemento que grita (en
+   Inicio, el bloque azul de lo siguiente) y todo lo demas es calma: listas
+   con filetes de 1px, titulos de seccion pequenos y grises, 28px de aire
+   entre secciones. El ambar nunca es texto; el rojo no existe.
+
+   Solo tokens de tokens.css. Toda zona tactil mide 44px como minimo: los
+   botones que se ven de 36px amplian su area con un ::before.
+   ========================================================================= */
+
+/* ============================================================ PIEZAS ==== */
+
+.fd5-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* El banderin del reminder: icono Reicon en ambar. Nunca texto ambar. */
+.fd5-flag {
+  color: var(--rem);
+}
+
+/* Pastilla de reminder: superficie ambar suave, texto oscuro. */
+.fd5-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 5px 10px 5px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--rem-soft);
+  color: var(--text-on-rem-soft);
+  font-size: var(--fd-small);
+  font-weight: var(--weight-semibold);
+  line-height: 1.2;
+}
+
+.fd5-chip .ico {
+  width: 13px;
+  height: 13px;
+  vertical-align: 0;
+}
+
+/* Boton con borde pequeno ("Planear", "Planificar", "Editar"): 36px a la
+   vista, 44px al dedo. */
+.fd5-smallbtn {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-btn-sm);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd5-smallbtn::before {
+  content: "";
+  position: absolute;
+  inset: -4px -2px;
+}
+
+.fd5-smallbtn--accent {
+  color: var(--accent-text);
+}
+
+.fd5-smallbtn:active {
+  background: var(--surface-sunken);
+}
+
+/* Botones de 48px: el primario es relleno azul marino, el secundario lleva
+   filete. Solo aparecen cuando no hay bloque de lo siguiente. */
+.fd5-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fd5-btn--primary {
+  background: var(--task);
+  box-shadow: none;
+  color: var(--text-on-accent);
+}
+
+.fd5-btn--primary:active {
+  background: var(--task-press);
+}
+
+/* Seccion calmada: titulo de 13px gris, enlaces de accion a la derecha. El
+   titulo pertenece a lo de debajo: 4px por debajo, la seccion respira por
+   arriba. */
+.fd5-sec__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 24px;
+  margin-bottom: 4px;
+}
+
+.fd5-sec__head h2 {
+  margin: 0;
+  font-size: var(--fd-small);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+}
+
+.fd5-sec__links {
+  display: flex;
+  gap: 4px;
+  margin-right: -10px;
+}
+
+/* "Horario", "Ver el dia", "+ Reminder": texto azul, 44px de alto. */
+.fd5-sec__links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tap-min);
+  margin: -10px 0;
+  padding: 0 10px;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+/* Lista sin tarjeta: filas sobre el fondo con filete de 1px entre ellas. */
+.fd5-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fd5-li {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: baseline;
+  min-height: 48px;
+  padding: 12px 0;
+  color: var(--text);
+}
+
+.fd5-li + .fd5-li,
+.fd5-li + .fd5-up,
+.fd5-up + .fd5-up {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-li__time {
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd5-li__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fd5-li__sub {
+  font-size: var(--fd-small);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.fd5-li__rem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fd5-li__rem .ico {
+  width: 13px;
+  height: 13px;
+  vertical-align: 0;
+}
+
+/* Tarea: el check a la derecha, 44px de area, circulo de 22. */
+.fd5-li--task {
+  grid-template-columns: 52px minmax(0, 1fr) 44px;
+  align-items: center;
+  padding: 2px 0;
+  margin-right: -10px;
+}
+
+.fd5-li--task .fd5-li__body {
+  padding: 10px 0;
+}
+
+.fd5-li__check {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.fd5-ring {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--line-control);
+  display: grid;
+  place-items: center;
+  color: var(--text-on-accent);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.fd5-ring[data-on="true"] {
+  background: var(--task);
+  box-shadow: none;
+}
+
+.fd5-ring .ico {
+  width: 14px;
+  height: 14px;
+}
+
+.fd5-li--task[data-done="true"] .fd5-li__title {
+  color: var(--text-faint);
+  font-weight: var(--weight-regular);
+  text-decoration: line-through;
+}
+
+/* Clase: gris, punto verde de 7px y el aula detras. */
+.fd5-li--cls .fd5-li__time {
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+
+.fd5-li--cls .fd5-li__body {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.fd5-classdot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--class);
+  transform: translateY(-1px);
+}
+
+/* "10:40 Ahora": una linea fina azul, discreta. */
+.fd5-li--now {
+  min-height: 0;
+  padding: 6px 0 8px;
+  align-items: center;
+}
+
+.fd5-li--now .fd5-li__time {
+  font-size: var(--fd-small);
+  color: var(--accent-text);
+}
+
+.fd5-li--now .fd5-li__body {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-li--now .fd5-li__body::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent-text) 45%, transparent);
+}
+
+/* Frases de nota ("Sin clases hoy", "Manana empieza con..."). */
+.fd5-li--note .fd5-li__body {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.fd5-li--note .ico {
+  color: var(--text-faint);
+}
+
+.fd5-more {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 0 0 0 52px;
+  border: 0;
+  box-shadow: inset 0 1px 0 var(--line);
+  background: transparent;
+  font: inherit;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.fd5-empty {
+  margin: 0;
+  padding: 8px 0;
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* ============================================================ INICIO ==== */
+
+/* Cabecera: "5" de 56px alineado con "Lunes / octubre", "Planear" con
+   borde y el engranaje sin caja. */
+.fd5-hd {
+  display: grid;
+  /* Fecha a la izquierda; a la derecha, en fila: racha (si hay), Planear y
+     engranaje. Columnas automaticas para que la racha pueda no estar. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 0;
+}
+
+.fd5-hd__date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd5-hd__num {
+  font-size: var(--fd-daynum);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fd5-hd__word {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--fd-weekday);
+  font-weight: var(--weight-semibold);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+.fd5-hd__word small {
+  margin-top: 1px;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.fd5-hd__streak {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fd5-hd__gear {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+.fd5-hd__gear:active {
+  background: var(--surface-sunken);
+}
+
+.fd5-home {
+  padding-top: 16px;
+}
+
+.fd5-focus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-section);
+}
+
+/* Lo unico saturado de la pantalla. */
+.fd5-next {
+  padding: 18px;
+  border-radius: var(--radius-lead);
+  background: var(--task);
+  color: var(--text-on-accent);
+  box-shadow: var(--shadow-lead);
+}
+
+.fd5-next__title {
+  display: block;
+  font-size: var(--fd-leadtitle);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fd5-next__meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-medium);
+  color: var(--text-on-accent-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd5-next__acts {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 8px;
+}
+
+.fd5-next__done,
+.fd5-next__later {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+/* "Hecho": blanco con texto azul marino en los dos temas. */
+.fd5-next__done {
+  background: #FFFFFF;
+  color: #1E3A6F;
+}
+
+.fd5-next__later {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.55);
+  color: var(--text-on-accent);
+}
+
+.fd5-next__done:active,
+.fd5-next__later:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.fd5-next__later:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Sin nada con fecha hoy: una tarjeta calmada en lugar del bloque. */
+.fd5-rest {
+  padding: 18px;
+  border-radius: var(--radius-lead);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.fd5-rest__title {
+  margin: 0;
+  font-size: var(--fd-weekday);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.fd5-rest__hint {
+  margin: 6px 0 0;
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-rest__acts {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.fd5-rest__acts .fd5-btn {
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.fd5-undo {
+  margin-top: -16px;
+}
+
+/* "Lo de ayer espera que decidas · Decidir": franja hundida, radio 16. */
+.fd5-home .fd-tray__toggle {
+  min-height: 52px;
+  padding: 4px 4px 4px 16px;
+  border-radius: var(--radius-strip);
+  font-size: var(--fd-sub);
+}
+
+.fd5-home .fd-tray__cta {
+  min-height: var(--tap-min);
+  padding: 0 14px;
+  background: transparent;
+  border-radius: var(--radius-control);
+}
+
+/* "Se viene": una fila por parcial o entrega. */
+.fd5-up {
+  display: block;
+  padding: 14px 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd5-up__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fd5-up__top b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+.fd5-up__top time {
+  margin-left: auto;
+  flex: none;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barra segmentada: un segmento por paso, lleno = hecho. */
+.fd5-seg {
+  margin-top: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.fd5-seg i {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rem-track);
+}
+
+.fd5-seg i[data-on="true"] {
+  background: var(--rem);
+}
+
+.fd5-up__next {
+  display: block;
+  margin-top: 8px;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-up__next b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd5-up__foot {
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+/* En escritorio Inicio son tres columnas (focus.css): se les quita el aire
+   de arriba que en el telefono separa las secciones. */
+@media (min-width: 900px) {
+  .fd5-hd {
+    padding-bottom: 6px;
+  }
+
+  .fd5-home {
+    padding-top: 22px;
+  }
+
+  /* Sin nada de ayer, su columna no se queda vacia: Se viene sube a ella. */
+  .fd5-home .fd-home__ayer:empty {
+    display: none;
+  }
+}
+
+/* ============================================================ HORARIO ==== */
+
+/* Cabecera de pantalla de detalle: volver a la izquierda, accion con borde
+   a la derecha. */
+.fd5-pagetop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  margin-left: -8px;
+}
+
+.fd5-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--tap-min);
+  padding: 0 8px 0 2px;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  color: var(--accent-text);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.fd5-ptitle {
+  padding-top: 2px;
+}
+
+.fd5-ptitle h1 {
+  margin: 0;
+  font-size: var(--fd-page);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+}
+
+.fd5-ptitle p {
+  margin: 3px 0 0;
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+}
+
+.fd5-days {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.fd5-dcard {
+  padding: 0 16px 4px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.fd5-dcard[data-today="true"] {
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 45%, transparent);
+}
+
+.fd5-dcard__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 0 6px;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+.fd5-dcard__head small {
+  font-size: var(--fd-small);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.fd5-cls {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 52px;
+  padding: 8px 0;
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-cls__hours {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fd5-cls__hours .fd5-classdot {
+  transform: none;
+}
+
+.fd5-cls__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.fd5-cls__text b {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.fd5-cls__text small {
+  margin-top: 1px;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-cls[data-past="true"] .fd5-cls__text b {
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+
+.fd5-tag {
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fd-xs);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+.fd5-tag--now {
+  background: color-mix(in srgb, var(--class) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--class) 50%, transparent);
+  color: var(--text);
+}
+
+.fd5-tag--next {
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text-muted);
+}
+
+@media (min-width: 900px) {
+  .fd5-clases {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-top: 14px;
+  }
+}
+
+/* =========================================================== VISTA DIA ==== */
+
+/* El modulo Calendario se queda como estaba (le gusta al usuario); FD5 solo
+   ajusta el tamano del titulo, los controles a 44px con radio 14, y como se
+   pintan la franja "En clase" y los bloques de tarea. */
+.fd-h1--cal {
+  font-size: var(--fd-day);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.fd-calhead__nav .fd-btn--icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: var(--radius-control);
+}
+
+.fd-calhead__seg .fd-seg {
+  min-height: 44px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+}
+
+.fd-calhead__seg .fd-seg a {
+  border-radius: var(--radius-sm);
+}
+
+.fd-calhead__seg > .fd-btn,
+.fd-dayhead .pl-addbar .fd-btn {
+  min-height: 44px;
+  border-radius: var(--radius-control);
+}
+
+.fd-dayhead .pl-addbar .fd-btn {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+}
+
+/* "En clase": gris neutro, sin nombre ni aula, detras de las tareas y sin
+   toque (#53). */
+.fd-classband {
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  padding: 7px 12px;
+  pointer-events: none;
+}
+
+.fd-classband span {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+/* Tarea en el riel: azul suave con filete, el texto en --text. */
+.fd-block--task {
+  background: var(--task-soft);
+  border: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-text) 22%, transparent);
+  border-radius: var(--radius);
+}
+
+.fd-block--task .fd-block__title {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+/* La casilla de la tarea en el riel es el circulo de check, como en todas
+   partes: la forma dice "tarea". */
+.fd-block--task .fd-check--mini {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border-color: var(--accent-text);
+}
+
+.fd-block--task .fd-check--mini[data-on="true"] {
+  border-color: var(--task);
+  background: var(--task);
+}
+
+/* ================================================ DETALLE DEL REMINDER ==== */
+
+.fd5-rhead {
+  padding-top: 6px;
+}
+
+.fd5-rhead h1 {
+  margin: 12px 0 0;
+  font-size: var(--fd-page);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.fd5-rhead p {
+  margin: 6px 0 0;
+  font-size: var(--fd-sub);
+  color: var(--text-muted);
+}
+
+.fd5-rhead .fd5-rhead__notes {
+  margin-top: 10px;
+  color: var(--text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.fd5-rprog {
+  margin-top: 18px;
+}
+
+.fd5-seg--lg {
+  margin-top: 0;
+}
+
+.fd5-seg--lg i {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.fd5-rprog__text {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+}
+
+.fd5-rprog__text b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* Sin pasos todavia: una franja hundida, sin alarma. */
+.fd5-ralert {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: var(--radius-strip);
+  background: var(--surface-sunken);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-ralert .ico {
+  margin-top: 3px;
+}
+
+.fd5-rsec {
+  margin-top: var(--gap-section);
+}
+
+/* La linea de estaciones. */
+.fd5-route {
+  display: flex;
+  flex-direction: column;
+}
+
+.fd5-stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 60px;
+}
+
+/* Dos medias lineas por estacion, centradas en la columna de 34px. */
+.fd5-stop[data-up]::before,
+.fd5-stop[data-down]::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  width: 4px;
+  background: var(--rem-track);
+}
+
+.fd5-stop[data-up]::before {
+  top: 0;
+  height: 50%;
+}
+
+.fd5-stop[data-down]::after {
+  top: 50%;
+  bottom: 0;
+}
+
+.fd5-stop[data-up="on"]::before,
+.fd5-stop[data-down="on"]::after {
+  background: var(--rem);
+}
+
+.fd5-stop__check {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  margin: 0 -5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.fd5-stop__ck {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--accent-text);
+  display: grid;
+  place-items: center;
+  color: var(--text-on-accent);
+}
+
+.fd5-stop[data-done="true"] .fd5-stop__ck {
+  background: var(--task);
+  box-shadow: none;
+}
+
+.fd5-stop__body {
+  min-width: 0;
+  min-height: 60px;
+  padding: 8px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  gap: 8px;
+  align-items: center;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.fd5-stop__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fd5-stop__text b {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.fd5-stop__text small {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-stop__text em {
+  font-style: normal;
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd5-stop[data-done="true"] .fd5-stop__text b {
+  font-weight: var(--weight-regular);
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.fd5-stop__chev {
+  color: var(--text-faint);
+}
+
+/* El final de la linea: el reminder, cuadrado ambar con banderin blanco. */
+.fd5-stop--term {
+  min-height: 56px;
+}
+
+.fd5-stop--term .fd5-stop__text {
+  padding: 8px 0;
+}
+
+.fd5-stop--term .fd5-stop__text b {
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-stop__flag {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--rem);
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+}
+
+/* Anadir un paso: tarjeta blanca, campo de 46px, chips de fecha de 36px
+   (44px al dedo). "Anadir" con filete: el bloque saturado no es este. */
+.fd5-qadd {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd5-qadd__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.fd5-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.fd5-input::placeholder {
+  color: var(--text-faint);
+}
+
+.fd5-input:focus {
+  box-shadow: inset 0 0 0 1.5px var(--accent-text), 0 0 0 3px var(--task-soft);
+}
+
+.fd5-input--date {
+  color: var(--text-muted);
+}
+
+.fd5-btn--accent {
+  min-height: 46px;
+  border-radius: var(--radius);
+  color: var(--accent-text);
+}
+
+.fd5-btn--accent:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.fd5-btn--quiet {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+
+.fd5-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+}
+
+.fd5-datechip {
+  position: relative;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+.fd5-datechip::before {
+  content: "";
+  position: absolute;
+  inset: -4px -1px;
+}
+
+.fd5-datechip[aria-pressed="true"] {
+  background: var(--task-soft);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 35%, transparent);
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-hint {
+  margin: 0;
+  font-size: var(--fd-small);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-rcand {
+  margin-top: 6px;
+}
+
+.fd5-rowbtn {
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  box-shadow: inset 0 -1px 0 var(--line);
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: inherit;
+  font-size: var(--fd-sub);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fd5-rowbtn .ico {
+  color: var(--text-faint);
+}
+
+.fd5-pick {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fd5-pick + .fd5-pick {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-pick .ico {
+  color: var(--accent-text);
+}
+
+.fd5-pick__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fd5-pick__text b {
+  font-size: var(--fd-body);
+  font-weight: var(--weight-medium);
+}
+
+.fd5-pick__text small {
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-rfoot {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.fd5-rfoot .fd5-btn {
+  min-height: 44px;
+  border-radius: var(--radius);
+}
+
+.fd5-rfoot + .fd5-hint {
+  margin-top: 8px;
+}
+
+@media (min-width: 900px) {
+  .fd5-pagetop,
+  .fd5-rhead,
+  .fd5-rprog,
+  .fd5-ralert,
+  .fd5-rsec,
+  .fd5-qadd,
+  .fd5-rcand,
+  .fd5-rfoot,
+  .fd5-rfoot + .fd5-hint {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+}
+
+/* ========================================================== PENDIENTES ==== */
+
+/* La casilla de tarea es un circulo en toda la app (FD5: la forma dice
+   "tarea"; el cuadrado se queda para nada). */
+.fd-check {
+  border-radius: 50%;
+}
+
+.fd-screen--pend .fd-pend__head {
+  gap: 0;
+}
+
+/* Conmutador Tareas / Recordatorios: 48px, radio 14, cada solapa con la
+   marca de su entidad (circulo de tarea, banderin ambar). */
+.fd5-seg2 {
+  min-height: 48px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  box-shadow: 0 0 0 1px var(--line);
+  border: 0;
+}
+
+.fd5-seg2 a {
+  gap: 7px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fd-sub);
+}
+
+.fd5-seg2__ring {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.fd5-seg2 .ico {
+  width: 13px;
+  height: 13px;
+  vertical-align: 0;
+}
+
+/* La tarjeta de clasificar: la pieza grande de la pantalla. */
+.fd5-cap {
+  padding: 18px;
+  border-radius: var(--radius-lead);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line), var(--shadow-classify);
+  display: flex;
+  flex-direction: column;
+}
+
+.fd5-cap__title {
+  margin: 0;
+  font-size: var(--fd-capture);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.fd5-cap__meta {
+  margin-top: 6px;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+}
+
+.fd5-cap__ask {
+  margin-top: 14px;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-cap__days {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+/* Un dia por fila, 52px: la etiqueta a la izquierda, la fecha a la
+   derecha. Al tocar se llena de azul marino un instante. */
+.fd5-dayopt {
+  min-height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: inherit;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.fd5-dayopt span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fd5-dayopt small {
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd5-dayopt:active,
+.fd5-dayopt[aria-expanded="true"] {
+  background: var(--task);
+  box-shadow: none;
+  color: var(--text-on-accent);
+}
+
+.fd5-dayopt:active small,
+.fd5-dayopt[aria-expanded="true"] small {
+  color: var(--text-on-accent-sub);
+}
+
+.fd5-cap__later {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+  padding: 4px 0 2px;
+}
+
+.fd5-cap__skip {
+  margin-top: 6px;
+  min-height: var(--tap-min);
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: var(--fd-sub);
+  font-weight: var(--weight-semibold);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+
+.fd5-cap__skip:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+.fd5-cap--rest .fd5-cap__title {
+  font-size: var(--fd-weekday);
+}
+
+.fd-triage__next b {
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+/* Grupos: tarjetas blancas de radio 18 con filete, sin riel de color. */
+.fd5-card {
+  border-radius: var(--radius-card);
+  box-shadow: none;
+}
+
+.fd5-group .fd-remcard {
+  box-shadow: none;
+}
+
+.fd5-group .fd-card__rail--reminder {
+  display: none;
+}

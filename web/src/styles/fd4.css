@@ -140,54 +140,52 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  color: var(--text-faint);
+  gap: 4px;
+  color: var(--text-muted);
   text-decoration: none;
   transition: background var(--dur-fast) var(--ease-out),
               color var(--dur-fast) var(--ease-out);
 }
 
 .fd-tab__label {
-  font-size: var(--fd-tiny);
+  font-size: var(--fd-xs);
   font-weight: var(--weight-medium);
   line-height: 1;
 }
 
+/* FD5: el activo no lleva caja. Icono y etiqueta pasan al azul de texto y
+   la etiqueta sube a 600: se distingue por color Y por peso. */
 .fd-tab[aria-current="page"] {
-  background: var(--tint-task);
-  color: var(--text);
+  color: var(--accent-text);
 }
 
-/* El icono hereda el color del boton salvo el trazo, que siempre es --text a
-   un 90%: un icono apagado del todo deja de leerse de reojo. */
+.fd-tab[aria-current="page"] .fd-tab__label {
+  font-weight: var(--weight-semibold);
+}
+
 .fd-tab .fd-ico {
-  color: var(--text);
-  opacity: 0.9;
+  color: inherit;
 }
 
-.fd-tab[aria-current="page"] .fd-ico {
-  opacity: 1;
-}
-
-/* El boton de capturar. 56 de alto como los demas para que la fila cuadre,
-   pero el cuadrado azul mide 38: flota dentro, no llena. */
+/* El boton de capturar. FD5: azul marino relleno de 52x46, la unica
+   excepcion fija a "un solo elemento saturado por pantalla" — es la accion
+   principal de la app y esta en todas. */
 .fd-fab {
-  flex: 0 0 auto;
-  width: 56px;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 56px;
-  padding: 8px 0 6px;
+  padding: 0;
   border: 0;
   background: transparent;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
 }
 
 .fd-fab__mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 13px;
+  width: 52px;
+  height: 46px;
+  border-radius: 15px;
   background: var(--task);
   color: var(--text-on-accent);
   display: flex;
@@ -288,10 +286,10 @@ html, body {
   width: 7px;
   height: 7px;
   border-radius: 2px;
-  background: var(--task);
+  background: var(--accent-text);
 }
 
-.fd-dot--task     { background: var(--task); }
+.fd-dot--task     { background: var(--accent-text); }
 .fd-dot--subject  { background: var(--class); }
 .fd-dot--reminder { background: var(--rem); }
 .fd-dot--none     { background: transparent; }
@@ -340,10 +338,10 @@ html, body {
 .fd-card__rail {
   flex: none;
   width: var(--rail);
-  background: var(--task);
+  background: var(--accent-text);
 }
 
-.fd-card__rail--task     { background: var(--task); }
+.fd-card__rail--task     { background: var(--accent-text); }
 .fd-card__rail--subject  { background: var(--class); }
 .fd-card__rail--reminder { background: var(--rem); }
 
@@ -401,7 +399,7 @@ html, body {
   height: 14px;
   margin-top: 0;
   border-radius: 4px;
-  border-color: var(--task);
+  border-color: var(--accent-text);
 }
 
 .fd-check--mini::after { display: none; }
@@ -411,7 +409,7 @@ html, body {
   height: 12px;
   margin-top: 0;
   border-radius: 4px;
-  border-color: var(--task);
+  border-color: var(--accent-text);
 }
 
 .fd-check--chip::after { display: none; }
@@ -935,7 +933,7 @@ html, body {
 
 .fd-cell[data-today="true"] {
   background: var(--tint-task);
-  border-color: var(--task);
+  border-color: var(--accent-text);
 }
 
 .fd-cell[data-today="true"] .fd-cell__num { font-weight: var(--weight-semibold); }
@@ -947,8 +945,8 @@ html, body {
 
 .fd-cell[data-today="true"][data-selected="true"] {
   background: var(--tint-task);
-  border-color: var(--task);
-  box-shadow: 0 0 0 1px var(--task);
+  border-color: var(--accent-text);
+  box-shadow: 0 0 0 1px var(--accent-text);
 }
 
 /* Leyenda. Existe porque tres colores de punto sin nombre son tres colores
@@ -1005,7 +1003,7 @@ html, body {
   flex: none;
   font-size: var(--fd-tiny);
   font-weight: 600;
-  color: var(--task);
+  color: var(--accent-text);
   background: var(--task-soft);
   padding: 2px 8px;
   border-radius: 999px;
@@ -1020,7 +1018,7 @@ html, body {
   gap: 3px;
   font-size: var(--fd-xs);
   font-weight: var(--weight-medium);
-  color: var(--task);
+  color: var(--accent-text);
   text-decoration: none;
   padding: 8px 12px;
   min-height: 40px;
@@ -1061,7 +1059,7 @@ html, body {
 }
 
 .fd-monthrow--task {
-  border-left: var(--rail) solid var(--task);
+  border-left: var(--rail) solid var(--accent-text);
 }
 
 .fd-monthrow--subject {
@@ -1176,7 +1174,7 @@ html, body {
 
 .fd-strip__day[data-today="true"] {
   background: var(--tint-task);
-  border-color: var(--task);
+  border-color: var(--accent-text);
 }
 
 .fd-daylist {
@@ -1413,7 +1411,7 @@ html, body {
   position: absolute;
   right: 0;
   border-radius: 12px;
-  border-left: var(--rail) solid var(--task);
+  border-left: var(--rail) solid var(--accent-text);
   padding: 8px 12px;
   display: flex;
   align-items: center;
@@ -1478,7 +1476,7 @@ html, body {
   left: 0;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-left: var(--rail) solid var(--task);
+  border-left: var(--rail) solid var(--accent-text);
   box-shadow: var(--shadow-card);
 }
 
@@ -1504,7 +1502,6 @@ html, body {
 
 /* ------------------------------------------------------------- clases ---
    Clases de hoy (Inicio) y /clases: una fila por clase, la hora delante. */
-.fd-todayclasses { margin-top: var(--gap-section); }
 
 .fd-classrow {
   display: flex;
@@ -1578,7 +1575,7 @@ html, body {
 .fd-now__line {
   flex: 1 1 auto;
   height: 2px;
-  background: var(--task);
+  background: var(--accent-text);
 }
 
 /* =============================================================== 5. PENDIENTES */
@@ -1809,7 +1806,7 @@ html, body {
 }
 
 .fd-search__input:focus {
-  border-color: var(--task);
+  border-color: var(--accent-text);
   box-shadow: 0 0 0 3px var(--task-soft);
 }
 

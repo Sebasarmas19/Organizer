@@ -36,11 +36,11 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   /* El color de la barra del navegador sigue al tema, con los mismos valores
-     que `--bg` en tokens.css. Si uno cambia, el otro tambien. FD4 los movio
-     de los grises calidos a los frios. */
+     que `--bg` en tokens.css. Si uno cambia, el otro tambien. FD5 los aclaro; FD4
+     antes los movio de los grises calidos a los frios. */
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#EDF0F5' },
-    { media: '(prefers-color-scheme: dark)', color: '#0E1116' },
+    { media: '(prefers-color-scheme: light)', color: '#F6F7F9' },
+    { media: '(prefers-color-scheme: dark)', color: '#0C111D' },
   ],
 };
 

@@ -55,6 +55,9 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
 
   const current = queue[0];
   const later = days.slice(2);
+  /* "mié – dom": el tramo que abre "Próximos días". */
+  const weekday = (d?: DayOption) => (d ? d.short.split(' ')[0] : '');
+  const laterSpan = later.length > 0 ? `${weekday(later[0])} – ${weekday(later[later.length - 1])}` : '';
 
   const decide = useCallback(
     (label: string, run: (id: string) => Promise<void>) => {
@@ -127,53 +130,60 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
 
   return (
     <section className="fd-triage" aria-labelledby="fd-triage-title">
-      <div className="fd-seclabel">
+      <div className="fd5-sec__head">
         <h2 id="fd-triage-title">Por clasificar</h2>
       </div>
 
       {current ? (
-        <div className="fd-lead fd-lead--enter fd-triage__card" key={current.id}>
-          <p className="fd-lead__title">{current.title}</p>
-          <span className="fd-lead__when">{current.meta}</span>
-          <span className="fd-triage__ask">¿Cuándo lo haces?</span>
+        <div className="fd5-cap fd-lead--enter fd-triage__card" key={current.id}>
+          <p className="fd5-cap__title">{current.title}</p>
+          <span className="fd5-cap__meta">{current.meta}</span>
+          <span className="fd5-cap__ask">¿Cuándo lo haces?</span>
 
-          <div className="fd-triage__grid">
+          <div className="fd5-cap__days">
+            <button type="button" className="fd5-dayopt" onClick={() => toDay(days[0])}>
+              <span>
+                Hoy <kbd>H</kbd>
+              </span>
+              <small>{days[0].short}</small>
+            </button>
+            <button type="button" className="fd5-dayopt" onClick={() => toDay(days[1])}>
+              <span>
+                Mañana <kbd>M</kbd>
+              </span>
+              <small>{days[1].short}</small>
+            </button>
             <button
               type="button"
-              className="fd-btn fd-triage__opt fd-triage__opt--today"
-              onClick={() => toDay(days[0])}
-            >
-              <span>Hoy</span> <kbd>H</kbd>
-            </button>
-            <button type="button" className="fd-btn fd-triage__opt" onClick={() => toDay(days[1])}>
-              <span>Mañana</span> <kbd>M</kbd>
-            </button>
-            <button
-              type="button"
-              className="fd-btn fd-triage__opt"
+              className="fd5-dayopt"
               aria-expanded={showDays}
               onClick={() => setShowDays(!showDays)}
             >
-              <span>Próximos días</span> <kbd>P</kbd>
+              <span>
+                Próximos días <kbd>P</kbd>
+              </span>
+              <small>{laterSpan}</small>
             </button>
-            <button type="button" className="fd-btn fd-triage__opt" onClick={someday}>
-              <span>Algún día</span> <kbd>A</kbd>
+            {showDays ? (
+              <div className="fd5-cap__later" role="group" aria-label="Elegir día">
+                {later.map((d, i) => (
+                  <button key={d.dateStr} type="button" className="fd5-datechip" onClick={() => toDay(d)}>
+                    {d.short} <kbd>{i + 1}</kbd>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <button type="button" className="fd5-dayopt" onClick={someday}>
+              <span>
+                Algún día <kbd>A</kbd>
+              </span>
+              <small>sin fecha</small>
             </button>
           </div>
 
-          {showDays ? (
-            <div className="fd-triage__days" role="group" aria-label="Elegir día">
-              {later.map((d, i) => (
-                <button key={d.dateStr} type="button" className="fd-btn" onClick={() => toDay(d)}>
-                  {d.short} <kbd>{i + 1}</kbd>
-                </button>
-              ))}
-            </div>
-          ) : null}
-
           <button
             type="button"
-            className="fd-btn fd-btn--quiet fd-triage__skip"
+            className="fd5-cap__skip"
             onClick={skip}
             disabled={queue.length < 2}
           >
@@ -181,9 +191,9 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
           </button>
         </div>
       ) : (
-        <div className="fd-lead fd-lead--rest">
-          <p className="fd-lead__title">Todo clasificado.</p>
-          <p className="fd-lead__hint">Lo nuevo que captures aparecerá aquí.</p>
+        <div className="fd5-cap fd5-cap--rest">
+          <p className="fd5-cap__title">Todo clasificado.</p>
+          <span className="fd5-cap__meta">Lo nuevo que captures aparecerá aquí.</span>
         </div>
       )}
 
@@ -201,7 +211,7 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
 
       {queue.length > 1 ? (
         <p className="fd-triage__next">
-          Después: {queue.slice(1, 4).map((t) => t.title).join(' · ')}
+          <b>Después:</b> {queue.slice(1, 4).map((t) => t.title).join(' · ')}
           {queue.length > 4 ? '…' : ''}
         </p>
       ) : null}

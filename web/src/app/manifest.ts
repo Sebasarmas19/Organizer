@@ -32,8 +32,8 @@ export default function manifest(): MetadataRoute.Manifest {
     /* `--bg` y `--bg` del tema claro. La pantalla de arranque de iOS usa
        `background_color`, asi que un blanco puro aqui daria un destello que
        no pega con el resto de la app. */
-    background_color: '#FAF8F5',
-    theme_color: '#FAF8F5',
+    background_color: '#F6F7F9',
+    theme_color: '#F6F7F9',
 
     lang: 'es',
     dir: 'ltr',

@@ -1,5 +1,5 @@
 /* ============================================================================
-   Organizer · FD4 · Pendientes
+   Organizer · FD4/FD5 · Pendientes
 
    Lo que en F1 se llamaba Tareas. Ahora tiene dos solapas dentro — Tareas y
    Recordatorios — porque las dos contestan la misma pregunta desde lados
@@ -33,7 +33,6 @@ import { TaskGroupCard } from '@/components/fd4/TaskGroupCard';
 import { Triage } from '@/components/fd4/Triage';
 import { ReminderCard } from '@/components/fd4/ReminderCard';
 import { CompletedSection } from '@/components/fd4/CompletedSection';
-import { Check, Flag } from '@/components/fd4/Marks';
 import { Icon } from '@/components/Icon';
 import { Setup } from '../Setup';
 
@@ -65,23 +64,23 @@ export default async function PendientesPage({
 
       <main className="fd-screen fd-screen--split fd-screen--pend">
         <div className="fd-fixedhead">
-          <div className="fd-pend__head">
-            <h1 className="fd-h1 fd-h1--screen">Pendientes</h1>
-            <span className="fd-sub">
+          <div className="fd-pend__head fd5-ptitle">
+            <h1>Pendientes</h1>
+            <p>
               {view === 'tareas'
                 ? data.inbox.length > 0
                   ? 'Hay capturas esperando día'
                   : 'Todo lo que capturaste'
                 : 'Fechas que no dependen de ti'}
-            </span>
+            </p>
           </div>
 
           {/* El conmutador lleva la marca de cada entidad dentro del propio
               boton: la casilla en Tareas, el banderin en Recordatorios. Asi
               la solapa ya te dice que vas a encontrar antes de tocarla. */}
-          <div className="fd-seg" role="tablist" aria-label="Tipo de pendiente">
+          <div className="fd-seg fd5-seg2" role="tablist" aria-label="Tipo de pendiente">
             <Link href="/pendientes" role="tab" aria-selected={view === 'tareas'} scroll={false}>
-              <Check variant="chip" />
+              <span className="fd5-seg2__ring" aria-hidden />
               Tareas
             </Link>
             <Link
@@ -90,7 +89,7 @@ export default async function PendientesPage({
               aria-selected={view === 'recordatorios'}
               scroll={false}
             >
-              <Flag size="tiny" />
+              <Icon name="flag" size="sm" className="fd5-flag" />
               Recordatorios
             </Link>
           </div>
@@ -127,7 +126,7 @@ export default async function PendientesPage({
               ) : (
                 <>
                   <p className="fd-empty">
-                    Nada pendiente. Lo que captures desde el botón ＋ aparece aquí.
+                    Nada pendiente. Lo que captures desde el botón + aparece aquí.
                   </p>
                   <CompletedSection items={data.recentCompleted} />
                 </>
@@ -135,9 +134,8 @@ export default async function PendientesPage({
             ) : data.reminderGroups.length > 0 ? (
               <>
                 {data.reminderGroups.map((g) => (
-                  <section key={g.label}>
-                    <div className="fd-seclabel">
-                      <Flag size="xs" />
+                  <section key={g.label} className="fd5-group">
+                    <div className="fd5-sec__head">
                       <h2>{g.label}</h2>
                     </div>
 

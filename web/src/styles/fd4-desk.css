@@ -492,7 +492,7 @@
   }
 
   .fd-weekgrid__day[data-today='true'] .fd-weekgrid__dow {
-    color: var(--task);
+    color: var(--accent-text);
   }
 
   /* --------------------------------------------- la banda de lo sin hora -- */
@@ -644,7 +644,7 @@
 
   .fd-weekblock--task {
     background: var(--task-soft);
-    border-left-color: var(--task);
+    border-left-color: var(--accent-text);
   }
 
   .fd-weekblock--reminder {

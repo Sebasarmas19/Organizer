@@ -22,6 +22,7 @@
    ========================================================================= */
 
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 import type { CalView } from '@/lib/fd4-calendar';
 import { stepDate } from '@/lib/fd4-calendar';
 
@@ -61,7 +62,7 @@ export function CalHeader({
             aria-label={`Anterior: ${view}`}
             scroll={false}
           >
-            ‹
+            <Icon name="chevron-left" size="md" />
           </Link>
           <Link
             href={to(view, stepDate(view, dateStr, 1))}
@@ -69,7 +70,7 @@ export function CalHeader({
             aria-label={`Siguiente: ${view}`}
             scroll={false}
           >
-            ›
+            <Icon name="chevron-right" size="md" />
           </Link>
         </div>
       </div>

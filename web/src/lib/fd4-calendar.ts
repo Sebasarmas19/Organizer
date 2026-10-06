@@ -751,7 +751,7 @@ export type ClassSlot = {
   /** "8:00 – 9:30" */
   hours: string;
   location: string | null;
-  /** La clase en curso o la siguiente; las demás, null. */
+  /** La clase en curso ('now') y la siguiente ('next'); las demás, null. */
   status: 'now' | 'next' | null;
 };
 
@@ -812,7 +812,8 @@ export async function getClassesView(
     }))
     .filter((d) => d.slots.length > 0);
 
-  /* En curso, o si no la siguiente: hoy después de ahora, o el próximo día. */
+  /* En curso y siguiente, las dos a la vez: la siguiente es la primera que
+     empieza después de ahora (hoy o el próximo día con clase). */
   const semesterOn = templates.some((t) => t.active_from <= todayStr);
   if (semesterOn) {
     const current = templates.find(
@@ -821,14 +822,14 @@ export async function getClassesView(
         timeToMinutes(t.start_time) <= nowMin &&
         nowMin < timeToMinutes(t.end_time)
     );
-    let next = current ? undefined : templates.find((t) => t.weekday === todayDow && timeToMinutes(t.start_time) > nowMin);
-    for (let i = 1; !current && !next && i <= 7; i++) {
+    let next = templates.find((t) => t.weekday === todayDow && timeToMinutes(t.start_time) > nowMin);
+    for (let i = 1; !next && i <= 7; i++) {
       next = templates.find((t) => t.weekday === (todayDow + i) % 7);
     }
-    const mark = current ?? next;
     for (const d of days) {
       for (const slot of d.slots) {
-        if (slot.id === mark?.id) slot.status = current ? 'now' : 'next';
+        if (slot.id === current?.id) slot.status = 'now';
+        else if (slot.id === next?.id) slot.status = 'next';
       }
     }
   }

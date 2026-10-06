@@ -19,7 +19,9 @@
                        sostiene Horario, Ajustes, Atajo y Entrar.
      6. focus.css    — "Una cosa a la vez": la estructura de Inicio,
                        Pendientes y Recursos, solo con tokens de FD4.
-     7. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
+     7. fd5.css      — FD5 «Calma» (app/DESIGN.md). La ultima: donde pisa a
+                       FD4, manda FD5.
+     8. @config      — el preset de Tailwind de siempre. Ver tailwind.config.js.
    ========================================================================= */
 
 @import "tailwindcss";
@@ -30,5 +32,6 @@
 @import "../styles/fd4-desk.css";
 @import "../styles/focus.css";
 @import "../styles/planner.css";
+@import "../styles/fd5.css";
 
 @config "../../tailwind.config.js";
