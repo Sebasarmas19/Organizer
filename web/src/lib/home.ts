@@ -36,6 +36,10 @@ export type HomeReminder = {
   prep: string[];
   /** "en 4 dias · nada planificado". Solo cuando `prep` esta vacio. */
   emptyLabel: string;
+  /** Pasos de preparacion ya hechos (la barra segmentada: done de done + prep). */
+  done: number;
+  /** Cuando toca el primer paso pendiente: "hoy", "mañana", "jue 8", "ayer" o "". */
+  nextWhen: string;
 };
 
 export type OverdueTask = {
@@ -109,6 +113,19 @@ export function daysBetween(a: string, b: string): number {
 }
 
 /** "hoy" · "manana" · "en 4 dias" · "ayer" · "hace 3 dias" */
+const SHORT_WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+
+/** "hoy", "mañana", "ayer" o "jue 8". Para "Siguiente: … · hoy" en Inicio. */
+export function shortDayLabel(todayStr: string, dateStr: string): string {
+  const day = (s: string) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 86400000;
+  const diff = day(dateStr) - day(todayStr);
+  if (diff === 0) return 'hoy';
+  if (diff === 1) return 'mañana';
+  if (diff === -1) return 'ayer';
+  const d = new Date(dateStr + 'T00:00:00Z');
+  return `${SHORT_WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}`;
+}
+
 export function formatDistance(todayStr: string, dateStr: string): string {
   const d = daysBetween(todayStr, dateStr);
   if (d === 0) return 'hoy';
@@ -228,7 +245,7 @@ export async function getHomeData(
     reminders.length > 0
       ? supabase
           .from('items')
-          .select('title, reminder_id, status')
+          .select('title, reminder_id, status, due_on')
           .eq('user_id', userId)
           .in(
             'reminder_id',
@@ -278,6 +295,7 @@ export async function getHomeData(
      para saber si "no hay nada" es porque ya está todo preparado. */
   const prepByReminder = new Map<string, string[]>();
   const doneByReminder = new Map<string, number>();
+  const nextDueByReminder = new Map<string, string | null>();
   for (const row of prepRowsRes.data ?? []) {
     if (!row.reminder_id) continue;
     if (row.status === 'done') {
@@ -285,14 +303,20 @@ export async function getHomeData(
       continue;
     }
     const list = prepByReminder.get(row.reminder_id) ?? [];
+    /* Vienen ordenadas por fecha: la primera pendiente es la siguiente. */
+    if (list.length === 0) nextDueByReminder.set(row.reminder_id, row.due_on);
     list.push(row.title);
     prepByReminder.set(row.reminder_id, list);
   }
 
   const semana: HomeReminder[] = reminders.map((r) => {
     const prep = prepByReminder.get(r.id) ?? [];
-    const allDone = prep.length === 0 && (doneByReminder.get(r.id) ?? 0) > 0;
+    const done = doneByReminder.get(r.id) ?? 0;
+    const allDone = prep.length === 0 && done > 0;
+    const nextDue = nextDueByReminder.get(r.id) ?? null;
     return {
+      done,
+      nextWhen: nextDue ? shortDayLabel(todayStr, nextDue) : '',
       id: r.id,
       title: r.title,
       when: formatWhen(r.occurs_on, r.occurs_at, timezone),

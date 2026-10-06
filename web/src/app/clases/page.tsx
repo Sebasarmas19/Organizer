@@ -31,11 +31,13 @@ export default async function ClasesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/entrar');
 
-  const data = await getClassesView(supabase, user.id, DEFAULT_TIMEZONE);
+  const { data: profile } = await supabase.from('profiles').select('timezone').eq('id', user.id).maybeSingle();
+  const timezone = profile?.timezone ?? DEFAULT_TIMEZONE;
+  const data = await getClassesView(supabase, user.id, timezone);
 
   return (
     <div className="fd-app">
-      <DeskSidebar active="inicio" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
+      <DeskSidebar active="inicio" todayStr={getTodayString(timezone)} />
 
       <main className="fd-screen">
         <div className="fd5-clases">
@@ -53,7 +55,7 @@ export default async function ClasesPage() {
             <p>{data.range ? `Tu semana de clases · ${data.range}` : 'Tu semana de clases'}</p>
           </div>
 
-          <ClassesView data={data} nowMin={getCurrentTimeMinutes(DEFAULT_TIMEZONE)} />
+          <ClassesView data={data} nowMin={getCurrentTimeMinutes(timezone)} />
         </div>
       </main>
 

@@ -13,9 +13,8 @@
    se anaden los pasos): por eso es un span con forma de boton y no un
    enlace dentro de otro enlace.
 
-   `done` es opcional porque `getHomeData` todavia no lo devuelve (solo los
-   titulos pendientes). Mientras no llegue, la barra no se pinta: una barra
-   que no sabe cuanto falta mentiria.
+   `done` y `nextWhen` vienen de `getHomeData`: pasos hechos (la barra es
+   done de done + pendientes) y cuando toca el siguiente ("hoy", "jue 8").
    ========================================================================= */
 
 import Link from 'next/link';
@@ -23,10 +22,11 @@ import type { HomeReminder } from '@/lib/home';
 import { Icon } from '@/components/Icon';
 import { shortWhen } from './homeSchedule';
 
-export function UpcomingRow({ reminder, done }: { reminder: HomeReminder; done?: number }) {
+export function UpcomingRow({ reminder }: { reminder: HomeReminder }) {
   const pending = reminder.prep.length;
-  const allDone = pending === 0 && reminder.emptyLabel.endsWith('todo preparado');
-  const total = done === undefined ? 0 : done + pending;
+  const done = reminder.done;
+  const allDone = pending === 0 && done > 0;
+  const total = done + pending;
 
   return (
     <Link href={`/reminders/${reminder.id}`} className="fd5-up">
@@ -41,12 +41,13 @@ export function UpcomingRow({ reminder, done }: { reminder: HomeReminder; done?:
           {total > 0 ? (
             <span className="fd5-seg" aria-hidden style={{ gridTemplateColumns: `repeat(${total}, 1fr)` }}>
               {Array.from({ length: total }, (_, i) => (
-                <i key={i} data-on={i < (done ?? 0) ? 'true' : 'false'} />
+                <i key={i} data-on={i < done ? 'true' : 'false'} />
               ))}
             </span>
           ) : null}
           <span className="fd5-up__next">
             Siguiente: <b>{reminder.prep[0]}</b>
+            {reminder.nextWhen ? ` · ${reminder.nextWhen}` : null}
           </span>
         </>
       ) : (

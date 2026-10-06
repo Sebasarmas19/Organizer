@@ -68,6 +68,12 @@ export default async function HomePage() {
             </span>
           </Link>
 
+          {/* La racha, junto a la fecha (#74). Discreta: no compite con el bloque azul. */}
+          {home.streakDays > 0 ? (
+            <span className="fd5-hd__streak" title="Días seguidos cerrando algo">
+              {home.streakDays} {home.streakDays === 1 ? 'día' : 'días'}
+            </span>
+          ) : null}
           <Link
             href="/planear"
             className="fd5-smallbtn"
