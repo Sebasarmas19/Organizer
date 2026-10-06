@@ -89,6 +89,10 @@ export function CaptureForm() {
           Se guarda en Pendientes · Tareas. Puedes ponerle fecha después, o nunca.
         </span>
 
+        <Link href="/planear" className="fd-secbtn" style={{ alignSelf: 'flex-start' }}>
+          ¿No sabes cuándo? Planéalo
+        </Link>
+
         <button type="submit" className="fd-btn fd-btn--primary" disabled={!draft.trim()}>
           Guardar
         </button>

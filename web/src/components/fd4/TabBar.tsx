@@ -39,7 +39,7 @@ type Tab = {
 };
 
 export const TABS: Tab[] = [
-  { id: 'inicio', label: 'Inicio', href: '/', match: ['/', '/clases'] },
+  { id: 'inicio', label: 'Inicio', href: '/', match: ['/', '/clases', '/planear'] },
   {
     id: 'calendario',
     label: 'Calendario',
