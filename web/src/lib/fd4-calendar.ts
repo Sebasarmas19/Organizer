@@ -25,7 +25,7 @@ import {
   parseDateString,
 } from './date-utils';
 
-export type CalView = 'mes' | 'semana' | 'dia' | 'clases';
+export type CalView = 'mes' | 'semana' | 'dia';
 export type Entity = 'task' | 'subject' | 'reminder';
 
 /** El riel del telefono: 7:00 a 23:00. Una fila de `--hour-row` por hora. */
@@ -857,8 +857,6 @@ export async function getClassesView(
  * una cabecera de 390px de ancho.
  */
 export function stepDate(view: CalView, dateStr: string, delta: number): string {
-  /* El horario es el mismo todas las semanas: Clases no tiene "anterior". */
-  if (view === 'clases') return dateStr;
   if (view === 'dia') return addDays(dateStr, delta);
   if (view === 'semana') return addDays(getMondayOfWeek(dateStr), delta * 7);
 

@@ -1475,7 +1475,9 @@ html, body {
 }
 
 /* ------------------------------------------------------------- clases ---
-   La pestana Clases: una fila por clase, la hora delante. */
+   Clases de hoy (Inicio) y /clases: una fila por clase, la hora delante. */
+.fd-todayclasses { margin-top: var(--gap-section); }
+
 .fd-classrow {
   display: flex;
   align-items: center;

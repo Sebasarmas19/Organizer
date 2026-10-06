@@ -48,7 +48,7 @@ export function DeskSidebar({
   active: DeskNav;
   todayStr: string;
   selectedStr?: string;
-  calView?: 'mes' | 'semana' | 'dia' | 'clases';
+  calView?: 'mes' | 'semana' | 'dia';
 }) {
   const anchor = selectedStr ?? todayStr;
   const { year, month } = parseDateString(anchor);

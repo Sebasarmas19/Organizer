@@ -117,10 +117,9 @@ más chica — eso produce una vista de mes ilegible e inútil.
 | **Día** | ¿Qué hago ahora? | Bloques por hora: tareas planificadas. Clases como franja gris *"En clase"*. Reminders del día como banda superior | Nombre de las materias |
 | **Semana** | ¿Cómo reparto el trabajo? | Los 7 días con sus reminders visibles y la carga de tareas | Materias |
 | **Mes** | ¿Qué se me viene encima? | Reminders y tareas | Materias |
-| **Clases** | ¿Qué clase tengo y dónde? | El horario del semestre por día, con aula; la clase en curso o la siguiente resaltada | Tareas y reminders |
 
-> Desde el 2026-10-05 (decisión #79) las materias no salen en Mes, Semana ni Día:
-> tienen su propia pestaña, **Clases**.
+> Desde el 2026-10-05 (decisión #79) las materias no salen en Mes, Semana ni Día.
+> Viven en **Inicio** (*Clases de hoy*) y en `/clases` (el semestre entero).
 
 La vista de mes es exactamente para lo que el usuario usaba el Calendar del
 iPhone: *"¿cuándo son mis parciales?"*. Meterle tareas la arruinaría.

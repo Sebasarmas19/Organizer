@@ -15,8 +15,8 @@
        navegacion y sin un parpadeo de carga por cada flecha
 
    El conmutador lleva `role="tablist"` y `aria-selected` porque Mes, Semana
-   y Dia son pestanas de verdad: tres vistas del mismo contenido. Clases es
-   la cuarta: el horario del semestre, que ya no sale en las otras tres. Eso no es
+   y Dia son pestanas de verdad: tres vistas del mismo contenido. El horario
+   de clases no esta aqui: vive en Inicio y en /clases (#79). Eso no es
    decoracion semantica, es lo que hace que VoiceOver las anuncie como
    "pestana 2 de 3" en vez de como tres enlaces sueltos.
    ========================================================================= */
@@ -29,7 +29,6 @@ const VIEWS: { id: CalView; label: string }[] = [
   { id: 'mes', label: 'Mes' },
   { id: 'semana', label: 'Semana' },
   { id: 'dia', label: 'Día' },
-  { id: 'clases', label: 'Clases' },
 ];
 
 export function CalHeader({
@@ -55,8 +54,7 @@ export function CalHeader({
           <span className="fd-sub">{subtitle}</span>
         </div>
 
-        {/* El horario es igual todas las semanas: Clases no tiene flechas. */}
-        {view !== 'clases' ? <div className="fd-calhead__nav">
+        <div className="fd-calhead__nav">
           <Link
             href={to(view, stepDate(view, dateStr, -1))}
             className="fd-btn fd-btn--icon"
@@ -73,7 +71,7 @@ export function CalHeader({
           >
             ›
           </Link>
-        </div> : null}
+        </div>
       </div>
 
       <div className="fd-calhead__seg">
@@ -91,15 +89,9 @@ export function CalHeader({
           ))}
         </div>
 
-        {view === 'clases' ? (
-          <Link href="/horario" className="fd-btn">
-            Editar
-          </Link>
-        ) : (
-          <Link href={to(view, todayStr)} className="fd-btn" scroll={false}>
-            Hoy
-          </Link>
-        )}
+        <Link href={to(view, todayStr)} className="fd-btn" scroll={false}>
+          Hoy
+        </Link>
       </div>
     </div>
   );
