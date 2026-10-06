@@ -1991,3 +1991,28 @@ html, body {
   font-size: var(--fd-meta);
   color: var(--text);
 }
+
+/* La conversación: tu frase como burbuja a la derecha; lo anterior, apagado. */
+.fd-plan__you {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 14px 14px 4px 14px;
+  background: var(--tint-task);
+  font-size: var(--fd-meta);
+  color: var(--text);
+}
+
+.fd-plan__past {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0.75;
+}
+
+.fd-plan__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fd-plan__actions .fd-btn--primary { flex: 1 1 auto; }

@@ -32,6 +32,8 @@ export type PlanContext = {
   slots: FreeSlot[];
   upcoming: { date: string; time: string | null; title: string }[];
   backlog: string[];
+  /** "Base de datos: mar 12:00–13:50, jue 12:00–13:50" — para entender apodos. */
+  subjects: string[];
 };
 
 export async function loadPlanContext(
@@ -46,7 +48,7 @@ export async function loadPlanContext(
   /* Las clases tienen que estar como bloques para contar como ocupadas. */
   await materializeScheduleTemplates(supabase, userId, today, last, timezone);
 
-  const [blocksRes, itemsRes, remindersRes] = await Promise.all([
+  const [blocksRes, itemsRes, remindersRes, templatesRes] = await Promise.all([
     supabase
       .from('blocks')
       .select('title, starts_at, ends_at, source, status, item_id')
@@ -69,6 +71,12 @@ export async function loadPlanContext(
       .gte('occurs_on', today)
       .lte('occurs_on', addDays(today, REMINDER_LOOKAHEAD))
       .order('occurs_on', { ascending: true }),
+    supabase
+      .from('schedule_templates')
+      .select('title, weekday, start_time, end_time')
+      .eq('user_id', userId)
+      .or(`active_until.is.null,active_until.gte.${today}`)
+      .order('weekday', { ascending: true }),
   ]);
 
   const blocks = blocksRes.data ?? [];
@@ -112,6 +120,14 @@ export async function loadPlanContext(
     };
   });
 
+  const WD = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const bySubject = new Map<string, string[]>();
+  for (const t of templatesRes.data ?? []) {
+    const list = bySubject.get(t.title) ?? [];
+    list.push(`${WD[t.weekday]} ${t.start_time.slice(0, 5)}–${t.end_time.slice(0, 5)}`);
+    bySubject.set(t.title, list);
+  }
+
   return {
     today,
     nowMinutes,
@@ -127,5 +143,6 @@ export async function loadPlanContext(
       .filter((t) => !t.due_on)
       .slice(0, 40)
       .map((t) => (t.status === 'someday' ? `${t.title} (algún día)` : t.title)),
+    subjects: [...bySubject].map(([title, times]) => `${title}: ${times.join(', ')}`),
   };
 }
