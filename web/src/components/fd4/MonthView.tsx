@@ -84,10 +84,7 @@ export function MonthView({ data }: { data: Fd4MonthData }) {
           <Dot entity="task" size="xs" />
           Tareas
         </span>
-        <span className="fd-legend__item">
-          <Dot entity="subject" size="xs" />
-          Materias
-        </span>
+        {/* Sin "Materias": el mes ya no las pinta (#79). */}
       </div>
 
       {/* Vista previa interactiva del día seleccionado */}

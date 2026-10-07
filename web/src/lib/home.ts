@@ -7,6 +7,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
 import { DEFAULT_TIMEZONE } from './profile';
 import { dayRangeUtc, formatTimeOfDay } from './tz';
+import { computeStreak } from './streak';
+import { reviewWeekStart } from './push/server/schedule';
 import {
   MONTH_NAMES_CAP_ES,
   WEEKDAY_FULL_ES,
@@ -47,6 +49,8 @@ export type OverdueTask = {
   title: string;
   /** "ayer · 18:00" o "hace 3 dias · sin hora" */
   meta: string;
+  /** YYYY-MM-DD del dia que tenia. El hilo de Inicio dice "ayer" solo si lo es. */
+  dueOn: string;
 };
 
 export type HomeData = {
@@ -58,6 +62,10 @@ export type HomeData = {
   monthLabel: string;
   /** Dias seguidos cerrando al menos una tarea. 0 = no se enseña. */
   streakDays: number;
+  /** Comodines que quedan este mes: un dia vacio gasta uno sin romper la racha. */
+  streakGraceLeft: number;
+  /** Dia del ritual (o el siguiente) y la semana sin armar: Inicio lo ofrece. */
+  weekReviewDue: boolean;
   hoy: HomeTask[];
   semana: HomeReminder[];
   ayer: OverdueTask[];
@@ -135,6 +143,68 @@ export function formatDistance(todayStr: string, dateStr: string): string {
   return `hace ${Math.abs(d)} días`;
 }
 
+/** Una tarea que cuelga de un reminder, tal y como la piden Inicio y el ritual. */
+export type PrepRow = {
+  title: string;
+  reminder_id: string | null;
+  status: string;
+  due_on: string | null;
+};
+
+/**
+ * Cada reminder con su preparacion resumida: pasos que faltan, pasos hechos
+ * y cuando toca el siguiente. Lo usan "Se viene" en Inicio y el paso 2 del
+ * ritual del domingo, que tienen que contar lo mismo.
+ *
+ * `prepRows` tiene que venir ordenado por `due_on` ascendente (nulos al
+ * final): el primer paso pendiente de la lista es "el siguiente".
+ */
+export function summarizeReminders(
+  reminders: Pick<Reminder, 'id' | 'title' | 'occurs_on' | 'occurs_at'>[],
+  prepRows: PrepRow[],
+  todayStr: string,
+  timezone: string
+): HomeReminder[] {
+  /* En la tarjeta solo se listan los pasos que faltan; los hechos cuentan
+     para saber si "no hay nada" es porque ya está todo preparado. */
+  const prepByReminder = new Map<string, string[]>();
+  const doneByReminder = new Map<string, number>();
+  const nextDueByReminder = new Map<string, string | null>();
+  for (const row of prepRows) {
+    if (!row.reminder_id) continue;
+    if (row.status === 'done') {
+      doneByReminder.set(row.reminder_id, (doneByReminder.get(row.reminder_id) ?? 0) + 1);
+      continue;
+    }
+    const list = prepByReminder.get(row.reminder_id) ?? [];
+    /* Vienen ordenadas por fecha: la primera pendiente es la siguiente. */
+    if (list.length === 0) nextDueByReminder.set(row.reminder_id, row.due_on);
+    list.push(row.title);
+    prepByReminder.set(row.reminder_id, list);
+  }
+
+  return reminders.map((r) => {
+    const prep = prepByReminder.get(r.id) ?? [];
+    const done = doneByReminder.get(r.id) ?? 0;
+    const allDone = prep.length === 0 && done > 0;
+    const nextDue = nextDueByReminder.get(r.id) ?? null;
+    return {
+      done,
+      nextWhen: nextDue ? shortDayLabel(todayStr, nextDue) : '',
+      id: r.id,
+      title: r.title,
+      when: formatWhen(r.occurs_on, r.occurs_at, timezone),
+      dateStr: r.occurs_on,
+      prep,
+      emptyLabel: prep.length
+        ? ''
+        : allDone
+          ? `${formatDistance(todayStr, r.occurs_on)} · todo preparado`
+          : `${formatDistance(todayStr, r.occurs_on)} · nada planificado`,
+    };
+  });
+}
+
 /* ------------------------------------------------------------ la consulta */
 
 /**
@@ -150,25 +220,29 @@ export async function getHomeData(
   userId: string,
   userTimezone?: string
 ): Promise<HomeData> {
-  let timezone = userTimezone;
-  if (!timezone) {
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('timezone')
-      .eq('id', userId)
-      .maybeSingle();
-    timezone = prof?.timezone ?? DEFAULT_TIMEZONE;
-  }
+  const { data: prof } = await supabase
+    .from('profiles')
+    .select('timezone, notify_weekly_dow')
+    .eq('id', userId)
+    .maybeSingle();
+  const timezone = userTimezone ?? prof?.timezone ?? DEFAULT_TIMEZONE;
 
   const todayStr = getTodayString(timezone);
   const horizonStr = addDays(todayStr, 45);
+
+  /* El ritual se ofrece su dia y el siguiente (por si el aviso llego tarde o
+     se dejo para luego). Fuera de esos dos, Inicio no lo menciona: un aviso
+     permanente de "arma tu semana" seria una factura. */
+  const reviewDow = prof?.notify_weekly_dow ?? 0;
+  const dow = getDayOfWeek(todayStr);
+  const inReviewWindow = dow === reviewDow || dow === (reviewDow + 1) % 7;
 
   /* El dia local en UTC, con la zona del perfil. */
   const range = dayRangeUtc(todayStr, timezone);
   const dayStartUTC = range.start;
   const dayEndUTC = new Date(Date.parse(range.end) - 1).toISOString();
 
-  const [blocksRes, itemsRes, remindersRes, contextsRes, doneRes] = await Promise.all([
+  const [blocksRes, itemsRes, remindersRes, contextsRes, doneRes, reviewRes] = await Promise.all([
     /* Bloques de hoy que son de una tarea manual */
     supabase
       .from('blocks')
@@ -209,6 +283,17 @@ export async function getHomeData(
       .eq('status', 'done')
       .gte('completed_at', new Date(Date.now() - 90 * 86_400_000).toISOString())
       .order('completed_at', { ascending: false }),
+
+    /* ¿La semana que arma el ritual de hoy ya esta cerrada? */
+    inReviewWindow
+      ? supabase
+          .from('weekly_reviews')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('week_start', reviewWeekStart(todayStr))
+          .not('completed_at', 'is', null)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
 
   const blocks = blocksRes.data ?? [];
@@ -291,44 +376,7 @@ export async function getHomeData(
     });
 
   /* ------------------------------------------------------- esta semana -- */
-  /* En la tarjeta solo se listan los pasos que faltan; los hechos cuentan
-     para saber si "no hay nada" es porque ya está todo preparado. */
-  const prepByReminder = new Map<string, string[]>();
-  const doneByReminder = new Map<string, number>();
-  const nextDueByReminder = new Map<string, string | null>();
-  for (const row of prepRowsRes.data ?? []) {
-    if (!row.reminder_id) continue;
-    if (row.status === 'done') {
-      doneByReminder.set(row.reminder_id, (doneByReminder.get(row.reminder_id) ?? 0) + 1);
-      continue;
-    }
-    const list = prepByReminder.get(row.reminder_id) ?? [];
-    /* Vienen ordenadas por fecha: la primera pendiente es la siguiente. */
-    if (list.length === 0) nextDueByReminder.set(row.reminder_id, row.due_on);
-    list.push(row.title);
-    prepByReminder.set(row.reminder_id, list);
-  }
-
-  const semana: HomeReminder[] = reminders.map((r) => {
-    const prep = prepByReminder.get(r.id) ?? [];
-    const done = doneByReminder.get(r.id) ?? 0;
-    const allDone = prep.length === 0 && done > 0;
-    const nextDue = nextDueByReminder.get(r.id) ?? null;
-    return {
-      done,
-      nextWhen: nextDue ? shortDayLabel(todayStr, nextDue) : '',
-      id: r.id,
-      title: r.title,
-      when: formatWhen(r.occurs_on, r.occurs_at, timezone),
-      dateStr: r.occurs_on,
-      prep,
-      emptyLabel: prep.length
-        ? ''
-        : allDone
-          ? `${formatDistance(todayStr, r.occurs_on)} · todo preparado`
-          : `${formatDistance(todayStr, r.occurs_on)} · nada planificado`,
-    };
-  });
+  const semana = summarizeReminders(reminders, prepRowsRes.data ?? [], todayStr, timezone);
 
   /* ------------------------------------------------------------- ayer --- */
   const ayer: OverdueTask[] = items
@@ -337,6 +385,7 @@ export async function getHomeData(
     .map((t) => ({
       id: t.id,
       title: t.title,
+      dueOn: t.due_on as string,
       meta: `${formatDistance(todayStr, t.due_on as string)} · ${
         contextName.get(t.context_id ?? '') ?? 'sin hora'
       }`,
@@ -357,15 +406,8 @@ export async function getHomeData(
       )
   );
 
-  /* Se cuenta hacia atras desde hoy. Si hoy todavia no se cerro nada, la
-     racha arranca en ayer: el dia no ha terminado y cortarla a las 9 de la
-     manana seria castigar por no haber empezado. */
-  let streakDays = 0;
-  let cursor = doneDays.has(todayStr) ? todayStr : addDays(todayStr, -1);
-  while (doneDays.has(cursor) && streakDays < 90) {
-    streakDays += 1;
-    cursor = addDays(cursor, -1);
-  }
+  /* Con perdon: dos comodines al mes (decision 8). Las reglas, en streak.ts. */
+  const streak = computeStreak(doneDays, todayStr);
 
   const { month } = parseDateString(todayStr);
 
@@ -374,7 +416,9 @@ export async function getHomeData(
     timezone,
     dayTitle: formatDayHeading(todayStr),
     monthLabel: MONTH_NAMES_CAP_ES[month - 1],
-    streakDays,
+    streakDays: streak.days,
+    streakGraceLeft: streak.graceLeft,
+    weekReviewDue: inReviewWindow && !reviewRes.data,
     hoy,
     semana,
     ayer,

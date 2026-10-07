@@ -1,23 +1,19 @@
 /**
  * Organizer · Layout raíz de la PWA
- * Carga estilos globales (Tailwind, tokens, FD4), tipografía IBM Plex Sans y bootstrap de tema.
+ * Carga estilos globales (Tailwind, tokens, capa iOS) y el bootstrap de tema.
+ *
+ * Sin fuente descargada: la app usa la del sistema (SF Pro en el iPhone),
+ * que es lo que la hace parecer nativa y no una web. Ver styles/ios.css.
  */
 
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
 import { NavigationProgress } from '@/components/NavigationProgress';
-
-/** Configuración de tipografía IBM Plex Sans autohospedada via next/font */
-const plex = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-plex',
-  display: 'swap',
-});
+import { ThemeColorSync } from '@/components/ThemeColorSync';
+import { THEME_BG } from '@/lib/theme-colors';
 
 export const metadata: Metadata = {
   title: 'Organizer',
@@ -36,11 +32,10 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   /* El color de la barra del navegador sigue al tema, con los mismos valores
-     que `--bg` en tokens.css. Si uno cambia, el otro tambien. FD5 los aclaro; FD4
-     antes los movio de los grises calidos a los frios. */
+     que `--io-bg` en ios.css (lib/theme-colors.ts). */
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F6F7F9' },
-    { media: '(prefers-color-scheme: dark)', color: '#0C111D' },
+    { media: '(prefers-color-scheme: light)', color: THEME_BG.light },
+    { media: '(prefers-color-scheme: dark)', color: THEME_BG.dark },
   ],
 };
 
@@ -56,6 +51,9 @@ try {
   var t = localStorage.getItem('organizer:theme');
   if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
 } catch (e) {}
+var a = 'bosque';
+try { a = localStorage.getItem('organizer:accent') || 'bosque'; } catch (e) {}
+if (a === 'bosque' || a === 'petroleo' || a === 'indigo' || a === 'grafito') document.documentElement.setAttribute('data-accent', a);
 try {
   document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
 } catch (e) {}
@@ -65,7 +63,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={plex.variable} suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
       </head>
@@ -78,6 +76,8 @@ export default function RootLayout({
         </Suspense>
         {/* Recarga los datos si cambian por fuera (Siri, cron, otro equipo). */}
         <LiveRefresh />
+        {/* La barra de estado sigue al tema elegido en Ajustes. */}
+        <ThemeColorSync />
         {children}
       </body>
     </html>

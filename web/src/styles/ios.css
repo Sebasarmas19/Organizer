@@ -1,0 +1,2495 @@
+/* ============================================================================
+   Organizer · Mundo iOS
+
+   La app deja de parecer una web con tarjetas y pasa a comportarse como una
+   app de iPhone: fuente del sistema, grises de iOS, listas agrupadas, vidrio
+   SOLO en lo que flota (cabecera, barra de pestanas, hojas) y muelles en lo
+   que se mueve por una accion.
+
+   Va la ULTIMA en globals.css y hace dos cosas:
+
+   1. Reasigna los tokens de FD (tokens.css es copia exacta de app/ y no se
+      toca) a valores de iOS. Calendario, Pendientes, Recursos y Ajustes
+      cambian de mundo sin reescribir su CSS; su composicion propia queda
+      para otra ronda.
+   2. Trae las piezas nuevas: la barra de pestanas flotante, las hojas y el
+      hilo de Inicio (.hl-*).
+
+   Contraste medido con luminancia relativa. Texto >= 4.5:1 (AA), indicador
+   que identifica un control >= 3:1. Los ratios van al lado del token.
+   ========================================================================= */
+
+/* ======================================================== 1 · TOKENS ==== */
+
+:root {
+  --io-bg: #F5F1F0;            /* fondo agrupado                               */
+  --io-thread: #F5F1F0;        /* fondo del hilo                               */
+  --io-cell: #FFFFFF;
+  --io-cell-up: #FFFFFF;       /* celda dentro de una hoja                     */
+  --io-cell-press: #EDE4E9;
+  --io-sheet: #F5F1F0;
+  --io-fill: rgb(124 100 114 / 0.12);
+  --io-fill-2: rgb(124 100 114 / 0.18);
+
+  --io-label: #221A20;
+  --io-label-2: #64575E;       /* 6.1:1 sobre --io-bg · 6.9 sobre blanco     */
+  --io-label-3: #B3A6AD;       /* solo decoracion: asa, chevron              */
+  --io-ctl: #85777E;           /* anillo vacio · 4.3:1 sobre blanco          */
+  --io-sep: rgb(70 48 62 / 0.18);
+
+  /* Ciruela (Inicio "widgets", 2026-10-06): el color de la accion y de las
+     tareas. Sustituye al azul de sistema, que se leia generico. */
+  --io-tint: #6C3561;          /* ciruela que se LEE · 9.0:1 sobre blanco ·
+                                  7.3 sobre --io-tint-soft                   */
+  --io-tint-fill: #7B3F6E;     /* relleno con texto blanco · 7.6:1           */
+  --io-tint-press: #66305A;
+  --io-on-tint: #FFFFFF;
+
+  --io-class: #3D7F5C;         /* punto de clase                             */
+  --io-rem: #B26B00;           /* banderin. NUNCA texto                      */
+  --io-tint-soft: #F0E3EC;
+  --io-rem-soft: #F7ECDA;
+  --io-track: #EDE5E9;
+  --io-bubble-in: #E9E9EB;
+
+  /* Vidrio: borde de luz arriba, filete de medio punto y una sombra
+     abierta. Solo para lo que flota sobre el contenido. */
+  --io-glass-bg: rgb(255 255 255 / 0.64);
+  --io-glass-hi: rgb(255 255 255 / 0.95);
+  --io-glass-line: rgb(0 0 0 / 0.06);
+  --io-glass-shadow: 0 10px 30px rgb(0 0 0 / 0.08), 0 2px 6px rgb(0 0 0 / 0.05);
+  --io-lens: rgb(0 0 0 / 0.06);
+  --io-scrim: rgb(0 0 0 / 0.25);
+
+  --io-r-group: 24px;
+  --io-tab-h: 62px;
+  /* La barra flota sobre el indicador de inicio, como las de iOS 26. */
+  --io-tab-bottom: max(14px, calc(env(safe-area-inset-bottom) - 12px));
+
+  /* Muelles de iOS como curvas. SOFT: respuesta 0.54 s, amortiguacion 0.9
+     (hojas, avisos). CRIT: critico, sin rebote (pulsar). POP: 0.47 s, 0.7,
+     un rebote leve para lo que llega (la burbuja, el check). */
+  --io-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --io-soft: linear(0, 0.028, 0.097, 0.189, 0.293, 0.398, 0.499, 0.591, 0.674, 0.745, 0.806, 0.856, 0.896, 0.929, 0.954, 0.973, 0.986, 0.996, 1.003, 1.007, 1.01, 1.011, 1.011, 1.011, 1.01, 1.009, 1.007, 1.006, 1.005, 1.004, 1.003, 1.003, 1);
+  --io-crit: linear(0, 0.049, 0.158, 0.286, 0.412, 0.526, 0.625, 0.706, 0.773, 0.825, 0.867, 0.899, 0.924, 0.943, 0.957, 0.968, 0.976, 0.983, 0.987, 0.991, 0.993, 0.995, 0.996, 0.997, 1);
+  --io-pop: linear(0, 0.036, 0.125, 0.243, 0.373, 0.502, 0.622, 0.728, 0.817, 0.889, 0.944, 0.985, 1.014, 1.032, 1.042, 1.046, 1.045, 1.042, 1.037, 1.031, 1.025, 1.019, 1.014, 1.01, 1.006, 1.003, 1.001, 1, 0.999, 0.998, 0.998, 0.998, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --io-bg: #120D11;
+    --io-thread: #120D11;
+    --io-cell: #1E171C;
+    --io-cell-up: #2A2127;
+    --io-cell-press: #3A2E35;
+    --io-sheet: #1E171C;
+    --io-fill: rgb(130 110 122 / 0.24);
+    --io-fill-2: rgb(130 110 122 / 0.32);
+    --io-label: #F2EBEF;
+    --io-label-2: #B09FA8;     /* 7.1:1 sobre la celda                        */
+    --io-label-3: #5E4F57;
+    --io-ctl: #8A7882;         /* 4.2:1 sobre la celda                        */
+    --io-sep: rgb(110 88 102 / 0.5);
+    --io-tint: #E0A6D2;        /* 9.2:1 sobre la celda                        */
+    --io-tint-fill: #C47DB3;   /* texto --io-on-tint encima: 6.1:1            */
+    --io-tint-press: #B06C9F;
+    --io-class: #6DB38E;
+    --io-rem: #E8A53A;
+    --io-on-tint: #1A0F17;
+    --io-tint-soft: #36222F;
+    --io-rem-soft: #33281A;
+    --io-track: #2E242A;
+    --io-bubble-in: #262628;
+    --io-glass-bg: rgb(46 36 43 / 0.62);
+    --io-glass-hi: rgb(255 255 255 / 0.16);
+    --io-glass-line: rgb(255 255 255 / 0.08);
+    --io-glass-shadow: 0 10px 30px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.4);
+    --io-lens: rgb(255 255 255 / 0.1);
+    --io-scrim: rgb(0 0 0 / 0.5);
+  }
+}
+
+:root[data-theme="dark"] {
+  --io-bg: #120D11;
+  --io-thread: #120D11;
+  --io-cell: #1E171C;
+  --io-cell-up: #2A2127;
+  --io-cell-press: #3A2E35;
+  --io-sheet: #1E171C;
+  --io-fill: rgb(130 110 122 / 0.24);
+  --io-fill-2: rgb(130 110 122 / 0.32);
+  --io-label: #F2EBEF;
+  --io-label-2: #B09FA8;
+  --io-label-3: #5E4F57;
+  --io-ctl: #8A7882;
+  --io-sep: rgb(110 88 102 / 0.5);
+  --io-tint: #E0A6D2;
+  --io-tint-fill: #C47DB3;
+  --io-tint-press: #B06C9F;
+  --io-class: #6DB38E;
+  --io-rem: #E8A53A;
+  --io-on-tint: #1A0F17;
+  --io-tint-soft: #36222F;
+  --io-rem-soft: #33281A;
+  --io-track: #2E242A;
+  --io-bubble-in: #262628;
+  --io-glass-bg: rgb(46 36 43 / 0.62);
+  --io-glass-hi: rgb(255 255 255 / 0.16);
+  --io-glass-line: rgb(255 255 255 / 0.08);
+  --io-glass-shadow: 0 10px 30px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.4);
+  --io-lens: rgb(255 255 255 / 0.1);
+  --io-scrim: rgb(0 0 0 / 0.5);
+}
+
+/* ============================================ 2 · LOS TOKENS DE FD, A iOS ==
+   Mismos nombres, valores nuevos. Lo que no esta aqui sigue como en
+   tokens.css. Las tres entidades conservan su significado: tarea azul,
+   materia verde, reminder ambar (que sigue sin poder ser texto).          */
+
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* La escala de iOS: cuerpo 17, subtitulo 15, titulo grande 34. */
+  --fd-body: 17px;
+  --fd-meta: 15px;
+  --fd-title: 34px;
+  --fd-page: 34px;
+  --fd-title-sm: 28px;
+
+  --desk: #EBE4E7;
+  --bg: var(--io-bg);
+  --surface: var(--io-cell);
+  --surface-sunken: #EEE7EA;   /* --io-label-2 encima: 5.9:1                 */
+  --line: #ECE4E8;
+  --line-strong: #D3C7CD;
+  --line-control: #85777E;     /* 3.9:1 sobre --bg                           */
+
+  --text: var(--io-label);
+  --text-muted: var(--io-label-2);
+  --text-faint: var(--io-label-2);
+  --text-on-accent: var(--io-on-tint);
+  --text-on-accent-sub: color-mix(in srgb, var(--io-on-tint) 84%, var(--io-tint-fill));
+
+  --task: var(--io-tint-fill);
+  --task-press: var(--io-tint-press);
+  --task-soft: var(--io-tint-soft);
+  --accent-text: var(--io-tint);
+
+  --class: var(--io-class);
+  --class-soft: #E5F1EA;
+  --rem: var(--io-rem);
+
+  --focus-ring: var(--io-tint);
+  --scrim: var(--io-scrim);
+
+  /* Dos radios: el de grupo (24) y el de lo pequeno (12). Los controles son
+     capsulas, como en iOS 26. */
+  --radius: 12px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --radius-card: 24px;
+  --radius-strip: 24px;
+  --radius-lead: 24px;
+  --radius-control: 999px;
+  --radius-btn-sm: 999px;
+
+  /* En iOS una celda agrupada no proyecta sombra: es blanca sobre gris. La
+     profundidad queda para lo que flota de verdad. */
+  --shadow-card: none;
+  --shadow-lead: none;
+  --shadow-classify: 0 8px 24px rgb(0 0 0 / 0.08);
+  --shadow-float: var(--io-glass-shadow);
+  --shadow-fab: var(--io-glass-shadow);
+  --shadow-sheet: 0 -8px 40px rgb(0 0 0 / 0.12);
+
+  --ease-out: var(--io-ease);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk: #0B080A;
+    --surface-sunken: #191317;
+    --line: #2E252B;
+    --line-strong: #3E3239;
+    --line-control: #8E7D87;
+    --text-faint: #9A8A93;
+    --text-on-accent-sub: color-mix(in srgb, var(--io-on-tint) 84%, var(--io-tint-fill));
+    --task-soft: var(--io-tint-soft);
+    --class-soft: #14281D;
+    --shadow-classify: 0 8px 24px rgb(0 0 0 / 0.5);
+    --shadow-sheet: 0 -8px 40px rgb(0 0 0 / 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --desk: #0B080A;
+  --surface-sunken: #191317;
+  --line: #2E252B;
+  --line-strong: #3E3239;
+  --line-control: #8E7D87;
+  --text-faint: #9A8A93;
+  --text-on-accent-sub: color-mix(in srgb, var(--io-on-tint) 84%, var(--io-tint-fill));
+  --task-soft: var(--io-tint-soft);
+  --class-soft: #14281D;
+  --shadow-classify: 0 8px 24px rgb(0 0 0 / 0.5);
+  --shadow-sheet: 0 -8px 40px rgb(0 0 0 / 0.6);
+}
+
+/* ================================================ 2b · OTROS COLORES ===
+   Ajustes · Color. Bosque es el de la app (2026-10-06): el layout le pone
+   `data-accent="bosque"` si no eliges otro. Sin atributo manda el ciruela. Cada
+   color trae su fondo (lib/theme-colors.ts lo repite para theme-color)
+   y, en oscuro, su propio juego de celdas. Bosque lleva las clases a
+   azul pizarra: dos verdes no se distinguirian.                       */
+
+:root[data-accent="bosque"] {
+  --io-bg: #F4F2EC;
+  --io-thread: #F4F2EC;
+  --io-sheet: #F4F2EC;
+  --io-label: #1B1F1C;
+  --io-label-2: #5C635D;
+  --io-tint: #265A44;
+  --io-tint-fill: #2F6B52;
+  --io-tint-press: #255843;
+  --io-on-tint: #FFFFFF;
+  --io-tint-soft: #E2ECE5;
+  --io-track: #E6E3DA;
+  --io-cell-press: #E7E4DC;
+  --io-class: #4F72A8;
+  --desk: #EAE7DF;
+  --surface-sunken: #ECE9E1;
+  --line: #E5E1D8;
+  --line-strong: #CCCFC7;
+  --io-fill: rgb(100 112 104 / 0.12);
+  --io-fill-2: rgb(100 112 104 / 0.18);
+  --io-label-3: #A7AEA8;
+  --io-ctl: #78807A;           /* 4.1:1 sobre blanco */
+  --io-sep: rgb(50 66 56 / 0.18);
+  --line-control: #78807A;
+  --class-soft: #E3E9F4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="bosque"]:not([data-theme="light"]) {
+    --io-bg: #0E1210;
+    --io-thread: #0E1210;
+    --io-sheet: #1A201D;
+    --io-cell: #1A201D;
+    --io-cell-up: #252C28;
+    --io-cell-press: #303833;
+    --io-label: #EEF1EE;
+    --io-label-2: #A3ABA5;
+    --io-tint: #86CDA9;
+    --io-tint-fill: #4FA37E;
+    --io-tint-press: #3F8E6B;
+    --io-on-tint: #08110C;
+    --io-tint-soft: #1F3328;
+    --io-track: #2A312D;
+    --io-class: #86A3D3;
+    --desk: #090C0A;
+    --surface-sunken: #141916;
+    --line: #26302B;
+    --io-glass-bg: rgb(34 40 37 / 0.62);
+    --line-strong: #36403A;
+    --io-fill: rgb(110 128 118 / 0.24);
+    --io-fill-2: rgb(110 128 118 / 0.32);
+    --io-label-3: #4E5852;
+    --io-ctl: #7C8780;         /* 4.4:1 sobre la celda */
+    --io-sep: rgb(88 106 96 / 0.5);
+    --line-control: #7C8780;
+    --text-faint: #98A09A;
+    --class-soft: #1B2433;
+  }
+}
+
+:root[data-accent="bosque"][data-theme="dark"] {
+  --io-bg: #0E1210;
+  --io-thread: #0E1210;
+  --io-sheet: #1A201D;
+  --io-cell: #1A201D;
+  --io-cell-up: #252C28;
+  --io-cell-press: #303833;
+  --io-label: #EEF1EE;
+  --io-label-2: #A3ABA5;
+  --io-tint: #86CDA9;
+  --io-tint-fill: #4FA37E;
+  --io-tint-press: #3F8E6B;
+  --io-on-tint: #08110C;
+  --io-tint-soft: #1F3328;
+  --io-track: #2A312D;
+  --io-class: #86A3D3;
+  --desk: #090C0A;
+  --surface-sunken: #141916;
+  --line: #26302B;
+  --io-glass-bg: rgb(34 40 37 / 0.62);
+  --line-strong: #36403A;
+  --io-fill: rgb(110 128 118 / 0.24);
+  --io-fill-2: rgb(110 128 118 / 0.32);
+  --io-label-3: #4E5852;
+  --io-ctl: #7C8780;
+  --io-sep: rgb(88 106 96 / 0.5);
+  --line-control: #7C8780;
+  --text-faint: #98A09A;
+  --class-soft: #1B2433;
+}
+
+:root[data-accent="petroleo"] {
+  --io-bg: #F1F4F4;
+  --io-thread: #F1F4F4;
+  --io-sheet: #F1F4F4;
+  --io-label: #14201F;
+  --io-label-2: #53615F;
+  --io-tint: #1A5A69;
+  --io-tint-fill: #1D6475;
+  --io-tint-press: #164F5D;
+  --io-on-tint: #FFFFFF;
+  --io-tint-soft: #DDEBEE;
+  --io-track: #DCE3E3;
+  --io-cell-press: #E2E9E9;
+  --desk: #E6ECEC;
+  --surface-sunken: #E8EEEE;
+  --line: #DFE6E6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="petroleo"]:not([data-theme="light"]) {
+    --io-bg: #0B1213;
+    --io-thread: #0B1213;
+    --io-sheet: #152022;
+    --io-cell: #152022;
+    --io-cell-up: #1F2C2E;
+    --io-cell-press: #2A3A3C;
+    --io-label: #E8F0F0;
+    --io-label-2: #9AAAAA;
+    --io-tint: #7CCADB;
+    --io-tint-fill: #46A3B8;
+    --io-tint-press: #3A8C9F;
+    --io-on-tint: #061214;
+    --io-tint-soft: #17343A;
+    --io-track: #22302F;
+    --desk: #070C0D;
+    --surface-sunken: #111A1B;
+    --line: #223031;
+    --io-glass-bg: rgb(28 40 42 / 0.62);
+  }
+}
+
+:root[data-accent="petroleo"][data-theme="dark"] {
+  --io-bg: #0B1213;
+  --io-thread: #0B1213;
+  --io-sheet: #152022;
+  --io-cell: #152022;
+  --io-cell-up: #1F2C2E;
+  --io-cell-press: #2A3A3C;
+  --io-label: #E8F0F0;
+  --io-label-2: #9AAAAA;
+  --io-tint: #7CCADB;
+  --io-tint-fill: #46A3B8;
+  --io-tint-press: #3A8C9F;
+  --io-on-tint: #061214;
+  --io-tint-soft: #17343A;
+  --io-track: #22302F;
+  --desk: #070C0D;
+  --surface-sunken: #111A1B;
+  --line: #223031;
+  --io-glass-bg: rgb(28 40 42 / 0.62);
+}
+
+:root[data-accent="indigo"] {
+  --io-bg: #F3F3F8;
+  --io-thread: #F3F3F8;
+  --io-sheet: #F3F3F8;
+  --io-label: #1A1A24;
+  --io-label-2: #5B5B6B;
+  --io-tint: #3B37A0;
+  --io-tint-fill: #4540B5;
+  --io-tint-press: #37339A;
+  --io-on-tint: #FFFFFF;
+  --io-tint-soft: #E6E5F7;
+  --io-track: #E3E3EE;
+  --io-cell-press: #E7E7F0;
+  --desk: #E8E8F0;
+  --surface-sunken: #EAEAF2;
+  --line: #E2E2EC;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="indigo"]:not([data-theme="light"]) {
+    --io-bg: #0E0E14;
+    --io-thread: #0E0E14;
+    --io-sheet: #1A1A24;
+    --io-cell: #1A1A24;
+    --io-cell-up: #24242F;
+    --io-cell-press: #30303C;
+    --io-label: #EDEDF5;
+    --io-label-2: #A3A3B5;
+    --io-tint: #B6B2FF;
+    --io-tint-fill: #8F88F2;
+    --io-tint-press: #7D76E0;
+    --io-on-tint: #0F0D24;
+    --io-tint-soft: #25234B;
+    --io-track: #2A2A36;
+    --desk: #09090D;
+    --surface-sunken: #14141C;
+    --line: #272733;
+    --io-glass-bg: rgb(36 36 48 / 0.62);
+  }
+}
+
+:root[data-accent="indigo"][data-theme="dark"] {
+  --io-bg: #0E0E14;
+  --io-thread: #0E0E14;
+  --io-sheet: #1A1A24;
+  --io-cell: #1A1A24;
+  --io-cell-up: #24242F;
+  --io-cell-press: #30303C;
+  --io-label: #EDEDF5;
+  --io-label-2: #A3A3B5;
+  --io-tint: #B6B2FF;
+  --io-tint-fill: #8F88F2;
+  --io-tint-press: #7D76E0;
+  --io-on-tint: #0F0D24;
+  --io-tint-soft: #25234B;
+  --io-track: #2A2A36;
+  --desk: #09090D;
+  --surface-sunken: #14141C;
+  --line: #272733;
+  --io-glass-bg: rgb(36 36 48 / 0.62);
+}
+
+:root[data-accent="grafito"] {
+  --io-bg: #F2F2F4;
+  --io-thread: #F2F2F4;
+  --io-sheet: #F2F2F4;
+  --io-label: #1C1C1E;
+  --io-label-2: #636366;
+  --io-tint: #1C1C1E;
+  --io-tint-fill: #1C1C1E;
+  --io-tint-press: #000000;
+  --io-on-tint: #FFFFFF;
+  --io-tint-soft: #E3E3E7;
+  --io-track: #E5E5EA;
+  --io-cell-press: #E5E5EA;
+  --desk: #E8E8EB;
+  --surface-sunken: #EAEAED;
+  --line: #E5E5EA;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="grafito"]:not([data-theme="light"]) {
+    --io-bg: #000000;
+    --io-thread: #000000;
+    --io-sheet: #1C1C1E;
+    --io-cell: #1C1C1E;
+    --io-cell-up: #2C2C2E;
+    --io-cell-press: #3A3A3C;
+    --io-label: #FFFFFF;
+    --io-label-2: #98989F;
+    --io-tint: #F2F2F7;
+    --io-tint-fill: #E5E5EA;
+    --io-tint-press: #D1D1D6;
+    --io-on-tint: #1C1C1E;
+    --io-tint-soft: #2C2C2E;
+    --io-track: #2C2C2E;
+    --desk: #000000;
+    --surface-sunken: #161618;
+    --line: #2C2C2E;
+    --io-glass-bg: rgb(38 38 42 / 0.6);
+  }
+}
+
+:root[data-accent="grafito"][data-theme="dark"] {
+  --io-bg: #000000;
+  --io-thread: #000000;
+  --io-sheet: #1C1C1E;
+  --io-cell: #1C1C1E;
+  --io-cell-up: #2C2C2E;
+  --io-cell-press: #3A3A3C;
+  --io-label: #FFFFFF;
+  --io-label-2: #98989F;
+  --io-tint: #F2F2F7;
+  --io-tint-fill: #E5E5EA;
+  --io-tint-press: #D1D1D6;
+  --io-on-tint: #1C1C1E;
+  --io-tint-soft: #2C2C2E;
+  --io-track: #2C2C2E;
+  --desk: #000000;
+  --surface-sunken: #161618;
+  --line: #2C2C2E;
+  --io-glass-bg: rgb(38 38 42 / 0.6);
+}
+
+/* ================================================= 3 · LO QUE NO SE DIBUJA =
+   Seleccion, cursor y numeros: tambien llevan el diseno.                  */
+
+html {
+  caret-color: var(--io-tint);
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--io-tint) 26%, transparent);
+}
+
+/* En Apple, SF Pro ya ajusta el espaciado por tamano (Text y Display). Un
+   letter-spacing a mano encima lo estropea: se anula en todo. */
+@supports (font: -apple-system-body) {
+  body,
+  body * {
+    letter-spacing: normal !important;
+  }
+}
+
+/* El selector de tema de Ajustes es un segmentado: capsula fuera y dentro. */
+.fd5-theme button {
+  border-radius: 999px;
+}
+
+/* =============================================== 4 · MATERIAL Y PULSACION =*/
+
+.io-glass {
+  background: var(--io-glass-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  backdrop-filter: blur(16px) saturate(1.8);
+  box-shadow:
+    inset 0 0.5px 0 var(--io-glass-hi),
+    inset 0 0 0 0.5px var(--io-glass-line),
+    var(--io-glass-shadow);
+}
+
+/* Responde al tocar, no al soltar. */
+.io-press {
+  transition: transform 300ms var(--io-crit);
+}
+
+.io-press:active {
+  transform: scale(0.95);
+  transition-duration: 80ms;
+}
+
+.io-circ {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--io-label);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.io-circ svg {
+  width: 22px;
+  height: 22px;
+}
+
+.io-glyph {
+  display: block;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.io-glyph--fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ====================================================== 5 · PESTANAS ===== */
+
+.io-tabbar {
+  position: fixed;
+  z-index: 50;
+  left: 16px;
+  right: calc(16px + var(--io-tab-h) + 10px);
+  bottom: var(--io-tab-bottom);
+  height: var(--io-tab-h);
+  padding: 4px;
+  border-radius: 31px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.io-tab {
+  min-width: 0;
+  border-radius: 27px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: var(--io-label);
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    transform 300ms var(--io-crit);
+}
+
+.io-tab svg {
+  width: 25px;
+  height: 25px;
+}
+
+.io-tab:active {
+  transform: scale(0.94);
+  transition-duration: 80ms;
+}
+
+.io-tab[aria-current="page"] {
+  color: var(--io-tint);
+  background: var(--io-lens);
+}
+
+.io-tab[aria-current="page"] .io-core {
+  fill: currentColor;
+}
+
+.io-tab__spin {
+  height: 25px;
+  display: grid;
+  place-items: center;
+}
+
+.io-fab {
+  position: fixed;
+  z-index: 50;
+  right: 16px;
+  bottom: var(--io-tab-bottom);
+  width: var(--io-tab-h);
+  height: var(--io-tab-h);
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--io-label);
+  cursor: pointer;
+}
+
+.io-fab svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 2;
+}
+
+/* La barra vieja reservaba 76px; la nueva flota y ocupa menos. El relleno
+   inferior de cada pantalla se recalcula con ella. */
+.fd-app {
+  --fd-screen-pb: calc(var(--io-tab-bottom) + var(--io-tab-h) + 32px);
+}
+
+/* ========================================================= 6 · HOJAS ===== */
+
+.io-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: var(--io-scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+
+.io-scrim[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.io-sheet {
+  position: fixed;
+  z-index: 81;
+  left: 8px;
+  right: 8px;
+  bottom: max(8px, calc(env(safe-area-inset-bottom) - 20px));
+  margin: 0 auto;
+  max-width: 520px;
+  max-height: calc(100dvh - env(safe-area-inset-top) - 48px);
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0 18px;
+  border-radius: 38px;
+  background: var(--io-sheet);
+  color: var(--io-label);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.25);
+  transform: translateY(calc(100% + 48px));
+  visibility: hidden;
+  transition:
+    transform 340ms var(--io-ease),
+    visibility 0s linear 340ms;
+}
+
+.io-sheet[data-open="true"] {
+  transform: none;
+  visibility: visible;
+  transition:
+    transform 541ms var(--io-soft),
+    visibility 0s;
+}
+
+.io-sheet[data-drag="true"] {
+  transition: none;
+}
+
+.io-sheet:focus {
+  outline: none;
+}
+
+.io-sheet__top {
+  flex: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.io-grab {
+  height: 22px;
+  display: grid;
+  place-items: center;
+}
+
+.io-grab span {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--io-label-3);
+}
+
+.io-shead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+.io-stitle {
+  min-width: 0;
+  text-align: center;
+}
+
+.io-stitle b {
+  display: block;
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.io-stitle span {
+  display: block;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.io-sheet__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.io-group {
+  margin: 0 14px;
+  background: var(--io-cell-up);
+  border-radius: var(--io-r-group);
+  overflow: hidden;
+}
+
+.io-group + .io-group {
+  margin-top: 14px;
+}
+
+.io-cell {
+  position: relative;
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--io-label);
+  font: inherit;
+  font-size: 17px;
+  line-height: 22px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 250ms ease;
+}
+
+.io-cell + .io-cell::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--io-sep-x, 16px);
+  border-top: 0.5px solid var(--io-sep);
+}
+
+.io-cell:active {
+  background: var(--io-cell-press);
+  transition-duration: 0ms;
+}
+
+/* Con icono, el filete empieza donde empieza el texto: 16 + 30 + 12. */
+.io-group--icons .io-cell + .io-cell::before {
+  left: 58px;
+}
+
+.io-cell__txt {
+  flex: 1;
+  min-width: 0;
+}
+
+.io-cell__sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+.io-ico {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--io-on-tint);
+}
+
+.io-ico svg {
+  width: 17px;
+  height: 17px;
+}
+
+.io-ico--tint {
+  background: var(--io-tint-fill);
+}
+
+.io-ico--rem {
+  background: var(--io-rem);
+}
+
+.io-ico--class {
+  background: var(--io-class);
+}
+
+.io-chev {
+  width: 8px;
+  height: 14px;
+  flex: none;
+  color: var(--io-label-3);
+  stroke-width: 2.2;
+}
+
+/* Las tres salidas de lo de ayer: mismo peso, ninguna por defecto. */
+.io-decide {
+  position: relative;
+  padding: 12px 16px 14px;
+}
+
+.io-decide + .io-decide::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  border-top: 0.5px solid var(--io-sep);
+}
+
+.io-decide__t {
+  display: block;
+  font-size: 17px;
+  line-height: 22px;
+}
+
+.io-decide__m {
+  display: block;
+  margin-top: 1px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+.io-decide__acts {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.io-chip {
+  position: relative;
+  height: 36px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--io-fill);
+  color: var(--io-label);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.io-chip::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+
+.io-chip[aria-expanded="true"] {
+  background: var(--io-fill-2);
+}
+
+/* "Otro día" abierto: mañana, los cinco siguientes y la rueda nativa. */
+.io-decide__days {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.io-chip--day {
+  color: var(--io-tint);
+}
+
+.io-chip--date {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+}
+
+.io-chip--date input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.io-chip--date:has(input:focus-visible) {
+  outline: 2px solid var(--io-tint);
+  outline-offset: 2px;
+}
+
+/* La nota al pie de un grupo, como las de Ajustes de iOS. */
+.io-foot {
+  margin: 8px 30px 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+.io-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =================================================== 7 · INICIO · HILO ===
+   Cada aviso que llego al iPhone queda como burbuja, en orden, con sus
+   botones. Lo tuyo (lo que anotaste, lo que cerraste) va a la derecha, en
+   azul. Lo siguiente queda siempre abajo, bajo el pulgar.                */
+
+.hl-screen {
+  position: relative;
+  flex: 1 1 auto;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--io-thread);
+  color: var(--io-label);
+  font-size: 17px;
+  line-height: 22px;
+  --hl-compose-bottom: calc(var(--io-tab-bottom) + var(--io-tab-h) + 10px);
+}
+
+/* `column-reverse`: el hilo nace anclado abajo, sin saltar al hidratar. */
+.hl-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.hl-log {
+  padding: calc(env(safe-area-inset-top) + 66px) 0 calc(var(--hl-compose-bottom) + 62px);
+}
+
+.hl-head {
+  position: absolute;
+  z-index: 3;
+  top: calc(env(safe-area-inset-top) + 6px);
+  left: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.hl-head > * {
+  pointer-events: auto;
+}
+
+.hl-cap {
+  min-width: 0;
+  max-width: 248px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.hl-cap h1 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
+}
+
+.hl-cap span {
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 15px;
+  color: var(--io-label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bordes de scroll: el contenido se funde bajo lo que flota, sin filete. */
+.hl-edge-t {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(env(safe-area-inset-top) + 78px);
+  pointer-events: none;
+  background: linear-gradient(color-mix(in srgb, var(--io-thread) 92%, transparent) 45%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(#000 50%, transparent);
+  mask-image: linear-gradient(#000 50%, transparent);
+}
+
+.hl-edge-b {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--hl-compose-bottom) + 72px);
+  pointer-events: none;
+  background: linear-gradient(to top, color-mix(in srgb, var(--io-thread) 96%, transparent) 45%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to top, #000 55%, transparent);
+  mask-image: linear-gradient(to top, #000 55%, transparent);
+}
+
+.hl-stamp {
+  margin: 18px 16px 7px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--io-label-2);
+}
+
+.hl-stamp b {
+  font-weight: 600;
+}
+
+/* --- burbujas ------------------------------------------------------------ */
+
+.hl-msg {
+  position: relative;
+  width: fit-content;
+  max-width: min(78%, 520px);
+  margin: 0 16px 3px;
+  padding: 8px 13px 9px;
+  border-radius: 19px;
+  overflow-wrap: anywhere;
+}
+
+.hl-in {
+  background: var(--io-bubble-in);
+  color: var(--io-label);
+}
+
+.hl-out {
+  margin-left: auto;
+  background: var(--io-tint-fill);
+  color: var(--io-on-tint);
+}
+
+.hl-rich {
+  max-width: min(84%, 560px);
+  padding: 11px 14px 12px;
+}
+
+/* La cola: el ultimo globo de cada tanda. Se recorta con el fondo del hilo. */
+.hl-tail {
+  margin-bottom: 8px;
+}
+
+.hl-tail::before,
+.hl-tail::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  height: 20px;
+}
+
+.hl-in.hl-tail::before {
+  left: -7px;
+  width: 20px;
+  background: var(--io-bubble-in);
+  border-bottom-right-radius: 15px;
+}
+
+.hl-in.hl-tail::after {
+  left: -10px;
+  width: 10px;
+  background: var(--io-thread);
+  border-bottom-right-radius: 10px;
+}
+
+.hl-out.hl-tail::before {
+  right: -7px;
+  width: 20px;
+  background: var(--io-tint-fill);
+  border-bottom-left-radius: 15px;
+}
+
+.hl-out.hl-tail::after {
+  right: -10px;
+  width: 10px;
+  background: var(--io-thread);
+  border-bottom-left-radius: 10px;
+}
+
+.hl-msg b {
+  font-weight: 600;
+}
+
+/* Un aviso es titulo y cuerpo, como en la pantalla bloqueada. */
+.hl-msg__t {
+  display: block;
+  font-weight: 600;
+}
+
+.hl-msg__b {
+  display: block;
+}
+
+
+.hl-msg a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Lo tuyo abre su tarea: toda la burbuja y 3px mas (39 + 6 = 45). */
+.hl-out > a::after {
+  content: "";
+  position: absolute;
+  inset: -3px 0;
+}
+
+/* El anillo global es azul: sobre la burbuja azul no se veria. */
+.fd-app .hl-out a:focus-visible {
+  outline-color: var(--io-on-tint);
+}
+
+/* --- el dia (resumen de la manana) --------------------------------------- */
+
+.hl-dg {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 22px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: start;
+  min-height: 36px;
+  font-size: 15px;
+  line-height: 21px;
+}
+
+/* 36 de fila + 8 de hueco = 44 de toque: el area se estira 4px arriba y
+   abajo, sin pisar la fila de al lado. La clase entera es enlace; en una
+   tarea, solo la columna del titulo (el circulo tiene su propio boton). */
+a.hl-dg::after,
+.hl-dg__t > a::after {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+
+.hl-dg + .hl-dg {
+  margin-top: 8px;
+}
+
+.hl-dg__tm {
+  color: var(--io-label-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.hl-dg__mk {
+  width: 22px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+}
+
+.hl-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--io-class);
+}
+
+.hl-dg__t {
+  position: relative;
+  align-self: stretch;
+  display: block;
+  min-width: 0;
+  color: var(--io-label);
+}
+
+.hl-dg[data-dim="true"] .hl-dg__t {
+  color: var(--io-label-2);
+}
+
+.hl-dg__sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+.hl-dg__sub svg,
+.hl-flag {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  color: var(--io-rem);
+}
+
+.hl-note {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+.hl-ringbtn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  margin: -11px;
+  border: 0;
+  padding: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.hl-ring {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1.75px var(--io-ctl);
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.hl-ring svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--io-on-tint);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  transition: stroke-dashoffset 260ms ease-out 80ms;
+}
+
+.hl-ring[data-on="true"] {
+  background: var(--io-tint-fill);
+  box-shadow: inset 0 0 0 0 transparent;
+}
+
+.hl-ring[data-on="true"] svg {
+  stroke-dashoffset: 0;
+}
+
+.hl-ring[data-pop="true"] {
+  animation: hl-pop 467ms var(--io-pop);
+}
+
+@keyframes hl-pop {
+  from { transform: scale(0.72); }
+  to { transform: none; }
+}
+
+/* --- se viene ------------------------------------------------------------ */
+
+.hl-up {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  column-gap: 8px;
+  align-items: start;
+  min-height: 44px;
+  padding: 2px 0;
+  color: inherit;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.hl-up + .hl-up {
+  margin-top: 6px;
+}
+
+.hl-up .hl-flag {
+  margin-top: 5px;
+}
+
+.hl-up__t {
+  min-width: 0;
+  font-weight: 600;
+}
+
+.hl-up__when {
+  color: var(--io-label-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.hl-up__sub {
+  grid-column: 2 / 4;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+.hl-up__plan {
+  color: var(--io-tint);
+  font-weight: 600;
+}
+
+/* --- lo siguiente -------------------------------------------------------- */
+
+.hl-next__cap {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.hl-next__t {
+  display: block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+/* La burbuja entera abre la tarea: el titulo solo mide 22px. */
+.hl-next__t::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.hl-next__m {
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+/* --- respuestas rapidas y acuses ----------------------------------------- */
+
+.hl-qr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 5px 16px 4px;
+}
+
+.hl-chip {
+  position: relative;
+  height: 34px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 17px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--io-fill);
+  color: var(--io-tint);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hl-chip::after {
+  content: "";
+  position: absolute;
+  inset: -5px -3px;
+}
+
+.hl-chip--pri {
+  background: var(--io-tint-fill);
+  color: var(--io-on-tint);
+}
+
+.hl-receipt {
+  margin: 2px 18px 4px;
+  text-align: right;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--io-label-2);
+}
+
+.hl-receipt button {
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--io-tint);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hl-receipt button::after {
+  content: "";
+  position: absolute;
+  inset: -14px -10px;
+}
+
+/* Lo que llega: un muelle con un rebote leve, desde la esquina de la cola. */
+.hl-arrive {
+  transform-origin: 0% 100%;
+  animation: hl-arrive 467ms var(--io-pop) both;
+}
+
+.hl-qr.hl-arrive {
+  transform-origin: 0% 0%;
+  animation-delay: 70ms;
+}
+
+/* Despues de responder, lo siguiente llega cuando tu respuesta ya aterrizo:
+   una conversacion, no un cambio de pantalla. */
+.hl-arrive--late {
+  animation-delay: 260ms;
+}
+
+.hl-qr.hl-arrive--late {
+  animation-delay: 330ms;
+}
+
+@keyframes hl-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- escribir ------------------------------------------------------------ */
+
+.hl-compose {
+  position: absolute;
+  z-index: 4;
+  left: 16px;
+  right: 16px;
+  bottom: var(--hl-compose-bottom);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hl-plus {
+  display: none;
+}
+
+.hl-field {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 0 16px;
+}
+
+.hl-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  background: none;
+  color: var(--io-label);
+  font: inherit;
+  font-size: 17px;
+}
+
+.hl-field input::placeholder {
+  color: var(--io-label-2);
+  opacity: 1;
+}
+
+.hl-send {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--io-tint-fill);
+  color: var(--io-on-tint);
+  cursor: pointer;
+  transform: scale(0);
+  transition: transform 300ms var(--io-ease);
+}
+
+.hl-send[data-on="true"] {
+  transform: none;
+  transition: transform 467ms var(--io-pop);
+}
+
+.hl-send::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+
+.hl-send svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.4;
+}
+
+.hl-err {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: calc(100% + 8px);
+  padding: 9px 14px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label);
+}
+
+/* El anillo global de foco (fd4.css) dibujaria un rectangulo dentro de la
+   capsula. El campo no lo lleva: el cursor ya dice donde escribes. */
+.fd-app .hl-field input:focus-visible {
+  outline: none;
+}
+
+/* Lo mismo en todos los formularios cuando no hay puntero fino (el iPhone):
+   iOS no enciende un anillo en el campo donde escribes. Con teclado y
+   raton, el anillo sigue. */
+@media (hover: none) {
+  .fd-app input:focus-visible,
+  .fd-app textarea:focus-visible {
+    outline: none;
+  }
+}
+
+/* Teclado y raton: el anillo, en la capsula entera y solo donde hay
+   puntero fino. */
+@media (hover: hover) and (pointer: fine) {
+  .hl-field:has(input:focus-visible) {
+    outline: 2px solid var(--io-tint);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================ 7b · INICIO · RESUMEN ======
+   Inicio en bloques, como los widgets del iPhone, en orden de urgencia:
+   Ahora (con Hecho y Después), Tu día, la racha junto a lo de ayer, y lo
+   que se viene. El ciruela es la accion y las tareas; el verde, las
+   clases; el ambar envuelve a los reminders y nunca es texto.            */
+
+.in-screen {
+  background: var(--io-bg);
+  color: var(--io-label);
+  padding-top: calc(env(safe-area-inset-top) + 14px);
+}
+
+.in-screen > * {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.in-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.in-head__t p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+.in-head__t h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 41px;
+  font-weight: 700;
+}
+
+.in-head__acts {
+  display: flex;
+  gap: 8px;
+}
+
+.in-circ {
+  background: var(--io-cell);
+}
+
+.in-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.in-tile {
+  min-width: 0;
+  padding: 16px;
+  border-radius: 24px;
+  background: var(--io-cell);
+  display: flex;
+  flex-direction: column;
+}
+
+.in-wide {
+  grid-column: 1 / -1;
+}
+
+.in-tile__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 28px;
+  margin-bottom: 4px;
+}
+
+.in-tile__head h2 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.in-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin: -8px 0;
+  font-size: 15px;
+  color: var(--io-tint);
+  text-decoration: none;
+}
+
+.in-muted {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+/* --- ahora ---------------------------------------------------------------- */
+
+.in-now {
+  padding: 18px;
+  border-radius: 26px;
+  background: var(--io-tint-soft);
+}
+
+.in-now > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.in-now__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.in-now__k {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--io-tint);
+}
+
+.in-now__cap {
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.in-now__t {
+  margin: 4px 0 0;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--io-label);
+  text-decoration: none;
+}
+
+.in-now__m {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+.in-now__m .in-flag {
+  width: 14px;
+  height: 14px;
+}
+
+.in-now__acts {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.in-btn {
+  flex: 1;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--io-cell);
+  color: var(--io-label);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.in-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.4;
+}
+
+.in-btn--pri {
+  background: var(--io-tint-fill);
+  color: var(--io-on-tint);
+}
+
+.in-btn--pri:active {
+  background: var(--io-tint-press);
+}
+
+.in-btn--soft {
+  flex: none;
+  min-height: 44px;
+  margin-top: auto;
+  background: var(--io-tint-soft);
+  color: var(--io-tint);
+  font-size: 15px;
+}
+
+.in-btn--start {
+  align-self: flex-start;
+  margin-top: 12px;
+}
+
+.in-undo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--io-sep);
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label-2);
+}
+
+.in-undo span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.in-undo button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--io-tint);
+  cursor: pointer;
+}
+
+.in-arrive {
+  animation: in-arrive 467ms var(--io-pop) both;
+}
+
+@keyframes in-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- tu dia --------------------------------------------------------------- */
+
+.in-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.in-row {
+  position: relative;
+  min-height: 52px;
+  padding: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.in-bar {
+  flex: none;
+  align-self: stretch;
+  width: 5px;
+  margin: 4px 0;
+  border-radius: 3px;
+  background: var(--io-tint-fill);
+}
+
+.in-bar--class {
+  background: var(--io-class);
+}
+
+.in-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.in-row__t {
+  font-size: 16px;
+  line-height: 21px;
+  color: var(--io-label);
+  text-decoration: none;
+}
+
+/* La fila entera abre la clase o la tarea; el circulo queda encima. */
+.in-row__t::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.in-row .hl-ringbtn {
+  z-index: 1;
+}
+
+.in-row[data-dim="true"] .in-row__t {
+  color: var(--io-label-2);
+}
+
+.in-row[data-dim="true"] .in-bar {
+  opacity: 0.35;
+}
+
+.in-row__s {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.in-flag {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: var(--io-rem);
+}
+
+.in-chip {
+  flex: none;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: var(--io-tint-soft);
+  color: var(--io-tint);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.in-foot {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--io-sep);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+/* --- racha y lo de ayer --------------------------------------------------- */
+
+.in-small {
+  min-height: 168px;
+  gap: 4px;
+}
+
+.in-small > .in-small__m:last-child {
+  margin-top: auto;
+}
+
+.in-flame {
+  width: 22px;
+  height: 22px;
+  color: var(--io-tint);
+}
+
+.in-big {
+  margin-top: 6px;
+  font-size: 44px;
+  line-height: 48px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.in-small__t {
+  margin: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.in-small__m {
+  font-size: 14px;
+  line-height: 19px;
+  color: var(--io-label-2);
+}
+
+/* --- se viene ------------------------------------------------------------- */
+
+.in-rows--up {
+  gap: 14px;
+}
+
+.in-up {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--io-label);
+  text-decoration: none;
+}
+
+.in-up__date {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--io-rem-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.in-up__date span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--io-label-2);
+  text-transform: uppercase;
+}
+
+.in-up__date b {
+  margin-top: 3px;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.in-up__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.in-up__t {
+  font-size: 16px;
+  line-height: 21px;
+  font-weight: 600;
+}
+
+.in-track {
+  display: block;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--io-track);
+  overflow: hidden;
+}
+
+.in-track span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--io-rem);
+}
+
+.in-up__plan {
+  color: var(--io-tint);
+  font-weight: 600;
+}
+
+.in-err {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--io-cell);
+  font-size: 15px;
+  line-height: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in-arrive {
+    animation: in-fade 200ms ease both;
+  }
+
+  @keyframes in-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* ==================================== 7c · INICIO Y BARRA EN ESCRITORIO ==
+   En un monitor sobra ancho y falta alto: los bloques se reparten en tres
+   columnas. Ahora y Tu día llevan dos; la racha, lo de ayer y lo que se
+   viene van en la tercera, a la derecha. La barra lateral pasa al mismo
+   mundo: capsula para Añadir, filas redondeadas, mini-mes sin borde.     */
+
+@media (min-width: 900px) {
+  .in-screen {
+    padding-top: var(--desk-pad);
+  }
+
+  .in-screen > * {
+    max-width: 1040px;
+  }
+
+  .in-head {
+    margin-bottom: 20px;
+  }
+
+  /* Ajustes y el mini-mes ya estan en la barra lateral. */
+  .in-head__acts {
+    display: none;
+  }
+
+  .in-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      "now now racha"
+      "dia dia ayer"
+      "dia dia viene";
+    grid-template-rows: auto auto 1fr;
+    gap: 16px;
+  }
+
+  .in-grid > .in-a-now { grid-area: now; }
+  .in-grid > .in-a-dia { grid-area: dia; }
+  .in-grid > .in-a-racha { grid-area: racha; }
+  .in-grid > .in-a-ayer { grid-area: ayer; }
+  .in-grid > .in-a-viene { grid-area: viene; }
+
+  .in-now,
+  .in-tile {
+    padding: 20px;
+  }
+
+  .in-now__t {
+    font-size: 26px;
+    line-height: 32px;
+  }
+
+  .in-now__acts {
+    max-width: 420px;
+  }
+
+  .in-a-ayer {
+    min-height: 0;
+  }
+
+  /* Con cursor, lo que se puede tocar lo dice al pasar por encima. */
+  .in-row:hover,
+  .in-up:hover {
+    border-radius: 10px;
+    background: var(--io-fill);
+    box-shadow: 0 0 0 6px var(--io-fill);
+  }
+
+  .in-btn:hover {
+    background: var(--io-cell-press);
+  }
+
+  .in-btn--pri:hover {
+    background: var(--io-tint-press);
+  }
+
+  .in-btn--soft:hover {
+    background: color-mix(in srgb, var(--io-tint-soft) 80%, var(--io-tint));
+  }
+
+  .in-link:hover,
+  .in-undo button:hover {
+    text-decoration: underline;
+  }
+
+  /* --- barra lateral ----------------------------------------------------- */
+
+  .fd-side__add {
+    border-radius: 999px;
+    background: var(--io-tint-fill);
+    color: var(--io-on-tint);
+  }
+
+  .fd-side__add:hover {
+    background: var(--io-tint-press);
+  }
+
+  .fd-side__mark {
+    background: var(--io-tint-fill);
+  }
+
+  .fd-sidelink {
+    border-radius: 12px;
+  }
+
+  .fd-sidelink:hover {
+    background: var(--io-fill);
+  }
+
+  .fd-sidelink[aria-current='page'] {
+    background: var(--io-cell);
+  }
+
+  .fd-sidelink[aria-current='page'] svg {
+    color: var(--io-tint);
+  }
+
+  .fd-side__mini {
+    border: 0;
+    border-radius: 20px;
+    background: var(--io-cell);
+  }
+
+  .fd-mini__cell {
+    border-radius: 50%;
+  }
+
+  .fd-mini__cell:hover {
+    background: var(--io-fill);
+  }
+
+  .fd-mini__cell[data-today='true'] {
+    box-shadow: inset 0 0 0 1.5px var(--io-tint);
+    color: var(--io-tint);
+  }
+}
+
+/* --- Ajustes · Color ----------------------------------------------------- */
+
+.io-accents {
+  margin-top: 16px;
+  padding: 8px;
+  border-radius: var(--io-r-group);
+  background: var(--io-cell);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.io-accent {
+  min-height: 72px;
+  border: 0;
+  border-radius: 16px;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--io-label-2);
+  cursor: pointer;
+}
+
+.io-accent__dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+}
+
+.io-accent[aria-checked="true"] {
+  background: var(--io-tint-soft);
+  color: var(--io-label);
+  font-weight: 600;
+}
+
+.io-accent[aria-checked="true"] .io-accent__dot {
+  box-shadow: 0 0 0 2px var(--io-cell), 0 0 0 4px var(--io-tint);
+}
+
+/* ================================================ 8 · ESCRITORIO (>=900) = */
+
+@media (min-width: 900px) {
+  /* Sin barra abajo no hay hueco que reservar (como en fd4-desk.css). */
+  .fd-app {
+    --fd-screen-pb: var(--desk-pad);
+  }
+
+  .io-tabbar,
+  .io-fab {
+    display: none;
+  }
+
+  .hl-screen {
+    border-left: 1px solid var(--line);
+    --hl-compose-bottom: 24px;
+  }
+
+  .hl-log {
+    width: min(720px, 100%);
+    margin: 0 auto;
+    padding-top: 92px;
+    padding-bottom: 96px;
+  }
+
+  .hl-head,
+  .hl-compose {
+    left: max(24px, calc(50% - 344px));
+    right: max(24px, calc(50% - 344px));
+  }
+
+  .hl-head {
+    top: 20px;
+    justify-content: center;
+  }
+
+  /* Ajustes y Ver el dia ya estan en la barra lateral. */
+  .hl-head > .io-circ {
+    display: none;
+  }
+
+  .hl-edge-t {
+    height: 96px;
+  }
+
+  .hl-plus {
+    display: grid;
+  }
+
+  /* En un monitor no hay pulgar ni borde de abajo al que pegarse: la hoja
+     es una hoja de formulario centrada, como en el iPad, y no se arrastra. */
+  .io-sheet {
+    top: 50%;
+    bottom: auto;
+    max-height: min(640px, calc(100dvh - 96px));
+    opacity: 0;
+    transform: translateY(calc(-50% + 24px));
+    transition:
+      transform 340ms var(--io-ease),
+      opacity 200ms ease,
+      visibility 0s linear 340ms;
+  }
+
+  .io-sheet[data-open="true"] {
+    opacity: 1;
+    transform: translateY(-50%);
+    transition:
+      transform 541ms var(--io-soft),
+      opacity 200ms ease,
+      visibility 0s;
+  }
+
+  .io-grab {
+    visibility: hidden;
+    height: 14px;
+  }
+
+  .io-sheet__top {
+    cursor: default;
+  }
+}
+
+
+/* ============================================ 9 · ACCESIBILIDAD DEL MOVIL =
+   Movimiento reducido: fundidos cortos en vez de muelles. Transparencia
+   reducida: el vidrio se vuelve solido. Mas contraste: filete definido.   */
+
+@media (prefers-reduced-motion: reduce) {
+  .hl-arrive,
+  .hl-qr.hl-arrive {
+    animation: hl-fade 200ms ease both;
+  }
+
+  @keyframes hl-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .hl-ring[data-pop="true"] {
+    animation: none;
+  }
+
+  .io-sheet,
+  .io-sheet[data-open="true"] {
+    transform: none;
+  }
+
+  .io-sheet {
+    opacity: 0;
+    transition: opacity 200ms ease, visibility 0s linear 200ms;
+  }
+
+  .io-sheet[data-open="true"] {
+    opacity: 1;
+    transition: opacity 200ms ease, visibility 0s;
+  }
+
+  .io-press:active,
+  .io-tab:active {
+    transform: none;
+  }
+
+  .hl-send,
+  .hl-send[data-on="true"] {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .io-glass {
+    background: var(--io-cell);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .hl-edge-t,
+  .hl-edge-b {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .io-glass {
+    background: var(--io-cell);
+    box-shadow: inset 0 0 0 1px var(--io-label-2);
+  }
+}
+
+/* Movimiento reducido en escritorio: la hoja sigue centrada (va despues
+   del bloque de §9 para ganarle al `transform: none`). */
+@media (min-width: 900px) and (prefers-reduced-motion: reduce) {
+  .io-sheet,
+  .io-sheet[data-open="true"] {
+    transform: translateY(-50%);
+  }
+}

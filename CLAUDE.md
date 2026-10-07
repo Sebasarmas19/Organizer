@@ -29,6 +29,7 @@
 | `docs/ESTADO-VIVO.md` | **Qué hay corriendo ahora.** Léelo si eres una sesión nueva |
 | `docs/PENDIENTES.md` | **Tareas pendientes e integración Front-Back** |
 | `docs/07-metodologia.md` | **Cómo se trabaja**: orquestación con Orca, roles, validación |
+| `DESIGN.md` | **El sistema visual vigente** (iOS nativo, Inicio en widgets, color Bosque). `app/DESIGN.md` es el anterior, congelado |
 
 ## Estructura del repositorio
 

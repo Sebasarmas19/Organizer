@@ -15,6 +15,9 @@ import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { Icon } from '@/components/Icon';
 import { Setup } from '../Setup';
 import { signOutAction } from './actions';
+import { ThemePicker } from './ThemePicker';
+import { AccentPicker } from './AccentPicker';
+import { InstallState } from './InstallState';
 
 export const metadata: Metadata = { title: 'Ajustes · Organizer' };
 
@@ -47,7 +50,7 @@ export default async function AjustesPage() {
         <div className="calhead">
           <Link href="/" prefetch={true} className="uplevel">
             <Icon name="chevron-left" size="sm" />
-            Inicio
+            Hoy
           </Link>
         </div>
 
@@ -117,7 +120,18 @@ export default async function AjustesPage() {
             </div>
           </section>
 
-          {/* 3. Cuenta y zona horaria */}
+          {/* 3. Apariencia: de este aparato, no de la cuenta. */}
+          <section>
+            <div className="fd-seclabel">
+              <h2>Apariencia</h2>
+            </div>
+            <ThemePicker />
+            <p className="fd-note">Automático sigue el ajuste del teléfono. Se guarda solo en este aparato.</p>
+            <AccentPicker />
+            <p className="fd-note">El color de los botones y las tareas. Las clases y los reminders guardan el suyo.</p>
+          </section>
+
+          {/* 4. Cuenta y zona horaria */}
           <section>
             <div className="fd-seclabel fd-seclabel--quiet">
               <h2>Cuenta y sistema</h2>
@@ -134,8 +148,10 @@ export default async function AjustesPage() {
                   <span style={{ color: 'var(--text)', fontWeight: 500 }}>{timezone}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Modo</span>
-                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>PWA Standalone (iOS)</span>
+                  <span style={{ color: 'var(--text-muted)' }}>App</span>
+                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>
+                    <InstallState />
+                  </span>
                 </div>
               </div>
             </div>

@@ -150,6 +150,21 @@ export function dayNumberOf(date: string): number {
 }
 
 /**
+ * El lunes de la semana que arma una revision hecha el dia `date` (F4). En
+ * fin de semana se arma la que viene; entre semana, la que esta en curso.
+ *
+ * Es la clave de `weekly_reviews.week_start`. La usan el ritual (`/domingo`)
+ * y el despachador (para no mandar el aviso del domingo si ya esta armada),
+ * y por eso vive aqui, con pruebas, y no escrita dos veces.
+ */
+export function reviewWeekStart(date: string): string {
+  const weekday = weekdayOf(date);
+  if (weekday === 0) return shiftDate(date, 1);
+  if (weekday === 6) return shiftDate(date, 2);
+  return shiftDate(date, 1 - weekday);
+}
+
+/**
  * `Hoy`, `Mañana`, o el dia de la semana con mayuscula. Mas alla de una semana
  * se cae al numero, que es lo unico que sigue siendo claro.
  */

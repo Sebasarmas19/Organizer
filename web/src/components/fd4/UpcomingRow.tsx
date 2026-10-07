@@ -15,6 +15,9 @@
 
    `done` y `nextWhen` vienen de `getHomeData`: pasos hechos (la barra es
    done de done + pendientes) y cuando toca el siguiente ("hoy", "jue 8").
+
+   `readOnly` es para el ritual del domingo: ahi los reminders se miran y no
+   se tocan (#62), asi que la fila no lleva a ningun sitio.
    ========================================================================= */
 
 import Link from 'next/link';
@@ -22,14 +25,14 @@ import type { HomeReminder } from '@/lib/home';
 import { Icon } from '@/components/Icon';
 import { shortWhen } from './homeSchedule';
 
-export function UpcomingRow({ reminder }: { reminder: HomeReminder }) {
+export function UpcomingRow({ reminder, readOnly = false }: { reminder: HomeReminder; readOnly?: boolean }) {
   const pending = reminder.prep.length;
   const done = reminder.done;
   const allDone = pending === 0 && done > 0;
   const total = done + pending;
 
-  return (
-    <Link href={`/reminders/${reminder.id}`} className="fd5-up">
+  const body = (
+    <>
       <span className="fd5-up__top">
         <Icon name="flag" size="sm" className="fd5-flag" />
         <b>{reminder.title}</b>
@@ -53,9 +56,16 @@ export function UpcomingRow({ reminder }: { reminder: HomeReminder }) {
       ) : (
         <span className="fd5-up__foot">
           <span>{allDone ? 'Todo preparado' : 'Sin preparación'}</span>
-          {allDone ? null : <span className="fd5-smallbtn fd5-smallbtn--accent">Planificar</span>}
+          {allDone || readOnly ? null : <span className="fd5-smallbtn fd5-smallbtn--accent">Planificar</span>}
         </span>
       )}
+    </>
+  );
+
+  if (readOnly) return <div className="fd5-up">{body}</div>;
+  return (
+    <Link href={`/reminders/${reminder.id}`} className="fd5-up">
+      {body}
     </Link>
   );
 }

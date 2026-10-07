@@ -55,10 +55,18 @@ tareas, fechas, horario y recursos (skills, herramientas, artículos).
 
 ## Brand Commitments
 
-- El sistema visual FD4 (`app/DESIGN.md`, `web/src/styles/tokens.css`) está
-  aprobado y se mantiene: color por entidad (tarea azul marino, materia verde,
-  reminder ámbar), "el color envuelve al texto, nunca lo pinta", sin rojo,
-  IBM Plex Sans, iconos Reicon Outline, sin emoji como icono, 44px táctiles.
+- Mundo visual: iOS nativo (2026-10-06). Fuente del sistema (SF Pro en el
+  iPhone), vidrio solo en lo que flota (barra de pestañas, botón +; las hojas
+  son opacas), cápsulas, esquinas amplias y muelles. Inicio es un resumen en
+  widgets (Ahora, Tu día, Racha, Lo de ayer, Se viene); el chat "Hilo" se
+  probó y se descartó. El sistema completo está en `DESIGN.md`; la capa vive
+  en `web/src/styles/ios.css`, que remapea los tokens FD4; `app/DESIGN.md` y
+  `web/src/styles/tokens.css` quedan congelados.
+- Color: Bosque (verde profundo sobre papel cálido) por defecto; Ajustes ·
+  Color deja cambiarlo (Ciruela, Petróleo, Índigo, Grafito). En Bosque las
+  clases van en azul pizarra; el reminder sigue en ámbar.
+- Se mantiene de FD4: "el color envuelve al texto, nunca lo pinta" (`--rem`
+  nunca como texto), sin rojo, sin emoji como icono, 44px táctiles.
 - Tono: directo, en español, sin culpa ni celebración ("Quitar no borra").
 
 ## Evidence on Hand

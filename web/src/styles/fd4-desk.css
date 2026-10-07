@@ -663,10 +663,13 @@
     pointer-events: none;
   }
 
+  /* Azul y no ambar: el ambar es de los reminders, y una linea ambar
+     cruzando la semana se leia como "hay un parcial ahora". Ademas el ambar
+     nunca va de texto, y la hora de al lado lo era. Igual que en el telefono. */
   .fd-weeknow__line {
     display: block;
     height: 2px;
-    background: var(--rem);
+    background: var(--accent-text);
     opacity: 0.85;
   }
 
@@ -680,7 +683,7 @@
     font-size: var(--fd-tiny);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    color: var(--rem);
+    color: var(--accent-text);
     background: var(--bg);
   }
 

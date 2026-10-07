@@ -55,6 +55,7 @@ import {
   minutesBeforeStart,
   PREP_ALERT_DAYS,
   relativeDayLabel,
+  reviewWeekStart,
   shiftDate,
   weekdayLabel,
   weekdayOf,
@@ -202,8 +203,15 @@ export async function dispatchDue(env: DispatchEnvironment): Promise<DispatchRep
         text = evening;
         url = '/pendientes';
       } else {
+        /* F4 · si la semana ya esta armada (se abrio el ritual antes de la
+           hora), el aviso sobra: seria pedir algo ya hecho. */
+        if (await isWeekReviewed(env, profile.id, due.date)) {
+          report.skipped.push(due.dedupeKey + ' (semana ya armada)');
+          continue;
+        }
         text = await buildWeeklyReview(env, profile, due.date);
-        url = '/pendientes';
+        /* La notificacion abre el ritual, no una lista (regla 1). */
+        url = '/domingo';
       }
 
       await deliver(env, profile.id, due.kind, due.dedupeKey, text, report, { url });
@@ -583,6 +591,17 @@ async function buildEvening(
 
   const open = own.filter((block) => block.status === 'pending').map((block) => block.title);
   return composeEvening({ open });
+}
+
+/** La semana que el ritual arma ese dia ya tiene fila cerrada en `weekly_reviews`. */
+async function isWeekReviewed(env: DispatchEnvironment, userId: string, date: string): Promise<boolean> {
+  const rows = await select<{ id: string }>(
+    env.db,
+    'weekly_reviews?user_id=eq.' + userId +
+      '&week_start=eq.' + reviewWeekStart(date) +
+      '&completed_at=not.is.null&select=id&limit=1'
+  );
+  return rows.length > 0;
 }
 
 async function buildWeeklyReview(

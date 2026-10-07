@@ -1,26 +1,25 @@
 /* ============================================================================
-   Organizer · FD4 · Iconos de pestañas y captura
-   Iconos oficiales del sistema extraídos de Reicon (Outline, grosor 1.5).
+   Organizer · Iconos de las pestañas y de capturar
+   Los glifos del mundo iOS (components/ios/Glyph): sun, calendar, tray y
+   bookmark, un solo grosor. Los usan la barra de abajo y la lateral.
    ========================================================================= */
 
-import { Icon } from '@/components/Icon';
+import { Glyph, type GlyphName } from '@/components/ios/Glyph';
 
 export type TabIconName = 'inicio' | 'calendario' | 'pendientes' | 'recursos';
 
+const GLYPH: Record<TabIconName, GlyphName> = {
+  inicio: 'sun',
+  calendario: 'calendar',
+  pendientes: 'tray',
+  recursos: 'book',
+};
+
 export function TabIcon({ name }: { name: TabIconName }) {
-  switch (name) {
-    case 'inicio':
-      return <Icon name="house" size="md" className="fd-ico" />;
-    case 'calendario':
-      return <Icon name="calendar" size="md" className="fd-ico" />;
-    case 'pendientes':
-      return <Icon name="check-circle" size="md" className="fd-ico" />;
-    case 'recursos':
-      return <Icon name="bookmark" size="md" className="fd-ico" />;
-  }
+  return <Glyph name={GLYPH[name]} className="fd-ico" />;
 }
 
 /** Icono más del botón de capturar. */
 export function PlusMark() {
-  return <Icon name="plus" size="md" />;
+  return <Glyph name="plus" />;
 }

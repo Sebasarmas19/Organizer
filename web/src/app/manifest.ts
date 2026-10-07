@@ -16,6 +16,7 @@
    ========================================================================= */
 
 import type { MetadataRoute } from 'next';
+import { THEME_BG } from '@/lib/theme-colors';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -29,11 +30,11 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     orientation: 'portrait',
 
-    /* `--bg` y `--bg` del tema claro. La pantalla de arranque de iOS usa
-       `background_color`, asi que un blanco puro aqui daria un destello que
-       no pega con el resto de la app. */
-    background_color: '#F6F7F9',
-    theme_color: '#F6F7F9',
+    /* El gris agrupado de iOS (`--io-bg`, tema claro). La pantalla de
+       arranque usa `background_color`, asi que un blanco puro aqui daria un
+       destello que no pega con el resto de la app. */
+    background_color: THEME_BG.light,
+    theme_color: THEME_BG.light,
 
     lang: 'es',
     dir: 'ltr',

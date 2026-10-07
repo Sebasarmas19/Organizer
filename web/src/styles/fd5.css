@@ -568,6 +568,44 @@
   border-radius: var(--radius-control);
 }
 
+/* "Armar la semana · Empezar": la misma franja, el dia del ritual y el
+   siguiente. Ocupa el sitio de "Lo de ayer" y se ve tambien en escritorio. */
+.fd5-weekstrip {
+  min-height: 52px;
+  padding: 4px 4px 4px 16px;
+  border-radius: var(--radius-strip);
+  background: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fd-sub);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.fd5-weekstrip b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd5-weekstrip__cta {
+  flex: none;
+  min-height: var(--tap-min);
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  display: inline-flex;
+  align-items: center;
+  font-weight: var(--weight-semibold);
+  color: var(--accent-text);
+}
+
+/* Sin nada de ayer, su hueco no existe: si no, el telefono sumaba dos
+   separaciones de seccion seguidas entre "Resto de hoy" y "Se viene". */
+.fd5-home .fd-home__ayer:empty {
+  display: none;
+}
+
 /* "Se viene": una fila por parcial o entrega. */
 .fd5-up {
   display: block;
@@ -649,11 +687,6 @@
 
   .fd5-home {
     padding-top: 22px;
-  }
-
-  /* Sin nada de ayer, su columna no se queda vacia: Se viene sube a ella. */
-  .fd5-home .fd-home__ayer:empty {
-    display: none;
   }
 }
 
@@ -1489,4 +1522,472 @@
 
 .fd5-group .fd-card__rail--reminder {
   display: none;
+}
+
+/* ============================================================ AJUSTES ==== */
+
+/* Apariencia: tres opciones en un carril de 52px, la elegida tintada. */
+.fd5-theme {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.fd5-theme button {
+  min-height: var(--tap-min);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.fd5-theme button[aria-checked="true"] {
+  background: var(--task-soft);
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+
+/* ============================================================ DOMINGO ==== */
+
+/* El ritual (`/domingo`, comp `app/comps/domingo.html`). Sin barra de
+   pestanas: abajo va su propio pie pegado, con "Siguiente" como el unico
+   elemento saturado de cada paso. */
+.fd5-rv {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.fd5-rv__inner {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Cuatro tramos: orientacion, no puntuacion. */
+.fd5-rv__steps {
+  margin-top: 18px;
+}
+
+.fd5-rv__bars {
+  display: flex;
+  gap: 4px;
+}
+
+.fd5-rv__bars i {
+  flex: 1 1 0;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.fd5-rv__bars i[data-on="true"] {
+  background: var(--accent-text);
+}
+
+.fd5-rv__steps p {
+  margin: 8px 0 0;
+  font-size: var(--fd-small);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+.fd5-rv__body {
+  margin-top: var(--gap-section);
+  padding-bottom: var(--gap-section);
+}
+
+.fd5-rv__h2 {
+  margin: 0;
+  font-size: var(--fd-weekday);
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.fd5-rv__lead {
+  margin: 6px 0 0;
+  max-width: 40ch;
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-rv__note {
+  margin-top: 10px;
+}
+
+/* Sin rojo: el error es una frase, no una alarma. */
+.fd5-rv__error {
+  margin: 0 0 12px;
+  font-size: var(--fd-small);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* --------------------------------------------- una tarea por decidir --- */
+
+/* `minmax(0, 1fr)`: sin eso, el titulo de una fila resuelta (una linea, sin
+   cortar) ensancha la columna y la fila se sale del margen. */
+.fd5-rv-items {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.fd5-rv-item {
+  padding: 14px 16px;
+  border-radius: var(--radius-strip);
+  background: var(--surface-sunken);
+}
+
+.fd5-rv-item__title {
+  margin: 0;
+  font-size: var(--fd-body);
+  font-weight: var(--weight-semibold);
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.fd5-rv-item__meta {
+  margin: 2px 0 0;
+  font-size: var(--fd-small);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tres salidas del mismo ancho, 44px de alto real. "Esta semana" va
+   tintada (la sugerida), no rellena: el relleno es de "Siguiente". */
+.fd5-rv-item__acts {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.fd5-rv-item__acts .fd5-smallbtn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--tap-min);
+  padding: 0 8px;
+  background: var(--surface);
+}
+
+.fd5-rv-item__acts .fd5-smallbtn::before {
+  inset: 0;
+}
+
+.fd5-rv-item__acts .fd5-rv-pick {
+  background: var(--task-soft);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent-text) 35%, transparent);
+}
+
+.fd5-rv-item__acts .fd5-rv-quiet {
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+}
+
+.fd5-rv-item__acts .fd5-smallbtn[aria-expanded="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--accent-text);
+  color: var(--accent-text);
+}
+
+.fd5-rv-item__days {
+  margin-top: 10px;
+}
+
+.fd5-rv-item__days .fd5-datechip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface);
+}
+
+.fd5-rv-item__days .fd5-datechip .ico {
+  width: 13px;
+  height: 13px;
+}
+
+/* Ya decidida: filete en vez de fondo, el destino en claro y Deshacer en
+   el sitio. Sin tachar: decidir no es borrar. */
+.fd5-rv-item--done {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 4px 16px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.fd5-rv-item__ok {
+  flex: none;
+  color: var(--text-faint);
+}
+
+.fd5-rv-item__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 0;
+}
+
+.fd5-rv-item--done .fd5-rv-item__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.fd5-rv-item--done .fd5-rv-item__meta {
+  color: var(--text);
+}
+
+.fd5-rv-item--done .fd-undo__btn {
+  font-size: var(--fd-meta);
+}
+
+/* "No quedo nada colgando" y "ya la armaste": franja hundida, sin festejo. */
+.fd5-rv-calm {
+  margin: 14px 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radius-strip);
+  background: var(--surface-sunken);
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-rv-calm p {
+  margin: 0;
+}
+
+.fd5-rv-calm b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.fd5-rv-calm .ico {
+  flex: none;
+  margin-top: 1px;
+}
+
+.fd5-rv-calm--top {
+  margin-top: 18px;
+}
+
+/* Lo que viene: se ve, no se promete. */
+.fd5-rv-next {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  font-size: var(--fd-meta);
+  color: var(--text-faint);
+}
+
+.fd5-rv-next li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ------------------------------------------------------------- semana --- */
+
+.fd5-rv-week {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Dia · carga y parciales · barra de peso. La barra es gris: dice "lleno"
+   o "libre" de un vistazo sin volverse un semaforo. */
+.fd5-rv-day {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 0;
+}
+
+.fd5-rv-day + .fd5-rv-day {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-rv-day__name {
+  font-size: var(--fd-meta);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.fd5-rv-day__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.fd5-rv-day__load {
+  font-size: var(--fd-meta);
+  color: var(--text-muted);
+}
+
+.fd5-rv-day__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.fd5-rv-day__bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--text-faint);
+}
+
+.fd5-rv-day[data-past="true"] {
+  opacity: 0.5;
+}
+
+.fd5-rv-day[data-today="true"] .fd5-rv-day__name {
+  color: var(--accent-text);
+}
+
+.fd5-rv-sub {
+  margin-top: var(--gap-section);
+}
+
+/* --------------------------------------------------- vaciar la cabeza --- */
+
+.fd5-rv-dump {
+  margin-top: var(--gap-section);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fd5-rv-dump .fd5-sec__head {
+  margin-bottom: 0;
+}
+
+.fd5-rv-dump__field {
+  min-height: 112px;
+  padding: 12px 14px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.fd5-rv-dump__btn {
+  align-self: flex-start;
+  min-height: var(--tap-min);
+}
+
+.fd5-rv-dump__btn:disabled {
+  color: var(--text-faint);
+  cursor: default;
+}
+
+/* -------------------------------------------------------------- listo --- */
+
+.fd5-rv-done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.fd5-rv-done__mark {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--task-soft);
+  color: var(--accent-text);
+}
+
+.fd5-rv-sum {
+  width: 100%;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fd5-rv-sum li {
+  padding: 12px 0;
+  font-size: var(--fd-sub);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.fd5-rv-sum li + li {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.fd5-rv-sum b {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------- pie --- */
+
+.fd5-rv__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: auto;
+  padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  display: grid;
+  gap: 2px;
+  background: var(--bg);
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+.fd5-rv__foot .fd5-btn--primary:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* En el telefono scrollea el documento (la pantalla no tiene alto fijo):
+   asi el pie se pega al borde de la pantalla y no al final del contenido. */
+@media (max-width: 899.98px) {
+  .fd5-rv {
+    overflow: visible;
+  }
+
+  .fd5-rv__foot {
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+  }
+}
+
+@media (min-width: 900px) {
+  .fd5-rv__inner {
+    max-width: 560px;
+    margin-inline: auto;
+  }
+
+  .fd5-rv__foot {
+    grid-template-columns: auto auto;
+    justify-content: start;
+    gap: 8px;
+    padding-bottom: 0;
+    box-shadow: none;
+  }
 }

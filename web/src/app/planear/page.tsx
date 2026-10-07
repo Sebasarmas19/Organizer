@@ -42,7 +42,7 @@ export default async function PlanearPage() {
           <div className="fd-calhead__row">
             <Link href="/" className="pl-back">
               <Icon name="chevron-left" size="sm" />
-              Inicio
+              Hoy
             </Link>
           </div>
           <div className="fd-calhead__row">
