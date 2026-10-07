@@ -261,9 +261,6 @@ export function InicioScreen({
           <section className="in-tile in-wide in-a-dia" aria-labelledby="in-dia">
             <div className="in-tile__head">
               <h2 id="in-dia">Tu día</h2>
-              <Link href={dayHref} className="in-link">
-                Ver día
-              </Link>
             </div>
             {rows.length === 0 ? (
               <p className="in-muted">Hoy no hay clases ni nada con fecha.</p>
@@ -327,6 +324,18 @@ export function InicioScreen({
                 {note.next ? ` ${note.next}.` : null}
               </p>
             ) : null}
+            {/* El horario de la semana y la vista del dia, a un toque: antes
+                solo se llegaba al horario tocando una materia. */}
+            <div className="in-dia__acts">
+              <Link href="/clases" className="in-btn in-btn--soft io-press">
+                <Glyph name="clock" />
+                Mi horario
+              </Link>
+              <Link href={dayHref} className="in-btn in-btn--soft io-press">
+                <Glyph name="calendar" />
+                Ver el día
+              </Link>
+            </div>
           </section>
 
           {/* ------------------------------------------------ Racha --- */}

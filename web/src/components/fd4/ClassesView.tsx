@@ -5,10 +5,11 @@
    enseña los nombres de las materias: Mes, Semana y Día no las llevan
    (#53), y Día solo marca el rato como "En clase".
 
-   FD5: punto verde + horas en una columna de 104px, materia y aula, y una
-   etiqueta "Ahora" (verde suave) o "Siguiente" (solo filete). La tarjeta de
-   hoy lleva el filete en azul marino; las clases de hoy que ya pasaron se
-   apagan.
+   Cada clase: inicio y fin apilados en una columna estrecha (como el
+   Calendario de iOS), la barra de clase, materia y aula, y una etiqueta
+   "Ahora" o "Siguiente". Antes la hora iba en una sola linea de 104px y
+   con la letra de iOS se montaba sobre la materia. Las clases de hoy que
+   ya pasaron se apagan.
 
    Solo se lee. Editar es en /horario, que es donde se carga el horario.
    ========================================================================= */
@@ -39,14 +40,16 @@ export function ClassesView({ data, nowMin }: { data: Fd4ClassesData; nowMin: nu
           </h2>
 
           {d.slots.map((c) => {
-            const end = clockToMin(c.hours.split('–')[1] ?? '');
+            const [start = c.hours, stop = ''] = c.hours.split('–').map((h) => h.trim());
+            const end = clockToMin(stop);
             const past = d.isToday && !c.status && !Number.isNaN(end) && end <= nowMin;
             return (
               <div className="fd5-cls" key={c.id} data-past={past ? 'true' : undefined}>
                 <span className="fd5-cls__hours">
-                  <i className="fd5-classdot" aria-hidden />
-                  {c.hours}
+                  <b>{start}</b>
+                  {stop ? <small>{stop}</small> : null}
                 </span>
+                <i className="fd5-cls__bar" aria-hidden />
                 <span className="fd5-cls__text">
                   <b>{c.title}</b>
                   {c.location ? <small>{c.location}</small> : null}
