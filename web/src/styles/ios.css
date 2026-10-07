@@ -1744,6 +1744,37 @@ a.hl-dg::after,
   background: var(--io-cell);
 }
 
+/* Planear: la entrada al asistente, con nombre y no solo icono, porque es
+   la unica puerta y un icono suelto no se descubre. */
+.in-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px 0 13px;
+  border-radius: 999px;
+  background: var(--io-tint-soft);
+  color: var(--io-tint);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.in-plan svg {
+  width: 19px;
+  height: 19px;
+}
+
+.in-plan:focus-visible {
+  outline: 2px solid var(--io-tint);
+  outline-offset: 2px;
+}
+
+/* En el ritual, el asistente va dentro del paso, sin su propio scroll. */
+.fd5-rv-ideas[hidden] {
+  display: none;
+}
+
 .in-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

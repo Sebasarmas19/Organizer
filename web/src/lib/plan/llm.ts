@@ -16,7 +16,7 @@
    ========================================================================= */
 
 import type { PlanContext } from './context';
-import { toClock } from './slots';
+import { addDays, toClock } from './slots';
 import {
   INTENTS,
   MAX_SESSIONS,
@@ -81,10 +81,41 @@ ${upcoming}
 
 PENDIENTES SIN FECHA
 ${list(ctx.backlog, 'vacío')}
+
+LO QUE YA HIZO (tareas cerradas en las dos semanas anteriores, lo más reciente primero)
+${list(ctx.done, 'nada cerrado todavía')}
 </agenda>`;
 }
 
-function instructions(ctx: PlanContext): string {
+/** "chat": la conversacion de /planear. "week": el ritual del domingo. */
+export type PlanMode = 'chat' | 'week';
+
+/** La semana que se arma: el domingo, de lunes a domingo; otro dia, hasta el domingo. */
+export function weekRange(today: string): { from: string; to: string } {
+  const dow = new Date(today + 'T00:00:00Z').getUTCDay();
+  const from = dow === 0 ? addDays(today, 1) : today;
+  return { from, to: addDays(today, dow === 0 ? 7 : 7 - dow) };
+}
+
+function weekBlock(ctx: PlanContext): string {
+  const { from, to } = weekRange(ctx.today);
+  return `
+MODO RITUAL DEL DOMINGO
+Está armando la semana del ${dayName(from)} ${from} al ${dayName(to)} ${to}. Su primer mensaje es la
+petición de sugerencias: intent "plan". Aquí cada opción NO es una alternativa: es una SUGERENCIA
+DISTINTA (algo distinto que hacer) y se acepta por separado. De 1 a 3, en este orden de prioridad:
+1. Preparar un reminder próximo (parcial, entrega) de esta semana o la siguiente.
+2. Seguir con lo que viene haciendo según LO QUE YA HIZO (mismo ritmo, el siguiente paso).
+3. Avanzar algo de PENDIENTES SIN FECHA.
+Como puede aceptar varias, las sesiones de una sugerencia nunca pisan las de otra.
+No sugieras algo que ya está en la agenda de esa semana ni repitas lo ya hecho como si fuera nuevo.
+Todas las sesiones entre ${from} y ${to}. En "why" di en una frase por qué esa y no otra (la fecha del
+parcial, lo que hizo la semana pasada). En "reply", una frase que resuma la semana, sin contar deudas.
+Si luego pide otra cosa ("quiero leer este libro"), trátalo como un "plan" normal dentro de esa semana.
+`;
+}
+
+function instructions(ctx: PlanContext, mode: PlanMode = 'chat'): string {
   return `Eres el asistente de planificación dentro de Organizer, la app de Sebastián, que estudia en la
 universidad en Venezuela y tiene TDAH. Ahora: ${dayName(ctx.today)} ${ctx.today} ${toClock(ctx.nowMinutes)}, zona ${ctx.timezone}.
 
@@ -114,6 +145,8 @@ Reglas:
 - No uses todos los huecos. Deja aire. Nada antes de las 7:30 ni después de las 22:30.
 - Respeta lo que pida (días, horas, duración). Si es imposible con su agenda, dilo y propón lo más cercano.
 - Para hábitos o cosas largas (un libro), propone un ritmo para estas dos semanas y dilo en "why".
+- Mira LO QUE YA HIZO: si ya avanzó en eso mismo (leyó, estudió esa materia), sigue su ritmo real
+  (duración y horas que le funcionaron) y dilo en "why". No propongas como nuevo algo que ya cerró.
 
 Respuesta (JSON):
 - intent: uno de ${INTENTS.map((i) => `"${i}"`).join(', ')}.
@@ -125,7 +158,7 @@ Respuesta (JSON):
   - sessions: slot (id de HUECOS LIBRES, p. ej. "H4"), start (HH:MM dentro de ese hueco), minutes
     (15–180) y title corto ("Leer Atomic Habits", "Repasar BD: normalización"). Cada sesión cabe
     ENTERA en su hueco. Máximo ${MAX_SESSIONS} sesiones.
-
+${mode === 'week' ? weekBlock(ctx) : ''}
 ${describeContext(ctx)}`;
 }
 
@@ -210,13 +243,14 @@ async function callModel(
 export async function proposeWithLlm(
   request: string,
   ctx: PlanContext,
-  history: ChatTurn[] = []
+  history: ChatTurn[] = [],
+  mode: PlanMode = 'chat'
 ): Promise<PlanAnswer | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   const primary = process.env.GEMINI_PLAN_MODEL || DEFAULT_MODEL;
   const models = [primary, ...FALLBACK_MODELS.filter((m) => m !== primary)];
-  const system = instructions(ctx);
+  const system = instructions(ctx, mode);
 
   /* Gemini exige que la conversación empiece por el usuario. */
   const turns = history[0]?.role === 'model' ? history.slice(1) : history;
@@ -234,7 +268,7 @@ export async function proposeWithLlm(
         const answer = validateAnswer(JSON.parse(raw), ctx.slots);
         if (answer) {
           /* Sin contenido: solo lo necesario para depurar desde los logs de Vercel. */
-          console.info('plan', { model, ms: Date.now() - started, intent: answer.intent, options: answer.options.length, turns: turns.length });
+          console.info('plan', { mode, model, ms: Date.now() - started, intent: answer.intent, options: answer.options.length, turns: turns.length });
           return answer;
         }
       } catch {

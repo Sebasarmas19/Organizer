@@ -3,7 +3,9 @@
 
    Junta en una sola estructura las próximas dos semanas: clases, tareas con
    y sin hora, reminders (los de 45 días, porque un parcial lejano también
-   cuenta), lo que hay en Pendientes y los huecos libres ya calculados.
+   cuenta), lo que hay en Pendientes, lo que ya hiciste en las dos semanas
+   anteriores (para seguir el ritmo y no proponer lo ya hecho) y los huecos
+   libres ya calculados.
    ========================================================================= */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -14,6 +16,9 @@ import { dayRangeUtc, localDateOf, localTimeOf, timeToMinutes } from '@/lib/tz';
 import { addDays, computeFreeSlots, toClock, type Busy, type FreeSlot } from './slots';
 
 export const HORIZON_DAYS = 14;
+/* Cuanto hacia atras se mira lo hecho. */
+export const DONE_LOOKBACK_DAYS = 14;
+const DONE_MAX = 40;
 const REMINDER_LOOKAHEAD = 45;
 /* Un reminder con hora (un parcial a las 10) ocupa al menos esto. */
 const REMINDER_BUSY_MIN = 90;
@@ -32,6 +37,8 @@ export type PlanContext = {
   slots: FreeSlot[];
   upcoming: { date: string; time: string | null; title: string }[];
   backlog: string[];
+  /** "lun 2026-09-28: Leer Atomic Habits (40 min)", lo mas reciente primero. */
+  done: string[];
   /** "Base de datos: mar 12:00–13:50, jue 12:00–13:50" — para entender apodos. */
   subjects: string[];
 };
@@ -48,7 +55,9 @@ export async function loadPlanContext(
   /* Las clases tienen que estar como bloques para contar como ocupadas. */
   await materializeScheduleTemplates(supabase, userId, today, last, timezone);
 
-  const [blocksRes, itemsRes, remindersRes, templatesRes] = await Promise.all([
+  const since = addDays(today, -DONE_LOOKBACK_DAYS);
+
+  const [blocksRes, itemsRes, remindersRes, templatesRes, doneRes] = await Promise.all([
     supabase
       .from('blocks')
       .select('title, starts_at, ends_at, source, status, item_id')
@@ -77,6 +86,14 @@ export async function loadPlanContext(
       .eq('user_id', userId)
       .or(`active_until.is.null,active_until.gte.${today}`)
       .order('weekday', { ascending: true }),
+    supabase
+      .from('items')
+      .select('title, completed_at, estimate_min')
+      .eq('user_id', userId)
+      .eq('status', 'done')
+      .gte('completed_at', dayRangeUtc(since, timezone).start)
+      .order('completed_at', { ascending: false })
+      .limit(DONE_MAX),
   ]);
 
   const blocks = blocksRes.data ?? [];
@@ -143,6 +160,13 @@ export async function loadPlanContext(
       .filter((t) => !t.due_on)
       .slice(0, 40)
       .map((t) => (t.status === 'someday' ? `${t.title} (algún día)` : t.title)),
+    done: (doneRes.data ?? [])
+      .filter((t) => t.completed_at)
+      .map((t) => {
+        const date = localDateOf(t.completed_at as string, timezone);
+        const min = t.estimate_min ? ` (${t.estimate_min} min)` : '';
+        return `${WD[new Date(date + 'T00:00:00Z').getUTCDay()]} ${date}: ${t.title}${min}`;
+      }),
     subjects: [...bySubject].map(([title, times]) => `${title}: ${times.join(', ')}`),
   };
 }

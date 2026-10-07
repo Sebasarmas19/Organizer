@@ -6,8 +6,9 @@
    lleva barra de pestanas: es un flujo con principio y final, y la barra
    invita a irse a mitad.
 
-   `?paso=N` deja volver al mismo paso tras "Seguir luego". Al paso 4
-   ("Listo") solo se entra con la semana ya cerrada.
+   `?paso=N` deja volver al mismo paso tras "Seguir luego". Al paso 5
+   ("Listo") solo se entra con la semana ya cerrada. Gemini puede tardar en
+   el paso 4: de ahi el maxDuration.
    ========================================================================= */
 
 import type { Metadata } from 'next';
@@ -21,6 +22,7 @@ import { Setup } from '../Setup';
 
 export const metadata: Metadata = { title: 'Domingo · Organizer' };
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export default async function DomingoPage({
   searchParams,
@@ -38,7 +40,7 @@ export default async function DomingoPage({
   const [{ paso }, data] = await Promise.all([searchParams, getReviewData(supabase, user.id)]);
 
   const asked = Number(paso);
-  const last = data.doneLabel ? 4 : 3;
+  const last = data.doneLabel ? 5 : 4;
   const initialStep = Number.isInteger(asked) && asked >= 1 ? Math.min(asked, last) : 1;
 
   return (

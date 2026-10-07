@@ -3,7 +3,7 @@
 /* ============================================================================
    Organizer · F4 · <ReviewFlow>  ·  el ritual del domingo
 
-   Cuatro pasos cortos, uno por pantalla (comp: `app/comps/domingo.html`):
+   Cinco pasos cortos, uno por pantalla (comp: `app/comps/domingo.html`):
 
      1. Lo que quedo   tareas con dia pasado. Tres salidas, ninguna borra:
                        Esta semana · Otro dia · Quitar (a "sin fecha")
@@ -11,7 +11,11 @@
                        reminders se miran y no se tocan (#62)
      3. Lo anotado     DOS capturas sin planificar, nunca la lista (#24), y
                        un campo para vaciar la cabeza (una linea, una tarea)
-     4. Listo          la semana queda cerrada en `weekly_reviews`
+     4. Para tu semana el asistente (Gemini, lib/plan) mira huecos, lo que
+                       hiciste y lo que viene, y sugiere hasta tres cosas con
+                       hora; cada una se pone con un toque o se ignora. Se
+                       le puede pedir otra ("quiero leer este libro")
+     5. Listo          la semana queda cerrada en `weekly_reviews`
 
    Lo que hace que se termine en menos de 5 minutos (criterio de F4):
 
@@ -38,8 +42,10 @@ import type { ReviewData, ReviewDay, ReviewTask } from '@/lib/review/data';
 import { addDays, getDayOfWeek } from '@/lib/date-utils';
 import { Icon } from '@/components/Icon';
 import { UpcomingRow } from '@/components/fd4/UpcomingRow';
+import { PlanClient } from '@/app/planear/PlanClient';
 
-const STEPS = ['Lo que quedó', 'Tu semana', 'Lo anotado', 'Listo'] as const;
+const STEPS = ['Lo que quedó', 'Tu semana', 'Lo anotado', 'Para tu semana', 'Listo'] as const;
+const IDEAS_STEP = 4;
 const LAST_STEP = STEPS.length;
 
 type Decision = {
@@ -432,7 +438,17 @@ export function ReviewFlow({ data, initialStep }: { data: ReviewData; initialSte
     </div>
   );
 
-  const body = [stepOne, stepTwo, stepThree, stepFour][step - 1];
+  const stepIdeas = (
+    <>
+      <h2 className="fd5-rv__h2">Para tu semana</h2>
+      <p className="fd5-rv__lead">
+        Ideas con hora, según tus huecos, lo que ya hiciste y lo que viene. Pon las que te sirvan; las
+        demás no cuestan nada.
+      </p>
+    </>
+  );
+
+  const body = [stepOne, stepTwo, stepThree, stepIdeas, stepFour][step - 1];
 
   /* ------------------------------------------------------------ pantalla -- */
 
@@ -484,6 +500,12 @@ export function ReviewFlow({ data, initialStep }: { data: ReviewData; initialSte
         <section className="fd5-rv__body fd-lead--enter" key={step}>
           {body}
         </section>
+
+        {/* Fuera de la seccion de arriba para no desmontarse al ir y volver:
+            asi pregunta una sola vez por visita y no se pierde lo propuesto. */}
+        <div className="fd5-rv-ideas" hidden={step !== IDEAS_STEP}>
+          <PlanClient mode="week" active={step === IDEAS_STEP} />
+        </div>
 
         {errorLine}
 

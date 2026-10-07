@@ -35,7 +35,7 @@ export default async function PlanearPage() {
 
   return (
     <div className="fd-app">
-      <DeskSidebar active="inicio" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
+      <DeskSidebar active="planear" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
 
       <main className="fd-screen fd-screen--split">
         <div className="fd-fixedhead">
