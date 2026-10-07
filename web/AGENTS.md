@@ -21,7 +21,8 @@ proyecto está un nivel más arriba** y hay que leerlo antes de tocar nada:
 | `../docs/00-problema.md` | El diagnóstico. **Léelo primero**, no es obvio |
 | `../docs/01-decisiones.md` | 73 decisiones cerradas con el usuario. No se reabren |
 | `../docs/08-modelo-tareas-reminders.md` | Materias, reminders y tareas |
-| `../app/DESIGN.md` | El sistema visual, ya aprobado. `app/` es de solo lectura |
+| `../DESIGN.md` | **El sistema visual vigente**: iOS nativo, Inicio en widgets, color Bosque (2026-10-06). Manda sobre el de `app/` |
+| `../app/DESIGN.md` | El sistema anterior (FD5), congelado. `app/` es de solo lectura; `src/styles/ios.css` reasigna sus tokens |
 | `./README.md` | Cómo está montada esta carpeta |
 
 Reglas cortas: textos en español, código en inglés; 44px de área táctil sin

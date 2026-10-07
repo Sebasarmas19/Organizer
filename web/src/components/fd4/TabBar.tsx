@@ -1,33 +1,31 @@
 'use client';
 
 /* ============================================================================
-   Organizer · FD4 · <TabBar>
+   Organizer · <TabBar>  ·  la barra de pestañas de iOS
 
-   CINCO RANURAS, CUATRO DESTINOS.
+   CUATRO DESTINOS Y UNA ACCION, SEPARADOS.
 
-   `Inicio · Calendario · (+) · Pendientes · Recursos`
+   `Hoy · Calendario · Pendientes · Recursos` van en una capsula de vidrio
+   que flota sobre el contenido; el + va aparte, en su propio circulo a la
+   derecha, como el boton de buscar de las apps de iOS 26. Un sitio donde
+   estar y una cosa que hacer no son lo mismo: por eso no comparten capsula.
 
-   La del medio no es un destino: es la accion de capturar. Por eso no lleva
-   etiqueta, no se enciende nunca y no aparece en `TABS`. Un sitio donde
-   estar y una cosa que hacer no son lo mismo, y pintarlos igual haria que el
-   usuario buscara "la pantalla de anadir" cuando lo que quiere es escribir
-   una linea y salir.
+   Las cuatro llevan icono Y etiqueta, siempre (DESIGN.md § Iconos): la app
+   se usa de reojo y un icono solo obliga a recordar que significa.
 
-   Los otros cuatro llevan ICONO **Y** ETIQUETA, siempre. Un icono solo
-   obliga a recordar que significa, y esta app se usa de reojo. La regla esta
-   escrita en `DESIGN.md` § Iconos.
+   La pestaña que se esta cargando enseña un spinner en lugar del icono: en
+   una PWA la navegacion puede tardar, y un toque sin respuesta se repite.
 
-   QUE CAMBIO RESPECTO A FD3
-   Semana dejo de ser pestana. Ahora hay un modulo Calendario con Mes, Semana
-   y Dia dentro, conmutados arriba: la barra de abajo aguanta cinco ranuras y
-   meter tres vistas del mismo calendario gastaria tres. Y Tareas paso a
-   llamarse Pendientes, porque ahora tambien contiene los recordatorios.
+   EL + SEGUN DONDE ESTES. En Inicio, anotar ya es el campo de abajo, asi
+   que el + abre "Crear" (planear, tarea con fecha, reminder): quien pinta
+   Inicio pasa `onCreate`. En las demas pantallas lleva a /anadir.
    ========================================================================= */
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { TabIcon, PlusMark, type TabIconName } from './TabIcon';
+import { TabIcon, type TabIconName } from './TabIcon';
+import { Glyph } from '@/components/ios/Glyph';
 import { Spinner } from '@/components/Spinner';
 
 type Tab = {
@@ -39,7 +37,7 @@ type Tab = {
 };
 
 export const TABS: Tab[] = [
-  { id: 'inicio', label: 'Inicio', href: '/', match: ['/', '/clases', '/planear'] },
+  { id: 'inicio', label: 'Hoy', href: '/', match: ['/', '/clases', '/planear'] },
   {
     id: 'calendario',
     label: 'Calendario',
@@ -57,7 +55,7 @@ export const TABS: Tab[] = [
   { id: 'recursos', label: 'Recursos', href: '/recursos', match: ['/recursos'] },
 ];
 
-export function TabBar() {
+export function TabBar({ onCreate }: { onCreate?: () => void }) {
   const pathname = usePathname();
   const [pendingId, setPendingId] = useState<TabIconName | null>(null);
   const [prevPath, setPrevPath] = useState(pathname);
@@ -73,69 +71,50 @@ export function TabBar() {
     );
 
   return (
-    <nav className="fd-tabbar" aria-label="Secciones">
-      {TABS.slice(0, 2).map((tab) => (
-        <TabLink
-          key={tab.id}
-          tab={tab}
-          current={isCurrent(tab)}
-          isPending={pendingId === tab.id}
-          onNavigate={() => setPendingId(tab.id)}
-        />
-      ))}
+    <>
+      <nav className="io-glass io-tabbar" aria-label="Secciones">
+        {TABS.map((tab) => {
+          const current = isCurrent(tab);
+          const pending = pendingId === tab.id;
+          return (
+            <Link
+              key={tab.id}
+              href={tab.href}
+              prefetch={true}
+              className="io-tab"
+              aria-current={current || pending ? 'page' : undefined}
+              onClick={() => {
+                if (!current) setPendingId(tab.id);
+              }}
+            >
+              {pending ? (
+                <span className="io-tab__spin">
+                  <Spinner size={16} />
+                </span>
+              ) : (
+                <TabIcon name={tab.id} />
+              )}
+              {tab.label}
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* Capturar. `aria-label` porque no hay texto visible, y el texto
-          visible no se pone porque el boton mide 56 y la etiqueta no cabe
-          sin empujar a las otras cuatro. */}
-      <Link href="/anadir" prefetch={true} className="fd-fab" aria-label="Añadir">
-        <span className="fd-fab__mark" style={{ position: 'relative' }}>
-          <PlusMark />
-        </span>
-      </Link>
-
-      {TABS.slice(2).map((tab) => (
-        <TabLink
-          key={tab.id}
-          tab={tab}
-          current={isCurrent(tab)}
-          isPending={pendingId === tab.id}
-          onNavigate={() => setPendingId(tab.id)}
-        />
-      ))}
-    </nav>
-  );
-}
-
-function TabLink({
-  tab,
-  current,
-  isPending,
-  onNavigate,
-}: {
-  tab: Tab;
-  current: boolean;
-  isPending: boolean;
-  onNavigate: () => void;
-}) {
-  const active = current || isPending;
-  return (
-    <Link
-      href={tab.href}
-      prefetch={true}
-      className="fd-tab"
-      aria-current={active ? 'page' : undefined}
-      onClick={() => {
-        if (!current) onNavigate();
-      }}
-    >
-      {isPending ? (
-        <span style={{ height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Spinner size={16} />
-        </span>
+      {onCreate ? (
+        <button
+          type="button"
+          className="io-glass io-fab io-press"
+          aria-label="Crear"
+          aria-haspopup="dialog"
+          onClick={onCreate}
+        >
+          <Glyph name="plus" />
+        </button>
       ) : (
-        <TabIcon name={tab.id} />
+        <Link href="/anadir" prefetch={true} className="io-glass io-fab io-press" aria-label="Anotar">
+          <Glyph name="plus" />
+        </Link>
       )}
-      <span className="fd-tab__label">{tab.label}</span>
-    </Link>
+    </>
   );
 }

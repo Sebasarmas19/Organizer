@@ -28,6 +28,7 @@ import {
   localNow,
   minutesOfDay,
   relativeDayLabel,
+  reviewWeekStart,
   shiftDate,
   timeZoneOffsetMinutes,
   weekdayLabel,
@@ -208,4 +209,14 @@ test('las horas se escriben sin cero delante, como en el comp', () => {
   assert.equal(formatPlainTime('08:00:00'), '8:00');
   assert.equal(formatPlainTime('15:00:00'), '15:00');
   assert.equal(minutesOfDay('21:00:00'), 1260);
+});
+
+test('la revisión del fin de semana arma la semana que viene; entre semana, la que está en curso', () => {
+  /* 11 de octubre de 2026 es domingo. */
+  assert.equal(reviewWeekStart('2026-10-11'), '2026-10-12', 'domingo: el lunes de mañana');
+  assert.equal(reviewWeekStart('2026-10-10'), '2026-10-12', 'sábado: el lunes de pasado mañana');
+  assert.equal(reviewWeekStart('2026-10-12'), '2026-10-12', 'lunes: la semana que empieza hoy');
+  assert.equal(reviewWeekStart('2026-10-16'), '2026-10-12', 'viernes: la semana en curso');
+  /* Cruce de mes: domingo 31 de enero de 2027. */
+  assert.equal(reviewWeekStart('2027-01-31'), '2027-02-01');
 });

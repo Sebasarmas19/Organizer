@@ -76,7 +76,7 @@ export function DeskSidebar({
           aria-current={active === 'inicio' ? 'page' : undefined}
         >
           <TabIcon name="inicio" />
-          Inicio
+          Hoy
         </Link>
 
         <Link

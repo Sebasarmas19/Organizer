@@ -44,7 +44,7 @@ export default async function ClasesPage() {
           <div className="fd5-pagetop">
             <Link href="/" className="fd5-back">
               <Icon name="chevron-left" size="md" />
-              Inicio
+              Hoy
             </Link>
             <Link href="/horario" className="fd5-smallbtn">
               Editar
