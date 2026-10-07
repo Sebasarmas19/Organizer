@@ -8,7 +8,15 @@ import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
 import type { TaskRowData } from '@/components/fd4/TaskRow';
 import type { ReminderCardData } from '@/components/fd4/ReminderCard';
 import { formatDistance, formatWhen } from './home';
-import { WEEKDAY_FULL_ES, WEEKDAY_SHORT_ES, addDays, getDayOfWeek, getTodayString, parseDateString } from './date-utils';
+import {
+  MONTH_NAMES_ES,
+  WEEKDAY_FULL_ES,
+  WEEKDAY_SHORT_ES,
+  addDays,
+  getDayOfWeek,
+  getTodayString,
+  parseDateString,
+} from './date-utils';
 
 export type PendView = 'tareas' | 'recordatorios';
 
@@ -32,10 +40,13 @@ export type Fd4PendientesData = {
   recentCompleted: TaskRowData[];
 };
 
-/** "viernes 18" · la fecha de una tarea, dentro de una frase. */
-function taskWhen(dateStr: string): string {
-  const { day } = parseDateString(dateStr);
-  return `${WEEKDAY_FULL_ES[getDayOfWeek(dateStr)]} ${day}`;
+/** "viernes 18" · la fecha de una tarea, dentro de una frase. A más de una
+    semana de hoy lleva el mes ("viernes 6 de noviembre"): "viernes 6" a un
+    mes vista se lee como el viernes pasado. */
+function taskWhen(dateStr: string, todayStr: string): string {
+  const { month, day } = parseDateString(dateStr);
+  const near = dateStr >= addDays(todayStr, -6) && dateStr <= addDays(todayStr, 6);
+  return `${WEEKDAY_FULL_ES[getDayOfWeek(dateStr)]} ${day}${near ? '' : ` de ${MONTH_NAMES_ES[month - 1]}`}`;
 }
 
 export async function getPendientesData(
@@ -83,7 +94,7 @@ export async function getPendientesData(
     id: t.id,
     title: t.title,
     meta: [
-      t.due_on ? taskWhen(t.due_on) : '',
+      t.due_on ? taskWhen(t.due_on, todayStr) : '',
       t.context_id ? contextName.get(t.context_id) : '',
     ]
       .filter(Boolean)

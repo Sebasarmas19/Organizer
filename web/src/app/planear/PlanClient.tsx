@@ -10,6 +10,10 @@
    mode="week" es el mismo asistente dentro del ritual del domingo: pregunta
    solo al abrirse el paso, cada propuesta es una sugerencia distinta que se
    acepta por separado, y puedes pedirle otra cosa ("quiero leer este libro").
+
+   Las propuestas solo las cambia una respuesta de planificar: si en medio
+   preguntas otra cosa ("¿qué tengo el jueves?"), lo propuesto sigue debajo
+   y se puede poner sin volver a pedirlo.
    ========================================================================= */
 
 import { useEffect, useRef, useState, useTransition } from 'react';
@@ -46,6 +50,9 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
   const [history, setHistory] = useState<ChatTurn[]>([]);
   const [past, setPast] = useState<Shown[]>([]);
   const [answer, setAnswer] = useState<PlanAnswer | null>(null);
+  const [options, setOptions] = useState<PlanOption[]>([]);
+  /* true: la respuesta actual no propone y lo de abajo viene de antes. */
+  const [carried, setCarried] = useState(false);
   const [lastAsk, setLastAsk] = useState('');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<number | null>(null);
@@ -61,6 +68,8 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
     setHistory([]);
     setPast([]);
     setAnswer(null);
+    setOptions([]);
+    setCarried(false);
     setLastAsk('');
     setError('');
     setText('');
@@ -83,7 +92,12 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
         if (answer) setPast((p) => [...p, { you: lastAsk, reply: answer.reply }]);
         setHistory((h) => [...h, { role: 'user' as const, text: v }, { role: 'model' as const, text: res.memory }].slice(-8));
         setAnswer(res.answer);
-        setAccepted({});
+        const replans = res.answer.intent === 'plan';
+        if (replans) {
+          setOptions(res.answer.options);
+          setAccepted({});
+        }
+        setCarried(!replans && options.length > 0);
         setLastAsk(shown.trim());
         setText('');
       } catch {
@@ -113,6 +127,8 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
           setHistory([]);
           setPast([]);
           setAnswer(null);
+          setOptions([]);
+          setCarried(false);
           setLastAsk('');
         } else setError(res.error);
       } catch {
@@ -151,7 +167,9 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
               </Link>
             ) : null}
 
-            {answer.options.map((opt, i) => (
+            {carried ? <span className="fd-meta">Lo que te propuse antes sigue en pie:</span> : null}
+
+            {options.map((opt, i) => (
               <section className="fd-daycard" key={i}>
                 <span className="fd-daycard__head">
                   <span className="fd-daycard__label">{opt.title}</span>
