@@ -715,23 +715,20 @@
 
   /* ============================================================ §7 · DIA === */
 
+  /* El riel del Dia se comprime de 56px a 48px por hora. En el telefono los
+     56px daban sitio al dedo; aqui lo que importa es que las quince horas
+     entren de una vez sin scroll. Los bloques, las franjas de clase y la
+     linea de ahora se colocan en horas contra --hour-row (DayView), asi que
+     cambiarla aqui los mueve con la rejilla. */
   .fd-grid {
+    --hour-row: var(--desk-hour);
     max-width: 900px;
     margin-inline: auto;
   }
 
-  /* El riel del Dia se comprime de 56px a 48px por hora. En el telefono los
-     56px daban sitio al dedo; aqui lo que importa es que las quince horas
-     entren de una vez sin scroll. */
   .fd-grid__hour,
   .fd-grid__line {
     height: var(--desk-hour);
-  }
-
-  .fd-grid__blocks .fd-block {
-    /* Las alturas vienen calculadas en el servidor contra 56px/hora. Se
-       reescalan con la misma razon, en vez de mandar dos juegos de numeros. */
-    transform-origin: top left;
   }
 
   .fd-dayhead,

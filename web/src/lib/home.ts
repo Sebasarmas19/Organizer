@@ -261,7 +261,9 @@ export async function getHomeData(
       .in('status', ['inbox', 'someday', 'planned', 'done'])
       .not('due_on', 'is', null)
       .lte('due_on', todayStr)
-      .order('due_on', { ascending: false }),
+      .order('due_on', { ascending: false })
+      /* Desempate fijo: sin él, marcar y deshacer cambiaba cuál sale en "Ahora". */
+      .order('created_at', { ascending: true }),
 
     /* Próximos reminders: solo campos necesarios */
     supabase

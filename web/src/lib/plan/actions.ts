@@ -5,11 +5,14 @@
 
    proposePlan: pide propuestas (con los turnos anteriores). No escribe nada.
                 En modo "week" (el ritual del domingo) solo quedan sesiones
-                de la semana que se arma, aunque el modelo proponga otras.
+                de la semana que se arma, aunque el modelo proponga otras, y
+                ninguna sugerencia impide guardar otra.
    acceptPlan:  guarda la propuesta que elegiste. Vuelve a calcular los huecos
                 antes de escribir: si entre medias algo ocupó esa hora, no se
                 guarda nada y se dice. Cada sesión es una tarea planificada con
                 su bloque y su aviso 15 min antes, igual que una hecha a mano.
+                Si la sesión es una tarea que ya tenías (itemId), se le da
+                hora a esa misma tarea: no se crea otra igual.
    ========================================================================= */
 
 import { revalidatePath } from 'next/cache';
@@ -19,7 +22,7 @@ import { zonedIso } from '@/lib/tz';
 import { loadPlanContext } from './context';
 import { proposeWithLlm, weekRange, type PlanAnswer, type PlanMode, type PlanSession } from './llm';
 import { sanitizeHistory, summarizeAnswer } from './validate';
-import { fitsInSlots, fromClock, toClock } from './slots';
+import { canBookBoth, fitsInSlots, fromClock, toClock, type Busy } from './slots';
 
 const REMIND_BEFORE_MIN = 15;
 const MAX_REQUEST = 1000;
@@ -54,13 +57,19 @@ export async function proposePlan(
     return { ok: false, error: 'El asistente no respondió. Prueba otra vez en un minuto.' };
   }
   if (mode === 'week') {
-    /* Cada sugerencia se acepta por separado: ninguna puede pisar a otra. */
+    /* Cada sugerencia se acepta por separado: guardar una no puede dejar a
+       otra sin hueco (ni pisarla, ni quedar a menos del margen), y una
+       misma tarea no va en dos. */
     const { from, to } = weekRange(ctx.today);
-    const taken: { date: string; from: number; to: number }[] = [];
+    const taken: Busy[] = [];
+    const items = new Set<string>();
     const free = (x: PlanSession) => {
       const a = fromClock(x.start) as number;
-      if (taken.some((t) => t.date === x.date && a < t.to && t.from < a + x.minutes)) return false;
-      taken.push({ date: x.date, from: a, to: a + x.minutes });
+      const mine: Busy = { date: x.date, from: a, to: a + x.minutes };
+      if (!taken.every((t) => canBookBoth(t, mine))) return false;
+      if (x.itemId && items.has(x.itemId)) return false;
+      taken.push(mine);
+      if (x.itemId) items.add(x.itemId);
       return true;
     };
     answer = {
@@ -83,8 +92,18 @@ export async function acceptPlan(
 
   const { supabase, user, timezone } = await requireUser();
   const ctx = await loadPlanContext(supabase, user.id, timezone);
+  /* Solo se le da hora a una tarea que sigue abierta y sin hora ahora mismo. */
+  const openTasks = new Map(ctx.tasks.map((t) => [t.id, t]));
+  const linked = new Set<string>();
 
   for (const s of sessions) {
+    if (s.itemId !== undefined) {
+      const task = typeof s.itemId === 'string' ? openTasks.get(s.itemId) : undefined;
+      if (!task || linked.has(task.id)) {
+        return { ok: false, error: 'Una de esas tareas ya tiene hora o ya no está. Pide otra propuesta.' };
+      }
+      linked.add(task.id);
+    }
     const from = typeof s.start === 'string' ? fromClock(s.start) : null;
     const ok =
       typeof s.date === 'string' &&
@@ -106,13 +125,14 @@ export async function acceptPlan(
   let count = 0;
   for (const s of sessions) {
     const from = fromClock(s.start) as number;
-    const title = s.title.trim().slice(0, 120);
+    const task = s.itemId ? openTasks.get(s.itemId) : undefined;
+    const title = task ? task.title : s.title.trim().slice(0, 120);
+    const fields = { status: 'planned' as const, due_on: s.date, estimate_min: s.minutes };
 
-    const { data: item, error } = await supabase
-      .from('items')
-      .insert({ user_id: user.id, title, status: 'planned', due_on: s.date, estimate_min: s.minutes })
-      .select('id')
-      .single();
+    /* La tarea que ya tenías conserva su reminder y su historia; solo cambia cuándo. */
+    const { data: item, error } = task
+      ? await supabase.from('items').update(fields).eq('id', task.id).eq('user_id', user.id).select('id').single()
+      : await supabase.from('items').insert({ user_id: user.id, title, ...fields }).select('id').single();
     if (error || !item) {
       console.error('acceptPlan: item', error);
       continue;

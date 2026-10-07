@@ -75,3 +75,37 @@ test('historial: se queda con roles válidos, los últimos 8 y textos recortados
   assert.ok(h.every((t) => t.role === 'user' || t.role === 'model'));
   assert.equal(h[h.length - 1].text.length, 1500);
 });
+
+const TASKS = [
+  { ref: 'T1', id: 'item-1', title: 'Leer capítulo 3', before: '2026-10-06' },
+  { ref: 'T2', id: 'item-2', title: 'Comprar cuaderno', before: null },
+];
+
+test('tarea que ya existe: se enlaza por id, con su título real, una vez y antes de su parcial', () => {
+  const a = validateAnswer(
+    {
+      intent: 'plan',
+      reply: 'ok',
+      options: [
+        {
+          title: 'x',
+          why: '',
+          sessions: [
+            { ...session('H1', '17:00', 30, 'Leer cap 3'), task: 't1' }, // vale, minúscula también
+            { ...session('H1', '18:00', 30, 'Leer otra vez'), task: 'T1' }, // la misma tarea dos veces
+            { ...session('H2', '12:00', 30, 'Leer'), task: 'T1' }, // después de su parcial (6 oct)
+            { ...session('H2', '12:30', 30, 'Cuaderno'), task: 'T2' }, // vale
+            { ...session('H1', '20:00', 30, 'Nueva'), task: 'T9' }, // id que no existe: sesión nueva
+          ],
+        },
+      ],
+    },
+    SLOTS,
+    TASKS
+  );
+  assert.deepEqual(a?.options[0].sessions, [
+    { date: '2026-10-06', start: '17:00', minutes: 30, title: 'Leer capítulo 3', itemId: 'item-1' },
+    { date: '2026-10-06', start: '20:00', minutes: 30, title: 'Nueva' },
+    { date: '2026-10-07', start: '12:30', minutes: 30, title: 'Comprar cuaderno', itemId: 'item-2' },
+  ]);
+});

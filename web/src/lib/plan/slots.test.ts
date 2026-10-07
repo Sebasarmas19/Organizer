@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeFreeSlots, fitsInSlots } from './slots.ts';
+import { canBookBoth, computeFreeSlots, fitsInSlots } from './slots.ts';
 
 const H = (h: number, m = 0) => h * 60 + m;
 
@@ -52,4 +52,30 @@ test('fitsInSlots exige que la sesión quepa entera', () => {
   assert.equal(fitsInSlots(s, '2026-10-06', H(22), 30), true);
   assert.equal(fitsInSlots(s, '2026-10-06', H(22, 15), 30), false);
   assert.equal(fitsInSlots(s, '2026-10-07', H(10), 30), false);
+});
+
+test('canBookBoth: 15 min entre dos sugerencias bastan; 10 no', () => {
+  const d = '2026-10-07';
+  assert.equal(canBookBoth({ date: d, from: H(14), to: H(14, 45) }, { date: d, from: H(15), to: H(15, 45) }), true);
+  assert.equal(canBookBoth({ date: d, from: H(14), to: H(14, 50) }, { date: d, from: H(15), to: H(15, 45) }), false);
+  assert.equal(canBookBoth({ date: d, from: H(14), to: H(15) }, { date: '2026-10-08', from: H(14), to: H(15) }), true);
+});
+
+test('canBookBoth dice lo mismo que guardar una y recalcular los huecos', () => {
+  const d = '2026-10-06';
+  const fitsAfter = (booked: { from: number; to: number }, other: { from: number; to: number }) =>
+    fitsInSlots(
+      computeFreeSlots({ today: d, nowMinutes: 0, days: 1, busy: [{ date: d, ...booked }] }),
+      d,
+      other.from,
+      other.to - other.from
+    );
+  for (let gap = 0; gap <= 30; gap += 5) {
+    for (const len of [30, 40, 45]) {
+      const a = { date: d, from: H(14), to: H(14) + len };
+      const b = { date: d, from: a.to + gap, to: a.to + gap + 30 };
+      if (b.from % 15) continue;
+      assert.equal(canBookBoth(a, b), fitsAfter(a, b) && fitsAfter(b, a), `len ${len}, gap ${gap}`);
+    }
+  }
 });

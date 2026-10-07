@@ -3,9 +3,13 @@
 
    Junta en una sola estructura las próximas dos semanas: clases, tareas con
    y sin hora, reminders (los de 45 días, porque un parcial lejano también
-   cuenta), lo que hay en Pendientes, lo que ya hiciste en las dos semanas
-   anteriores (para seguir el ritmo y no proponer lo ya hecho) y los huecos
-   libres ya calculados.
+   cuenta), lo que hay en Pendientes, lo atrasado, lo que ya hiciste en las
+   dos semanas anteriores (para seguir el ritmo y no proponer lo ya hecho) y
+   los huecos libres ya calculados.
+
+   Cada tarea abierta sin hora lleva un id corto ("T3"): si el asistente
+   propone hacer justo esa tarea, la nombra por su id y al aceptarla se le
+   da hora a ella, no se crea otra igual.
    ========================================================================= */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -14,11 +18,14 @@ import { materializeScheduleTemplates } from '@/lib/calendar';
 import { getCurrentTimeMinutes, getTodayString } from '@/lib/date-utils';
 import { dayRangeUtc, localDateOf, localTimeOf, timeToMinutes } from '@/lib/tz';
 import { addDays, computeFreeSlots, toClock, type Busy, type FreeSlot } from './slots';
+import type { TaskRef } from './validate';
 
 export const HORIZON_DAYS = 14;
 /* Cuanto hacia atras se mira lo hecho. */
 export const DONE_LOOKBACK_DAYS = 14;
 const DONE_MAX = 40;
+const BACKLOG_MAX = 40;
+const OVERDUE_MAX = 20;
 const REMINDER_LOOKAHEAD = 45;
 /* Un reminder con hora (un parcial a las 10) ocupa al menos esto. */
 const REMINDER_BUSY_MIN = 90;
@@ -37,6 +44,10 @@ export type PlanContext = {
   slots: FreeSlot[];
   upcoming: { date: string; time: string | null; title: string }[];
   backlog: string[];
+  /** Tareas con fecha pasada que siguen abiertas: "T9: Leer cap. 2 (era para lun 2026-10-05)". */
+  overdue: string[];
+  /** Las tareas que el modelo puede nombrar por id, sin hora y abiertas. */
+  tasks: TaskRef[];
   /** "lun 2026-09-28: Leer Atomic Habits (40 min)", lo mas reciente primero. */
   done: string[];
   /** "Base de datos: mar 12:00–13:50, jue 12:00–13:50" — para entender apodos. */
@@ -68,14 +79,14 @@ export async function loadPlanContext(
       .order('starts_at', { ascending: true }),
     supabase
       .from('items')
-      .select('id, title, status, due_on')
+      .select('id, title, status, due_on, reminder_id')
       .eq('user_id', userId)
       .in('status', ['inbox', 'someday', 'planned'])
       .order('created_at', { ascending: false })
       .limit(200),
     supabase
       .from('reminders')
-      .select('title, occurs_on, occurs_at')
+      .select('id, title, occurs_on, occurs_at')
       .eq('user_id', userId)
       .gte('occurs_on', today)
       .lte('occurs_on', addDays(today, REMINDER_LOOKAHEAD))
@@ -125,19 +136,36 @@ export async function loadPlanContext(
     add(r.occurs_on, at, `${at >= 0 ? toClock(at) : 'todo el día'} reminder: ${r.title}`);
   }
 
+  const WD = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
   const blockedItems = new Set(blocks.map((b) => b.item_id).filter(Boolean));
+  const reminderDate = new Map(reminders.map((r) => [r.id, r.occurs_on]));
+
+  /* Las tareas sin hora, con su id corto. Las de fecha más lejana que el
+     horizonte no se proponen: ya tienen su día. */
+  const open = items.filter((t) => !blockedItems.has(t.id) && (!t.due_on || t.due_on <= last));
+  const picked = [
+    ...open.filter((t) => t.due_on && t.due_on >= today),
+    ...open.filter((t) => !t.due_on).slice(0, BACKLOG_MAX),
+    ...open.filter((t) => t.due_on && t.due_on < today).slice(0, OVERDUE_MAX),
+  ];
+  const tasks: TaskRef[] = picked.map((t, i) => ({
+    ref: `T${i + 1}`,
+    id: t.id,
+    title: t.title,
+    before: (t.reminder_id && reminderDate.get(t.reminder_id)) || null,
+  }));
+  const refOf = new Map(tasks.map((t) => [t.id, t.ref]));
+  const named = (t: { id: string; title: string }) => `${refOf.get(t.id)}: ${t.title}`;
+
   const days: PlanDay[] = Array.from({ length: HORIZON_DAYS }, (_, i) => {
     const date = addDays(today, i);
     return {
       date,
       agenda: (agendaByDay.get(date) ?? []).sort((a, b) => a.at - b.at).map((x) => x.text),
-      looseTasks: items
-        .filter((t) => t.due_on === date && !blockedItems.has(t.id))
-        .map((t) => t.title),
+      looseTasks: picked.filter((t) => t.due_on === date).map(named),
     };
   });
 
-  const WD = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
   const bySubject = new Map<string, string[]>();
   for (const t of templatesRes.data ?? []) {
     const list = bySubject.get(t.title) ?? [];
@@ -156,10 +184,16 @@ export async function loadPlanContext(
       time: r.occurs_at ? r.occurs_at.slice(0, 5) : null,
       title: r.title,
     })),
-    backlog: items
+    backlog: picked
       .filter((t) => !t.due_on)
-      .slice(0, 40)
-      .map((t) => (t.status === 'someday' ? `${t.title} (algún día)` : t.title)),
+      .map((t) => (t.status === 'someday' ? `${named(t)} (algún día)` : named(t))),
+    overdue: picked
+      .filter((t) => t.due_on && t.due_on < today)
+      .map((t) => {
+        const due = t.due_on as string;
+        return `${named(t)} (era para ${WD[new Date(due + 'T00:00:00Z').getUTCDay()]} ${due})`;
+      }),
+    tasks,
     done: (doneRes.data ?? [])
       .filter((t) => t.completed_at)
       .map((t) => {

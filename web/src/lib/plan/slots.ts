@@ -75,6 +75,17 @@ export function computeFreeSlots(opts: SlotOptions): FreeSlot[] {
   return slots.map((s, i) => ({ ...s, id: `H${i + 1}` }));
 }
 
+/**
+ * ¿Se pueden guardar las dos, en cualquier orden? Al guardar una, la otra
+ * tiene que seguir cabiendo en los huecos recalculados: con el mismo margen
+ * y el mismo redondeo a 15 min que usa computeFreeSlots.
+ */
+export function canBookBoth(a: Busy, b: Busy, buffer = 10): boolean {
+  if (a.date !== b.date) return true;
+  const [first, second] = a.from <= b.from ? [a, b] : [b, a];
+  return second.from >= ceilTo(first.to + buffer) && first.to <= floorTo(second.from - buffer);
+}
+
 /** ¿Cabe una sesión (fecha, inicio, duración) entera dentro de algún hueco? */
 export function fitsInSlots(
   slots: FreeSlot[],

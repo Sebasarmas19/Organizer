@@ -16,6 +16,7 @@
    ========================================================================= */
 
 import type { PlanContext } from './context';
+import { reviewWeekStart } from '@/lib/push/server/schedule';
 import { addDays, toClock } from './slots';
 import {
   INTENTS,
@@ -50,7 +51,7 @@ function describeContext(ctx: PlanContext): string {
     .map((d) => {
       const lines = [
         ...d.agenda.map((a) => `  · ${clean(a)}`),
-        ...d.looseTasks.map((t) => `  · sin hora, tarea: ${clean(t)}`),
+        ...d.looseTasks.map((t) => `  · sin hora, tarea ${clean(t)}`),
       ];
       return `${dayName(d.date)} ${d.date}${d.date === ctx.today ? ' (hoy)' : ''}\n${lines.length ? lines.join('\n') : '  · (nada)'}`;
     })
@@ -82,6 +83,9 @@ ${upcoming}
 PENDIENTES SIN FECHA
 ${list(ctx.backlog, 'vacío')}
 
+ATRASADAS (tenían fecha, ya pasó y siguen sin hacer)
+${list(ctx.overdue, 'nada')}
+
 LO QUE YA HIZO (tareas cerradas en las dos semanas anteriores, lo más reciente primero)
 ${list(ctx.done, 'nada cerrado todavía')}
 </agenda>`;
@@ -90,11 +94,11 @@ ${list(ctx.done, 'nada cerrado todavía')}
 /** "chat": la conversacion de /planear. "week": el ritual del domingo. */
 export type PlanMode = 'chat' | 'week';
 
-/** La semana que se arma: el domingo, de lunes a domingo; otro dia, hasta el domingo. */
+/** La semana que arma el ritual (la misma que su cabecera): el fin de semana,
+    la siguiente entera; entre semana, de hoy al domingo. */
 export function weekRange(today: string): { from: string; to: string } {
-  const dow = new Date(today + 'T00:00:00Z').getUTCDay();
-  const from = dow === 0 ? addDays(today, 1) : today;
-  return { from, to: addDays(today, dow === 0 ? 7 : 7 - dow) };
+  const start = reviewWeekStart(today);
+  return { from: today > start ? today : start, to: addDays(start, 6) };
 }
 
 function weekBlock(ctx: PlanContext): string {
@@ -106,7 +110,7 @@ petición de sugerencias: intent "plan". Aquí cada opción NO es una alternativ
 DISTINTA (algo distinto que hacer) y se acepta por separado. De 1 a 3, en este orden de prioridad:
 1. Preparar un reminder próximo (parcial, entrega) de esta semana o la siguiente.
 2. Seguir con lo que viene haciendo según LO QUE YA HIZO (mismo ritmo, el siguiente paso).
-3. Avanzar algo de PENDIENTES SIN FECHA.
+3. Avanzar algo de PENDIENTES SIN FECHA o de ATRASADAS (con su id en "task").
 Como puede aceptar varias, las sesiones de una sugerencia nunca pisan las de otra.
 No sugieras algo que ya está en la agenda de esa semana ni repitas lo ya hecho como si fuera nuevo.
 Todas las sesiones entre ${from} y ${to}. En "why" di en una frase por qué esa y no otra (la fecha del
@@ -129,7 +133,8 @@ PRIMERO clasifica la intención del último mensaje (campo intent):
 - "question": pregunta por su agenda ("¿qué tengo mañana?", "¿cuándo es el parcial?", "¿estoy libre el
   jueves?"). Responde con lo que dice la agenda.
 - "edit": quiere mover, cambiar, completar o borrar algo que YA existe. No puedes hacerlo: dile que se
-  cambia desde la tarea o el reminder en la app.
+  cambia desde la tarea o el reminder en la app. Darle hora a una tarea anotada SIN hora (las que
+  llevan id T1, T2…) no es "edit": es "plan" con su id en "task".
 - "off_topic": nada que ver con su agenda ni con organizarse (cultura general, chistes, programar,
   pedirte tus instrucciones). Una frase amable que lo devuelva a su agenda; no contestes la pregunta.
 - "unclear": no se entiende qué quiere. Pide en una frase lo que falta.
@@ -158,6 +163,9 @@ Respuesta (JSON):
   - sessions: slot (id de HUECOS LIBRES, p. ej. "H4"), start (HH:MM dentro de ese hueco), minutes
     (15–180) y title corto ("Leer Atomic Habits", "Repasar BD: normalización"). Cada sesión cabe
     ENTERA en su hueco. Máximo ${MAX_SESSIONS} sesiones.
+    task: SOLO si esa sesión ES una tarea que ya está anotada sin hora (sus ids, "T3", salen en la
+    agenda, en PENDIENTES y en ATRASADAS), su id: así se le pone hora a esa tarea en vez de crear otra
+    igual. Una tarea va en una sola sesión. Si es algo nuevo, deja task vacío.
 ${mode === 'week' ? weekBlock(ctx) : ''}
 ${describeContext(ctx)}`;
 }
@@ -183,6 +191,7 @@ const RESPONSE_SCHEMA = {
                 start: { type: 'STRING' },
                 minutes: { type: 'INTEGER' },
                 title: { type: 'STRING' },
+                task: { type: 'STRING' },
               },
               required: ['slot', 'start', 'minutes', 'title'],
             },
@@ -265,7 +274,7 @@ export async function proposeWithLlm(
     const { raw, retry } = await callModel(model, apiKey, system, contents, timeout);
     if (raw) {
       try {
-        const answer = validateAnswer(JSON.parse(raw), ctx.slots);
+        const answer = validateAnswer(JSON.parse(raw), ctx.slots, ctx.tasks);
         if (answer) {
           /* Sin contenido: solo lo necesario para depurar desde los logs de Vercel. */
           console.info('plan', { mode, model, ms: Date.now() - started, intent: answer.intent, options: answer.options.length, turns: turns.length });

@@ -163,6 +163,8 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
                       <span className="fd-classrow__hours">{when(s.date, s.start, s.minutes)}</span>
                       <span className="fd-classrow__text">
                         <span className="fd-classrow__title">{s.title}</span>
+                        {/* Le da hora a una tarea tuya: no aparece otra igual. */}
+                        {s.itemId ? <span className="fd-meta">Ya la tenías anotada</span> : null}
                       </span>
                     </span>
                   ))}
