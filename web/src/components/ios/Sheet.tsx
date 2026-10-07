@@ -11,9 +11,14 @@
 
    Siempre esta montada: asi el cierre se anima. Cerrada es `inert`, no se
    puede tabular dentro ni la lee un lector de pantalla.
+
+   Se dibuja en <body> (portal): si colgara de la pantalla, cualquier
+   contexto de apilamiento de un padre la dejaria debajo de la barra de
+   pestanas, como paso con el formulario de Recursos.
    ========================================================================= */
 
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Glyph } from './Glyph';
 import { project, rubberband } from './spring';
 
@@ -35,6 +40,7 @@ export function Sheet({
   const sheet = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
   const titleId = useId();
+  const mounted = useSyncExternalStore(noop, () => true, () => false);
 
   /* Al abrir, el foco entra en la hoja; al cerrar, vuelve a quien la abrio. */
   useEffect(() => {
@@ -103,7 +109,9 @@ export function Sheet({
     if (d.dy + project(d.v) > Math.min(160, el.offsetHeight * 0.35)) onClose();
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       <div className="io-scrim" data-open={open} onClick={onClose} aria-hidden="true" />
       <div
@@ -143,6 +151,11 @@ export function Sheet({
         </div>
         <div className="io-sheet__body">{children}</div>
       </div>
-    </>
+    </>,
+    document.body
   );
+}
+
+function noop() {
+  return () => {};
 }

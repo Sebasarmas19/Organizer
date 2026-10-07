@@ -1,15 +1,22 @@
 'use client';
 
 /* ============================================================================
-   Organizer · FD4 · <CreateResourceModal>
-   Modal para añadir un recurso a la biblioteca.
+   Organizer · <CreateResourceModal>  ·  añadir a Recursos
+
+   Una hoja de iOS (ios/Sheet) con un formulario agrupado, como Ajustes:
+   título y enlace arriba, el tipo en chips, notas y etiquetas debajo, y el
+   botón de guardar dentro de la hoja. Solo el título hace falta (regla 3:
+   capturar cuesta 0 fricción). La hoja vive en <body>, así que la barra de
+   pestañas ya no la tapa.
    ========================================================================= */
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ResourceKind } from '@/lib/fd4-resources';
+import { KIND_SINGULAR, type ResourceKind } from '@/lib/fd4-resources';
 import { createResourceAction } from '@/lib/resources-actions';
-import { Icon } from '@/components/Icon';
+import { Sheet } from '@/components/ios/Sheet';
+
+const KINDS: ResourceKind[] = ['tool', 'skill', 'article', 'repo', 'video', 'other'];
 
 export function CreateResourceModal({
   isOpen,
@@ -27,12 +34,10 @@ export function CreateResourceModal({
   const [errorMsg, setErrorMsg] = useState('');
   const [isPending, startTransition] = useTransition();
 
-  if (!isOpen) return null;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setErrorMsg('El título es obligatorio');
+      setErrorMsg('Ponle un título para poder guardarlo.');
       return;
     }
 
@@ -58,111 +63,91 @@ export function CreateResourceModal({
         router.refresh();
         onClose();
       } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'Error al guardar el recurso');
+        setErrorMsg(err instanceof Error ? err.message : 'No se pudo guardar. Inténtalo otra vez.');
       }
     });
   };
 
   return (
-    <div className="fd-modal-backdrop" onClick={onClose}>
-      <div className="fd-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="fd-modal-head">
-          <h2 className="fd-modal-title">Añadir a Recursos</h2>
-          <button type="button" onClick={onClose} className="fd-modal-close" aria-label="Cerrar">
-            <Icon name="xmark" size="sm" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="fd-modal-form">
-          {errorMsg ? <p className="fd-modal-error">{errorMsg}</p> : null}
-
-          <div className="fd-formgroup">
-            <label className="fd-formlabel">Título o Nombre *</label>
+    <Sheet open={isOpen} onClose={onClose} title="Añadir a Recursos">
+      <form onSubmit={handleSubmit} className="io-form">
+        <div className="io-group">
+          <label className="io-field">
+            <span className="io-sr">Título</span>
             <input
               type="text"
-              required
-              autoFocus
-              placeholder="Ej. Cursor Rules Directory, Comandos de Git..."
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="field w-full px-3"
-              style={{ height: '40px' }}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errorMsg) setErrorMsg('');
+              }}
+              placeholder="Título"
+              autoComplete="off"
             />
-          </div>
-
-          <div className="fd-formgroup">
-            <label className="fd-formlabel">URL del enlace (opcional)</label>
+          </label>
+          <label className="io-field">
+            <span className="io-sr">Enlace</span>
             <input
               type="url"
-              placeholder="https://..."
+              inputMode="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="field w-full px-3"
-              style={{ height: '40px' }}
+              placeholder="Enlace (opcional)"
+              autoComplete="off"
+              autoCapitalize="off"
             />
-          </div>
+          </label>
+        </div>
 
-          <div className="fd-formgroup">
-            <label className="fd-formlabel">Tipo de recurso</label>
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as ResourceKind)}
-              className="field w-full px-3"
-              style={{ height: '40px' }}
+        <p className="io-form__label" id="res-kind">Tipo</p>
+        <div className="io-kinds" role="radiogroup" aria-labelledby="res-kind">
+          {KINDS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={kind === k}
+              className="io-chip io-press"
+              onClick={() => setKind(k)}
             >
-              <option value="tool">🛠️ Herramienta</option>
-              <option value="skill">🧠 Skill / Conocimiento</option>
-              <option value="article">📄 Artículo / Lectura</option>
-              <option value="repo">💻 Repositorio / Código</option>
-              <option value="video">🎬 Video / Curso</option>
-              <option value="other">📌 Otro</option>
-            </select>
-          </div>
+              {KIND_SINGULAR[k]}
+            </button>
+          ))}
+        </div>
 
-          <div className="fd-formgroup">
-            <label className="fd-formlabel">Notas / Por qué lo guardaste</label>
+        <div className="io-group">
+          <label className="io-field io-field--area">
+            <span className="io-sr">Notas</span>
             <textarea
-              placeholder="Detalles clave, comandos a recordar, resumen..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="field w-full p-3"
+              placeholder="Por qué lo guardaste"
               rows={3}
-              style={{ minHeight: '75px', resize: 'vertical' }}
             />
-          </div>
-
-          <div className="fd-formgroup">
-            <label className="fd-formlabel">Etiquetas (separadas por espacio o coma)</label>
+          </label>
+          <label className="io-field">
+            <span className="io-sr">Etiquetas</span>
             <input
               type="text"
-              placeholder="ia, devtools, prompt..."
               value={tagsStr}
               onChange={(e) => setTagsStr(e.target.value)}
-              className="field w-full px-3"
-              style={{ height: '40px' }}
+              placeholder="Etiquetas: ia, devtools…"
+              autoComplete="off"
+              autoCapitalize="off"
             />
-          </div>
+          </label>
+        </div>
 
-          <div className="fd-modal-actions">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn--quiet"
-              style={{ minHeight: '40px' }}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn btn--primary"
-              style={{ minHeight: '40px' }}
-            >
-              {isPending ? 'Guardando...' : 'Guardar recurso'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {errorMsg ? (
+          <p className="io-form__err" role="alert">
+            {errorMsg}
+          </p>
+        ) : null}
+
+        <button type="submit" className="in-btn in-btn--pri io-press io-form__save" disabled={isPending}>
+          {isPending ? 'Guardando…' : 'Guardar'}
+        </button>
+      </form>
+    </Sheet>
   );
 }

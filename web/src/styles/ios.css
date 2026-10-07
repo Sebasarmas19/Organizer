@@ -208,6 +208,25 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    /* tokens.css redefine estos en oscuro con un selector mas fuerte que
+       `:root`: sin repetirlos aqui, las pantallas FD4 salian en azul marino. */
+    --bg: var(--io-bg);
+    --surface: var(--io-cell);
+    --text: var(--io-label);
+    --text-muted: var(--io-label-2);
+    --text-on-accent: var(--io-on-tint);
+    --task: var(--io-tint-fill);
+    --task-press: var(--io-tint-press);
+    --accent-text: var(--io-tint);
+    --class: var(--io-class);
+    --rem: var(--io-rem);
+    --rem-soft: var(--io-rem-soft);
+    --focus-ring: var(--io-tint);
+    --scrim: var(--io-scrim);
+    --shadow-card: none;
+    --shadow-lead: none;
+    --shadow-float: var(--io-glass-shadow);
+    --shadow-fab: var(--io-glass-shadow);
     --desk: #0B080A;
     --surface-sunken: #191317;
     --line: #2E252B;
@@ -223,6 +242,23 @@
 }
 
 :root[data-theme="dark"] {
+  --bg: var(--io-bg);
+  --surface: var(--io-cell);
+  --text: var(--io-label);
+  --text-muted: var(--io-label-2);
+  --text-on-accent: var(--io-on-tint);
+  --task: var(--io-tint-fill);
+  --task-press: var(--io-tint-press);
+  --accent-text: var(--io-tint);
+  --class: var(--io-class);
+  --rem: var(--io-rem);
+  --rem-soft: var(--io-rem-soft);
+  --focus-ring: var(--io-tint);
+  --scrim: var(--io-scrim);
+  --shadow-card: none;
+  --shadow-lead: none;
+  --shadow-float: var(--io-glass-shadow);
+  --shadow-fab: var(--io-glass-shadow);
   --desk: #0B080A;
   --surface-sunken: #191317;
   --line: #2E252B;
@@ -2334,6 +2370,231 @@ a.hl-dg::after,
 
 .io-accent[aria-checked="true"] .io-accent__dot {
   box-shadow: 0 0 0 2px var(--io-cell), 0 0 0 4px var(--io-tint);
+}
+
+/* ================================================= 7d · DETALLES DE iOS ==
+   Cuatro arreglos que pidio el usuario al probar en el iPhone (2026-10-07).
+
+   1. Control segmentado (Mes/Semana/Dia, Tareas/Recordatorios): el de iOS.
+      Carril gris sin borde y una pastilla blanca con sombra que repite la
+      forma del carril. Antes la pastilla era verde, de radio 10, dentro de
+      una capsula con filete: las dos curvas no casaban.
+   2. Horario: inicio y fin apilados, la barra de clase y la materia.
+   3. Formulario de Recursos: grupos de iOS dentro de la hoja.
+   4. Inicio: Mi horario y Ver el dia al pie de Tu dia.                    */
+
+.fd-app .fd-seg {
+  padding: 3px;
+  gap: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--io-fill);
+  box-shadow: none;
+}
+
+.fd-app .fd-seg > a,
+.fd-app .fd-seg > button {
+  border-radius: 999px;
+  color: var(--io-label);
+  font-weight: 500;
+}
+
+.fd-app .fd-seg > [aria-selected="true"] {
+  background: var(--io-cell);
+  color: var(--io-label);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgb(0 0 0 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.04);
+}
+
+/* En oscuro la pastilla tiene que ser mas clara que el carril. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fd-app .fd-seg > [aria-selected="true"] {
+    background: color-mix(in srgb, var(--io-label) 22%, var(--io-cell));
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.3);
+  }
+}
+
+:root[data-theme="dark"] .fd-app .fd-seg > [aria-selected="true"] {
+  background: color-mix(in srgb, var(--io-label) 22%, var(--io-cell));
+  box-shadow: 0 3px 8px rgb(0 0 0 / 0.3);
+}
+
+/* --- 2 · horario --------------------------------------------------------- */
+
+.fd5-cls {
+  grid-template-columns: 50px 4px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.fd5-cls__hours {
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+}
+
+.fd5-cls__hours b {
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--io-label);
+}
+
+.fd5-cls__hours small {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+.fd5-cls__bar {
+  border-radius: 2px;
+  background: var(--io-class);
+}
+
+.fd5-cls__text,
+.fd5-cls > .fd5-tag {
+  align-self: center;
+}
+
+.fd5-cls__text b {
+  font-size: 16px;
+  line-height: 21px;
+  letter-spacing: normal;
+}
+
+.fd5-cls__text small {
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.fd5-cls[data-past="true"] .fd5-cls__hours b,
+.fd5-cls[data-past="true"] .fd5-cls__text b {
+  color: var(--io-label-2);
+}
+
+.fd5-cls[data-past="true"] .fd5-cls__bar {
+  opacity: 0.4;
+}
+
+/* --- 3 · formulario dentro de una hoja ------------------------------------ */
+
+.io-form {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 4px;
+}
+
+.io-field {
+  position: relative;
+  display: block;
+  padding: 0 16px;
+}
+
+.io-field + .io-field::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 0.5px solid var(--io-sep);
+}
+
+.io-field input,
+.io-field textarea {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 15px 0;
+  border: 0;
+  background: transparent;
+  color: var(--io-label);
+  font: inherit;
+  font-size: 17px;
+  line-height: 22px;
+  resize: none;
+}
+
+.io-field input::placeholder,
+.io-field textarea::placeholder {
+  color: var(--io-label-2);
+}
+
+.io-field input:focus,
+.io-field textarea:focus {
+  outline: none;
+}
+
+/* En el iPhone basta el cursor, como en iOS; con raton y teclado, anillo. */
+@media (pointer: fine) {
+  .io-field:has(:focus-visible) {
+    box-shadow: inset 0 0 0 2px var(--io-tint);
+  }
+}
+
+.io-form__label {
+  margin: 18px 30px 8px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--io-label-2);
+}
+
+.io-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 14px 18px;
+}
+
+.io-kinds .io-chip {
+  padding: 0 14px;
+  background: var(--io-cell-up);
+}
+
+.io-kinds .io-chip[aria-checked="true"] {
+  background: var(--io-tint-fill);
+  color: var(--io-on-tint);
+}
+
+.io-kinds .io-chip:focus-visible {
+  outline: 2px solid var(--io-tint);
+  outline-offset: 2px;
+}
+
+.io-form__err {
+  margin: 12px 30px 0;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--io-label);
+}
+
+.io-form__save {
+  flex: none;
+  margin: 18px 14px 0;
+  background: var(--io-tint-fill);
+  color: var(--io-on-tint);
+}
+
+.io-form__save:disabled {
+  opacity: 0.6;
+}
+
+/* --- 4 · Inicio: horario y dia al pie de Tu dia ---------------------------- */
+
+.in-dia__acts {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.in-dia__acts .in-btn {
+  flex: 1 1 0;
+  margin-top: 0;
+}
+
+.in-dia__acts .in-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* ================================================ 8 · ESCRITORIO (>=900) = */
