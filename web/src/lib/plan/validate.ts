@@ -8,6 +8,10 @@
      de editar, algo fuera de tema o que no se entendió → cero propuestas.
    · Cada sesión tiene que caber entera en un hueco libre real, por su id.
    · Dos sesiones de la misma propuesta no se pisan.
+   · Una sesión puede ser una tarea que ya existe (por su id, "T3"): entonces
+     lleva el título real de esa tarea, va una sola vez por propuesta y nunca
+     después del reminder del que cuelga. Así "Ponerlo" le da hora a esa
+     tarea en vez de crear otra igual.
    · Topes de tamaño en todo el texto.
 
    Sin dependencias de Next ni de red: se prueba con `node --test`.
@@ -18,7 +22,10 @@ import { fitsInSlots, fromClock, toClock, type FreeSlot } from './slots.ts';
 export const INTENTS = ['plan', 'question', 'edit', 'off_topic', 'unclear'] as const;
 export type Intent = (typeof INTENTS)[number];
 
-export type PlanSession = { date: string; start: string; minutes: number; title: string };
+/** `itemId`: la tarea ya anotada a la que esta sesión le da hora. */
+export type PlanSession = { date: string; start: string; minutes: number; title: string; itemId?: string };
+/** Una tarea abierta sin hora que el modelo puede elegir por `ref`. */
+export type TaskRef = { ref: string; id: string; title: string; before: string | null };
 export type PlanOption = { title: string; why: string; sessions: PlanSession[] };
 export type PlanAnswer = { intent: Intent; reply: string; options: PlanOption[] };
 
@@ -33,7 +40,7 @@ const FALLBACK_REPLY: Record<Intent, string> = {
   unclear: 'No entendí qué quieres planificar. Dime qué quieres hacer y te busco hueco.',
 };
 
-export function validateAnswer(out: unknown, slots: FreeSlot[]): PlanAnswer | null {
+export function validateAnswer(out: unknown, slots: FreeSlot[], tasks: TaskRef[] = []): PlanAnswer | null {
   if (!out || typeof out !== 'object') return null;
   const o = out as { intent?: unknown; reply?: unknown; options?: unknown };
 
@@ -43,25 +50,31 @@ export function validateAnswer(out: unknown, slots: FreeSlot[]): PlanAnswer | nu
   const options: PlanOption[] = [];
   if (intent === 'plan') {
     const slotById = new Map(slots.map((s) => [s.id, s]));
+    const taskByRef = new Map(tasks.map((t) => [t.ref.toUpperCase(), t]));
 
     for (const raw of Array.isArray(o.options) ? o.options : []) {
       if (options.length >= MAX_OPTIONS) break;
       const opt = (raw ?? {}) as { title?: unknown; why?: unknown; sessions?: unknown };
       const sessions: PlanSession[] = [];
       const taken: { date: string; from: number; to: number }[] = [];
+      const linked = new Set<string>();
 
       for (const rs of Array.isArray(opt.sessions) ? opt.sessions : []) {
         if (sessions.length >= MAX_SESSIONS) break;
-        const s = (rs ?? {}) as { slot?: unknown; start?: unknown; minutes?: unknown; title?: unknown };
+        const s = (rs ?? {}) as { slot?: unknown; start?: unknown; minutes?: unknown; title?: unknown; task?: unknown };
         const slot = typeof s.slot === 'string' ? slotById.get(s.slot.trim()) : undefined;
         const from = typeof s.start === 'string' ? fromClock(s.start) : null;
         const minutes = typeof s.minutes === 'number' ? Math.round(s.minutes) : NaN;
-        const title = typeof s.title === 'string' ? s.title.trim().slice(0, 120) : '';
+        const task = typeof s.task === 'string' ? taskByRef.get(s.task.trim().toUpperCase()) : undefined;
+        const title = task ? task.title : typeof s.title === 'string' ? s.title.trim().slice(0, 120) : '';
         if (!slot || from === null || !title || !(minutes >= 15 && minutes <= 180)) continue;
         if (!fitsInSlots([slot], slot.date, from, minutes)) continue;
         if (taken.some((t) => t.date === slot.date && from < t.to && t.from < from + minutes)) continue;
+        /* Una tarea es una sola cosa: una hora, y antes de su parcial. */
+        if (task && (linked.has(task.id) || (task.before !== null && slot.date > task.before))) continue;
         taken.push({ date: slot.date, from, to: from + minutes });
-        sessions.push({ date: slot.date, start: toClock(from), minutes, title });
+        if (task) linked.add(task.id);
+        sessions.push({ date: slot.date, start: toClock(from), minutes, title, ...(task ? { itemId: task.id } : {}) });
       }
 
       if (sessions.length === 0) continue;

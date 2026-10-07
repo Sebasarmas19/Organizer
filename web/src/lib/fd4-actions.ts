@@ -28,10 +28,23 @@ async function requireUser() {
 export async function toggleTask(id: string, done: boolean) {
   const { supabase, user } = await requireUser();
 
+  /* Desmarcar la devuelve a donde estaba, no a "por clasificar": con fecha,
+     planificada; sin fecha, en algún día (como al editarla). */
+  let reopened: 'planned' | 'someday' = 'someday';
+  if (!done) {
+    const { data } = await supabase
+      .from('items')
+      .select('due_on')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (data?.due_on) reopened = 'planned';
+  }
+
   const { error } = await supabase
     .from('items')
     .update({
-      status: done ? 'done' : 'inbox',
+      status: done ? 'done' : reopened,
       completed_at: done ? new Date().toISOString() : null,
     })
     .eq('id', id)

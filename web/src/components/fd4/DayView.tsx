@@ -14,10 +14,15 @@ import { useOptimistic, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Fd4DayData, DayBlockView, DayNoHourTask } from '@/lib/fd4-calendar';
-import { DAY_HOURS } from '@/lib/fd4-calendar';
+import { DAY_HOURS, HOUR_PX } from '@/lib/fd4-calendar';
 import { Check, Flag } from './Marks';
 import { Icon } from '@/components/Icon';
 import { toggleBlockTask, toggleTask } from '@/lib/fd4-actions';
+
+/* El servidor coloca todo a HOUR_PX por hora, pero la hora mide lo que diga
+   --hour-row: 56px en el telefono y menos en escritorio. Se pasa a horas y
+   el CSS pone la medida, así bloques y rejilla no se separan nunca. */
+const rail = (px: number) => `calc(${(px / HOUR_PX).toFixed(4)} * var(--hour-row))`;
 
 export function DayView({ data }: { data: Fd4DayData }) {
   const router = useRouter();
@@ -161,7 +166,7 @@ export function DayView({ data }: { data: Fd4DayData }) {
                 <div
                   key={c.id}
                   className="fd-classband"
-                  style={{ top: c.top, height: c.height }}
+                  style={{ top: rail(c.top), height: rail(c.height) }}
                   aria-hidden
                 >
                   {c.height >= 24 ? <span>En clase</span> : null}
@@ -194,7 +199,7 @@ export function DayView({ data }: { data: Fd4DayData }) {
                   <div
                     key={b.id}
                     className={`fd-block fd-block--${b.kind}`}
-                    style={{ top: b.top, height: b.height, opacity: isDone ? 0.6 : 1 }}
+                    style={{ top: rail(b.top), height: rail(b.height), opacity: isDone ? 0.6 : 1 }}
                   >
                     {b.kind === 'reminder' ? <Flag size="sm" /> : null}
 
@@ -233,7 +238,7 @@ export function DayView({ data }: { data: Fd4DayData }) {
               })}
 
               {data.nowTop !== null ? (
-                <div className="fd-now" style={{ top: data.nowTop }}>
+                <div className="fd-now" style={{ top: rail(data.nowTop) }}>
                   <span className="fd-now__label">{data.nowLabel}</span>
                   <span className="fd-now__line" />
                 </div>
