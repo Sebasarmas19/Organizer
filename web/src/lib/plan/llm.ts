@@ -30,12 +30,22 @@ export type { PlanAnswer, PlanOption, PlanSession, Intent, ChatTurn } from './va
 
 /* Flash y no Flash-Lite: aquí importa razonar bien, no responder en 1 s.
    Medido el 2026-10-05: 3.8-flash ~9 s, 3.5-flash ~8 s, 3.5-flash-lite ~2 s.
-   Cupo gratis: 20 al día cada Flash, 500 el Lite. Los tres intentos caben en
-   el maxDuration (60 s) de /planear. */
+   Cupo gratis: 20 al día cada Flash, 500 el Lite.
+
+   CARRERA, NO COLA (2026-10-07). El plan gratis es errático: la misma
+   petición al Lite tardó 44 s y luego 2 s, y hasta un "hola" se colgó 60 s.
+   Probar un modelo detrás de otro con su tiempo límite perdía la respuesta
+   en cuanto uno se colgaba. Ahora sale el principal y, si no ha contestado
+   a los HEDGES[i].at ms, sale el siguiente SIN cancelar el anterior: gana la
+   primera respuesta válida y las demás se cortan. Si uno falla rápido (500,
+   429), el siguiente sale ya. Todo dentro de DEADLINE_MS, que deja margen al
+   maxDuration (60 s) de /planear y del domingo. */
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const FALLBACK_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
-const FIRST_TIMEOUT_MS = 22000;
-const FALLBACK_TIMEOUT_MS = 12000;
+const LITE_MODEL = 'gemini-3.5-flash-lite';
+const SECOND_FLASH = 'gemini-3.5-flash';
+const DEADLINE_MS = 50000;
+/* El Lite sale pronto porque casi nunca agota cupo y suele tardar 2 s. */
+const HEDGES_AT_MS = [0, 9000, 18000, 30000];
 
 const WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
@@ -211,16 +221,14 @@ async function callModel(
   apiKey: string,
   system: string,
   contents: Contents,
-  timeoutMs: number
+  signal: AbortSignal
 ): Promise<{ raw: string | null; retry: boolean }> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
       {
         method: 'POST',
-        signal: controller.signal,
+        signal,
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
@@ -242,12 +250,15 @@ async function callModel(
     const raw = parts.filter((p) => !p.thought && p.text).map((p) => p.text).join('');
     return { raw: raw || null, retry: !raw };
   } catch (error) {
-    console.error('Gemini (plan)', model, 'no respondió:', error instanceof Error ? error.message : error);
+    /* Cortado porque otro ganó: no es un fallo. */
+    if (!signal.aborted || signal.reason !== WON) {
+      console.error('Gemini (plan)', model, 'no respondió:', error instanceof Error ? error.message : error);
+    }
     return { raw: null, retry: true };
-  } finally {
-    clearTimeout(timer);
   }
 }
+
+const WON = 'otro modelo ya respondió';
 
 export async function proposeWithLlm(
   request: string,
@@ -258,7 +269,8 @@ export async function proposeWithLlm(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   const primary = process.env.GEMINI_PLAN_MODEL || DEFAULT_MODEL;
-  const models = [primary, ...FALLBACK_MODELS.filter((m) => m !== primary)];
+  const others = [LITE_MODEL, SECOND_FLASH, LITE_MODEL].filter((m, i) => i === 2 || m !== primary);
+  const models = [primary, ...others].slice(0, HEDGES_AT_MS.length);
   const system = instructions(ctx, mode);
 
   /* Gemini exige que la conversación empiece por el usuario. */
@@ -268,23 +280,62 @@ export async function proposeWithLlm(
     { role: 'user', parts: [{ text: request }] },
   ];
 
-  for (const [i, model] of models.entries()) {
-    const started = Date.now();
-    const timeout = i === 0 ? FIRST_TIMEOUT_MS : FALLBACK_TIMEOUT_MS;
-    const { raw, retry } = await callModel(model, apiKey, system, contents, timeout);
-    if (raw) {
-      try {
-        const answer = validateAnswer(JSON.parse(raw), ctx.slots, ctx.tasks);
-        if (answer) {
-          /* Sin contenido: solo lo necesario para depurar desde los logs de Vercel. */
-          console.info('plan', { mode, model, ms: Date.now() - started, intent: answer.intent, options: answer.options.length, turns: turns.length });
-          return answer;
+  const started = Date.now();
+  const deadline = AbortSignal.timeout(DEADLINE_MS);
+  const runs: AbortController[] = [];
+
+  return new Promise<PlanAnswer | null>((resolve) => {
+    let next = 0;
+    let running = 0;
+    let settled = false;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    const finish = (answer: PlanAnswer | null) => {
+      if (settled) return;
+      settled = true;
+      timers.forEach(clearTimeout);
+      runs.forEach((c) => c.abort(WON));
+      deadline.removeEventListener('abort', onDeadline);
+      if (!answer) console.error('plan: ningún modelo respondió', { mode, ms: Date.now() - started, tried: next });
+      resolve(answer);
+    };
+    const onDeadline = () => finish(null);
+    deadline.addEventListener('abort', onDeadline);
+
+    const launch = () => {
+      if (settled || next >= models.length) return;
+      const model = models[next++];
+      const run = new AbortController();
+      runs.push(run);
+      running++;
+      const t0 = Date.now();
+      void callModel(model, apiKey, system, contents, AbortSignal.any([run.signal, deadline])).then(({ raw, retry }) => {
+        running--;
+        if (settled) return;
+        if (raw) {
+          try {
+            const answer = validateAnswer(JSON.parse(raw), ctx.slots, ctx.tasks);
+            if (answer) {
+              /* Sin contenido: solo lo necesario para depurar desde los logs de Vercel. */
+              console.info('plan', { mode, model, ms: Date.now() - t0, total: Date.now() - started, intent: answer.intent, options: answer.options.length, turns: turns.length });
+              finish(answer);
+              return;
+            }
+          } catch {
+            console.error('Gemini (plan) devolvió algo que no es JSON válido:', raw.slice(0, 200));
+          }
         }
-      } catch {
-        console.error('Gemini (plan) devolvió algo que no es JSON válido:', raw.slice(0, 200));
-      }
-    }
-    if (!raw && !retry) break;
-  }
-  return null;
+        /* Un 400 es culpa de la petición: los demás modelos fallarían igual. */
+        if (!raw && !retry) return finish(null);
+        /* Falló rápido: el siguiente no espera a su turno. */
+        if (running === 0) {
+          if (next >= models.length) finish(null);
+          else launch();
+        }
+      });
+    };
+
+    launch();
+    for (const at of HEDGES_AT_MS.slice(1)) timers.push(setTimeout(launch, at));
+  });
 }
