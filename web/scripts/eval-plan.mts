@@ -4,7 +4,7 @@
    npm run eval:plan            (usa el modelo por defecto y sus respaldos)
    GEMINI_PLAN_MODEL=gemini-3.5-flash npm run eval:plan
 
-   Gasta ~9 peticiones del cupo gratis (20/día en los Flash): no va en verify.
+   Gasta ~10 peticiones del cupo gratis (20/día en los Flash): no va en verify.
    Espera 13 s entre preguntas para no pasar de 5 por minuto. Solo lee: no
    guarda nada en la base de datos.
    ========================================================================= */
@@ -37,6 +37,8 @@ const all = (...fs: ((a: PlanAnswer) => string | null)[]) => (a: PlanAnswer) =>
 let bookAnswer: PlanAnswer | null = null;
 const tomorrow = ctx.days[1];
 const tomorrowClass = tomorrow.agenda.find((x) => x.includes('clase:'))?.split('clase: ')[1];
+/* Una tarea tuya sin hora: pedirle hora tiene que enlazarla, no crear otra (decisión 83). */
+const ownTask = ctx.tasks[0];
 
 const cases: Case[] = [
   { ask: '¿Cuál es la capital de Francia?', check: all(intentIs('off_topic'), noOptions, (a) => (/par[ií]s/i.test(a.reply) ? 'contestó la pregunta' : null)) },
@@ -67,6 +69,19 @@ const cases: Case[] = [
       return late.length ? `${late.length} sesiones después de las 12` : null;
     },
   },
+  ...(ownTask
+    ? [
+        {
+          ask: `Ponle hora esta semana a "${ownTask.title}"`,
+          check: (a: PlanAnswer) => {
+            const bad = intentIs('plan')(a) ?? (a.options.length ? null : 'sin propuestas');
+            if (bad) return bad;
+            const loose = a.options.flatMap((o) => o.sessions).filter((s) => s.itemId !== ownTask.id);
+            return loose.length ? `${loose.length} sesiones no enlazan la tarea (crearían una copia)` : null;
+          },
+        },
+      ]
+    : []),
 ];
 
 console.log(`Agenda: ${ctx.slots.length} huecos, ${ctx.subjects.length} materias, ${ctx.upcoming.length} reminders. Hoy ${ctx.today} ${toClock(ctx.nowMinutes)}.\n`);
