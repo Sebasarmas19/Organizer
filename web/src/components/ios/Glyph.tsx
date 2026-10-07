@@ -25,7 +25,8 @@ export type GlyphName =
   | 'xmark'
   | 'chevron'
   | 'clock'
-  | 'flame';
+  | 'flame'
+  | 'sparkles';
 
 const PATHS: Record<GlyphName, ReactNode> = {
   gear: (
@@ -68,6 +69,13 @@ const PATHS: Record<GlyphName, ReactNode> = {
     <>
       <circle cx="12" cy="12" r="8.25" />
       <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  /* sparkles: una estrella de cuatro puntas grande y una pequena. */
+  sparkles: (
+    <>
+      <path d="M10 3.5c.6 3.6 2.4 5.4 6 6-3.6.6-5.4 2.4-6 6-.6-3.6-2.4-5.4-6-6 3.6-.6 5.4-2.4 6-6z" />
+      <path d="M17.5 14.5c.3 1.6 1.1 2.4 2.75 2.75-1.65.35-2.45 1.15-2.75 2.75-.3-1.6-1.1-2.4-2.75-2.75 1.65-.35 2.45-1.15 2.75-2.75z" />
     </>
   ),
   flame: <path d="M12 2.5c1.2 3.8 5.5 6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.4 1.3-4 2.7-5 .3 1.7 1.3 2.8 2.7 2.8-1.1-3-.6-6 .1-8.8z" />,

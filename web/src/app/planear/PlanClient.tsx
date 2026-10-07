@@ -6,12 +6,16 @@
    Una conversación corta: escribes qué quieres hacer, el asistente mira tu
    agenda y propone; puedes ajustar ("mejor en las mañanas") y recuerda lo
    anterior. Nada se guarda hasta que tocas "Ponerlo así".
+
+   mode="week" es el mismo asistente dentro del ritual del domingo: pregunta
+   solo al abrirse el paso, cada propuesta es una sugerencia distinta que se
+   acepta por separado, y puedes pedirle otra cosa ("quiero leer este libro").
    ========================================================================= */
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { acceptPlan, proposePlan } from '@/lib/plan/actions';
-import type { ChatTurn, PlanAnswer, PlanOption } from '@/lib/plan/llm';
+import type { ChatTurn, PlanAnswer, PlanMode, PlanOption } from '@/lib/plan/llm';
 
 const EXAMPLES = [
   'Quiero leer Atomic Habits',
@@ -19,6 +23,9 @@ const EXAMPLES = [
   'Ir al gym 3 veces por semana',
   '¿Qué tengo mañana?',
 ];
+
+/* Lo que "pregunta" el ritual al abrir el paso; no se muestra como tuyo. */
+const WEEK_REQUEST = 'Estoy armando la semana. ¿Qué me recomiendas hacer y cuándo?';
 
 const WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
@@ -33,7 +40,8 @@ function when(date: string, start: string, minutes: number): string {
 /** Lo que se ve de los turnos anteriores: tu frase y la respuesta corta. */
 type Shown = { you: string; reply: string };
 
-export function PlanClient() {
+export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; active?: boolean }) {
+  const week = mode === 'week';
   const [text, setText] = useState('');
   const [history, setHistory] = useState<ChatTurn[]>([]);
   const [past, setPast] = useState<Shown[]>([]);
@@ -44,7 +52,10 @@ export function PlanClient() {
   const [thinking, startThinking] = useTransition();
   const [saving, startSaving] = useTransition();
   const [savingIdx, setSavingIdx] = useState<number | null>(null);
+  /* Solo en el ritual: lo aceptado de cada sugerencia, por indice. */
+  const [accepted, setAccepted] = useState<Record<number, number>>({});
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const autoAsked = useRef(false);
 
   const reset = () => {
     setHistory([]);
@@ -56,14 +67,14 @@ export function PlanClient() {
     inputRef.current?.focus();
   };
 
-  const ask = (value: string) => {
+  const ask = (value: string, shown = value) => {
     const v = value.trim();
     if (!v || thinking) return;
     setError('');
     setSaved(null);
     startThinking(async () => {
       try {
-        const res = await proposePlan(v, history);
+        const res = await proposePlan(v, history, mode);
         if (!res.ok) {
           setError(res.error);
           return;
@@ -72,7 +83,8 @@ export function PlanClient() {
         if (answer) setPast((p) => [...p, { you: lastAsk, reply: answer.reply }]);
         setHistory((h) => [...h, { role: 'user' as const, text: v }, { role: 'model' as const, text: res.memory }].slice(-8));
         setAnswer(res.answer);
-        setLastAsk(v);
+        setAccepted({});
+        setLastAsk(shown.trim());
         setText('');
       } catch {
         setError('No se pudo preguntar. Revisa la conexión y prueba otra vez.');
@@ -80,13 +92,23 @@ export function PlanClient() {
     });
   };
 
+  /* En el ritual pregunta sola la primera vez que se ve el paso: el paso
+     es justo para esto, y una sola llamada por visita cuida el cupo. */
+  useEffect(() => {
+    if (!week || !active || autoAsked.current) return;
+    autoAsked.current = true;
+    ask(WEEK_REQUEST, '');
+  });
+
   const accept = (opt: PlanOption, idx: number) => {
     setError('');
     setSavingIdx(idx);
     startSaving(async () => {
       try {
         const res = await acceptPlan(opt.sessions);
-        if (res.ok) {
+        if (res.ok && week) {
+          setAccepted((a) => ({ ...a, [idx]: res.count }));
+        } else if (res.ok) {
           setSaved(res.count);
           setHistory([]);
           setPast([]);
@@ -103,18 +125,24 @@ export function PlanClient() {
   const inConversation = answer !== null;
 
   return (
-    <div className="fd-scroll">
+    <div className={week ? undefined : 'fd-scroll'}>
       <div className="fd-plan">
+        {week && thinking && !answer ? (
+          <p className="fd-plan__reply" role="status">
+            Mirando tu semana, lo que hiciste y lo que viene…
+          </p>
+        ) : null}
+
         {past.map((t, i) => (
           <div className="fd-plan__past" key={i}>
-            <span className="fd-plan__you">{t.you}</span>
+            {t.you ? <span className="fd-plan__you">{t.you}</span> : null}
             <span className="fd-meta">{t.reply}</span>
           </div>
         ))}
 
         {answer ? (
           <>
-            <span className="fd-plan__you">{lastAsk}</span>
+            {lastAsk ? <span className="fd-plan__you">{lastAsk}</span> : null}
             <p className="fd-plan__reply">{answer.reply}</p>
 
             {answer.intent === 'edit' ? (
@@ -138,14 +166,20 @@ export function PlanClient() {
                       </span>
                     </span>
                   ))}
-                  <button
-                    type="button"
-                    className="fd-btn fd-btn--primary"
-                    onClick={() => accept(opt, i)}
-                    disabled={saving || thinking}
-                  >
-                    {saving && savingIdx === i ? 'Guardando…' : 'Ponerlo así'}
-                  </button>
+                  {accepted[i] !== undefined ? (
+                    <span className="fd-meta" role="status">
+                      Puesto: {accepted[i]} {accepted[i] === 1 ? 'sesión' : 'sesiones'} con aviso 15 min antes.
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="fd-btn fd-btn--primary"
+                      onClick={() => accept(opt, i)}
+                      disabled={saving || thinking}
+                    >
+                      {saving && savingIdx === i ? 'Guardando…' : week ? 'Ponerlo' : 'Ponerlo así'}
+                    </button>
+                  )}
                 </span>
               </section>
             ))}
@@ -184,7 +218,9 @@ export function PlanClient() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={
-              inConversation
+              week
+                ? 'Pídele otra cosa: "quiero leer este libro", "estudiar Física"…'
+                : inConversation
                 ? 'Ajusta: "mejor en las mañanas", "solo 20 minutos"…'
                 : '¿Qué quieres hacer? Ej.: leer un libro, estudiar para Física, ir al gym…'
             }
@@ -194,10 +230,15 @@ export function PlanClient() {
             autoCapitalize="sentences"
           />
           <div className="fd-plan__actions">
-            <button type="submit" className="fd-btn fd-btn--primary" disabled={!text.trim() || thinking}>
-              {thinking ? 'Mirando tu agenda…' : inConversation ? 'Enviar' : '¿Dónde lo pongo?'}
+            {/* En el ritual la accion principal es Cerrar la semana: esta va en segundo plano. */}
+            <button
+              type="submit"
+              className={week ? 'fd-btn' : 'fd-btn fd-btn--primary'}
+              disabled={!text.trim() || thinking}
+            >
+              {thinking ? 'Mirando tu agenda…' : week ? 'Preguntar' : inConversation ? 'Enviar' : '¿Dónde lo pongo?'}
             </button>
-            {inConversation ? (
+            {inConversation && !week ? (
               <button type="button" className="fd-btn" onClick={reset} disabled={thinking}>
                 Nueva consulta
               </button>
@@ -205,7 +246,7 @@ export function PlanClient() {
           </div>
         </form>
 
-        {!inConversation && !thinking && saved === null ? (
+        {!week && !inConversation && !thinking && saved === null ? (
           <div className="fd-plan__examples">
             {EXAMPLES.map((ex) => (
               <button key={ex} type="button" className="fd-secbtn" onClick={() => ask(ex)}>

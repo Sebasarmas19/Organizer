@@ -35,9 +35,10 @@ import { DOW_INITIALS } from '@/lib/fd4-calendar';
 import { Dot } from './Marks';
 import { TabIcon } from './TabIcon';
 import { Icon } from '@/components/Icon';
+import { Glyph } from '@/components/ios/Glyph';
 
 /** Que enlace de la barra se enciende, segun la pantalla que te trajo. */
-export type DeskNav = 'inicio' | 'calendario' | 'pendientes' | 'recursos' | 'ajustes';
+export type DeskNav = 'inicio' | 'calendario' | 'pendientes' | 'recursos' | 'planear' | 'ajustes';
 
 export function DeskSidebar({
   active,
@@ -107,6 +108,16 @@ export function DeskSidebar({
         >
           <TabIcon name="recursos" />
           Recursos
+        </Link>
+
+        <Link
+          href="/planear"
+          prefetch={true}
+          className="fd-sidelink"
+          aria-current={active === 'planear' ? 'page' : undefined}
+        >
+          <Glyph name="sparkles" className="fd-ico" />
+          Planear
         </Link>
       </nav>
 

@@ -179,8 +179,11 @@ export function InicioScreen({
             <h1>Hoy</h1>
           </div>
           <div className="in-head__acts">
-            <Link href={dayHref} prefetch={true} className="io-circ in-circ io-press" aria-label="Ver el día">
-              <Glyph name="calendar" />
+            {/* El asistente, siempre a la vista: antes solo salia con el dia
+                vacio. Ver el dia vive ahora al pie de Tu dia. */}
+            <Link href="/planear" prefetch={true} className="in-plan io-press">
+              <Glyph name="sparkles" />
+              Planear
             </Link>
             <Link href="/ajustes" prefetch={true} className="io-circ in-circ io-press" aria-label="Ajustes">
               <Glyph name="gear" />
