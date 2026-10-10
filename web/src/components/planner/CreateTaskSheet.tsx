@@ -11,9 +11,9 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet } from '@/components/ios/Sheet';
+import { Glyph } from '@/components/ios/Glyph';
 import { createTask } from '@/lib/planner-actions';
 import type { ReminderOption } from '@/lib/planner-data';
-import { addDays } from '@/lib/date-utils';
 
 const DURATIONS = [
   { value: 30, label: '30 min' },
@@ -61,13 +61,6 @@ export function CreateTaskSheet({
   const [reminderId, setReminderId] = useState(initialReminderId);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
-
-  const tomorrow = addDays(todayStr, 1);
-  const quick = [
-    { label: 'Hoy', value: todayStr },
-    { label: 'Mañana', value: tomorrow },
-    { label: 'Sin fecha', value: '' },
-  ];
 
   const reset = () => {
     setTitle('');
@@ -145,23 +138,27 @@ export function CreateTaskSheet({
         </div>
 
         {/* GRUPO 2: Planificación y Fecha */}
-        <span className="io-form__label">Cuándo</span>
-        <div className="io-kinds" role="radiogroup" aria-label="Fecha rápida">
-          {quick.map((q) => (
-            <button
-              key={q.label}
-              type="button"
-              role="radio"
-              className="io-chip io-press"
-              aria-checked={dueOn === q.value}
-              onClick={() => {
-                setDueOn(q.value);
-                if (!q.value) setTime('');
-              }}
-            >
-              {q.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '18px 24px 8px' }}>
+          <span className="io-form__label" style={{ margin: 0 }}>Cuándo</span>
+          <button
+            type="button"
+            className="io-chip io-press"
+            aria-checked={!dueOn}
+            onClick={() => {
+              setDueOn('');
+              setTime('');
+            }}
+            style={{
+              height: 28,
+              padding: '0 12px',
+              fontSize: 13,
+              fontWeight: 600,
+              background: !dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+              color: !dueOn ? 'var(--io-on-tint)' : 'var(--io-label-2)',
+            }}
+          >
+            Sin fecha
+          </button>
         </div>
 
         <div className="io-group">
@@ -169,15 +166,44 @@ export function CreateTaskSheet({
             <label htmlFor="task-sheet-date" className="io-field__label">
               Fecha
             </label>
-            <input
-              id="task-sheet-date"
-              type="date"
-              value={dueOn}
-              onChange={(e) => {
-                setDueOn(e.target.value);
-                if (!e.target.value) setTime('');
-              }}
-            />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 52 }}>
+              {!dueOn ? (
+                <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                  Elegir fecha…
+                </span>
+              ) : null}
+              <input
+                id="task-sheet-date"
+                type="date"
+                value={dueOn}
+                onChange={(e) => {
+                  setDueOn(e.target.value);
+                  if (!e.target.value) setTime('');
+                }}
+                style={!dueOn ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
+              />
+              {dueOn ? (
+                <button
+                  type="button"
+                  aria-label="Quitar fecha"
+                  onClick={() => {
+                    setDueOn('');
+                    setTime('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 0,
+                    padding: '4px',
+                    color: 'var(--io-label-3)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Glyph name="xmark" style={{ width: 14, height: 14 }} />
+                </button>
+              ) : null}
+            </div>
           </div>
 
           {dueOn ? (
@@ -274,7 +300,7 @@ export function CreateTaskSheet({
 
         <button
           type="submit"
-          className="io-btn io-form__save io-press"
+          className="in-btn in-btn--pri io-form__save io-press"
           disabled={isPending || !title.trim()}
         >
           {isPending ? 'Creando…' : 'Crear tarea'}

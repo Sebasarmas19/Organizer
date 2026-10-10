@@ -150,7 +150,7 @@ export function ReminderForm({
 
       <button
         type="submit"
-        className="io-btn io-form__save io-press"
+        className="in-btn in-btn--pri io-form__save io-press"
         disabled={pending || !values.title.trim()}
       >
         {pending ? 'Guardando…' : mode === 'create' ? 'Guardar y planificar tareas' : 'Guardar cambios'}

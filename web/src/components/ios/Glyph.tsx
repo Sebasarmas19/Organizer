@@ -84,7 +84,15 @@ const PATHS: Record<GlyphName, ReactNode> = {
 /** Los que son silueta rellena y no trazo. */
 const FILLED = new Set<GlyphName>(['flag', 'flame']);
 
-export function Glyph({ name, className }: { name: GlyphName; className?: string }) {
+export function Glyph({
+  name,
+  className,
+  style,
+}: {
+  name: GlyphName;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   const cls = ['io-glyph', FILLED.has(name) ? 'io-glyph--fill' : '', className ?? ''].filter(Boolean).join(' ');
   /* Tamano por defecto en atributos: donde ningun CSS lo fija, el SVG no
      se estira a 300x150. Cualquier regla de CSS manda sobre ellos. */
@@ -92,6 +100,7 @@ export function Glyph({ name, className }: { name: GlyphName; className?: string
   return (
     <svg
       className={cls}
+      style={style}
       width={chevron ? 9 : 24}
       height={chevron ? 15 : 24}
       viewBox={chevron ? '0 0 9 15' : '0 0 24 24'}

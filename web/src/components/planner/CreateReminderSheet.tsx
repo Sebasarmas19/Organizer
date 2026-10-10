@@ -183,7 +183,7 @@ export function CreateReminderSheet({
 
         <button
           type="submit"
-          className="io-btn io-form__save io-press"
+          className="in-btn in-btn--pri io-form__save io-press"
           disabled={isPending || !title.trim()}
         >
           {isPending ? 'Guardando…' : 'Guardar y planificar tareas'}
