@@ -29,6 +29,9 @@ import { TabBar } from '@/components/fd4/TabBar';
 import { Glyph } from '@/components/ios/Glyph';
 import { DecideSheet, type Decision } from './DecideSheet';
 import { useLaterQueue } from './laterQueue';
+import { CreateSheet } from '@/components/ios/CreateSheet';
+import { CreateTaskSheet } from '@/components/planner/CreateTaskSheet';
+import { CreateReminderSheet } from '@/components/planner/CreateReminderSheet';
 
 export type InicioProps = {
   todayStr: string;
@@ -85,6 +88,9 @@ export function InicioScreen({
   const [animate, setAnimate] = useState(false);
   const [popped, setPopped] = useState<string[]>([]);
   const [decideOpen, setDecideOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [taskSheetOpen, setTaskSheetOpen] = useState(false);
+  const [reminderSheetOpen, setReminderSheetOpen] = useState(false);
 
   /* ---------------------------------------------- lo que se ve ahora --- */
 
@@ -402,9 +408,13 @@ export function InicioScreen({
             {semana.length === 0 ? (
               <>
                 <p className="in-muted">No hay parciales ni entregas a la vista. Añádelos y te aviso con tiempo.</p>
-                <Link href="/reminders/nuevo" className="in-btn in-btn--soft in-btn--start io-press">
+                <button
+                  type="button"
+                  className="in-btn in-btn--soft in-btn--start io-press"
+                  onClick={() => setReminderSheetOpen(true)}
+                >
                   Nuevo reminder
-                </Link>
+                </button>
               </>
             ) : (
               <ul className="in-rows in-rows--up">
@@ -453,13 +463,29 @@ export function InicioScreen({
         ) : null}
       </main>
 
-      <TabBar />
+      <TabBar onCreate={() => setCreateOpen(true)} />
       <DecideSheet
         open={decideOpen && openAyer.length > 0}
         onClose={() => setDecideOpen(false)}
         tasks={openAyer}
         days={laterDays(todayStr)}
         onDecide={decide}
+      />
+      <CreateSheet
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onOpenTask={() => setTaskSheetOpen(true)}
+        onOpenReminder={() => setReminderSheetOpen(true)}
+      />
+      <CreateTaskSheet
+        open={taskSheetOpen}
+        onClose={() => setTaskSheetOpen(false)}
+        todayStr={todayStr}
+      />
+      <CreateReminderSheet
+        open={reminderSheetOpen}
+        onClose={() => setReminderSheetOpen(false)}
+        todayStr={todayStr}
       />
     </>
   );

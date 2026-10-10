@@ -10,14 +10,15 @@
    · Las clases son una franja gris "En clase", sin nombre ni toque (#53).
    ========================================================================= */
 
-import { useOptimistic, useTransition } from 'react';
+import { useState, useOptimistic, useTransition } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import type { Fd4DayData, DayBlockView, DayNoHourTask } from '@/lib/fd4-calendar';
 import { DAY_HOURS, HOUR_PX } from '@/lib/fd4-calendar';
 import { Check, Flag } from './Marks';
 import { Icon } from '@/components/Icon';
 import { toggleBlockTask, toggleTask } from '@/lib/fd4-actions';
+import { CreateTaskSheet } from '@/components/planner/CreateTaskSheet';
+import { CreateReminderSheet } from '@/components/planner/CreateReminderSheet';
 
 /* El servidor coloca todo a HOUR_PX por hora, pero la hora mide lo que diga
    --hour-row: 56px en el telefono y menos en escritorio. Se pasa a horas y
@@ -25,7 +26,6 @@ import { toggleBlockTask, toggleTask } from '@/lib/fd4-actions';
 const rail = (px: number) => `calc(${(px / HOUR_PX).toFixed(4)} * var(--hour-row))`;
 
 export function DayView({ data }: { data: Fd4DayData }) {
-  const router = useRouter();
   const [, startTransition] = useTransition();
 
   const [doneBlockIds, toggleDoneBlock] = useOptimistic<
@@ -61,23 +61,39 @@ export function DayView({ data }: { data: Fd4DayData }) {
     });
   };
 
+  const [taskSheetOpen, setTaskSheetOpen] = useState(false);
+  const [reminderSheetOpen, setReminderSheetOpen] = useState(false);
+  const [taskSheetTime, setTaskSheetTime] = useState('');
+
   const newTaskAt = (hour: string) => {
     const [h] = hour.split(':');
-    router.push(`/tareas/nueva?d=${data.dateStr}&t=${h.padStart(2, '0')}:00`);
+    setTaskSheetTime(`${h.padStart(2, '0')}:00`);
+    setTaskSheetOpen(true);
   };
 
   return (
     <>
       <div className="fd-dayhead">
         <div className="pl-addbar">
-          <Link href={`/tareas/nueva?d=${data.dateStr}`} className="fd-btn">
+          <button
+            type="button"
+            className="fd-btn io-press"
+            onClick={() => {
+              setTaskSheetTime('');
+              setTaskSheetOpen(true);
+            }}
+          >
             <Icon name="plus" size="sm" />
             Tarea
-          </Link>
-          <Link href={`/reminders/nuevo?d=${data.dateStr}`} className="fd-btn">
+          </button>
+          <button
+            type="button"
+            className="fd-btn io-press"
+            onClick={() => setReminderSheetOpen(true)}
+          >
             <Flag size="xs" />
             Reminder
-          </Link>
+          </button>
         </div>
 
         {data.band ? (
@@ -247,6 +263,21 @@ export function DayView({ data }: { data: Fd4DayData }) {
           </div>
         </div>
       </div>
+
+      <CreateTaskSheet
+        open={taskSheetOpen}
+        onClose={() => setTaskSheetOpen(false)}
+        todayStr={data.dateStr}
+        initialDate={data.dateStr}
+        initialTime={taskSheetTime}
+      />
+
+      <CreateReminderSheet
+        open={reminderSheetOpen}
+        onClose={() => setReminderSheetOpen(false)}
+        todayStr={data.dateStr}
+        initialDate={data.dateStr}
+      />
     </>
   );
 }

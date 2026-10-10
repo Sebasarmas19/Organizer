@@ -78,81 +78,93 @@ export function ReminderForm({
   };
 
   return (
-    <form className="pl-form" onSubmit={submit}>
-      {error ? <p className="pl-error" role="alert">{error}</p> : null}
+    <form className="io-form" onSubmit={submit} style={{ maxWidth: 540, margin: '0 auto', width: '100%' }}>
+      {error ? <p className="io-form__err" role="alert">{error}</p> : null}
 
-      <div className="pl-field">
-        <label className="pl-label" htmlFor="rem-title">Qué es</label>
-        <input
-          id="rem-title"
-          className="pl-input pl-input--title"
-          value={values.title}
-          onChange={set('title')}
-          placeholder="Entrega del proyecto, Parcial 2…"
-          autoFocus={mode === 'create'}
-          autoCapitalize="sentences"
-          enterKeyHint="next"
-          required
-        />
+      {/* GRUPO 1: Identidad */}
+      <div className="io-group">
+        <label className="io-field">
+          <span className="io-sr">Qué es</span>
+          <input
+            id="rem-title"
+            value={values.title}
+            onChange={set('title')}
+            placeholder="Entrega del proyecto, Parcial 2…"
+            autoFocus={mode === 'create'}
+            autoCapitalize="sentences"
+            enterKeyHint="next"
+            required
+          />
+        </label>
+        <label className="io-field">
+          <span className="io-sr">Notas</span>
+          <textarea
+            id="rem-notes"
+            rows={2}
+            value={values.notes}
+            onChange={set('notes')}
+            placeholder="Temas que entran, formato de entrega, aula…"
+          />
+        </label>
       </div>
 
-      <div className="pl-row">
-        <div className="pl-field">
-          <label className="pl-label" htmlFor="rem-date">Fecha</label>
+      {/* GRUPO 2: Fecha y Hora */}
+      <span className="io-form__label">Cuándo</span>
+      <div className="io-group">
+        <div className="io-field io-field--row">
+          <label className="io-field__label" htmlFor="rem-date">Fecha</label>
           <input
             id="rem-date"
             type="date"
-            className="pl-input"
             value={values.occursOn}
             onChange={set('occursOn')}
             required
           />
         </div>
-        <div className="pl-field">
-          <label className="pl-label" htmlFor="rem-time">Hora (opcional)</label>
+        <div className="io-field io-field--row">
+          <label className="io-field__label" htmlFor="rem-time">Hora (opcional)</label>
           <input
             id="rem-time"
             type="time"
-            className="pl-input"
             value={values.occursAt}
             onChange={set('occursAt')}
           />
         </div>
       </div>
 
-      <div className="pl-field">
-        <label className="pl-label" htmlFor="rem-notice">Que encabece la notificación de la mañana</label>
-        <select id="rem-notice" className="pl-select" value={values.noticeDays} onChange={set('noticeDays')}>
-          {NOTICE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-        <span className="pl-hint">
-          Además, si no tiene tareas, te aviso una semana, tres días y un día antes.
-        </span>
+      {/* GRUPO 3: Notificación */}
+      <span className="io-form__label">Notificación matutina</span>
+      <div className="io-group">
+        <div className="io-field io-field--row">
+          <label className="io-field__label" htmlFor="rem-notice">Avisar</label>
+          <select id="rem-notice" value={values.noticeDays} onChange={set('noticeDays')}>
+            {NOTICE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
+      <p className="io-field__hint">
+        Además, si no tiene tareas, te aviso una semana, tres días y un día antes.
+      </p>
 
-      <div className="pl-field">
-        <label className="pl-label" htmlFor="rem-notes">Notas (opcional)</label>
-        <textarea
-          id="rem-notes"
-          className="pl-textarea"
-          value={values.notes}
-          onChange={set('notes')}
-          placeholder="Temas que entran, formato de entrega, aula…"
-        />
-      </div>
-
-      <div className="pl-actions">
-        <button type="submit" className="fd-btn fd-btn--primary fd-btn--full" disabled={pending || !values.title.trim()}>
-          {pending ? 'Guardando…' : mode === 'create' ? 'Guardar y planificar tareas' : 'Guardar cambios'}
+      <button
+        type="submit"
+        className="io-btn io-form__save io-press"
+        disabled={pending || !values.title.trim()}
+      >
+        {pending ? 'Guardando…' : mode === 'create' ? 'Guardar y planificar tareas' : 'Guardar cambios'}
+      </button>
+      {mode === 'edit' ? (
+        <button
+          type="button"
+          className="io-btn io-press"
+          style={{ margin: '10px 14px 0', background: 'transparent', color: 'var(--io-label-2)' }}
+          onClick={onDone}
+        >
+          Cancelar
         </button>
-        {mode === 'edit' ? (
-          <button type="button" className="fd-btn fd-btn--quiet fd-btn--full" onClick={onDone}>
-            Cancelar
-          </button>
-        ) : null}
-      </div>
+      ) : null}
     </form>
   );
 }

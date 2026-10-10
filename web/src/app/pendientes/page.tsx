@@ -33,6 +33,7 @@ import { TaskGroupCard } from '@/components/fd4/TaskGroupCard';
 import { Triage } from '@/components/fd4/Triage';
 import { ReminderCard } from '@/components/fd4/ReminderCard';
 import { CompletedSection } from '@/components/fd4/CompletedSection';
+import { PendientesAddBar } from '@/components/planner/PendientesAddBar';
 import { Icon } from '@/components/Icon';
 import { Setup } from '../Setup';
 
@@ -97,19 +98,11 @@ export default async function PendientesPage({
 
         <div className="fd-scroll">
           <div className={`fd-pend__body${view === 'tareas' ? ' fd-pend__body--tareas' : ''}`}>
-            <div className="pl-addbar" style={{ marginBottom: 18 }}>
-              {view === 'tareas' ? (
-                <Link href="/tareas/nueva" className="fd-btn">
-                  <Icon name="plus" size="sm" />
-                  Tarea con fecha u hora
-                </Link>
-              ) : (
-                <Link href="/reminders/nuevo" className="fd-btn">
-                  <Icon name="plus" size="sm" />
-                  Nuevo reminder
-                </Link>
-              )}
-            </div>
+            <PendientesAddBar
+              view={view}
+              todayStr={data.todayStr}
+              reminders={data.reminderOptions}
+            />
             {view === 'tareas' ? (
               data.groups.length > 0 || data.inbox.length > 0 ? (
                 <>

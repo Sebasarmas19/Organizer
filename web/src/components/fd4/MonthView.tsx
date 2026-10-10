@@ -18,10 +18,14 @@ import type { Fd4MonthData } from '@/lib/fd4-calendar';
 import { DOW_INITIALS } from '@/lib/fd4-calendar';
 import { Check, Dot, Flag } from './Marks';
 import { Icon } from '@/components/Icon';
+import { CreateTaskSheet } from '@/components/planner/CreateTaskSheet';
+import { CreateReminderSheet } from '@/components/planner/CreateReminderSheet';
 
 export function MonthView({ data }: { data: Fd4MonthData }) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<string>(data.selectedStr);
+  const [taskSheetOpen, setTaskSheetOpen] = useState(false);
+  const [reminderSheetOpen, setReminderSheetOpen] = useState(false);
 
   const preview = data.previews[selectedDate] ?? {
     dateStr: selectedDate,
@@ -134,14 +138,22 @@ export function MonthView({ data }: { data: Fd4MonthData }) {
         </div>
 
         <div className="pl-addbar" style={{ marginTop: 12 }}>
-          <Link href={`/reminders/nuevo?d=${selectedDate}`} className="fd-btn">
+          <button
+            type="button"
+            className="fd-btn io-press"
+            onClick={() => setReminderSheetOpen(true)}
+          >
             <Flag size="xs" />
             Reminder este día
-          </Link>
-          <Link href={`/tareas/nueva?d=${selectedDate}`} className="fd-btn">
+          </button>
+          <button
+            type="button"
+            className="fd-btn io-press"
+            onClick={() => setTaskSheetOpen(true)}
+          >
             <Icon name="plus" size="sm" />
             Tarea
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -167,6 +179,20 @@ export function MonthView({ data }: { data: Fd4MonthData }) {
           )}
         </div>
       </div>
+
+      <CreateTaskSheet
+        open={taskSheetOpen}
+        onClose={() => setTaskSheetOpen(false)}
+        todayStr={selectedDate}
+        initialDate={selectedDate}
+      />
+
+      <CreateReminderSheet
+        open={reminderSheetOpen}
+        onClose={() => setReminderSheetOpen(false)}
+        todayStr={selectedDate}
+        initialDate={selectedDate}
+      />
     </div>
   );
 }

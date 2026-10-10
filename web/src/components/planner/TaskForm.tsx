@@ -111,166 +111,176 @@ export function TaskForm({
   };
 
   return (
-    <form className="pl-form" onSubmit={submit}>
-      {error ? <p className="pl-error" role="alert">{error}</p> : null}
+    <form className="io-form" onSubmit={submit} style={{ maxWidth: 540, margin: '0 auto', width: '100%' }}>
+      {error ? <p className="io-form__err" role="alert">{error}</p> : null}
 
-      <div className="pl-field">
-        <label className="pl-label" htmlFor="task-title">Tarea</label>
-        <input
-          id="task-title"
-          className="pl-input pl-input--title"
-          value={v.title}
-          onChange={(e) => setV({ ...v, title: e.target.value })}
-          placeholder="Qué vas a hacer"
-          autoFocus={mode === 'create'}
-          autoCapitalize="sentences"
-          required
-        />
+      {/* GRUPO 1: Identidad */}
+      <div className="io-group">
+        <label className="io-field">
+          <span className="io-sr">Tarea</span>
+          <input
+            id="task-title"
+            value={v.title}
+            onChange={(e) => setV({ ...v, title: e.target.value })}
+            placeholder="¿Qué vas a hacer?"
+            autoFocus={mode === 'create'}
+            autoCapitalize="sentences"
+            required
+          />
+        </label>
+        <label className="io-field">
+          <span className="io-sr">Notas</span>
+          <textarea
+            id="task-notes"
+            rows={2}
+            value={v.notes}
+            onChange={(e) => setV({ ...v, notes: e.target.value })}
+            placeholder="Notas (opcional): pasos, enlaces…"
+          />
+        </label>
       </div>
 
-      <div className="pl-field">
-        <span className="pl-label">Cuándo</span>
-        <div className="pl-chips" role="group" aria-label="Fecha rápida">
-          {quick.map((q) => (
-            <button
-              key={q.label}
-              type="button"
-              className="pl-chip"
-              aria-pressed={v.dueOn === q.value}
-              onClick={() => setV({ ...v, dueOn: q.value, time: q.value ? v.time : '' })}
-            >
-              {q.label}
-            </button>
-          ))}
+      {/* GRUPO 2: Cuándo */}
+      <span className="io-form__label">Cuándo</span>
+      <div className="io-kinds" role="radiogroup" aria-label="Fecha rápida">
+        {quick.map((q) => (
+          <button
+            key={q.label}
+            type="button"
+            role="radio"
+            className="io-chip io-press"
+            aria-checked={v.dueOn === q.value}
+            onClick={() => setV({ ...v, dueOn: q.value, time: q.value ? v.time : '' })}
+          >
+            {q.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="io-group">
+        <div className="io-field io-field--row">
+          <label className="io-field__label" htmlFor="task-date">Fecha</label>
+          <input
+            id="task-date"
+            type="date"
+            value={v.dueOn}
+            onChange={(e) => setV({ ...v, dueOn: e.target.value, time: e.target.value ? v.time : '' })}
+          />
         </div>
-        <input
-          type="date"
-          className="pl-input"
-          aria-label="Otra fecha"
-          value={v.dueOn}
-          onChange={(e) => setV({ ...v, dueOn: e.target.value })}
-        />
-      </div>
 
-      {v.dueOn ? (
-        <>
-          <div className="pl-row">
-            <div className="pl-field">
-              <label className="pl-label" htmlFor="task-time">Hora (opcional)</label>
+        {v.dueOn ? (
+          <>
+            <div className="io-field io-field--row">
+              <label className="io-field__label" htmlFor="task-time">Hora (opcional)</label>
               <input
                 id="task-time"
                 type="time"
-                className="pl-input"
                 value={v.time}
                 onChange={(e) => setV({ ...v, time: e.target.value })}
               />
             </div>
-            <div className="pl-field">
-              <label className="pl-label" htmlFor="task-dur">Duración</label>
+            {v.time ? (
+              <>
+                <div className="io-field io-field--row">
+                  <label className="io-field__label" htmlFor="task-dur">Duración</label>
+                  <select
+                    id="task-dur"
+                    value={v.durationMin}
+                    onChange={(e) => setV({ ...v, durationMin: Number(e.target.value) })}
+                  >
+                    {DURATIONS.map((d) => (
+                      <option key={d.value} value={d.value}>{d.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="io-field io-field--row">
+                  <label className="io-field__label" htmlFor="task-remind">Aviso al teléfono</label>
+                  <select
+                    id="task-remind"
+                    value={v.remindBeforeMin}
+                    onChange={(e) => setV({ ...v, remindBeforeMin: e.target.value })}
+                  >
+                    {REMIND_BEFORE.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+
+      {v.dueOn && !v.time ? (
+        <p className="io-field__hint">Con hora, la tarea ocupa su hueco en el calendario y puede avisarte antes.</p>
+      ) : null}
+
+      {/* GRUPO 3: Asociar a Reminder */}
+      {reminders.length > 0 ? (
+        <>
+          <span className="io-form__label">Asociar</span>
+          <div className="io-group">
+            <div className="io-field io-field--row">
+              <label className="io-field__label" htmlFor="task-rem">Es para</label>
               <select
-                id="task-dur"
-                className="pl-select"
-                value={v.durationMin}
-                disabled={!v.time}
-                onChange={(e) => setV({ ...v, durationMin: Number(e.target.value) })}
+                id="task-rem"
+                value={v.reminderId}
+                onChange={(e) => setV({ ...v, reminderId: e.target.value })}
               >
-                {DURATIONS.map((d) => (
-                  <option key={d.value} value={d.value}>{d.label}</option>
+                <option value="">Nada en concreto</option>
+                {reminders.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.title} · {r.when}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
-
-          {v.time ? (
-            <div className="pl-field">
-              <label className="pl-label" htmlFor="task-remind">Aviso al teléfono</label>
-              <select
-                id="task-remind"
-                className="pl-select"
-                value={v.remindBeforeMin}
-                onChange={(e) => setV({ ...v, remindBeforeMin: e.target.value })}
-              >
-                {REMIND_BEFORE.map((r) => (
-                  <option key={r.value} value={r.value}>{r.label}</option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            <span className="pl-hint">Con hora, la tarea ocupa su hueco en el calendario y puede avisarte antes.</span>
-          )}
         </>
       ) : null}
 
-      <div className="pl-field">
-        <label className="pl-label" htmlFor="task-rem">Es para</label>
-        <select
-          id="task-rem"
-          className="pl-select"
-          value={v.reminderId}
-          onChange={(e) => setV({ ...v, reminderId: e.target.value })}
-        >
-          <option value="">Nada en concreto</option>
-          {reminders.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.title} · {r.when}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="pl-field">
-        <label className="pl-label" htmlFor="task-notes">Notas (opcional)</label>
-        <textarea
-          id="task-notes"
-          className="pl-textarea"
-          value={v.notes}
-          onChange={(e) => setV({ ...v, notes: e.target.value })}
-          placeholder="Enlaces, pasos, lo que necesites recordar"
-        />
-      </div>
-
-      <div className="pl-actions">
-        <button type="submit" className="fd-btn fd-btn--primary fd-btn--full" disabled={pending || !v.title.trim()}>
-          {pending ? 'Guardando…' : mode === 'create' ? 'Crear tarea' : 'Guardar'}
-        </button>
-      </div>
+      <button
+        type="submit"
+        className="io-btn io-form__save io-press"
+        disabled={pending || !v.title.trim()}
+      >
+        {pending ? 'Guardando…' : mode === 'create' ? 'Crear tarea' : 'Guardar'}
+      </button>
 
       {mode === 'edit' && taskId ? (
-        <div className="pl-dangerzone">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '18px 14px 0' }}>
           <button
             type="button"
-            className="fd-btn"
+            className="io-btn io-press"
             disabled={pending}
             onClick={() => run(() => toggleTask(taskId, !done))}
           >
             {done ? 'Marcar pendiente' : 'Marcar hecha'}
           </button>
           {status !== 'dropped' ? (
-            <button type="button" className="fd-btn" disabled={pending} onClick={() => run(() => dropTask(taskId))}>
+            <button type="button" className="io-btn io-press" disabled={pending} onClick={() => run(() => dropTask(taskId))}>
               Soltar
             </button>
           ) : null}
           {confirmDelete ? (
             <button
               type="button"
-              className="fd-btn"
+              className="io-btn io-press"
               disabled={pending}
-              style={{ borderColor: 'var(--text)', fontWeight: 600 }}
+              style={{ background: 'var(--io-fill-2)', color: 'var(--io-label)', fontWeight: 600 }}
               onClick={() => run(() => deleteTask(taskId))}
             >
               Sí, borrar
             </button>
           ) : (
-            <button type="button" className="fd-btn fd-btn--quiet" onClick={() => setConfirmDelete(true)}>
+            <button type="button" className="io-btn io-press" style={{ background: 'transparent', color: 'var(--io-label-2)' }} onClick={() => setConfirmDelete(true)}>
               Borrar
             </button>
           )}
+          <span className="io-field__hint" style={{ margin: '4px 8px 0', textAlign: 'center' }}>
+            Soltar = no la harás, pero queda en el historial. Borrar = desaparece.
+          </span>
         </div>
-      ) : null}
-      {mode === 'edit' ? (
-        <span className="pl-hint">
-          Soltar = no la harás, pero queda en el historial. Borrar = desaparece.
-        </span>
       ) : null}
     </form>
   );

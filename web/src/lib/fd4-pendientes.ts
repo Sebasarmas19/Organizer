@@ -18,6 +18,8 @@ import {
   parseDateString,
 } from './date-utils';
 
+import type { ReminderOption } from './planner-data';
+
 export type PendView = 'tareas' | 'recordatorios';
 
 export type TaskGroup = { label: string; items: TaskRowData[] };
@@ -38,6 +40,7 @@ export type Fd4PendientesData = {
   groups: TaskGroup[];
   reminderGroups: ReminderGroup[];
   recentCompleted: TaskRowData[];
+  reminderOptions: ReminderOption[];
 };
 
 /** "viernes 18" · la fecha de una tarea, dentro de una frase. A más de una
@@ -203,5 +206,12 @@ export async function getPendientesData(
       };
     });
 
-  return { todayStr, inbox, dayOptions, groups, reminderGroups, recentCompleted };
+  /* Opciones de reminder para vincular tareas en el modal de creación. */
+  const reminderOptions: ReminderOption[] = reminders.map((r) => ({
+    id: r.id,
+    title: r.title,
+    when: formatWhen(r.occurs_on, r.occurs_at, timezone),
+  }));
+
+  return { todayStr, inbox, dayOptions, groups, reminderGroups, recentCompleted, reminderOptions };
 }
