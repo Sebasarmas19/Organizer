@@ -24,6 +24,34 @@ import { project, rubberband } from './spring';
 
 type Drag = { y: number; t: number; dy: number; v: number };
 
+let lockCount = 0;
+let savedScrollY = 0;
+
+function lockBodyScroll() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (lockCount === 0) {
+    savedScrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+  }
+  lockCount++;
+}
+
+function unlockBodyScroll() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  lockCount = Math.max(0, lockCount - 1);
+  if (lockCount === 0) {
+    const scrollY = savedScrollY;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    window.scrollTo(0, scrollY);
+  }
+}
+
 export function Sheet({
   open,
   onClose,
@@ -41,6 +69,15 @@ export function Sheet({
   const drag = useRef<Drag | null>(null);
   const titleId = useId();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
+
+  /* Bloquear el scroll de la pagina de fondo mientras la hoja este abierta */
+  useEffect(() => {
+    if (!open) return;
+    lockBodyScroll();
+    return () => {
+      unlockBodyScroll();
+    };
+  }, [open]);
 
   /* Al abrir, el foco entra en la hoja; al cerrar, vuelve a quien la abrio. */
   useEffect(() => {
@@ -113,7 +150,15 @@ export function Sheet({
 
   return createPortal(
     <>
-      <div className="io-scrim" data-open={open} onClick={onClose} aria-hidden="true" />
+      <div
+        className="io-scrim"
+        data-open={open}
+        onClick={onClose}
+        aria-hidden="true"
+        onTouchMove={(e) => {
+          if (open) e.preventDefault();
+        }}
+      />
       <div
         ref={sheet}
         className="io-sheet"

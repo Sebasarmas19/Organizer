@@ -557,15 +557,42 @@
 }
 
 /* ================================================= 3 · LO QUE NO SE DIBUJA =
-   Seleccion, cursor y numeros: tambien llevan el diseno.                  */
+   Seleccion, cursor y tacto: comportamiento de app nativa iOS.               */
 
-html {
+*,
+*::before,
+*::after {
+  -webkit-touch-callout: none;
+}
+
+html,
+body {
   caret-color: var(--io-tint);
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+img,
+svg {
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 ::selection {
   background: color-mix(in srgb, var(--io-tint) 26%, transparent);
+}
+
+/* Permitir seleccion y edicion EXCLUSIVAMENTE donde el usuario escribe */
+input,
+textarea,
+[contenteditable="true"],
+.io-selectable,
+.selectable {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* En Apple, SF Pro ya ajusta el espaciado por tamano (Text y Display). Un
@@ -733,6 +760,7 @@ html {
   background: var(--io-scrim);
   opacity: 0;
   pointer-events: none;
+  touch-action: none;
   transition: opacity 320ms ease;
 }
 
@@ -757,6 +785,7 @@ html {
   background: var(--io-sheet);
   color: var(--io-label);
   box-shadow: 0 20px 60px rgb(0 0 0 / 0.25);
+  overscroll-behavior: contain;
   transform: translateY(calc(100% + 48px));
   visibility: hidden;
   transition:
@@ -833,6 +862,7 @@ html {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .io-group {
