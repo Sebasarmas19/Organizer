@@ -20,6 +20,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { ItemStatus, Update } from '@/lib/supabase/database.types';
 import { getProfileTimezone } from './profile';
+import { getTaskDetail, getReminderDetail, type TaskDetail, type ReminderDetail } from './planner-data';
 import { timeToMinutes, zonedIso } from './tz';
 import { addDays } from './date-utils';
 
@@ -283,4 +284,18 @@ export async function linkTaskToReminder(taskId: string, reminderId: string | nu
     .eq('user_id', user.id);
   if (error) throw new Error(error.message);
   revalidateAll();
+}
+
+/** Carga los datos completos de una tarea para la hoja modal sin cambiar de URL. */
+export async function getTaskForSheet(id: string): Promise<TaskDetail | null> {
+  const { supabase, user } = await requireUser();
+  const timezone = await getProfileTimezone(supabase, user.id);
+  return getTaskDetail(supabase, user.id, id, timezone);
+}
+
+/** Carga los datos completos de un recordatorio para la hoja modal sin cambiar de URL. */
+export async function getReminderForSheet(id: string): Promise<ReminderDetail | null> {
+  const { supabase, user } = await requireUser();
+  const timezone = await getProfileTimezone(supabase, user.id);
+  return getReminderDetail(supabase, user.id, id, timezone);
 }

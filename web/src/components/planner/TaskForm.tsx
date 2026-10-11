@@ -15,6 +15,7 @@ import { Glyph } from '@/components/ios/Glyph';
 import { createTask, deleteTask, dropTask, updateTask } from '@/lib/planner-actions';
 import { toggleTask } from '@/lib/fd4-actions';
 import type { ReminderOption } from '@/lib/planner-data';
+import { addDays } from '@/lib/date-utils';
 
 const DURATIONS = [
   { value: 30, label: '30 min' },
@@ -107,8 +108,52 @@ export function TaskForm({
   };
 
   return (
-    <form className="io-form" onSubmit={submit} style={{ maxWidth: 540, margin: '0 auto', width: '100%' }}>
+    <form className="io-form" onSubmit={submit} style={{ maxWidth: 540, margin: '0 auto', width: '100%', paddingBottom: 'calc(env(safe-area-inset-bottom) + 36px)' }}>
       {error ? <p className="io-form__err" role="alert">{error}</p> : null}
+
+      {/* Botón de decisión rápida superior si estamos editando */}
+      {mode === 'edit' && taskId ? (
+        <div style={{ margin: '0 14px 14px' }}>
+          <button
+            type="button"
+            className="io-btn io-press"
+            disabled={pending}
+            onClick={() => run(() => toggleTask(taskId, !done))}
+            style={{
+              width: '100%',
+              minHeight: 48,
+              borderRadius: 14,
+              fontSize: 16,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              background: done ? 'var(--io-tint-soft)' : 'var(--io-cell)',
+              color: done ? 'var(--io-tint)' : 'var(--io-label)',
+              border: done ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+            }}
+          >
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: done ? 'var(--io-tint)' : 'transparent',
+                border: done ? 'none' : '2px solid var(--io-ctl)',
+                color: '#fff',
+                fontSize: 12,
+              }}
+            >
+              {done ? <Glyph name="check" style={{ width: 14, height: 14 }} /> : null}
+            </span>
+            {done ? 'Completada · Tocar para reabrir' : 'Marcar como hecha'}
+          </button>
+        </div>
+      ) : null}
 
       {/* GRUPO 1: Identidad */}
       <div className="io-group">
@@ -122,6 +167,10 @@ export function TaskForm({
             autoFocus={mode === 'create'}
             autoCapitalize="sentences"
             required
+            style={{
+              textDecoration: done ? 'line-through' : 'none',
+              opacity: done ? 0.7 : 1,
+            }}
           />
         </label>
         <label className="io-field">
@@ -137,60 +186,122 @@ export function TaskForm({
       </div>
 
       {/* GRUPO 2: Cuándo */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '18px 24px 8px' }}>
-        <span className="io-form__label" style={{ margin: 0 }}>Cuándo</span>
+      <span className="io-form__label">Cuándo</span>
+      <div
+        role="group"
+        aria-label="Selección de fecha"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 8,
+          margin: '0 14px 12px',
+        }}
+      >
         <button
           type="button"
           className="io-chip io-press"
-          aria-checked={!v.dueOn}
-          onClick={() => setV({ ...v, dueOn: '', time: '' })}
+          onClick={() => setV({ ...v, dueOn: todayStr || '', time: v.time })}
           style={{
-            height: 28,
-            padding: '0 12px',
+            padding: '10px 4px',
+            height: 'auto',
+            borderRadius: 12,
             fontSize: 13,
             fontWeight: 600,
-            background: !v.dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
-            color: !v.dueOn ? 'var(--io-on-tint)' : 'var(--io-label-2)',
+            background: todayStr && v.dueOn === todayStr ? 'var(--io-tint-fill)' : 'var(--io-cell)',
+            color: todayStr && v.dueOn === todayStr ? 'var(--io-on-tint)' : 'var(--io-label)',
+            border: '1px solid var(--io-sep)',
+            textAlign: 'center',
+          }}
+        >
+          Hoy
+        </button>
+        <button
+          type="button"
+          className="io-chip io-press"
+          onClick={() => {
+            const tom = todayStr ? addDays(todayStr, 1) : '';
+            setV({ ...v, dueOn: tom, time: v.time });
+          }}
+          style={{
+            padding: '10px 4px',
+            height: 'auto',
+            borderRadius: 12,
+            fontSize: 13,
+            fontWeight: 600,
+            background: todayStr && v.dueOn === addDays(todayStr, 1) ? 'var(--io-tint-fill)' : 'var(--io-cell)',
+            color: todayStr && v.dueOn === addDays(todayStr, 1) ? 'var(--io-on-tint)' : 'var(--io-label)',
+            border: '1px solid var(--io-sep)',
+            textAlign: 'center',
+          }}
+        >
+          Mañana
+        </button>
+        <button
+          type="button"
+          className="io-chip io-press"
+          onClick={() => setV({ ...v, dueOn: '', time: '' })}
+          style={{
+            padding: '10px 4px',
+            height: 'auto',
+            borderRadius: 12,
+            fontSize: 13,
+            fontWeight: 600,
+            background: !v.dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell)',
+            color: !v.dueOn ? 'var(--io-on-tint)' : 'var(--io-label)',
+            border: '1px solid var(--io-sep)',
+            textAlign: 'center',
           }}
         >
           Sin fecha
         </button>
+        <label
+          className="io-chip io-press"
+          style={{
+            position: 'relative',
+            padding: '10px 4px',
+            height: 'auto',
+            borderRadius: 12,
+            fontSize: 13,
+            fontWeight: 600,
+            background:
+              v.dueOn && v.dueOn !== todayStr && v.dueOn !== (todayStr ? addDays(todayStr, 1) : '')
+                ? 'var(--io-tint-fill)'
+                : 'var(--io-cell)',
+            color:
+              v.dueOn && v.dueOn !== todayStr && v.dueOn !== (todayStr ? addDays(todayStr, 1) : '')
+                ? 'var(--io-on-tint)'
+                : 'var(--io-label)',
+            border: '1px solid var(--io-sep)',
+            textAlign: 'center',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          Otra…
+          <input
+            type="date"
+            value={v.dueOn}
+            onChange={(e) => setV({ ...v, dueOn: e.target.value, time: e.target.value ? v.time : '' })}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              opacity: 0,
+              width: '100%',
+              cursor: 'pointer',
+            }}
+          />
+        </label>
       </div>
 
       <div className="io-group">
         <div className="io-field io-field--row">
-          <label className="io-field__label" htmlFor="task-date">Fecha</label>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 52 }}>
-            {!v.dueOn ? (
-              <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
-                Elegir fecha…
-              </span>
-            ) : null}
-            <input
-              id="task-date"
-              type="date"
-              value={v.dueOn}
-              onChange={(e) => setV({ ...v, dueOn: e.target.value, time: e.target.value ? v.time : '' })}
-              style={!v.dueOn ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
-            />
-            {v.dueOn ? (
-              <button
-                type="button"
-                aria-label="Quitar fecha"
-                onClick={() => setV({ ...v, dueOn: '', time: '' })}
-                style={{
-                  background: 'transparent',
-                  border: 0,
-                  padding: '4px',
-                  color: 'var(--io-label-3)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <Glyph name="xmark" style={{ width: 14, height: 14 }} />
-              </button>
-            ) : null}
+          <label className="io-field__label" htmlFor="task-date">Fecha asignada</label>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
+            <span style={{ color: v.dueOn ? 'var(--io-label)' : 'var(--io-label-3)', fontSize: 16 }}>
+              {v.dueOn ? v.dueOn : 'Sin fecha'}
+            </span>
           </div>
         </div>
 
@@ -274,18 +385,16 @@ export function TaskForm({
       </button>
 
       {mode === 'edit' && taskId ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '18px 14px 0' }}>
-          <button
-            type="button"
-            className="io-btn io-press"
-            disabled={pending}
-            onClick={() => run(() => toggleTask(taskId, !done))}
-          >
-            {done ? 'Marcar pendiente' : 'Marcar hecha'}
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '14px 14px 0' }}>
           {status !== 'dropped' ? (
-            <button type="button" className="io-btn io-press" disabled={pending} onClick={() => run(() => dropTask(taskId))}>
-              Soltar
+            <button
+              type="button"
+              className="io-btn io-press"
+              disabled={pending}
+              onClick={() => run(() => dropTask(taskId))}
+              style={{ background: 'var(--io-cell)', border: '1px solid var(--io-sep)', color: 'var(--io-label-2)' }}
+            >
+              Soltar tarea
             </button>
           ) : null}
           {confirmDelete ? (
@@ -293,14 +402,19 @@ export function TaskForm({
               type="button"
               className="io-btn io-press"
               disabled={pending}
-              style={{ background: 'var(--io-fill-2)', color: 'var(--io-label)', fontWeight: 600 }}
+              style={{ background: '#FF3B30', color: '#fff', fontWeight: 600 }}
               onClick={() => run(() => deleteTask(taskId))}
             >
-              Sí, borrar
+              Sí, borrar definitivamente
             </button>
           ) : (
-            <button type="button" className="io-btn io-press" style={{ background: 'transparent', color: 'var(--io-label-2)' }} onClick={() => setConfirmDelete(true)}>
-              Borrar
+            <button
+              type="button"
+              className="io-btn io-press"
+              style={{ background: 'transparent', color: '#FF3B30', fontSize: 15 }}
+              onClick={() => setConfirmDelete(true)}
+            >
+              Borrar tarea
             </button>
           )}
           <span className="io-field__hint" style={{ margin: '4px 8px 0', textAlign: 'center' }}>

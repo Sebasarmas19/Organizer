@@ -6,7 +6,6 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileTimezone } from '@/lib/profile';
 import { getReminderDetail } from '@/lib/planner-data';
-import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { ReminderDetailView } from '@/components/planner/ReminderDetailView';
 
@@ -36,7 +35,6 @@ export default async function ReminderPage({
       <main className="fd-screen">
         <ReminderDetailView detail={detail} isNew={sp.nuevo === '1'} />
       </main>
-      <TabBar />
     </div>
   );
 }

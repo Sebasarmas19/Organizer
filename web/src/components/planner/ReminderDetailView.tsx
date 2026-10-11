@@ -322,7 +322,7 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
         </section>
       ) : null}
 
-      <div className="fd5-rfoot">
+      <div className="fd5-rfoot" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 36px)' }}>
         <Link href={`/calendario?v=dia&d=${detail.occursOn}`} className="fd5-btn">
           Ver el día
         </Link>

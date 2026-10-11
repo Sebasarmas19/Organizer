@@ -6,7 +6,6 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileTimezone } from '@/lib/profile';
 import { getTaskDetail } from '@/lib/planner-data';
-import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { BackButton } from '@/components/planner/BackButton';
 import { TaskForm } from '@/components/planner/TaskForm';
@@ -57,7 +56,6 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           }}
         />
       </main>
-      <TabBar />
     </div>
   );
 }

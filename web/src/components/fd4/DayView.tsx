@@ -11,7 +11,6 @@
    ========================================================================= */
 
 import { useState, useOptimistic, useTransition } from 'react';
-import Link from 'next/link';
 import type { Fd4DayData, DayBlockView, DayNoHourTask } from '@/lib/fd4-calendar';
 import { DAY_HOURS, HOUR_PX } from '@/lib/fd4-calendar';
 import { Check, Flag } from './Marks';
@@ -19,6 +18,8 @@ import { Icon } from '@/components/Icon';
 import { toggleBlockTask, toggleTask } from '@/lib/fd4-actions';
 import { CreateTaskSheet } from '@/components/planner/CreateTaskSheet';
 import { CreateReminderSheet } from '@/components/planner/CreateReminderSheet';
+import { TaskDetailSheet } from '@/components/planner/TaskDetailSheet';
+import { ReminderDetailSheet } from '@/components/planner/ReminderDetailSheet';
 
 /* El servidor coloca todo a HOUR_PX por hora, pero la hora mide lo que diga
    --hour-row: 56px en el telefono y menos en escritorio. Se pasa a horas y
@@ -65,6 +66,18 @@ export function DayView({ data }: { data: Fd4DayData }) {
   const [reminderSheetOpen, setReminderSheetOpen] = useState(false);
   const [taskSheetTime, setTaskSheetTime] = useState('');
 
+  const [selectedTask, setSelectedTask] = useState<{
+    id: string;
+    title: string;
+    done: boolean;
+    time?: string;
+  } | null>(null);
+
+  const [selectedReminder, setSelectedReminder] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
   const newTaskAt = (hour: string) => {
     const [h] = hour.split(':');
     setTaskSheetTime(`${h.padStart(2, '0')}:00`);
@@ -97,13 +110,18 @@ export function DayView({ data }: { data: Fd4DayData }) {
         </div>
 
         {data.band ? (
-          <Link href={`/reminders/${data.band.id}`} className="fd-band">
+          <button
+            type="button"
+            className="fd-band io-press"
+            onClick={() => setSelectedReminder({ id: data.band!.id, title: data.band!.title })}
+            style={{ width: '100%', textAlign: 'left', border: 0, cursor: 'pointer', background: 'var(--surface)' }}
+          >
             <Flag />
             <span className="fd-band__text">
               <span className="fd-band__title">{data.band.title}</span>
               <span className="fd-meta">{data.band.meta}</span>
             </span>
-          </Link>
+          </button>
         ) : null}
 
         {data.noHour.length > 0 ? (
@@ -137,17 +155,29 @@ export function DayView({ data }: { data: Fd4DayData }) {
                   >
                     <Check on={isDone} variant="chip" />
                   </button>
-                  <Link
-                    href={`/tareas/${t.id}`}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedTask({
+                        id: t.id,
+                        title: t.title,
+                        done: isDone,
+                      })
+                    }
                     style={{
                       padding: '8px 14px 8px 4px',
                       color: 'inherit',
                       textDecoration: isDone ? 'line-through' : 'none',
                       whiteSpace: 'nowrap',
+                      background: 'none',
+                      border: 0,
+                      font: 'inherit',
+                      cursor: 'pointer',
+                      textAlign: 'left',
                     }}
                   >
                     {t.title}
-                  </Link>
+                  </button>
                 </span>
               );
             })}
@@ -192,12 +222,6 @@ export function DayView({ data }: { data: Fd4DayData }) {
               {data.blocks.map((b) => {
                 const isTask = b.kind === 'task';
                 const isDone = isTask && Boolean(doneBlockIds[b.id]);
-                const href =
-                  b.kind === 'reminder'
-                    ? `/reminders/${b.id}`
-                    : isTask && b.itemId
-                      ? `/tareas/${b.itemId}`
-                      : null;
 
                 const text = (
                   <>
@@ -242,10 +266,51 @@ export function DayView({ data }: { data: Fd4DayData }) {
                       </button>
                     ) : null}
 
-                    {href ? (
-                      <Link href={href} className="fd-block__text" style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {isTask && b.itemId ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedTask({
+                            id: b.itemId!,
+                            title: b.title,
+                            done: isDone,
+                            time: b.meta ? b.meta.split(' – ')[0] : undefined,
+                          })
+                        }
+                        className="fd-block__text"
+                        style={{
+                          color: 'inherit',
+                          textDecoration: 'none',
+                          background: 'none',
+                          border: 0,
+                          textAlign: 'left',
+                          font: 'inherit',
+                          cursor: 'pointer',
+                          padding: 0,
+                          width: '100%',
+                        }}
+                      >
                         {text}
-                      </Link>
+                      </button>
+                    ) : b.kind === 'reminder' ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedReminder({ id: b.id, title: b.title })}
+                        className="fd-block__text"
+                        style={{
+                          color: 'inherit',
+                          textDecoration: 'none',
+                          background: 'none',
+                          border: 0,
+                          textAlign: 'left',
+                          font: 'inherit',
+                          cursor: 'pointer',
+                          padding: 0,
+                          width: '100%',
+                        }}
+                      >
+                        {text}
+                      </button>
                     ) : (
                       <span className="fd-block__text">{text}</span>
                     )}
@@ -277,6 +342,28 @@ export function DayView({ data }: { data: Fd4DayData }) {
         onClose={() => setReminderSheetOpen(false)}
         todayStr={data.dateStr}
         initialDate={data.dateStr}
+      />
+
+      <TaskDetailSheet
+        key={selectedTask?.id ?? 'task-sheet-none'}
+        open={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
+        taskId={selectedTask?.id ?? null}
+        initialTitle={selectedTask?.title}
+        initialDone={selectedTask?.done}
+        initialTime={selectedTask?.time}
+        initialDueOn={data.dateStr}
+        todayStr={data.dateStr}
+      />
+
+      <ReminderDetailSheet
+        key={selectedReminder?.id ?? 'reminder-sheet-none'}
+        open={Boolean(selectedReminder)}
+        onClose={() => setSelectedReminder(null)}
+        reminderId={selectedReminder?.id ?? null}
+        initialTitle={selectedReminder?.title}
+        initialDate={data.dateStr}
+        todayStr={data.dateStr}
       />
     </>
   );
