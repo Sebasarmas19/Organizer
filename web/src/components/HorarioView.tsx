@@ -333,7 +333,11 @@ export function HorarioView({
       >
         <button
           type="button"
+          data-back="true"
           onClick={() => {
+            if (typeof document !== 'undefined') {
+              document.documentElement.dataset.navDirection = 'back';
+            }
             if (typeof window !== 'undefined' && window.history.length > 1) {
               router.back();
             } else {

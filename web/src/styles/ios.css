@@ -3008,3 +3008,217 @@ a.hl-dg::after,
     transform: translateY(-50%);
   }
 }
+
+/* ============================================================================
+   10 · TRANSICIONES NATIVAS DE PANTALLA (iOS PUSH / POP / TAB)
+   Reproduce fielmente la navegación de iOS (Ajustes, Recordatorios):
+   - Push: Pantalla anterior retrocede con atenuación y la nueva entra desde la derecha.
+   - Pop: Pantalla actual sale hacia la derecha revelando la anterior.
+   - Tab: Crossfade limpio de 160ms entre pestañas de primer nivel.
+   - TabBar y FAB permanecen anclados abajo sin desplazarse lateralmente.
+   ========================================================================= */
+
+@supports (view-transition-name: root) {
+  /* Anclar elementos fijos como la barra de pestañas y el botón FAB */
+  .io-tabbar {
+    view-transition-name: io-tabbar;
+  }
+
+  .io-fab {
+    view-transition-name: io-fab;
+  }
+
+  .fd-tabbar {
+    view-transition-name: fd-tabbar;
+  }
+
+  ::view-transition-group(io-tabbar),
+  ::view-transition-group(io-fab),
+  ::view-transition-group(fd-tabbar) {
+    animation-duration: 0s;
+  }
+
+  ::view-transition-group(root) {
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  /* --- 1. PUSH (Hacia adelante / entrar a detalle) --- */
+  html[data-nav-direction="forward"]::view-transition-old(root),
+  html:not([data-nav-direction])::view-transition-old(root) {
+    animation: ios-push-old 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+    z-index: 1;
+  }
+
+  html[data-nav-direction="forward"]::view-transition-new(root),
+  html:not([data-nav-direction])::view-transition-new(root) {
+    animation: ios-push-new 350ms cubic-bezier(0.32, 0.72, 0, 1) both;
+    z-index: 2;
+  }
+
+  /* --- 2. POP (Hacia atrás / volver a lista) --- */
+  html[data-nav-direction="back"]::view-transition-old(root) {
+    animation: ios-pop-old 330ms cubic-bezier(0.32, 0.72, 0, 1) both;
+    z-index: 2;
+  }
+
+  html[data-nav-direction="back"]::view-transition-new(root) {
+    animation: ios-pop-new 330ms cubic-bezier(0.32, 0.72, 0, 1) both;
+    z-index: 1;
+  }
+
+  /* --- 3. TAB (Conmutación limpia de pestañas principales) --- */
+  html[data-nav-direction="tab"]::view-transition-old(root) {
+    animation: ios-tab-old 150ms ease-out both;
+  }
+
+  html[data-nav-direction="tab"]::view-transition-new(root) {
+    animation: ios-tab-new 170ms ease-out both;
+  }
+}
+
+@keyframes ios-push-old {
+  0% {
+    transform: translateX(0);
+    filter: brightness(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-24%);
+    filter: brightness(0.85);
+    opacity: 0.94;
+  }
+}
+
+@keyframes ios-push-new {
+  0% {
+    transform: translateX(100%);
+    box-shadow: -10px 0 24px rgba(0, 0, 0, 0.18);
+  }
+  100% {
+    transform: translateX(0);
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes ios-pop-old {
+  0% {
+    transform: translateX(0);
+    box-shadow: -10px 0 24px rgba(0, 0, 0, 0.18);
+  }
+  100% {
+    transform: translateX(100%);
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes ios-pop-new {
+  0% {
+    transform: translateX(-24%);
+    filter: brightness(0.85);
+    opacity: 0.94;
+  }
+  100% {
+    transform: translateX(0);
+    filter: brightness(1);
+    opacity: 1;
+  }
+}
+
+@keyframes ios-tab-old {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ios-tab-new {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fallback para navegadores sin View Transitions API */
+@supports not (view-transition-name: root) {
+  html[data-nav-direction="forward"] .ios-page-wrap {
+    animation: ios-fallback-push 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  html[data-nav-direction="back"] .ios-page-wrap {
+    animation: ios-fallback-pop 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  html[data-nav-direction="tab"] .ios-page-wrap {
+    animation: ios-tab-new 150ms ease-out both;
+  }
+}
+
+@keyframes ios-fallback-push {
+  from {
+    transform: translateX(25%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes ios-fallback-pop {
+  from {
+    transform: translateX(-20%);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Línea de progreso sutil para navegaciones lentas (reemplaza el HUD invasivo) */
+.ios-nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  z-index: 999999;
+  pointer-events: none;
+  background: var(--io-tint, #007aff);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  animation: ios-bar-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes ios-bar-slide {
+  0% {
+    left: 0;
+    right: 100%;
+  }
+  50% {
+    left: 20%;
+    right: 20%;
+  }
+  100% {
+    left: 100%;
+    right: 0;
+  }
+}
+
+/* Reducción de movimiento */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  .ios-page-wrap {
+    animation-duration: 100ms !important;
+    animation-name: ios-tab-new !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+

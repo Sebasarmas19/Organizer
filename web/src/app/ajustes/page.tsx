@@ -48,7 +48,7 @@ export default async function AjustesPage() {
 
       <main className="fd-screen fd-ajustes">
         <div className="calhead">
-          <Link href="/" prefetch={true} className="uplevel">
+          <Link href="/" prefetch={true} className="uplevel" data-back="true">
             <Icon name="chevron-left" size="sm" />
             Hoy
           </Link>

@@ -21,7 +21,11 @@ export function BackButton({
     <button
       type="button"
       className={className}
+      data-back="true"
       onClick={() => {
+        if (typeof document !== 'undefined') {
+          document.documentElement.dataset.navDirection = 'back';
+        }
         if (window.history.length > 1) router.back();
         else router.push(fallback);
       }}
@@ -36,6 +40,9 @@ export function BackButton({
 export function useGoBack(fallback: string) {
   const router = useRouter();
   return () => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.navDirection = 'back';
+    }
     if (window.history.length > 1) router.back();
     else router.push(fallback);
     router.refresh();

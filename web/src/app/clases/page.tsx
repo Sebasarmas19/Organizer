@@ -42,7 +42,7 @@ export default async function ClasesPage() {
       <main className="fd-screen">
         <div className="fd5-clases">
           <div className="fd5-pagetop">
-            <Link href="/" className="fd5-back">
+            <Link href="/" className="fd5-back" data-back="true">
               <Icon name="chevron-left" size="md" />
               Hoy
             </Link>

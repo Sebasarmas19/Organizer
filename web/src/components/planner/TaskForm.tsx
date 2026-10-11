@@ -69,6 +69,9 @@ export function TaskForm({
   const done = status === 'done';
 
   const leave = () => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.navDirection = 'back';
+    }
     if (window.history.length > 1) router.back();
     else router.push(fallback);
     router.refresh();

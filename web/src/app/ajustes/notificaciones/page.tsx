@@ -69,7 +69,7 @@ export default async function NotificationsSettingsPage() {
 
       <main className="fd-screen" style={{ paddingBottom: 'calc(var(--tab-bar-h) + var(--space-6))' }}>
         <div className="calhead">
-          <Link href="/ajustes" className="uplevel">
+          <Link href="/ajustes" className="uplevel" data-back="true">
             <Icon name="chevron-left" size="sm" />
             Ajustes
           </Link>
