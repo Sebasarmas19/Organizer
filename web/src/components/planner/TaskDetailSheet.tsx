@@ -24,7 +24,6 @@ import {
 } from '@/lib/planner-actions';
 import { toggleTask } from '@/lib/fd4-actions';
 import type { ReminderOption, TaskDetail } from '@/lib/planner-data';
-import { addDays } from '@/lib/date-utils';
 
 const DURATIONS = [
   { value: 30, label: '30 min' },
@@ -51,7 +50,7 @@ export function TaskDetailSheet({
   initialDone = false,
   initialDueOn = '',
   initialTime = '',
-  todayStr,
+  todayStr: _todayStr,
   onUpdated,
   onDeleted,
 }: {
@@ -187,8 +186,6 @@ export function TaskDetailSheet({
     });
   };
 
-  const tomorrowStr = addDays(todayStr, 1);
-
   return (
     <Sheet
       open={open}
@@ -273,54 +270,9 @@ export function TaskDetailSheet({
           </label>
         </div>
 
-        {/* 3. Decisión de Fecha rápida ("Cuándo") */}
-        <span className="io-form__label">Cuándo</span>
-        <div
-          role="group"
-          aria-label="Selección rápida de fecha"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 8,
-            margin: '0 16px 12px',
-          }}
-        >
-          <button
-            type="button"
-            className="io-chip io-press"
-            onClick={() => setDueOn(todayStr)}
-            style={{
-              padding: '10px 4px',
-              height: 'auto',
-              borderRadius: 12,
-              fontSize: 13,
-              fontWeight: 600,
-              background: dueOn === todayStr ? 'var(--io-tint-fill)' : 'var(--io-cell)',
-              color: dueOn === todayStr ? 'var(--io-on-tint)' : 'var(--io-label)',
-              border: '1px solid var(--io-sep)',
-              textAlign: 'center',
-            }}
-          >
-            Hoy
-          </button>
-          <button
-            type="button"
-            className="io-chip io-press"
-            onClick={() => setDueOn(tomorrowStr)}
-            style={{
-              padding: '10px 4px',
-              height: 'auto',
-              borderRadius: 12,
-              fontSize: 13,
-              fontWeight: 600,
-              background: dueOn === tomorrowStr ? 'var(--io-tint-fill)' : 'var(--io-cell)',
-              color: dueOn === tomorrowStr ? 'var(--io-on-tint)' : 'var(--io-label)',
-              border: '1px solid var(--io-sep)',
-              textAlign: 'center',
-            }}
-          >
-            Mañana
-          </button>
+        {/* 3. Cuándo y Fecha */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '18px 20px 8px' }}>
+          <span className="io-form__label" style={{ margin: 0 }}>Cuándo</span>
           <button
             type="button"
             className="io-chip io-press"
@@ -329,63 +281,64 @@ export function TaskDetailSheet({
               setTime('');
             }}
             style={{
-              padding: '10px 4px',
-              height: 'auto',
-              borderRadius: 12,
+              height: 28,
+              padding: '0 12px',
               fontSize: 13,
               fontWeight: 600,
-              background: !dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell)',
-              color: !dueOn ? 'var(--io-on-tint)' : 'var(--io-label)',
-              border: '1px solid var(--io-sep)',
-              textAlign: 'center',
+              background: !dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+              color: !dueOn ? 'var(--io-on-tint)' : 'var(--io-label-2)',
             }}
           >
             Sin fecha
           </button>
-          <label
-            className="io-chip io-press"
-            style={{
-              position: 'relative',
-              padding: '10px 4px',
-              height: 'auto',
-              borderRadius: 12,
-              fontSize: 13,
-              fontWeight: 600,
-              background:
-                dueOn && dueOn !== todayStr && dueOn !== tomorrowStr
-                  ? 'var(--io-tint-fill)'
-                  : 'var(--io-cell)',
-              color:
-                dueOn && dueOn !== todayStr && dueOn !== tomorrowStr
-                  ? 'var(--io-on-tint)'
-                  : 'var(--io-label)',
-              border: '1px solid var(--io-sep)',
-              textAlign: 'center',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            Otra…
-            <input
-              type="date"
-              value={dueOn}
-              onChange={(e) => setDueOn(e.target.value)}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0,
-                width: '100%',
-                cursor: 'pointer',
-              }}
-            />
-          </label>
         </div>
 
-        {/* 4. Hora y Bloque de calendario */}
-        {dueOn ? (
-          <div className="io-group">
+        <div className="io-group">
+          <div className="io-field io-field--row">
+            <label htmlFor="task-detail-date" className="io-field__label">
+              Fecha
+            </label>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
+              {!dueOn ? (
+                <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                  Elegir fecha…
+                </span>
+              ) : null}
+              <input
+                id="task-detail-date"
+                type="date"
+                value={dueOn}
+                onChange={(e) => {
+                  setDueOn(e.target.value);
+                  if (!e.target.value) setTime('');
+                }}
+                style={!dueOn ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
+              />
+              {dueOn ? (
+                <button
+                  type="button"
+                  aria-label="Quitar fecha"
+                  onClick={() => {
+                    setDueOn('');
+                    setTime('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 0,
+                    padding: 4,
+                    color: 'var(--io-label-3)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Glyph name="xmark" style={{ width: 14, height: 14 }} />
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {dueOn ? (
             <div className="io-field io-field--row">
               <label className="io-field__label" htmlFor="task-time-input">
                 Hora (opcional)
@@ -415,45 +368,45 @@ export function TaskDetailSheet({
                 ) : null}
               </div>
             </div>
+          ) : null}
 
-            {time ? (
-              <>
-                <div className="io-field io-field--row">
-                  <label className="io-field__label" htmlFor="task-dur-input">
-                    Duración
-                  </label>
-                  <select
-                    id="task-dur-input"
-                    value={durationMin}
-                    onChange={(e) => setDurationMin(Number(e.target.value))}
-                  >
-                    {DURATIONS.map((d) => (
-                      <option key={d.value} value={d.value}>
-                        {d.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="io-field io-field--row">
-                  <label className="io-field__label" htmlFor="task-remind-input">
-                    Aviso al teléfono
-                  </label>
-                  <select
-                    id="task-remind-input"
-                    value={remindBeforeMin}
-                    onChange={(e) => setRemindBeforeMin(e.target.value)}
-                  >
-                    {REMIND_BEFORE.map((r) => (
-                      <option key={r.value} value={r.value}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            ) : null}
-          </div>
-        ) : null}
+          {dueOn && time ? (
+            <>
+              <div className="io-field io-field--row">
+                <label className="io-field__label" htmlFor="task-dur-input">
+                  Duración
+                </label>
+                <select
+                  id="task-dur-input"
+                  value={durationMin}
+                  onChange={(e) => setDurationMin(Number(e.target.value))}
+                >
+                  {DURATIONS.map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="io-field io-field--row">
+                <label className="io-field__label" htmlFor="task-remind-input">
+                  Aviso al teléfono
+                </label>
+                <select
+                  id="task-remind-input"
+                  value={remindBeforeMin}
+                  onChange={(e) => setRemindBeforeMin(e.target.value)}
+                >
+                  {REMIND_BEFORE.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : null}
+        </div>
 
         {/* 5. Asociar a Reminder */}
         {reminders.length > 0 ? (

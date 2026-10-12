@@ -1,12 +1,9 @@
 /* ============================================================================
-   Organizer · Retorno del enlace magico
+   Organizer · Retorno de autenticación (Google OAuth y Enlace Mágico)
 
-   Supabase manda al usuario aqui con un `code` en la URL. Aqui se cambia ese
-   codigo por una sesion y se garantiza su fila en `profiles`.
-
-   Este es el unico sitio donde se crea el perfil, a proposito: es el primer
-   instante en que existe una sesion, y no depende de que el usuario llegue a
-   ninguna pantalla concreta.
+   Supabase manda al usuario aquí con un `code` en la URL.
+   Aquí se intercambia ese código por una sesión y se garantiza su fila
+   en `profiles` de forma segura e idempotente.
    ========================================================================= */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -17,9 +14,10 @@ import { isAllowedEmail } from '@/lib/allowlist';
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
+  const oauthError = searchParams.get('error') || searchParams.get('error_description');
 
-  /* `next` permite volver a donde estabas. Solo se aceptan rutas internas:
-     una URL absoluta o con caracteres de escape seria un redirector abierto. */
+  /* `next` permite volver a donde estaba el usuario. Solo se aceptan rutas internas
+     relativas para evitar vulnerabilidades de Open Redirect. */
   const requested = searchParams.get('next') ?? '/';
   let next = '/';
   if (requested.startsWith('/') && !requested.startsWith('//') && !requested.includes('\\')) {
@@ -33,30 +31,34 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  if (oauthError) {
+    console.error('Error reportado por el proveedor OAuth:', oauthError);
+    return NextResponse.redirect(`${origin}/auth/error?motivo=oauth-cancelado`);
+  }
+
   if (!code) {
-    return NextResponse.redirect(origin + '/auth/error?motivo=sin-codigo');
+    return NextResponse.redirect(`${origin}/auth/error?motivo=sin-codigo`);
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.user) {
-    return NextResponse.redirect(origin + '/auth/error?motivo=enlace-invalido');
+    console.error('Error al intercambiar código por sesión:', error);
+    return NextResponse.redirect(`${origin}/auth/error?motivo=enlace-invalido`);
   }
 
   if (!isAllowedEmail(data.user.email)) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(origin + '/auth/error?motivo=no-autorizado');
+    return NextResponse.redirect(`${origin}/auth/error?motivo=no-autorizado`);
   }
 
+  // Garantizar que la fila en profiles existe para este usuario (zona horaria, etc.)
   const profile = await ensureProfile(supabase, data.user.id);
   if (profile.error) {
-    /* La sesion SI existe: no se echa al usuario por esto. Pero conviene
-       saberlo, porque sin perfil no hay zona horaria y sin zona horaria no
-       hay notificaciones — que es el producto. */
-    console.error('No se pudo crear la fila en profiles:', profile.error);
-    return NextResponse.redirect(origin + '/auth/error?motivo=sin-perfil');
+    console.error('No se pudo crear o verificar la fila en profiles:', profile.error);
+    return NextResponse.redirect(`${origin}/auth/error?motivo=sin-perfil`);
   }
 
-  return NextResponse.redirect(origin + next);
+  return NextResponse.redirect(`${origin}${next}`);
 }

@@ -6,7 +6,6 @@
  * adelanta al tocar vive en <InicioScreen>.
  */
 
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
 import { getHomeData } from '@/lib/home';
@@ -16,6 +15,7 @@ import { getCurrentTimeMinutes, getDayOfWeek } from '@/lib/date-utils';
 import { restOfTodayClasses } from '@/components/fd4/homeSchedule';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { InicioScreen } from '@/components/inicio/InicioScreen';
+import { LandingPage } from '@/components/landing/LandingPage';
 import { Setup } from './Setup';
 
 /* Nunca estatica: depende de la cookie de sesion y de la fecha de hoy. */
@@ -31,9 +31,11 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  /* El proxy ya manda a /entrar sin sesion; esto es el cinturon por si
-     alguna vez esta pagina se renderiza fuera de ese camino. */
-  if (!user) redirect('/entrar');
+  /* Si el usuario no tiene sesion, mostramos la Landing Page informativa.
+     Al iniciar sesion, vera inmediatamente su panel de Inicio. */
+  if (!user) {
+    return <LandingPage />;
+  }
 
   const home = await getHomeData(supabase, user.id);
   const timezone = home.timezone;

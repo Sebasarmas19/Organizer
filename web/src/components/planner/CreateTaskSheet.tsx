@@ -35,7 +35,7 @@ const REMIND_BEFORE = [
 export function CreateTaskSheet({
   open,
   onClose,
-  todayStr,
+  todayStr: _todayStr,
   reminders = [],
   initialDate = '',
   initialTime = '',
@@ -143,7 +143,7 @@ export function CreateTaskSheet({
           <button
             type="button"
             className="io-chip io-press"
-            aria-checked={!dueOn}
+            aria-pressed={!dueOn}
             onClick={() => {
               setDueOn('');
               setTime('');

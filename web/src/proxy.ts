@@ -1,14 +1,18 @@
 /**
- * Organizer · Proxy de peticiones (Next.js 16)
- * 1. Refresca la sesión de Supabase Auth en cookies en cada petición.
- * 2. Protege rutas privadas redirigiendo a /entrar y bloquea APIs no autorizadas con 401.
+ * Organizer · Middleware de seguridad y protección de rutas (Next.js 16)
+ *
+ * 1. Refresca y valida la sesión de Supabase Auth en cookies en cada petición con getUser().
+ * 2. Protege todas las rutas privadas de la aplicación redirigiendo a /entrar con parámetro ?next=.
+ * 3. Bloquea peticiones no autenticadas a /api/* con HTTP 401.
+ * 4. Permite acceso a rutas públicas (/, /landing, /entrar, /auth/*, y endpoints con Bearer token).
+ * 5. Redirige a usuarios ya autenticados fuera de /entrar hacia / o a su destino en next.
+ * 6. Aplica cabeceras de seguridad HTTP en todas las respuestas.
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { isAllowedEmail } from '@/lib/allowlist';
 
-/** La unica ruta que se ve sin sesion. En espanol porque el usuario la lee. */
 const SIGN_IN_PATH = '/entrar';
 
 /** Cabeceras de seguridad base para mitigar Clickjacking, MIME sniffing y filtración de referrers */
@@ -26,16 +30,44 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
   return res;
 }
 
-/** Rutas que no exigen sesion por cookie: la entrada, el retorno del auth y los endpoints de captura / cron. */
+/** Comprueba si una ruta es pública y no exige sesión de usuario */
 function isPublic(pathname: string): boolean {
-  return (
+  if (
+    pathname === '/' ||
+    pathname === '/landing' ||
     pathname === SIGN_IN_PATH ||
     pathname === '/auth/callback' ||
-    pathname === '/auth/error' ||
-    pathname === '/api/capture' ||
-    pathname === '/api/capture/resource' ||
-    pathname === '/api/push/cron'
-  );
+    pathname === '/auth/error'
+  ) {
+    return true;
+  }
+
+  // Endpoints con autenticación propia por Bearer token (Siri Shortcuts / Cron secret)
+  if (pathname.startsWith('/api/capture') || pathname.startsWith('/api/push/cron')) {
+    return true;
+  }
+
+  // Archivos estáticos o PWA
+  if (
+    pathname.startsWith('/_next') ||
+    pathname === '/favicon.ico' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/sw.js' ||
+    /\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$/i.test(pathname)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/** Valida que el parámetro de redirección sea una ruta interna segura para prevenir open redirects */
+function getSafeRedirectPath(rawPath: string | null | undefined, fallback = '/'): string {
+  if (!rawPath) return fallback;
+  if (rawPath.startsWith('/') && !rawPath.startsWith('//') && !rawPath.includes('\\')) {
+    return rawPath;
+  }
+  return fallback;
 }
 
 export async function proxy(request: NextRequest) {
@@ -44,10 +76,11 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  /* Sin variables no hay sesion que refrescar ni a donde mandar a nadie.
-     Dejar pasar es correcto: la pantalla de entrada ya explica que falta
-     configurar, y bloquear aqui daria una redireccion infinita a /entrar. */
-  if (!url || !key) return response;
+  /* Sin variables de entorno no hay sesión que validar; dejar pasar para que
+     la pantalla de configuración inicial pueda mostrarse. */
+  if (!url || !key) {
+    return applySecurityHeaders(response);
+  }
 
   const supabase = createServerClient(url, key, {
     cookies: {
@@ -62,8 +95,6 @@ export async function proxy(request: NextRequest) {
         for (const { name, value, options } of cookiesToSet) {
           response.cookies.set(name, value, options);
         }
-        /* Una respuesta que escribe cookies de sesion no se puede cachear:
-           un CDN podria servirle el token de uno a otro. */
         for (const [header, headerValue] of Object.entries(headers)) {
           response.headers.set(header, headerValue);
         }
@@ -71,54 +102,71 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getClaims();
-  const { pathname } = request.nextUrl;
+  // Verificación real y segura de la sesión del usuario contra Supabase Auth
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  /* Una sesión con un correo que no es el del dueño se cierra en el acto. */
-  if (data?.claims && !isAllowedEmail(data.claims.email as string | undefined)) {
+  const { pathname, search } = request.nextUrl;
+
+  // Si hay usuario pero su correo no está autorizado en despliegues con lista blanca
+  if (user && !isAllowedEmail(user.email)) {
     await supabase.auth.signOut();
     if (pathname.startsWith('/api/')) {
-      return applySecurityHeaders(NextResponse.json({ error: 'No autorizado' }, { status: 403 }));
+      return applySecurityHeaders(
+        NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+      );
     }
-    if (pathname !== '/auth/error') {
-      const target = request.nextUrl.clone();
-      target.pathname = '/auth/error';
-      target.search = '?motivo=no-autorizado';
-      const redirect = NextResponse.redirect(target);
-      for (const cookie of response.cookies.getAll()) redirect.cookies.set(cookie);
-      return applySecurityHeaders(redirect);
+    const target = new URL('/auth/error?motivo=no-autorizado', request.url);
+    const redirectRes = NextResponse.redirect(target);
+    for (const cookie of response.cookies.getAll()) {
+      redirectRes.cookies.set(cookie);
     }
-    return applySecurityHeaders(response);
+    return applySecurityHeaders(redirectRes);
   }
 
-  const signedIn = Boolean(data?.claims);
+  const signedIn = Boolean(user);
 
+  // Si NO está autenticado y la ruta es protegida
   if (!signedIn && !isPublic(pathname)) {
     if (pathname.startsWith('/api/')) {
-      return applySecurityHeaders(NextResponse.json({ error: 'No autorizado' }, { status: 401 }));
+      return applySecurityHeaders(
+        NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+      );
     }
-    const target = request.nextUrl.clone();
-    target.pathname = SIGN_IN_PATH;
-    target.search = '';
-    return applySecurityHeaders(NextResponse.redirect(target));
+
+    const redirectPath = `${pathname}${search}`;
+    const target = new URL(SIGN_IN_PATH, request.url);
+    target.searchParams.set('next', redirectPath);
+
+    const redirectRes = NextResponse.redirect(target);
+    for (const cookie of response.cookies.getAll()) {
+      redirectRes.cookies.set(cookie);
+    }
+    return applySecurityHeaders(redirectRes);
   }
 
-  /* Ya dentro, la pantalla de entrada no tiene sentido. */
+  // Si YA está autenticado y accede a /entrar, redirigir a / o al destino en next
   if (signedIn && pathname === SIGN_IN_PATH) {
-    const target = request.nextUrl.clone();
-    target.pathname = '/';
-    target.search = '';
-    return applySecurityHeaders(NextResponse.redirect(target));
+    const nextParam = request.nextUrl.searchParams.get('next');
+    const destination = getSafeRedirectPath(nextParam, '/');
+    const target = new URL(destination, request.url);
+
+    const redirectRes = NextResponse.redirect(target);
+    for (const cookie of response.cookies.getAll()) {
+      redirectRes.cookies.set(cookie);
+    }
+    return applySecurityHeaders(redirectRes);
   }
 
   return applySecurityHeaders(response);
 }
 
 export const config = {
-  /* Todo menos los archivos estaticos y los iconos. El negativo se escribe
-     asi —y no como una lista de rutas protegidas— para que una pantalla
-     nueva quede protegida por omision y no por acordarse. */
+  /* Aplica a todas las rutas excepto archivos estáticos e iconos */
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
+
+export default proxy;

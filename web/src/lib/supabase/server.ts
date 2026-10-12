@@ -6,7 +6,7 @@
    de uno a otro.
 
    Sobre el try/catch de `setAll`: desde un Server Component no se pueden
-   escribir cookies. Eso no es un fallo mientras `proxy.ts` refresque la
+   escribir cookies. Eso no es un fallo mientras `middleware.ts` refresque la
    sesion en cada peticion, que es justo lo que hace. El catch existe para
    ese caso concreto y esta documentado para que nadie lo lea como "aqui se
    traga un error".
@@ -31,7 +31,7 @@ export async function createClient() {
             cookieStore.set(name, value, options);
           }
         } catch {
-          /* Server Component: no puede escribir cookies. Lo resuelve proxy.ts. */
+          /* Server Component: no puede escribir cookies. Lo resuelve middleware.ts. */
         }
       },
     },

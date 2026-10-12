@@ -74,8 +74,9 @@ const appRoutes = allSrcFiles
 for (const route of appRoutes) {
   importedFiles.add(route);
 }
-// Proxy es entrypoint de Next.js
+// Proxy y Middleware son entrypoints de Next.js
 importedFiles.add('src/proxy.ts');
+importedFiles.add('src/middleware.ts');
 // CSS principal es importado en layout
 importedFiles.add('src/app/globals.css');
 

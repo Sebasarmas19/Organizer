@@ -15,7 +15,6 @@ import { Glyph } from '@/components/ios/Glyph';
 import { createTask, deleteTask, dropTask, updateTask } from '@/lib/planner-actions';
 import { toggleTask } from '@/lib/fd4-actions';
 import type { ReminderOption } from '@/lib/planner-data';
-import { addDays } from '@/lib/date-utils';
 
 const DURATIONS = [
   { value: 30, label: '30 min' },
@@ -49,7 +48,7 @@ export function TaskForm({
   taskId,
   status,
   initial,
-  todayStr,
+  todayStr: _todayStr,
   reminders,
   fallback,
 }: {
@@ -186,122 +185,59 @@ export function TaskForm({
       </div>
 
       {/* GRUPO 2: Cuándo */}
-      <span className="io-form__label">Cuándo</span>
-      <div
-        role="group"
-        aria-label="Selección de fecha"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 8,
-          margin: '0 14px 12px',
-        }}
-      >
-        <button
-          type="button"
-          className="io-chip io-press"
-          onClick={() => setV({ ...v, dueOn: todayStr || '', time: v.time })}
-          style={{
-            padding: '10px 4px',
-            height: 'auto',
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 600,
-            background: todayStr && v.dueOn === todayStr ? 'var(--io-tint-fill)' : 'var(--io-cell)',
-            color: todayStr && v.dueOn === todayStr ? 'var(--io-on-tint)' : 'var(--io-label)',
-            border: '1px solid var(--io-sep)',
-            textAlign: 'center',
-          }}
-        >
-          Hoy
-        </button>
-        <button
-          type="button"
-          className="io-chip io-press"
-          onClick={() => {
-            const tom = todayStr ? addDays(todayStr, 1) : '';
-            setV({ ...v, dueOn: tom, time: v.time });
-          }}
-          style={{
-            padding: '10px 4px',
-            height: 'auto',
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 600,
-            background: todayStr && v.dueOn === addDays(todayStr, 1) ? 'var(--io-tint-fill)' : 'var(--io-cell)',
-            color: todayStr && v.dueOn === addDays(todayStr, 1) ? 'var(--io-on-tint)' : 'var(--io-label)',
-            border: '1px solid var(--io-sep)',
-            textAlign: 'center',
-          }}
-        >
-          Mañana
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '18px 20px 8px' }}>
+        <span className="io-form__label" style={{ margin: 0 }}>Cuándo</span>
         <button
           type="button"
           className="io-chip io-press"
           onClick={() => setV({ ...v, dueOn: '', time: '' })}
           style={{
-            padding: '10px 4px',
-            height: 'auto',
-            borderRadius: 12,
+            height: 28,
+            padding: '0 12px',
             fontSize: 13,
             fontWeight: 600,
-            background: !v.dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell)',
-            color: !v.dueOn ? 'var(--io-on-tint)' : 'var(--io-label)',
-            border: '1px solid var(--io-sep)',
-            textAlign: 'center',
+            background: !v.dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+            color: !v.dueOn ? 'var(--io-on-tint)' : 'var(--io-label-2)',
           }}
         >
           Sin fecha
         </button>
-        <label
-          className="io-chip io-press"
-          style={{
-            position: 'relative',
-            padding: '10px 4px',
-            height: 'auto',
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 600,
-            background:
-              v.dueOn && v.dueOn !== todayStr && v.dueOn !== (todayStr ? addDays(todayStr, 1) : '')
-                ? 'var(--io-tint-fill)'
-                : 'var(--io-cell)',
-            color:
-              v.dueOn && v.dueOn !== todayStr && v.dueOn !== (todayStr ? addDays(todayStr, 1) : '')
-                ? 'var(--io-on-tint)'
-                : 'var(--io-label)',
-            border: '1px solid var(--io-sep)',
-            textAlign: 'center',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          Otra…
-          <input
-            type="date"
-            value={v.dueOn}
-            onChange={(e) => setV({ ...v, dueOn: e.target.value, time: e.target.value ? v.time : '' })}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              opacity: 0,
-              width: '100%',
-              cursor: 'pointer',
-            }}
-          />
-        </label>
       </div>
 
       <div className="io-group">
         <div className="io-field io-field--row">
-          <label className="io-field__label" htmlFor="task-date">Fecha asignada</label>
+          <label className="io-field__label" htmlFor="task-date">Fecha</label>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
-            <span style={{ color: v.dueOn ? 'var(--io-label)' : 'var(--io-label-3)', fontSize: 16 }}>
-              {v.dueOn ? v.dueOn : 'Sin fecha'}
-            </span>
+            {!v.dueOn ? (
+              <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                Elegir fecha…
+              </span>
+            ) : null}
+            <input
+              id="task-date"
+              type="date"
+              value={v.dueOn}
+              onChange={(e) => setV({ ...v, dueOn: e.target.value, time: e.target.value ? v.time : '' })}
+              style={!v.dueOn ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
+            />
+            {v.dueOn ? (
+              <button
+                type="button"
+                aria-label="Quitar fecha"
+                onClick={() => setV({ ...v, dueOn: '', time: '' })}
+                style={{
+                  background: 'transparent',
+                  border: 0,
+                  padding: 4,
+                  color: 'var(--io-label-3)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Glyph name="xmark" style={{ width: 14, height: 14 }} />
+              </button>
+            ) : null}
           </div>
         </div>
 

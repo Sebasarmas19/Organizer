@@ -1,22 +1,26 @@
 /* ============================================================================
-   Organizer · Quién puede entrar
+   Organizer · Control de acceso por correo (Multiusuario / SaaS)
 
-   La app es de una sola persona. La barrera de verdad está en la base de
-   datos: el trigger `enforce_allowed_signup` sobre `auth.users` rechaza crear
-   cualquier cuenta cuyo correo no esté en `public.allowed_emails`.
+   En modo SaaS / multiusuario (por omisión, sin ALLOWED_EMAILS o con '*'),
+   cualquier usuario registrado tiene acceso a su propio espacio privado.
 
-   Esto es la segunda capa, por si algún día existiera una sesión con otro
-   correo: el proxy la cierra. `ALLOWED_EMAILS` va separado por comas; sin la
-   variable no se comprueba aquí (la base de datos sigue bloqueando).
+   Si se define ALLOWED_EMAILS en el entorno (lista de correos separados por
+   comas), actúa como lista restrictiva permitiendo el acceso solo a los
+   correos autorizados.
    ========================================================================= */
 
 export function isAllowedEmail(email: string | null | undefined): boolean {
   const raw = process.env.ALLOWED_EMAILS;
-  if (!raw) return true;
+  // Sin variable configurada, vacía o con comodín '*', se permite cualquier usuario (SaaS multiusuario)
+  if (!raw || raw.trim() === '' || raw.trim() === '*') {
+    return true;
+  }
   if (!email) return false;
+
   const allowed = raw
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+
   return allowed.includes(email.trim().toLowerCase());
 }

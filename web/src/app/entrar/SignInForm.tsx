@@ -1,41 +1,16 @@
 'use client';
 
 /* ============================================================================
-   Organizer · El formulario de entrada
+   Organizer · Formulario de inicio de sesión (Google OAuth & Magic Link)
 
-   POR QUE GOOGLE Y NO CORREO
-   --------------------------------------------------------------------------
-   El correo fue el camino durante media hora y fallo dos veces, por dos
-   razones distintas y las dos estructurales:
-
-   1. Verificado contra la base el 2026-09-13: el correo salio a las 01:32:14
-      y la cuenta quedo confirmada a las 01:32:30, dieciseis segundos despues,
-      sin que se creara ninguna sesion. Nadie abre un correo en dieciseis
-      segundos: fue el escaner de enlaces de Gmail. El enlace es de un solo
-      uso, el escaner lo gasta, y al usuario le llega `otp_expired`.
-   2. El arreglo natural —mandar un codigo de seis digitos en vez de un
-      enlace— exige editar la plantilla del correo, y Supabase solo lo permite
-      con un servidor SMTP propio. Montar un servicio de correo entero para
-      una app cuyo unico uso del correo es entrar era la cola moviendo al
-      perro.
-
-   Google resuelve las dos de golpe y ademas quita el limite de cuatro correos
-   por hora del plan gratis. En el iPhone la sesion de Google ya esta abierta,
-   asi que entrar es un toque, que es exactamente lo que esta app necesita: el
-   usuario no vuelve de una friccion, se queda fuera.
-
-   El correo se queda como salida de emergencia, discreta. Si la configuracion
-   de Google se rompe, el usuario no se queda encerrado fuera de sus datos.
-
-   Dos cosas que no son cosmeticas:
-
-   - El boton mide 44px (`.btn`). El minimo tactil del sistema no tiene
-     excepciones, ni en la pantalla que se ve una vez cada seis meses.
-   - Los mensajes son `aria-live`: si no, un lector de pantalla no se entera
-     de que paso algo.
+   Estilo SaaS / Apple moderno:
+   - Botón principal de "Continuar con Google" con estado de carga interactivo
+   - Soporte para redirección inteligente mediante parámetro `next`
+   - Opción secundaria discreta para enlace mágico por correo
+   - Manejo de estados de carga, confirmación y errores accesibles (aria-live)
    ========================================================================= */
 
-import { useState, type FormEvent } from 'react';
+import { useState, useTransition, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 type State =
@@ -45,10 +20,37 @@ type State =
   | { kind: 'sent'; email: string }
   | { kind: 'error'; message: string };
 
-export function SignInForm() {
-  const [state, setState] = useState<State>({ kind: 'idle' });
+interface SignInFormProps {
+  nextParam?: string;
+  motivoParam?: string;
+}
+
+export function SignInForm({ nextParam = '', motivoParam = '' }: SignInFormProps) {
+  const [state, setState] = useState<State>(() => {
+    if (motivoParam === 'no-autorizado') {
+      return { kind: 'error', message: 'Esta cuenta no está autorizada para acceder a esta instalación.' };
+    }
+    if (motivoParam === 'oauth-cancelado') {
+      return { kind: 'error', message: 'Se canceló el inicio de sesión con Google o la sesión expiró.' };
+    }
+    if (motivoParam === 'sin-codigo' || motivoParam === 'enlace-invalido') {
+      return { kind: 'error', message: 'El enlace de acceso no es válido o ya caducó. Solicita uno nuevo.' };
+    }
+    return { kind: 'idle' };
+  });
+
   const [emailOpen, setEmailOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [, startTransition] = useTransition();
+
+  function getEffectiveNext(): string {
+    if (nextParam) return nextParam;
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      return searchParams.get('next') || '';
+    }
+    return '';
+  }
 
   async function signInWithGoogle() {
     if (state.kind === 'google') return;
@@ -56,19 +58,30 @@ export function SignInForm() {
 
     try {
       const supabase = createClient();
+      const effectiveNext = getEffectiveNext();
+
+      const callbackUrl = new URL('/auth/callback', window.location.origin);
+      if (effectiveNext) {
+        callbackUrl.searchParams.set('next', effectiveNext);
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/auth/callback',
+          redirectTo: callbackUrl.toString(),
         },
       });
-      /* Si sale bien, el navegador ya se fue a Google y esto no se ejecuta. */
-      if (error) setState({ kind: 'error', message: error.message });
+
+      if (error) {
+        setState({ kind: 'error', message: error.message });
+      }
     } catch (error) {
       setState({
         kind: 'error',
         message:
-          error instanceof Error ? error.message : 'No se pudo abrir Google.',
+          error instanceof Error
+            ? error.message
+            : 'No se pudo conectar con el servicio de autenticación.',
       });
     }
   }
@@ -76,116 +89,219 @@ export function SignInForm() {
   async function sendLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (state.kind === 'sending') return;
+    if (!email.trim()) return;
+
     setState({ kind: 'sending' });
 
     try {
       const supabase = createClient();
+      const effectiveNext = getEffectiveNext();
+
+      const callbackUrl = new URL('/auth/callback', window.location.origin);
+      if (effectiveNext) {
+        callbackUrl.searchParams.set('next', effectiveNext);
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
-        email,
-        /* La app es privada: el enlace solo se manda a una cuenta que ya
-           existe. Los correos desconocidos no crean cuenta. */
+        email: email.trim(),
         options: {
-          emailRedirectTo: window.location.origin + '/auth/callback',
-          shouldCreateUser: false,
+          emailRedirectTo: callbackUrl.toString(),
+          shouldCreateUser: true,
         },
       });
+
       if (error) {
-        const blocked = /signups? not allowed|database error|not found/i.test(error.message);
         setState({
           kind: 'error',
-          message: blocked ? 'Esta app es privada: ese correo no tiene acceso.' : error.message,
+          message: error.message,
         });
         return;
       }
-      setState({ kind: 'sent', email });
+
+      startTransition(() => {
+        setState({ kind: 'sent', email: email.trim() });
+      });
     } catch (error) {
       setState({
         kind: 'error',
         message:
           error instanceof Error
             ? error.message
-            : 'No se pudo conectar con Supabase.',
+            : 'No se pudo conectar con el servidor.',
       });
     }
   }
 
   return (
-    <div style={{ marginTop: 'var(--space-8)' }}>
+    <div className="w-full" style={{ marginTop: 'var(--space-6, 24px)' }}>
+      {/* Botón principal: Continuar con Google */}
       <button
         type="button"
-        className="btn btn--primary btn--full"
         onClick={signInWithGoogle}
         disabled={state.kind === 'google'}
+        className="w-full relative flex items-center justify-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-150 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed select-none active:scale-[0.99]"
+        style={{
+          minHeight: 48,
+          backgroundColor: '#FFFFFF',
+          color: '#1B1F1C',
+          border: '1px solid rgba(0, 0, 0, 0.12)',
+        }}
+        aria-label="Continuar con Google"
       >
-        <span
-          style={{
-            width: 20,
-            height: 20,
-            borderRadius: '50%',
-            backgroundColor: '#ffffff',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-          aria-hidden="true"
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            focusable="false"
-          >
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.24 0 6.02-1.07 8.04-2.91l-3.88-3.05c-1.08.73-2.47 1.16-4.16 1.16-3.19 0-5.9-2.16-6.87-5.06H1.07v3.14C3.12 21.32 7.27 24 12 24Z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.13 14.14c-.25-.73-.39-1.51-.39-2.14s.14-1.41.39-2.14V6.72H1.07C.39 8.08 0 9.77 0 12s.39 3.92 1.07 5.28l4.06-3.14Z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.12 2.68 1.07 6.72l4.06 3.14c.97-2.9 3.68-5.09 6.87-5.09Z"
-            />
-          </svg>
-        </span>
-        <span>{state.kind === 'google' ? 'Abriendo Google…' : 'Entrar con Google'}</span>
+        {state.kind === 'google' ? (
+          <>
+            <svg
+              className="animate-spin"
+              style={{ width: 18, height: 18, color: '#265A44' }}
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="3"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              />
+            </svg>
+            <span style={{ fontWeight: 500 }}>Conectando con Google...</span>
+          </>
+        ) : (
+          <>
+            <span
+              style={{
+                width: 20,
+                height: 20,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+              aria-hidden="true"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false">
+                <path
+                  fill="#4285F4"
+                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 24c3.24 0 6.02-1.07 8.04-2.91l-3.88-3.05c-1.08.73-2.47 1.16-4.16 1.16-3.19 0-5.9-2.16-6.87-5.06H1.07v3.14C3.12 21.32 7.27 24 12 24Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.13 14.14c-.25-.73-.39-1.51-.39-2.14s.14-1.41.39-2.14V6.72H1.07C.39 8.08 0 9.77 0 12s.39 3.92 1.07 5.28l4.06-3.14Z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.12 2.68 1.07 6.72l4.06 3.14c.97-2.9 3.68-5.09 6.87-5.09Z"
+                />
+              </svg>
+            </span>
+            <span style={{ fontWeight: 500 }}>Continuar con Google</span>
+          </>
+        )}
       </button>
 
-      <p
-        aria-live="polite"
-        className="t-meta"
-        style={{ marginTop: 'var(--space-3)', minHeight: 20 }}
-      >
-        {state.kind === 'error' ? (
-          <span className="c-muted">{state.message}</span>
-        ) : null}
-      </p>
+      {/* Alerta de error accesible */}
+      {state.kind === 'error' && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="flex items-start gap-2.5 p-3 rounded-xl text-xs leading-relaxed"
+          style={{
+            marginTop: 'var(--space-4, 16px)',
+            backgroundColor: 'rgba(234, 67, 53, 0.08)',
+            border: '1px solid rgba(234, 67, 53, 0.2)',
+            color: '#A02015',
+          }}
+        >
+          <svg
+            style={{ width: 16, height: 16, flexShrink: 0, marginTop: 1 }}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span>{state.message}</span>
+        </div>
+      )}
 
-      {/* ------------------------------------------------ salida de emergencia
-          Deliberadamente callada. No es una segunda opcion que haya que
-          sopesar cada vez: es lo que se usa el dia que Google falle. */}
-      {state.kind === 'sent' ? (
-        <div role="status" style={{ marginTop: 'var(--space-6)' }}>
-          <p className="t-meta">Te mandamos un enlace a {state.email}.</p>
-          <p className="t-label c-muted" style={{ marginTop: 'var(--space-1)' }}>
-            Ábrelo en este mismo navegador. Caduca en una hora.
+      {/* Confirmación de enlace enviado por correo */}
+      {state.kind === 'sent' && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-4 rounded-xl text-center"
+          style={{
+            marginTop: 'var(--space-5, 20px)',
+            backgroundColor: 'rgba(38, 90, 68, 0.08)',
+            border: '1px solid rgba(38, 90, 68, 0.2)',
+          }}
+        >
+          <div
+            className="w-8 h-8 rounded-full mx-auto flex items-center justify-center mb-2"
+            style={{ backgroundColor: '#265A44', color: '#FFFFFF' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <p className="text-sm font-medium" style={{ color: '#1B1F1C' }}>
+            Enlace enviado a {state.email}
+          </p>
+          <p className="text-xs text-muted mt-1" style={{ color: 'var(--text-muted, #5C635D)' }}>
+            Ábrelo en este mismo navegador para ingresar automáticamente.
           </p>
         </div>
-      ) : emailOpen ? (
-        <form onSubmit={sendLink} style={{ marginTop: 'var(--space-6)' }}>
-          <label className="t-label c-muted" htmlFor="email" style={{ fontWeight: 600 }}>
-            Tu correo
-          </label>
+      )}
 
-          <div className="field" style={{ marginTop: 'var(--space-2)' }}>
+      {/* Separador sutil */}
+      <div
+        className="flex items-center gap-3"
+        style={{ marginBlock: 'var(--space-6, 24px)' }}
+        aria-hidden="true"
+      >
+        <div className="flex-1 h-px" style={{ backgroundColor: 'var(--io-sep, rgba(0, 0, 0, 0.08))' }} />
+        <span
+          className="text-xs font-normal"
+          style={{ color: 'var(--text-muted, #5C635D)', letterSpacing: '0.02em' }}
+        >
+          o con correo electrónico
+        </span>
+        <div className="flex-1 h-px" style={{ backgroundColor: 'var(--io-sep, rgba(0, 0, 0, 0.08))' }} />
+      </div>
+
+      {/* Salida secundaria discreta: Magic link por correo */}
+      {emailOpen ? (
+        <form onSubmit={sendLink} className="space-y-3">
+          <label
+            htmlFor="email-input"
+            className="block text-xs font-medium"
+            style={{ color: 'var(--text-muted, #5C635D)' }}
+          >
+            Correo electrónico
+          </label>
+          <div className="relative">
             <input
-              id="email"
+              id="email-input"
               name="email"
               type="email"
               inputMode="email"
@@ -196,28 +312,41 @@ export function SignInForm() {
               autoFocus
               placeholder="tu@correo.com"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={state.kind === 'sending'}
+              className="w-full px-3.5 py-2.5 text-sm rounded-xl transition-colors outline-none"
+              style={{
+                backgroundColor: 'var(--surface-sunken, #F4F2EC)',
+                border: '1px solid var(--io-sep, rgba(0, 0, 0, 0.12))',
+                color: 'var(--text, #1B1F1C)',
+                minHeight: 44,
+              }}
             />
           </div>
 
           <button
             type="submit"
-            className="btn btn--full"
-            style={{ marginTop: 'var(--space-3)' }}
-            disabled={state.kind === 'sending'}
+            disabled={state.kind === 'sending' || !email.trim()}
+            className="btn btn--primary btn--full rounded-xl"
+            style={{
+              minHeight: 44,
+              marginTop: 'var(--space-3, 12px)',
+            }}
           >
-            {state.kind === 'sending' ? 'Enviando…' : 'Mandarme un enlace'}
+            {state.kind === 'sending' ? 'Enviando enlace...' : 'Enviar enlace de acceso'}
           </button>
         </form>
       ) : (
-        <button
-          type="button"
-          className="taptext t-label c-muted"
-          style={{ marginTop: 'var(--space-4)' }}
-          onClick={() => setEmailOpen(true)}
-        >
-          Entrar con un enlace al correo
-        </button>
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setEmailOpen(true)}
+            className="text-xs transition-colors hover:underline"
+            style={{ color: 'var(--text-muted, #5C635D)' }}
+          >
+            Entrar con un enlace al correo
+          </button>
+        </div>
       )}
     </div>
   );
