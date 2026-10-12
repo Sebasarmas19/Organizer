@@ -1,15 +1,17 @@
 'use client';
 
 /* ============================================================================
-   Organizer · Landing Page de Clase Mundial
-   Diseño impecable, Anti-AI Slop, animaciones GSAP & iconos Reicon.
+   Organizer · Landing Page (Dark Titanium Studio)
+   Dirección seleccionada: Impeccable's Pick (Linear / Raycast / Cron style)
    
-   Principios fundamentales:
-     1. Push, no pull: el producto es la notificación en la pantalla de bloqueo (8:00 AM).
-     2. Captura en 0 fricción: < 2 segundos por Siri / voz sin clasificar forzosamente.
-     3. Inicio en una pantalla: cero scroll, cero sobrecarga para ADHD / estudiantes.
-     4. Sin reproches ni culpa: si algo no se hizo, se reajusta sin deuda acumulada.
-     5. Recursos aislado: notas y herramientas independientes de la planificación.
+   Directivas Impeccable & Craft Floor:
+     - Fondo obsidiana (#090D0A), atmósfera con luz esmeralda volumétrica (#10B981).
+     - Micro-bordes de 1px de precisión (border-zinc-800/80).
+     - Sin texto en degradado, sin kickers/eyebrows innecesarios.
+     - Cero emojis: iconografía vectorial de precisión (Reicon).
+     - iPhone 16 Pro centrado en titanio oscuro con display limpio reservado para video.
+     - Tarjetas flotantes interactivas: captura Siri (<1.2s) y notificación matutina (8:00 AM).
+     - Animaciones fluidas GSAP con respeto a prefers-reduced-motion.
    ========================================================================= */
 
 import { useState, useRef } from 'react';
@@ -24,63 +26,70 @@ if (typeof window !== 'undefined') {
 
 export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'push' | 'captura' | 'escritorio'>('push');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // GSAP Animations with useGSAP & ScrollTrigger
+  // GSAP Choreography
   useGSAP(
     () => {
-      // Respect prefers-reduced-motion
       const prefersReducedMotion =
         typeof window !== 'undefined' &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       if (prefersReducedMotion) return;
 
-      // 1. Hero Entrance Choreography
+      // 1. Hero Entrance Stagger
       gsap.from('.gsap-hero-item', {
         y: 28,
         opacity: 0,
-        duration: 0.85,
+        duration: 0.9,
         stagger: 0.12,
         ease: 'power3.out',
       });
 
-      // 2. Phone Mockup Reveal
-      gsap.from('.gsap-mockup-frame', {
-        scale: 0.94,
-        y: 40,
+      // 2. Showcase Entrance & Device Scale
+      gsap.from('.gsap-device-chassis', {
+        scale: 0.93,
+        y: 45,
         opacity: 0,
-        duration: 1,
+        duration: 1.1,
         ease: 'power3.out',
         delay: 0.25,
       });
 
-      // 3. Subtle Phone Float Physics
-      gsap.to('.gsap-mockup-float', {
+      // 3. Flanking Floating Cards Entrance
+      gsap.from('.gsap-flank-card', {
+        x: (index) => (index === 0 ? -30 : 30),
+        opacity: 0,
+        duration: 0.9,
+        ease: 'power2.out',
+        delay: 0.45,
+      });
+
+      // 4. Ambient Floating Physics for iPhone
+      gsap.to('.gsap-phone-float', {
         y: -10,
-        duration: 3.5,
+        duration: 3.6,
         repeat: -1,
         yoyo: true,
         ease: 'sine.inOut',
       });
 
-      // 4. Bento Grid ScrollTrigger Reveal
+      // 5. Bento Grid Scroll Reveal
       gsap.from('.gsap-bento-card', {
         scrollTrigger: {
-          trigger: '#filosofia',
+          trigger: '#caracteristicas',
           start: 'top 82%',
           once: true,
         },
         y: 35,
         opacity: 0,
         duration: 0.75,
-        stagger: 0.14,
+        stagger: 0.12,
         ease: 'power2.out',
       });
 
-      // 5. Workflow Steps ScrollTrigger Reveal
+      // 6. Workflow Steps Scroll Reveal
       gsap.from('.gsap-workflow-step', {
         scrollTrigger: {
           trigger: '#como-funciona',
@@ -94,7 +103,7 @@ export function LandingPage() {
         ease: 'power2.out',
       });
 
-      // 6. Modules ScrollTrigger Reveal
+      // 7. Modules Scroll Reveal
       gsap.from('.gsap-module-card', {
         scrollTrigger: {
           trigger: '#modulos',
@@ -118,75 +127,71 @@ export function LandingPage() {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[#FAFAF9] text-zinc-900 selection:bg-emerald-100 selection:text-emerald-950 antialiased overflow-x-hidden font-sans"
+      className="min-h-screen bg-[#090D0A] text-zinc-100 selection:bg-emerald-500/30 selection:text-emerald-100 antialiased overflow-x-hidden font-sans"
     >
       {/* ====================================================================
-          1. HEADER NAVEGACIÓN
+          1. HEADER NAVEGACIÓN (Obsidian Frosted Glass)
           ==================================================================== */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-zinc-200/70 transition-all">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#090D0A]/85 border-b border-zinc-800/80 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Brand Logo & Name */}
+          {/* Brand Mark */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-[1.03] transition-transform duration-200">
+              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-700/80 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-inner group-hover:border-emerald-500/60 transition-colors">
                 O
               </div>
-              <span className="font-semibold text-lg tracking-tight text-zinc-950 group-hover:text-emerald-900 transition-colors">
+              <span className="font-semibold text-lg tracking-tight text-white group-hover:text-emerald-300 transition-colors">
                 Organizer
               </span>
             </Link>
 
-            {/* Servicio Activo Badge */}
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/70 text-[11px] font-medium text-emerald-800">
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-medium text-emerald-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              Servicio activo
+              PWA iOS Nativa
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600">
-            <a href="#filosofia" className="hover:text-zinc-950 transition-colors">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
+            <a href="#caracteristicas" className="hover:text-white transition-colors">
               Filosofía
             </a>
-            <a href="#como-funciona" className="hover:text-zinc-950 transition-colors">
+            <a href="#como-funciona" className="hover:text-white transition-colors">
               Cómo funciona
             </a>
-            <a href="#modulos" className="hover:text-zinc-950 transition-colors">
+            <a href="#modulos" className="hover:text-white transition-colors">
               Módulos
             </a>
-            <a href="#faq" className="hover:text-zinc-950 transition-colors">
-              FAQ
+            <a href="#faq" className="hover:text-white transition-colors">
+              Preguntas
             </a>
           </nav>
 
-          {/* Right Action CTAs */}
+          {/* Header Action Buttons */}
           <div className="flex items-center gap-3">
             <Link
               href="/entrar"
-              className="hidden sm:inline-flex text-sm font-semibold text-zinc-700 hover:text-zinc-950 px-3 py-2 rounded-lg hover:bg-zinc-100 transition-colors"
+              className="hidden sm:inline-flex text-sm font-semibold text-zinc-400 hover:text-white px-3 py-2 rounded-lg hover:bg-zinc-800/60 transition-colors"
             >
               Iniciar sesión
             </Link>
 
             <Link
               href="/entrar"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold shadow-xs hover:shadow transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
             >
-              <GoogleIcon className="w-4 h-4" />
+              <GoogleIcon className="w-4 h-4 bg-white rounded-full p-0.5" />
               <span>Empezar gratis</span>
-              <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
             </Link>
 
             {/* Mobile menu button */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-zinc-600 hover:text-zinc-900 rounded-lg hover:bg-zinc-100"
+              className="md:hidden p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/60"
               aria-label="Abrir menú de navegación"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -202,47 +207,47 @@ export function LandingPage() {
 
         {/* Mobile dropdown menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-zinc-200 bg-white/95 backdrop-blur-lg px-4 pt-2 pb-4 space-y-2">
+          <div className="md:hidden border-b border-zinc-800 bg-[#090D0A]/95 backdrop-blur-xl px-4 pt-2 pb-4 space-y-2">
             <a
-              href="#filosofia"
+              href="#caracteristicas"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-700 hover:bg-zinc-50"
+              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
             >
               Filosofía
             </a>
             <a
               href="#como-funciona"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-700 hover:bg-zinc-50"
+              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
             >
               Cómo funciona
             </a>
             <a
               href="#modulos"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-700 hover:bg-zinc-50"
+              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
             >
               Módulos
             </a>
             <a
               href="#faq"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-700 hover:bg-zinc-50"
+              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
             >
-              FAQ
+              Preguntas
             </a>
-            <div className="pt-2 border-t border-zinc-100 flex flex-col gap-2">
+            <div className="pt-2 border-t border-zinc-800 flex flex-col gap-2">
               <Link
                 href="/entrar"
-                className="w-full text-center px-4 py-2.5 rounded-xl border border-zinc-300 text-zinc-700 font-semibold"
+                className="w-full text-center px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-200 font-semibold"
               >
                 Iniciar sesión
               </Link>
               <Link
                 href="/entrar"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 text-white font-semibold"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold"
               >
-                <GoogleIcon className="w-4 h-4" />
+                <GoogleIcon className="w-4 h-4 bg-white rounded-full p-0.5" />
                 <span>Empezar con Google</span>
               </Link>
             </div>
@@ -251,52 +256,39 @@ export function LandingPage() {
       </header>
 
       {/* ====================================================================
-          2. HERO SECTION
+          2. HERO SECTION CENTRADO (Volumetric Emerald Aura)
           ==================================================================== */}
-      <section className="relative pt-14 pb-20 sm:pt-24 sm:pb-28 overflow-hidden">
-        {/* Subtle, restrained ambient backdrop (Anti-AI Slop: no neon purple/blue orbs) */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-80 pointer-events-none -z-10">
-          <div className="w-full h-full bg-radial from-emerald-100/40 via-zinc-100/30 to-transparent blur-2xl" />
-        </div>
+      <section className="relative pt-16 pb-16 sm:pt-24 sm:pb-24 overflow-hidden">
+        {/* Atmósfera volumétrica esmeralda controlada detrás del Hero */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none -z-10" />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Eyebrow Badge */}
-          <div className="gsap-hero-item inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs sm:text-sm font-medium mb-6 sm:mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-            <span>Tu planificación devuelta a tiempo</span>
-            <span className="text-zinc-300">·</span>
-            <span className="font-semibold text-zinc-950">Push, no pull</span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="gsap-hero-item text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-zinc-950 leading-[1.08] mb-6">
-            Tu día resuelto{' '}
-            <span className="text-emerald-800 underline decoration-emerald-300/60 decoration-wavy decoration-1 underline-offset-8">
-              antes de que abras la app.
-            </span>
+          {/* Main Headline (monumental scale, sharp tracking) */}
+          <h1 className="gsap-hero-item text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08] mb-6">
+            Tu día resuelto antes de que abras la app.
           </h1>
 
           {/* Subtitle */}
-          <p className="gsap-hero-item max-w-2xl mx-auto text-base sm:text-xl text-zinc-600 leading-relaxed font-normal mb-8 sm:mb-10">
-            Diseñada para estudiantes universitarios y mentes con ADHD. Sin listas infinitas que paralizan: captura ideas en 2 segundos y recibe tu plan detallado en tu pantalla de bloqueo cada mañana a las 8:00 AM.
+          <p className="gsap-hero-item max-w-2xl mx-auto text-base sm:text-xl text-zinc-400 leading-relaxed font-normal mb-8 sm:mb-10">
+            El asistente silencioso para estudiantes y mentes con TDAH. Sin listas infinitas que paralizan: captura ideas en 1 segundo y recibe tu plan completo en la pantalla de bloqueo a las 8:00 AM.
           </p>
 
-          {/* Primary & Secondary Action CTAs */}
-          <div className="gsap-hero-item flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-10">
+          {/* CTA Buttons */}
+          <div className="gsap-hero-item flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
             <Link
               href="/entrar"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white text-base font-semibold shadow-sm hover:shadow transition-all active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-base font-semibold shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:shadow-[0_0_35px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
             >
               <GoogleIcon className="w-5 h-5 bg-white rounded-full p-0.5" />
               <span>Empezar con Google</span>
-              <svg className="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <svg className="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
             </Link>
 
             <a
               href="#como-funciona"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-white hover:bg-zinc-50 border border-zinc-300 text-zinc-800 text-base font-semibold shadow-2xs hover:border-zinc-400 transition-all active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 hover:text-white text-base font-semibold shadow-inner transition-all active:scale-[0.98]"
             >
               <span>Ver cómo funciona</span>
               <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -305,116 +297,109 @@ export function LandingPage() {
             </a>
           </div>
 
-          {/* High-craft Trust Metrics Pill */}
-          <div className="gsap-hero-item inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 py-2 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs text-xs sm:text-sm text-zinc-700">
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
-              <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+          {/* Social Proof & Metrics Badges */}
+          <div className="gsap-hero-item inline-flex flex-wrap items-center justify-center gap-3 px-4 py-2 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-sm text-zinc-300">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-400">
+              <CheckIcon className="w-3.5 h-3.5" />
+              Push, no pull
+            </span>
+            <span className="text-zinc-600">·</span>
+            <span className="inline-flex items-center gap-1.5 text-zinc-300">
+              <BoltIcon className="w-3.5 h-3.5 text-emerald-400" />
+              Captura &lt; 1.2s
+            </span>
+            <span className="text-zinc-600">·</span>
+            <span className="inline-flex items-center gap-1.5 text-zinc-400">
+              <ShieldIcon className="w-3.5 h-3.5 text-zinc-500" />
               Cero deuda acumulada
             </span>
-            <span className="text-zinc-300">·</span>
-            <span className="inline-flex items-center gap-1 font-medium text-zinc-700">
-              <ShieldIcon className="w-3.5 h-3.5 text-zinc-500" />
-              100% libre de culpa
-            </span>
-            <span className="text-zinc-300">·</span>
-            <span className="text-zinc-500">PWA nativa en iOS & Web</span>
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-          3. SHOWCASE VISUAL: MOCKUP IPHONE (FRAME VACÍO PARA VIDEO) & TARJETAS
+          3. DEVICE SHOWCASE: IPHONE 16 PRO EN TITANIO OSCURO & TARJETAS FLOTANTES
           ==================================================================== */}
-      <section className="py-12 sm:py-20 relative">
+      <section className="py-8 sm:py-16 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header de la sección */}
-          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-            <span className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/70">
-              EXPERIENCIA EN DISPOSITIVO
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-zinc-950 mt-3 tracking-tight">
-              Sin fricción en el bolsillo, potente en el escritorio.
-            </h2>
-            <p className="text-zinc-600 text-base sm:text-lg mt-2.5">
-              Tu teléfono recibe el resumen; tu computadora te ayuda a proyectar la semana sin esfuerzo.
-            </p>
+          <div className="relative max-w-5xl mx-auto flex items-center justify-center">
+            {/* Resplandor ambiental detrás del dispositivo */}
+            <div className="absolute inset-0 bg-radial from-emerald-500/15 via-emerald-900/5 to-transparent blur-[90px] -z-10 rounded-full" />
 
-            {/* Selector de pestañas interactivas */}
-            <div className="inline-flex p-1 mt-6 rounded-xl bg-zinc-200/70 border border-zinc-300/60">
-              <button
-                type="button"
-                onClick={() => setActiveTab('push')}
-                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                  activeTab === 'push'
-                    ? 'bg-white text-zinc-950 shadow-xs'
-                    : 'text-zinc-600 hover:text-zinc-950'
-                }`}
-              >
-                Notificación Push (8:00 AM)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('captura')}
-                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                  activeTab === 'captura'
-                    ? 'bg-white text-zinc-950 shadow-xs'
-                    : 'text-zinc-600 hover:text-zinc-950'
-                }`}
-              >
-                Captura Siri (1.2s)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('escritorio')}
-                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                  activeTab === 'escritorio'
-                    ? 'bg-white text-zinc-950 shadow-xs'
-                    : 'text-zinc-600 hover:text-zinc-950'
-                }`}
-              >
-                Vista Semanal (Desktop)
-              </button>
-            </div>
-          </div>
+            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Tarjeta Flotante Izquierda: Captura de voz Siri (<1.2s) */}
+              <div className="hidden lg:block lg:col-span-3.5 order-1">
+                <div className="gsap-flank-card p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-emerald-400">
+                        <MicIcon className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold text-zinc-200 tracking-wider uppercase">
+                        Captura Siri
+                      </span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-400">
+                      &lt; 1.2s
+                    </span>
+                  </div>
 
-          {/* Grid: iPhone Mockup a la izquierda, tarjetas flotantes a la derecha */}
-          <div className="relative max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Columna Izquierda: Chasis iPhone 16 Pro (Frame vacío preparado para el video del usuario) */}
-              <div className="lg:col-span-5 flex justify-center order-2 lg:order-1">
-                <div className="gsap-mockup-frame gsap-mockup-float relative w-[310px] sm:w-[340px] h-[670px] bg-zinc-900 rounded-[52px] p-3 shadow-2xl ring-1 ring-zinc-800 border-[4px] border-zinc-700/80">
+                  <div className="mt-3.5 space-y-3">
+                    <p className="text-xs font-mono text-zinc-300 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800">
+                      &quot;Oye Siri, anota comprar cuaderno de física&quot;
+                    </p>
+                    {/* Visualizador de audio / waveform estilizado */}
+                    <div className="flex items-center justify-center gap-1 py-1.5 px-3 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
+                      {[40, 75, 100, 60, 90, 45, 80, 100, 70, 35, 85, 50].map((h, i) => (
+                        <span
+                          key={i}
+                          style={{ height: `${h * 0.16}px` }}
+                          className="w-1 bg-emerald-400/80 rounded-full"
+                        />
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-zinc-500 leading-snug">
+                      Sin campos obligatorios ni fechas forzadas. La idea queda archivada en 1 toque.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chasis Central iPhone 16 Pro (Frame limpio reservado para video) */}
+              <div className="lg:col-span-5 flex justify-center order-2">
+                <div className="gsap-device-chassis gsap-phone-float relative w-[310px] sm:w-[335px] h-[670px] bg-zinc-950 rounded-[52px] p-3 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_40px_rgba(16,185,129,0.12)] border-[4px] border-zinc-800">
                   {/* Dynamic Island */}
                   <div className="absolute top-5 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-30 flex items-center justify-end pr-2.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 ring-1 ring-zinc-700" />
                   </div>
 
-                  {/* ==============================================================
-                      PANTALLA DEL IPHONE: FRAME LIMPIO VACÍO RESERVADO PARA VIDEO
-                      (Sin imágenes artificiales de IA según la instrucción del usuario)
-                      ============================================================== */}
+                  {/* ==========================================================
+                      PANTALLA DEL IPHONE: FRAME LIMPIO RESERVADO PARA VIDEO
+                      (Sin imágenes artificiales de IA según la instrucción)
+                      ========================================================== */}
                   <div
                     id="phone-video-slot"
-                    className="relative w-full h-full bg-zinc-950 rounded-[42px] overflow-hidden flex flex-col items-center justify-center text-center p-6 border border-zinc-800/80 select-none"
+                    className="relative w-full h-full bg-[#050705] rounded-[42px] overflow-hidden flex flex-col items-center justify-center text-center p-6 border border-zinc-900 select-none"
                   >
-                    {/* Reflejo sutil de cristal OLED */}
+                    {/* Reflejo OLED de cristal sutil */}
                     <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-white/[0.02] pointer-events-none" />
 
                     {/* Placeholder elegante y funcional */}
-                    <div className="relative z-10 flex flex-col items-center justify-center space-y-4 max-w-[220px]">
-                      <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center justify-center shadow-inner">
-                        <VideoPlaceholderIcon className="w-7 h-7 text-zinc-300" />
+                    <div className="relative z-10 flex flex-col items-center justify-center space-y-4 max-w-[210px]">
+                      <div className="w-14 h-14 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-zinc-300 flex items-center justify-center shadow-inner">
+                        <VideoPlaceholderIcon className="w-7 h-7 text-emerald-400" />
                       </div>
                       <div className="space-y-1.5">
                         <p className="text-xs font-semibold text-zinc-200 tracking-wide uppercase">
                           Demostración en video
                         </p>
                         <p className="text-[11px] text-zinc-500 leading-snug">
-                          Espacio preparado para la grabación de pantalla real en iPhone.
+                          Espacio preparado para la grabación de pantalla real de tu iPhone.
                         </p>
                       </div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[10px] text-zinc-400 font-medium">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-[10px] text-zinc-400 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        iOS PWA Standalone
+                        PWA iOS Standalone
                       </div>
                     </div>
 
@@ -424,114 +409,36 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Columna Derecha: Tarjetas interactivas de características clave */}
-              <div className="lg:col-span-7 space-y-5 order-1 lg:order-2">
-                {/* Tarjeta 1: Notificación Push en Pantalla de Bloqueo */}
-                <div
-                  className={`p-5 rounded-2xl bg-white border transition-all ${
-                    activeTab === 'push'
-                      ? 'border-emerald-300/80 shadow-md ring-1 ring-emerald-200/50'
-                      : 'border-zinc-200 shadow-2xs hover:border-zinc-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center">
-                        <BellIcon className="w-4 h-4 text-emerald-400" />
-                      </div>
-                      <span className="text-xs font-bold tracking-wider text-zinc-900 uppercase">
-                        ORGANIZER · PUSH MATUTINO
-                      </span>
-                    </div>
-                    <span className="text-xs font-medium text-zinc-400">Hoy · 8:00 AM</span>
-                  </div>
-                  <div className="mt-3.5 space-y-2">
+              {/* Tarjeta Flotante Derecha: Notificación Push 8:00 AM */}
+              <div className="hidden lg:block lg:col-span-3.5 order-3">
+                <div className="gsap-flank-card p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 shadow-2xl backdrop-blur-xl">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-zinc-950">Tu plan del día en pantalla de bloqueo:</span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-100/70 text-emerald-800 text-[10px] font-semibold">
-                        0 clics
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-zinc-900 bg-zinc-50 p-3 rounded-xl border border-zinc-200 font-mono tracking-tight">
-                      &quot;Hoy: Cálculo 8:00 · Entrega Lab 11:00 · Gym 18:00&quot;
-                    </p>
-                    <p className="text-xs text-zinc-500 leading-relaxed">
-                      La información va hacia ti antes de salir de la cama. Sin insignias que estresan ni obligación de abrir pestañas.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Tarjeta 2: Captura en 0 fricción con Siri / Atajos */}
-                <div
-                  className={`p-5 rounded-2xl bg-white border transition-all ${
-                    activeTab === 'captura'
-                      ? 'border-emerald-300/80 shadow-md ring-1 ring-emerald-200/50'
-                      : 'border-zinc-200 shadow-2xs hover:border-zinc-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-zinc-900 text-white flex items-center justify-center">
-                        <MicIcon className="w-4 h-4 text-emerald-400" />
+                      <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-emerald-400">
+                        <BellIcon className="w-4 h-4" />
                       </div>
-                      <span className="text-xs font-bold tracking-wider text-zinc-900 uppercase">
-                        CAPTURA EN 0 FRICCIÓN
+                      <span className="text-xs font-bold text-zinc-200 tracking-wider uppercase">
+                        Push 8:00 AM
                       </span>
                     </div>
-                    <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
-                      1.2 segundos
-                    </span>
-                  </div>
-                  <div className="mt-3.5 space-y-2">
-                    <div className="p-3 rounded-xl bg-zinc-900 text-white font-mono text-xs flex items-center justify-between">
-                      <span className="text-zinc-200">&quot;Oye Siri, anota comprar cuaderno de física&quot;</span>
-                      <span className="text-emerald-400 text-[11px] font-sans font-semibold inline-flex items-center gap-1">
-                        <CheckIcon className="w-3 h-3" /> Guardado
-                      </span>
-                    </div>
-                    <p className="text-xs text-zinc-500 leading-relaxed">
-                      Sin seleccionar carpetas, sin fechas forzadas ni formularios obligatorios. Suelta la idea y sigue con lo tuyo.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Tarjeta 3: Vista Semanal de Escritorio */}
-                <div
-                  className={`hidden sm:block rounded-2xl bg-zinc-950 text-white p-4.5 border transition-all ${
-                    activeTab === 'escritorio'
-                      ? 'border-emerald-500/60 shadow-lg'
-                      : 'border-zinc-800 shadow-md'
-                  }`}
-                >
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1.5">
-                        <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                        <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-                      </div>
-                      <span className="text-xs font-medium text-zinc-400 pl-2">
-                        Organizer Desktop · Vista Semanal
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-zinc-500">Sincronización instantánea</span>
+                    <span className="text-xs font-mono text-zinc-400">Ahora</span>
                   </div>
 
-                  <div className="mt-3.5 grid grid-cols-5 gap-2 text-center text-xs">
-                    {['Lun 5', 'Mar 6', 'Mié 7', 'Jue 8', 'Vie 9'].map((dia, idx) => (
-                      <div
-                        key={dia}
-                        className={`p-2.5 rounded-lg border ${
-                          idx === 1
-                            ? 'bg-zinc-900 border-emerald-500/40 text-emerald-200'
-                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-400'
-                        }`}
-                      >
-                        <div className="font-bold text-[11px] mb-1.5">{dia}</div>
-                        <div className="h-1.5 w-full bg-emerald-500/70 rounded-full mb-1" title="Clase fijada" />
-                        <div className="h-1.5 w-3/4 bg-zinc-500 rounded-full" title="Tarea planificada" />
+                  <div className="mt-3.5 space-y-3">
+                    <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">
+                          Plan del día
+                        </span>
                       </div>
-                    ))}
+                      <p className="text-xs font-mono font-semibold text-white leading-relaxed">
+                        &quot;Hoy: Cálculo 8:00 · Entrega Lab 11:00 · Gym 18:00&quot;
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 leading-snug">
+                      Llega a tu pantalla de bloqueo antes de salir de la cama. Lo lees sin abrir nada.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -541,123 +448,82 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          4. SECCIÓN BENTO: "¿POR QUÉ ES DIFERENTE?" (FILOSOFÍA)
+          4. SECCIÓN BENTO GRID: LOS 3 PILARES DE ALTO RENDIMIENTO
           ==================================================================== */}
-      <section id="filosofia" className="py-16 sm:py-24 bg-white border-y border-zinc-200/80">
+      <section id="caracteristicas" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#070A08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-            <span className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/70">
-              FILOSOFÍA FUNDAMENTAL
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-zinc-950 mt-3 tracking-tight">
-              ¿Por qué las demás apps de tareas te fallaron?
+          <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+              Construida para cerebros que no toleran la fricción.
             </h2>
-            <p className="text-zinc-600 text-base sm:text-lg mt-3">
-              El problema no es que carezcas de disciplina. Las apps tradicionales están hechas para cerebros que aman gestionar listas. Organizer está hecha para la realidad.
+            <p className="text-zinc-400 text-base sm:text-lg mt-4 leading-relaxed">
+              Las aplicaciones tradicionales exigen categorizar, estimar horas y revisar listas infinitas. Organizer reduce el esfuerzo a cero.
             </p>
           </div>
 
-          {/* Bento Grid con 4 tarjetas asimétricas y animaciones GSAP */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* Card 1: Push, no pull (md:col-span-7) */}
-            <div className="gsap-bento-card md:col-span-7 p-6 sm:p-8 rounded-3xl bg-zinc-50/80 border border-zinc-200 hover:border-zinc-300 transition-all flex flex-col justify-between group shadow-2xs">
+          {/* Bento Grid con bordes de 1px de precisión (Dark Titanium Studio) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Bento Card 1: Captura en 1s */}
+            <div className="gsap-bento-card p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-11 h-11 rounded-2xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-5 shadow-xs">
-                  <BellIcon className="w-5 h-5" />
-                </div>
-                <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">
-                  Principio 01 · El producto es el aviso
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-950 tracking-tight">
-                  Push, no pull. La app va hacia ti.
-                </h3>
-                <p className="text-zinc-600 text-base mt-2.5 leading-relaxed">
-                  Cualquier sistema que dependa de que te acuerdes de entrar a la app fracasa al tercer día. En Organizer, tu plan del día llega a tu pantalla de bloqueo a las <strong>8:00 AM exactas</strong>. Contiene tus horas, tus materias y tus tareas. Lo lees sin desbloquear.
-                </p>
-              </div>
-              <div className="mt-6 p-4 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs">
-                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-800">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Notificación sin rodeos ni badges engañosos:
-                </div>
-                <p className="text-sm font-semibold text-zinc-900 mt-1 font-mono">
-                  Hoy: Cálculo 8:00 · Informe 11:00 · Gym 18:00
-                </p>
-              </div>
-            </div>
-
-            {/* Card 2: Captura en 0 fricción (md:col-span-5) */}
-            <div className="gsap-bento-card md:col-span-5 p-6 sm:p-8 rounded-3xl bg-zinc-50/80 border border-zinc-200 hover:border-zinc-300 transition-all flex flex-col justify-between group shadow-2xs">
-              <div>
-                <div className="w-11 h-11 rounded-2xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-5 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 text-emerald-400 flex items-center justify-center mb-5">
                   <BoltIcon className="w-5 h-5" />
                 </div>
-                <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">
-                  Principio 02 · Cero barreras
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-950 tracking-tight">
-                  Captura en 0 fricción.
+                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                  Captura en 1 segundo
                 </h3>
-                <p className="text-zinc-600 text-base mt-2.5 leading-relaxed">
-                  Anotar toma menos de 2 segundos. Con Siri, un atajo de iOS o un toque en la pantalla de inicio. Sin categorías obligatorias ni fechas forzadas: anota la idea antes de que se esfume.
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Por voz con Siri o con un toque en la pantalla de inicio. Sin carpetas forzadas ni fechas obligatorias: anotas la idea antes de que se esfume de tu cabeza.
                 </p>
               </div>
-              <div className="mt-6 p-4 rounded-2xl bg-white border border-zinc-200/90 flex items-center justify-between">
-                <div className="text-xs font-medium text-zinc-500">Tiempo de captura medido</div>
-                <div className="text-sm font-bold text-emerald-800">&lt; 2 segundos</div>
+              <div className="mt-8 pt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs">
+                <span className="text-zinc-500">Velocidad medida</span>
+                <span className="font-mono font-bold text-emerald-400">&lt; 1.2 segundos</span>
               </div>
             </div>
 
-            {/* Card 3: Inicio sin scroll (md:col-span-5) */}
-            <div className="gsap-bento-card md:col-span-5 p-6 sm:p-8 rounded-3xl bg-zinc-50/80 border border-zinc-200 hover:border-zinc-300 transition-all flex flex-col justify-between group shadow-2xs">
+            {/* Bento Card 2: Bloques de Foco */}
+            <div className="gsap-bento-card p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-11 h-11 rounded-2xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-5 shadow-xs">
-                  <TargetIcon className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 text-emerald-400 flex items-center justify-center mb-5">
+                  <CalendarIcon className="w-5 h-5" />
                 </div>
-                <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">
-                  Principio 03 · Foco absoluto
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-950 tracking-tight">
-                  Inicio en una pantalla (sin scroll).
+                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                  Bloques de foco real
                 </h3>
-                <p className="text-zinc-600 text-base mt-2.5 leading-relaxed">
-                  Para una mente con sobrecarga o ADHD, una lista de 15 cosas pendientes equivale a una lista vacía: te paraliza. Organizer solo muestra lo que toca hoy y una acción inmediata en foco.
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Tus clases universitarias se cargan una sola vez. Ubica tus tareas en los huecos de tiempo libres reales de tu semana, sin saturar ningún día.
                 </p>
               </div>
-              <div className="mt-6 p-4 rounded-2xl bg-white border border-zinc-200/90 flex items-center gap-3">
-                <CheckIcon className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-xs font-semibold text-zinc-800">
-                  Cero listas infinitas. Cero sobrecarga cognitiva.
-                </span>
+              {/* Mini visualizador de bloques de horario */}
+              <div className="mt-8 pt-4 border-t border-zinc-800/80 space-y-1.5 text-xs font-mono">
+                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300">
+                  <span>08:00 Cálculo III</span>
+                  <span className="text-[10px] text-emerald-400">Clase</span>
+                </div>
+                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
+                  <span>11:00 Laboratorio Física</span>
+                  <span className="text-[10px] text-zinc-500">45m</span>
+                </div>
               </div>
             </div>
 
-            {/* Card 4: Sin reproches ni culpa (md:col-span-7) */}
-            <div className="gsap-bento-card md:col-span-7 p-6 sm:p-8 rounded-3xl bg-zinc-50/80 border border-zinc-200 hover:border-zinc-300 transition-all flex flex-col justify-between group shadow-2xs">
+            {/* Bento Card 3: Bajo Estrés / Cero Culpa */}
+            <div className="gsap-bento-card p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
               <div>
-                <div className="w-11 h-11 rounded-2xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-5 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 text-emerald-400 flex items-center justify-center mb-5">
                   <ShieldIcon className="w-5 h-5" />
                 </div>
-                <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider mb-1">
-                  Principio 04 · Cero culpa
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-950 tracking-tight">
-                  Sin reproches ni deuda acumulada.
+                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                  Cero reproches ni deuda
                 </h3>
-                <p className="text-zinc-600 text-base mt-2.5 leading-relaxed">
-                  Si ayer no pudiste completar algo, la app no te castiga ni deja tareas rojas pudriéndose en una lista de la vergüenza. Te pregunta con calma qué hacer hoy: ¿moverlo, reprogramarlo o descartarlo? Tu racha cuenta con comodines automáticos.
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Si ayer no pudiste completar algo, la app no acumula deuda roja ni te hace sentir culpable. Te pregunta con calma qué hacer hoy y tu racha cuenta con comodines automáticos.
                 </p>
               </div>
-              <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs font-semibold">
-                <div className="p-2.5 rounded-xl bg-white border border-zinc-200 text-zinc-800">
-                  Hacer hoy
-                </div>
-                <div className="p-2.5 rounded-xl bg-white border border-zinc-200 text-zinc-800">
-                  Mover de día
-                </div>
-                <div className="p-2.5 rounded-xl bg-white border border-zinc-200 text-zinc-800">
-                  Descartar
-                </div>
+              <div className="mt-8 pt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs">
+                <span className="text-zinc-500">Comodines de perdón</span>
+                <span className="font-mono font-bold text-emerald-400">2 al mes activos</span>
               </div>
             </div>
           </div>
@@ -665,77 +531,65 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          5. SECCIÓN DE 4 PASOS: "TU FLUJO DIARIO CON ORGANIZER"
+          5. FLUJO COTIDIANO EN 4 PASOS
           ==================================================================== */}
-      <section id="como-funciona" className="py-16 sm:py-24 bg-[#FAFAF9]">
+      <section id="como-funciona" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#090D0A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-            <span className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/70">
-              EL FLUJO COTIDIANO
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-zinc-950 mt-3 tracking-tight">
+          <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
               Cómo transcurre tu día con Organizer.
             </h2>
-            <p className="text-zinc-600 text-base sm:text-lg mt-3">
-              Un ciclo diseñado para adaptarse al ritmo real de estudio universitario y proyectos personales.
+            <p className="text-zinc-400 text-base sm:text-lg mt-3">
+              Un ciclo diseñado para el ritmo real de estudio universitario y proyectos personales.
             </p>
           </div>
 
-          {/* Grid de 4 pasos */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Step 1 */}
-            <div className="gsap-workflow-step p-6 rounded-3xl bg-white border border-zinc-200 shadow-2xs hover:shadow-xs transition-all relative">
-              <div className="text-4xl font-black text-zinc-200 mb-3 font-mono">01</div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-800 flex items-center justify-center font-bold text-lg mb-4">
+            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">01</div>
+              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
                 <BoltIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-950 mb-2">
-                Captura instantánea
-              </h3>
-              <p className="text-sm text-zinc-600 leading-relaxed">
-                Se te ocurre algo mientras caminas o estás en clase. Lo dictas a Siri o anotas en 2 segundos. Queda a salvo en Pendientes sin distraerte.
+              <h3 className="text-lg font-bold text-white mb-2">Captura instantánea</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Dictas la idea a Siri o anotas en 2 segundos mientras caminas. Queda a salvo en Pendientes sin interrumpirte.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="gsap-workflow-step p-6 rounded-3xl bg-white border border-zinc-200 shadow-2xs hover:shadow-xs transition-all relative">
-              <div className="text-4xl font-black text-zinc-200 mb-3 font-mono">02</div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-800 flex items-center justify-center font-bold text-lg mb-4">
+            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">02</div>
+              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
                 <CalendarIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-950 mb-2">
-                Bloques con clases
-              </h3>
-              <p className="text-sm text-zinc-600 leading-relaxed">
-                Tus materias fijas se cargan una vez. Acomodas tus tareas en los huecos de tiempo reales de tu semana, sin sobrecargar ningún día.
+              <h3 className="text-lg font-bold text-white mb-2">Bloques con clases</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Tus materias estructuran la semana. Acomodas tus tareas en los huecos libres reales sin sobrecargar ningún día.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="gsap-workflow-step p-6 rounded-3xl bg-white border border-zinc-200 shadow-2xs hover:shadow-xs transition-all relative">
-              <div className="text-4xl font-black text-zinc-200 mb-3 font-mono">03</div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-800 flex items-center justify-center font-bold text-lg mb-4">
+            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">03</div>
+              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
                 <SunIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-950 mb-2">
-                Notificación 8:00 AM
-              </h3>
-              <p className="text-sm text-zinc-600 leading-relaxed">
-                A las 8:00 AM tu teléfono vibra con el plan completo listo en la pantalla de bloqueo. Sabes qué toca sin necesidad de abrir la app.
+              <h3 className="text-lg font-bold text-white mb-2">Notificación 8:00 AM</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                A las 8:00 AM tu iPhone vibra con el plan completo listo en la pantalla de bloqueo. Sabes qué toca sin abrir nada.
               </p>
             </div>
 
             {/* Step 4 */}
-            <div className="gsap-workflow-step p-6 rounded-3xl bg-white border border-zinc-200 shadow-2xs hover:shadow-xs transition-all relative">
-              <div className="text-4xl font-black text-zinc-200 mb-3 font-mono">04</div>
-              <div className="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-800 flex items-center justify-center font-bold text-lg mb-4">
+            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">04</div>
+              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
                 <FireIcon className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-950 mb-2">
-                Cierre y racha
-              </h3>
-              <p className="text-sm text-zinc-600 leading-relaxed">
-                Marcas lo cumplido en 30 segundos. Tu racha avanza y, si un día tuviste una emergencia, tu comodín protege tu progreso automáticamente.
+              <h3 className="text-lg font-bold text-white mb-2">Cierre y racha</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Marcas lo cumplido en 30 segundos. Tu racha avanza y, ante cualquier imprevisto, tus comodines protegen tu progreso.
               </p>
             </div>
           </div>
@@ -743,138 +597,135 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          6. SECCIÓN DE MÓDULOS: "LOS 4 PILARES"
+          6. LOS CUATRO MÓDULOS DE ORGANIZER
           ==================================================================== */}
-      <section id="modulos" className="py-16 sm:py-24 bg-white border-t border-zinc-200/80">
+      <section id="modulos" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#070A08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-16">
-            <span className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/70">
-              LOS CUATRO PILARES
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-zinc-950 mt-3 tracking-tight">
-              Cada cosa en su lugar, sin mezclar tu foco.
+          <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+              Cuatro módulos independientes. Cero caos.
             </h2>
-            <p className="text-zinc-600 text-base sm:text-lg mt-3">
-              Organizer separa estrictamente la ejecución de hoy de tus notas y referencias de largo plazo.
+            <p className="text-zinc-400 text-base sm:text-lg mt-3">
+              Separación estricta entre la ejecución del día de hoy y tus notas de largo plazo.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Módulo 1: Hoy */}
-            <div className="gsap-module-card p-8 rounded-3xl bg-[#FAFAF9] border border-zinc-200 hover:border-zinc-300 transition-all">
+            {/* Módulo Hoy */}
+            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center">
-                  <SunIcon className="w-5 h-5 text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
+                  <SunIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-zinc-950">Módulo Hoy</h3>
-                  <p className="text-xs text-zinc-500">Ejecución inmediata</p>
+                  <h3 className="text-xl font-bold text-white">Módulo Hoy</h3>
+                  <p className="text-xs text-zinc-500">Ejecución inmediata sin scroll</p>
                 </div>
               </div>
-              <p className="text-zinc-600 text-sm leading-relaxed mb-4">
-                Tu pantalla de arranque matutina. Sin scroll. Muestra tu tarea activa bajo el pulgar (&quot;Ahora&quot;), el horario del día y tu racha de constancia.
+              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
+                Tu pantalla matutina sin scroll. Muestra tu tarea activa bajo el pulgar (&quot;Ahora&quot;), el horario del día y tu racha de constancia.
               </p>
-              <ul className="space-y-2 text-xs font-medium text-zinc-700">
+              <ul className="space-y-2.5 text-xs text-zinc-300">
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Acción rápida Hecho / Para después
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
-                  Lo de ayer con resolución amigable
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  Lo de ayer con reajuste amigable sin deuda
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Racha con comodines automáticos
                 </li>
               </ul>
             </div>
 
-            {/* Módulo 2: Calendario y Clases */}
-            <div className="gsap-module-card p-8 rounded-3xl bg-[#FAFAF9] border border-zinc-200 hover:border-zinc-300 transition-all">
+            {/* Módulo Calendario */}
+            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center">
-                  <CalendarIcon className="w-5 h-5 text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
+                  <CalendarIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-zinc-950">Calendario & Clases</h3>
-                  <p className="text-xs text-zinc-500">Horario y huecos reales</p>
+                  <h3 className="text-xl font-bold text-white">Calendario & Clases</h3>
+                  <p className="text-xs text-zinc-500">Horario universitario fijo</p>
                 </div>
               </div>
-              <p className="text-zinc-600 text-sm leading-relaxed mb-4">
-                Tus materias fijas universitarias estructuran la semana. Visualiza tus bloques de tiempo libres para ubicar tareas de estudio sin fricción.
+              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
+                Tus materias fijas estructuran la semana. Visualiza tus bloques de tiempo libres para ubicar tareas de estudio sin fricción.
               </p>
-              <ul className="space-y-2 text-xs font-medium text-zinc-700">
+              <ul className="space-y-2.5 text-xs text-zinc-300">
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Plantilla fija de horario universitario
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Vistas de Semana, Mes y Día
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Recordatorios con fecha y aviso anticipado
                 </li>
               </ul>
             </div>
 
-            {/* Módulo 3: Tareas y Pendientes */}
-            <div className="gsap-module-card p-8 rounded-3xl bg-[#FAFAF9] border border-zinc-200 hover:border-zinc-300 transition-all">
+            {/* Módulo Pendientes */}
+            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center">
-                  <InboxIcon className="w-5 h-5 text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
+                  <InboxIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-zinc-950">Pendientes</h3>
+                  <h3 className="text-xl font-bold text-white">Pendientes</h3>
                   <p className="text-xs text-zinc-500">Inbox & Carpetas</p>
                 </div>
               </div>
-              <p className="text-zinc-600 text-sm leading-relaxed mb-4">
+              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
                 La bandeja de entrada para todo lo que capturaste al vuelo. Organízalo en carpetas solo cuando tengas tiempo, o déjalo esperando fecha sin estrés.
               </p>
-              <ul className="space-y-2 text-xs font-medium text-zinc-700">
+              <ul className="space-y-2.5 text-xs text-zinc-300">
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Captura sin categorización forzada
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Carpetas limpias para proyectos
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
-                  Planificación en un solo toque hacia hoy
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  Planificación en un toque hacia hoy
                 </li>
               </ul>
             </div>
 
-            {/* Módulo 4: Recursos */}
-            <div className="gsap-module-card p-8 rounded-3xl bg-[#FAFAF9] border border-zinc-200 hover:border-zinc-300 transition-all">
+            {/* Módulo Recursos */}
+            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-white flex items-center justify-center">
-                  <FolderIcon className="w-5 h-5 text-emerald-400" />
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
+                  <FolderIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-zinc-950">Recursos</h3>
+                  <h3 className="text-xl font-bold text-white">Recursos</h3>
                   <p className="text-xs text-zinc-500">Módulo independiente</p>
                 </div>
               </div>
-              <p className="text-zinc-600 text-sm leading-relaxed mb-4">
-                Tus notas, herramientas, artículos y referencias viven en un módulo totalmente separado. Nunca persiguen al usuario ni contaminan la planificación diaria.
+              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
+                Tus notas, herramientas, artículos y referencias viven aislados. Nunca persiguen al usuario ni contaminan la planificación diaria.
               </p>
-              <ul className="space-y-2 text-xs font-medium text-zinc-700">
+              <ul className="space-y-2.5 text-xs text-zinc-300">
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Totalmente aislado de tus tareas diarias
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   Enlaces, notas y apuntes de consulta
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   0 notificaciones, 0 presión de lectura
                 </li>
               </ul>
@@ -884,19 +735,16 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          7. SECCIÓN DE FAQ (PREGUNTAS FRECUENTES)
+          7. FAQ ACCORDION (Dark Titanium Style)
           ==================================================================== */}
-      <section id="faq" className="py-16 sm:py-24 bg-[#FAFAF9]">
+      <section id="faq" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#090D0A]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <span className="text-xs font-semibold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/70">
-              RESOLVEMOS TUS DUDAS
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-bold text-zinc-950 mt-3 tracking-tight">
+          <div className="text-center mb-14 sm:mb-20">
+            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
               Preguntas Frecuentes
             </h2>
-            <p className="text-zinc-600 text-base sm:text-lg mt-3">
-              Todo lo que necesitas saber sobre cómo funciona Organizer en tu día a día.
+            <p className="text-zinc-400 text-base sm:text-lg mt-3">
+              Todo lo que necesitas saber sobre Organizer en tu día a día.
             </p>
           </div>
 
@@ -904,15 +752,15 @@ export function LandingPage() {
             {[
               {
                 q: '¿Cómo funcionan las notificaciones push en mi iPhone si es una PWA?',
-                a: 'Apple incorporó soporte nativo para Web Push a partir de iOS 16.4. Solo debes abrir Organizer en Safari, tocar en Compartir y seleccionar "Añadir a pantalla de inicio". Desde ese momento, la PWA funciona como una app nativa y nuestro servidor te envía la notificación matutina cada mañana a las 8:00 AM con tu plan detallado.',
+                a: 'Apple incorporó soporte nativo para Web Push a partir de iOS 16.4. Solo debes abrir Organizer en Safari, tocar en Compartir y seleccionar "Añadir a pantalla de inicio". Desde ese momento, la PWA funciona como una app nativa y nuestro servidor con pg_cron te envía la notificación matutina cada mañana a las 8:00 AM con tu plan detallado.',
               },
               {
                 q: '¿Por qué la pantalla de Inicio no tiene una lista larga con todas mis tareas?',
-                a: 'Porque está comprobado que las listas largas generan parálisis de decisión y agobio en cerebros con ADHD o sobrecarga de estudio. Organizer limita la pantalla de Inicio a lo que realmente vas a hacer hoy, destacando una sola tarea bajo tu pulgar en la tarjeta "Ahora".',
+                a: 'Porque está comprobado que las listas largas generan parálisis de decisión y agobio en personas con TDAH o sobrecarga académica. Organizer limita la pantalla de Inicio a lo que realmente vas a hacer hoy, destacando una sola tarea bajo tu pulgar en la tarjeta "Ahora".',
               },
               {
                 q: '¿Cómo funciona el acceso con Google?',
-                a: 'Inicias sesión con un solo toque utilizando tu cuenta de Google mediante autenticación OAuth segura con Supabase. No necesitas inventar ni recordar contraseñas, ni esperar correos que caduquen.',
+                a: 'Inicias sesión con un solo toque utilizando tu cuenta de Google mediante autenticación OAuth segura con Supabase. No necesitas inventar contraseñas ni esperar enlaces por correo que expiren.',
               },
               {
                 q: '¿Mis datos están protegidos y completamente privados?',
@@ -925,24 +773,24 @@ export function LandingPage() {
             ].map((faq, index) => (
               <div
                 key={index}
-                className="rounded-2xl bg-white border border-zinc-200/90 shadow-2xs overflow-hidden transition-colors"
+                className="rounded-2xl bg-zinc-950/80 border border-zinc-800/80 overflow-hidden transition-colors"
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(index)}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-bold text-zinc-950 hover:text-emerald-900 transition-colors"
+                  className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-bold text-white hover:text-emerald-400 transition-colors"
                 >
                   <span className="text-base sm:text-lg">{faq.q}</span>
                   <span
-                    className={`w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 transition-transform duration-200 shrink-0 ${
-                      openFaq === index ? 'rotate-180 bg-emerald-50 text-emerald-800' : ''
+                    className={`w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 transition-transform duration-200 shrink-0 ${
+                      openFaq === index ? 'rotate-180 text-emerald-400 border-emerald-500/40' : ''
                     }`}
                   >
                     ↓
                   </span>
                 </button>
                 {openFaq === index && (
-                  <div className="px-6 pb-6 pt-1 text-zinc-600 text-sm sm:text-base leading-relaxed border-t border-zinc-100">
+                  <div className="px-6 pb-6 pt-1 text-zinc-400 text-sm sm:text-base leading-relaxed border-t border-zinc-900">
                     {faq.a}
                   </div>
                 )}
@@ -953,31 +801,30 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          8. BANNER CTA FINAL: CONTENEDOR OSCURO ELEGANTE
+          8. BANNER CTA FINAL: CONTENEDOR OBSIDIANA CON HALO ESMERALDA
           ==================================================================== */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto rounded-[36px] bg-zinc-950 text-white p-8 sm:p-16 lg:p-20 relative overflow-hidden border border-zinc-800 shadow-xl">
-          <div className="relative z-10 max-w-3xl mx-auto text-center">
-            <span className="inline-block px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-6">
-              COMIENZA HOY MISMO
-            </span>
+      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-zinc-900">
+        <div className="max-w-6xl mx-auto rounded-[36px] bg-black text-white p-8 sm:p-16 lg:p-20 relative overflow-hidden border border-zinc-800/90 shadow-[0_0_80px_rgba(16,185,129,0.08)]">
+          {/* Volumetric emerald backlight */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/15 blur-[120px] rounded-full pointer-events-none -z-0" />
 
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight mb-6">
+          <div className="relative z-10 max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight mb-6">
               Toma el control de tu tiempo hoy mismo.
             </h2>
 
-            <p className="text-base sm:text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed mb-10">
+            <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
               Sin listas infinitas que agobian. Sin reproches si un día no llegas. Tu plan completo servido en tu pantalla de bloqueo cada mañana.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
               <Link
                 href="/entrar"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-bold text-base shadow hover:shadow-md transition-all active:scale-[0.98]"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] transition-all active:scale-[0.98]"
               >
-                <GoogleIcon className="w-5 h-5" />
+                <GoogleIcon className="w-5 h-5 bg-white rounded-full p-0.5" />
                 <span>Empezar con Google</span>
-                <svg className="w-4 h-4 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <svg className="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                 </svg>
               </Link>
@@ -990,7 +837,7 @@ export function LandingPage() {
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckIcon className="w-4 h-4 text-emerald-400" />
-                Diseñado para iPhone & Web
+                PWA nativa en iPhone & Web
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckIcon className="w-4 h-4 text-emerald-400" />
@@ -1004,39 +851,39 @@ export function LandingPage() {
       {/* ====================================================================
           9. FOOTER PULIDO
           ==================================================================== */}
-      <footer className="border-t border-zinc-200 bg-white py-12 text-sm text-zinc-500">
+      <footer className="border-t border-zinc-900 bg-black py-12 text-sm text-zinc-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-8 border-b border-zinc-100">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-8 border-b border-zinc-900">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center text-sm font-bold">
+              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-emerald-400 flex items-center justify-center text-sm font-bold">
                 O
               </div>
               <div>
-                <span className="font-bold text-zinc-950 text-base">Organizer</span>
-                <p className="text-xs text-zinc-400">Tu planificación devuelta a tiempo.</p>
+                <span className="font-bold text-white text-base">Organizer</span>
+                <p className="text-xs text-zinc-500">Tu planificación devuelta a tiempo.</p>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-zinc-600">
-              <a href="#filosofia" className="hover:text-zinc-950 transition-colors">
+            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-zinc-400">
+              <a href="#caracteristicas" className="hover:text-white transition-colors">
                 Filosofía
               </a>
-              <a href="#como-funciona" className="hover:text-zinc-950 transition-colors">
+              <a href="#como-funciona" className="hover:text-white transition-colors">
                 Cómo funciona
               </a>
-              <a href="#modulos" className="hover:text-zinc-950 transition-colors">
+              <a href="#modulos" className="hover:text-white transition-colors">
                 Módulos
               </a>
-              <a href="#faq" className="hover:text-zinc-950 transition-colors">
-                FAQ
+              <a href="#faq" className="hover:text-white transition-colors">
+                Preguntas
               </a>
-              <Link href="/entrar" className="hover:text-zinc-950 transition-colors font-semibold text-emerald-800">
+              <Link href="/entrar" className="hover:text-white transition-colors font-semibold text-emerald-400">
                 Iniciar sesión
               </Link>
             </div>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400">
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
             <p>© {new Date().getFullYear()} Organizer. Hecho para cumplir objetivos reales. Push, no pull.</p>
             <p>Construido con Next.js, Tailwind CSS y Supabase Postgres.</p>
           </div>
@@ -1069,37 +916,7 @@ function BoltIcon({ className = 'w-5 h-5' }: { className?: string }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M20.5279 10.3736C20.1572 9.73163 19.4779 9.5206 18.8294 9.42992C18.1757 9.33852 17.3008 9.33855 16.2426 9.33858L16.1824 9.33858C15.5523 9.33858 15.1403 9.33237 14.8402 9.29064C14.5688 9.2529 14.4825 9.19704 14.4456 9.16446C14.4187 9.13635 14.3706 9.07063 14.3379 8.83366C14.2993 8.55425 14.2976 8.1711 14.2976 7.55704V7.18255C14.2977 5.59503 14.2977 4.32329 14.1755 3.4166C14.0608 2.56554 13.7882 1.60969 12.844 1.32035C11.9164 1.03608 11.1384 1.64564 10.5337 2.27405C9.88942 2.9435 9.12413 3.97895 8.16596 5.27538L5.02896 9.51969C4.41863 10.3454 3.90984 11.0337 3.60669 11.6029C3.3028 12.1735 3.08164 12.8509 3.41872 13.5268C3.82188 14.2296 4.49825 14.4524 5.1526 14.5523C5.82693 14.6553 6.72671 14.6619 7.81795 14.6619C8.45456 14.6619 8.86048 14.6633 9.1586 14.7013C9.42195 14.7349 9.50071 14.7867 9.53447 14.8165C9.56438 14.8478 9.61682 14.9207 9.6538 15.1663C9.69612 15.4473 9.70276 15.8364 9.70275 16.4435L9.70274 16.8178C9.7027 18.4053 9.70266 19.6771 9.82483 20.5838C9.9395 21.4349 10.2121 22.3907 11.1563 22.6801C12.0839 22.9644 12.8619 22.3548 13.4667 21.7264C14.1109 21.0569 14.8762 20.0215 15.8344 18.725L18.9338 14.5317C19.5646 13.6783 20.0834 12.9652 20.3893 12.3718C20.6887 11.7911 20.8976 11.1097 20.5636 10.44C20.5293 10.3759 20.5279 10.3736 20.5279 10.3736ZM11.6145 3.31416C11.0465 3.90435 10.3387 4.85927 9.335 6.21733L6.27286 10.3604C5.61517 11.2502 5.17513 11.849 4.93062 12.3081C4.81161 12.5315 4.76693 12.6725 4.75421 12.7578C4.74635 12.8105 4.75115 12.8343 4.75742 12.8496C4.78161 12.8852 4.88663 12.9943 5.379 13.0695C5.9169 13.1516 6.69032 13.1619 7.81795 13.1619L7.86392 13.1619C8.44106 13.1618 8.94393 13.1618 9.3483 13.2134C9.78148 13.2686 10.2118 13.3942 10.568 13.7293C10.9296 14.0839 11.0719 14.5099 11.1371 14.9429C11.1994 15.3568 11.2028 15.8658 11.2028 16.4435L11.2027 16.753C11.2027 18.42 11.2044 19.5894 11.3114 20.3835C11.3647 20.7789 11.4363 21.0108 11.505 21.1404C11.5564 21.2374 11.586 21.2438 11.5943 21.2456C11.6078 21.25 11.6446 21.2628 11.7583 21.2056C11.9003 21.1341 12.1032 20.98 12.3858 20.6863C12.9538 20.0961 13.6616 19.1412 14.6654 17.7831L17.7275 13.6401C18.3815 12.7553 18.8172 12.1478 19.0561 11.6845C19.2608 11.2873 19.2385 11.1528 19.2249 11.1171C19.2024 11.0843 19.1016 10.9826 18.6217 10.9155C18.0846 10.8404 17.3161 10.8386 16.1824 10.8386C15.5796 10.8386 15.0567 10.8352 14.6336 10.7763C14.1968 10.7156 13.7655 10.5841 13.4123 10.252C13.0476 9.89419 12.9114 9.46874 12.852 9.03887C12.7975 8.64454 12.7976 8.15622 12.7976 7.60538L12.7976 7.24733C12.7976 5.58044 12.7959 4.41099 12.6889 3.61692C12.6356 3.22153 12.564 2.98959 12.4954 2.86008C12.4439 2.76301 12.4143 2.75666 12.406 2.75487C12.3925 2.7504 12.3557 2.73767 12.242 2.79487C12.1 2.86633 11.8972 3.02042 11.6145 3.31416Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function TargetIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M9.25 12C9.25 11.5858 9.58579 11.25 10 11.25H11.25V10C11.25 9.58579 11.5858 9.25 12 9.25C12.4142 9.25 12.75 9.58579 12.75 10V11.25H14C14.4142 11.25 14.75 11.5858 14.75 12C14.75 12.4142 14.4142 12.75 14 12.75H12.75V14C12.75 14.4142 12.4142 14.75 12 14.75C11.5858 14.75 11.25 14.4142 11.25 14V12.75H10C9.58579 12.75 9.25 12.4142 9.25 12Z"
-        fill="currentColor"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 1.25C6.06294 1.25 1.25 6.06294 1.25 12C1.25 17.9371 6.06294 22.75 12 22.75C17.9371 22.75 22.75 17.9371 22.75 12C22.75 6.06294 17.9371 1.25 12 1.25ZM11.25 2.77997C6.7395 3.14188 3.14188 6.7395 2.77997 11.25H5C5.41421 11.25 5.75 11.5858 5.75 12C5.75 12.4142 5.41421 12.75 5 12.75H2.77997C3.14188 17.2605 6.7395 20.8581 11.25 21.22V19C11.25 18.5858 11.5858 18.25 12 18.25C12.4142 18.25 12.75 18.5858 12.75 19V21.22C17.2605 20.8581 20.8581 17.2605 21.22 12.75H19C18.5858 12.75 18.25 12.4142 18.25 12C18.25 11.5858 18.5858 11.25 19 11.25H21.22C20.8581 6.7395 17.2605 3.14188 12.75 2.77997V5C12.75 5.41421 12.4142 5.75 12 5.75C11.5858 5.75 11.25 5.41421 11.25 5V2.77997Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function ShieldIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M8.72339 2.05112C10.1673 1.55658 11.0625 1.25 12 1.25C12.9375 1.25 13.8327 1.55658 15.2766 2.05112L16.004 2.30013C17.4854 2.8072 18.6286 3.19852 19.447 3.53099C19.8592 3.69846 20.2136 3.86067 20.499 4.02641C20.7737 4.1859 21.0492 4.38484 21.2364 4.65154C21.4214 4.91516 21.5171 5.23924 21.5772 5.55122C21.6397 5.87556 21.6774 6.26464 21.7017 6.71136C21.75 7.5984 21.75 8.81361 21.75 10.3898V11.9914C21.75 18.0924 17.142 21.0175 14.4017 22.2146L14.3746 22.2264C14.0348 22.3749 13.7154 22.5144 13.3484 22.6084C12.9609 22.7076 12.5493 22.75 12 22.75C11.4507 22.75 11.0391 22.7076 10.6516 22.6084C10.2846 22.5144 9.96523 22.3749 9.62543 22.2264L9.59833 22.2146C6.85803 21.0175 2.25 18.0924 2.25 11.9914V10.3899C2.25 8.81378 2.25 7.59836 2.2983 6.71136C2.32262 6.26464 2.36031 5.87556 2.42281 5.55122C2.48293 5.23924 2.5786 4.91516 2.76363 4.65154C2.95082 4.38484 3.22634 4.1859 3.50098 4.02641C3.78637 3.86067 4.14078 3.69846 4.55303 3.53099C5.3714 3.19852 6.51462 2.8072 7.99595 2.30014L8.72339 2.05112ZM11.25 2.83792C10.7525 2.94604 10.1152 3.16015 9.08062 3.5143L8.5078 3.71037C6.99521 4.22814 5.8921 4.60605 5.11759 4.92069C4.731 5.07774 4.4509 5.20935 4.25429 5.32353C4.15722 5.3799 4.09034 5.42642 4.04567 5.46273C4.0078 5.49351 3.99336 5.51095 3.99129 5.51349C3.98936 5.51663 3.97693 5.5374 3.95943 5.58654C3.93944 5.64265 3.91729 5.72309 3.89571 5.83506C3.85204 6.06169 3.81894 6.37301 3.79608 6.79292C3.75473 7.55226 3.75048 8.58298 3.75005 9.95941L11.25 7.45943V2.83792ZM12.75 2.83792V7.45943L20.25 9.95941C20.2495 8.58298 20.2453 7.55226 20.2039 6.79292C20.1811 6.37301 20.148 6.06169 20.1043 5.83506C20.0827 5.72309 20.0606 5.64265 20.0406 5.58654C20.0231 5.53737 20.0106 5.5166 20.0087 5.51348C20.0066 5.51092 19.9922 5.49349 19.9543 5.46273C19.9097 5.42642 19.8428 5.3799 19.7457 5.32353C19.5491 5.20935 19.269 5.07774 18.8824 4.92069C18.1079 4.60605 17.0048 4.22814 15.4922 3.71037L14.9194 3.5143C13.8848 3.16015 13.2475 2.94604 12.75 2.83792ZM11.25 9.04057L3.75 11.5406V11.9914C3.75 17.1665 7.6199 19.7135 10.1988 20.84C10.5703 21.0023 10.7848 21.0941 11.0236 21.1552C11.0931 21.173 11.1672 21.1888 11.25 21.2021V9.04057ZM12.75 21.2021V9.04057L20.25 11.5406V11.9914C20.25 17.1665 16.3801 19.7135 13.8012 20.84C13.4297 21.0023 13.2152 21.0941 12.9764 21.1552C12.9069 21.173 12.8328 21.1888 12.75 21.2021Z"
+        d="M20.5279 10.3736C20.1572 9.73163 19.4779 9.5206 18.8294 9.42992C18.1757 9.33852 17.3008 9.33855 16.2426 9.33858L16.1824 9.33858C15.5523 9.33858 15.1403 9.33237 14.8402 9.29064C14.5688 9.2529 14.4825 9.19704 14.4456 9.16446C14.4187 9.13635 14.3706 9.07063 14.3379 8.83366C14.2993 8.55425 14.2976 8.1711 14.2976 7.55704V7.18255C14.2977 5.59503 14.2977 4.32329 14.1755 3.4166C14.0608 2.56554 13.7882 1.60969 12.844 1.32035C11.9164 1.03608 11.1384 1.64564 10.5337 2.27405C9.88942 2.9435 9.12413 3.97895 8.16596 5.27538L5.02896 9.51969C4.41863 10.3454 3.90984 11.0337 3.60669 11.6029C3.3028 12.1735 3.08164 12.8509 3.41872 13.5268L3.41989 13.5293L3.42344 13.5365L3.42748 13.5445L3.43146 13.5522L3.4358 13.5603L3.44023 13.5685L3.44441 13.576L3.44884 13.5838L3.45289 13.5907L3.45438 13.5931C3.82188 14.2296 4.49825 14.4524 5.1526 14.5523C5.82693 14.6553 6.72671 14.6619 7.81795 14.6619C8.45456 14.6619 8.86048 14.6633 9.1586 14.7013C9.42195 14.7349 9.50071 14.7867 9.53447 14.8165C9.56438 14.8478 9.61682 14.9207 9.6538 15.1663C9.69612 15.4473 9.70276 15.8364 9.70275 16.4435L9.70274 16.8178C9.7027 18.4053 9.70266 19.6771 9.82483 20.5838C9.9395 21.4349 10.2121 22.3907 11.1563 22.6801C12.0839 22.9644 12.8619 22.3548 13.4667 21.7264C14.1109 21.0569 14.8762 20.0215 15.8344 18.725L18.9338 14.5317C19.5646 13.6783 20.0834 12.9652 20.3893 12.3718C20.6887 11.7911 20.8976 11.1097 20.5636 10.44L20.5293 10.3759L20.5279 10.3736ZM11.6145 3.31416C11.0465 3.90435 10.3387 4.85927 9.335 6.21733L6.27286 10.3604C5.61517 11.2502 5.17513 11.849 4.93062 12.3081C4.81161 12.5315 4.76693 12.6725 4.75421 12.7578C4.74635 12.8105 4.75115 12.8343 4.75742 12.8496C4.78161 12.8852 4.88663 12.9943 5.379 13.0695C5.9169 13.1516 6.69032 13.1619 7.81795 13.1619L7.86392 13.1619C8.44106 13.1618 8.94393 13.1618 9.3483 13.2134C9.78148 13.2686 10.2118 13.3942 10.568 13.7293C10.5739 13.7348 10.5796 13.7404C10.9296 14.0839 11.0719 14.5099 11.1371 14.9429C11.1994 15.3568 11.2028 15.8658 11.2028 16.4435L11.2027 16.753C11.2027 18.42 11.2044 19.5894 11.3114 20.3835C11.3647 20.7789 11.4363 21.0108 11.505 21.1404C11.5564 21.2374 11.586 21.2438 11.5943 21.2456L11.5958 21.2459L11.5973 21.2464C11.6078 21.25 11.6446 21.2628 11.7583 21.2056C11.9003 21.1341 12.1032 20.98 12.3858 20.6863C12.9538 20.0961 13.6616 19.1412 14.6654 17.7831L17.7275 13.6401C18.3815 12.7553 18.8172 12.1478 19.0561 11.6845C19.2608 11.2873 19.2385 11.1528 19.2249 11.1171C19.2024 11.0843 19.1016 10.9826 18.6217 10.9155C18.0846 10.8404 17.3161 10.8386 16.1824 10.8386C15.5796 10.8386 15.0567 10.8352 14.6336 10.7763C14.1968 10.7156 13.7655 10.5841 13.4123 10.252C13.0476 9.89419 12.9114 9.46874 12.852 9.03887C12.7975 8.64454 12.7976 8.15622 12.7976 7.60538L12.7976 7.24733C12.7976 5.58044 12.7959 4.41099 12.6889 3.61692C12.6356 3.22153 12.564 2.98959 12.4954 2.86008C12.4439 2.76301 12.4143 2.75666 12.406 2.75487L12.4045 2.75451L12.403 2.75401C12.3925 2.7504 12.3557 2.73767 12.242 2.79487C12.1 2.86633 11.8972 3.02042 11.6145 3.31416Z"
         fill="currentColor"
       />
     </svg>
@@ -1131,7 +948,7 @@ function InboxIcon({ className = 'w-5 h-5' }: { className?: string }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0574C22.75 12.3718 22.75 12.6769 22.7495 12.9731C22.75 13 22.7494 13.0296 22.746 14.8816C22.7225 16.3793 22.5603 17.5863 22.366 19.031C22.1711 20.1711 21.0659 21.0659 20.1711 21.9607C19.031 22.366 17.5863 22.5603 16.1748 22.75C14.3658 22.75 12.0574 22.75 11.9426 22.75C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.03933 20.1711 1.63399 19.031 1.43975 17.5863C1.27747 16.3793 1.25397 14.8816 1.25057 13.0295C1.25 13 1.25047 12.9731 1.25 12.6769V11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM2.7535 13.75C2.76294 15.2526 2.79778 16.43 2.92637 17.3864C3.09825 18.6648 3.42514 19.4355 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62177 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.5749 19.4355 20.9018 18.6648 21.0736 17.3864C21.2022 16.43 21.2371 15.2526 21.2465 13.75H18.8397C17.8659 13.75 17.6113 13.766 17.3975 13.8644C17.1838 13.9627 17.0059 14.1456 16.3722 14.8849L15.7667 15.5913C15.1773 16.2803 14.7796 16.7453 14.2292 16.9984C13.6789 17.2515 13.067 17.2509 12.2945 17.2501C12.2503 17.25 12.2056 17.25 12.1603 17.25H11.8397C11.7944 17.25 11.7497 17.25 11.7055 17.2501C10.933 17.2509 10.3211 17.2515 9.77076 16.9984C9.22039 16.7453 8.82271 16.2803 8.32059 15.6933C8.23327 15.5913 7.62784 14.8849 6.60245 13.8644C6.38869 13.766 6.13407 13.75 5.16026 13.75H2.7535ZM21.25 12.25H18.8397C18.7944 12.25 18.7497 12.25 18.7055 12.2499C17.933 12.2491 17.3211 12.2485 16.7708 12.5016C16.2204 12.7547 15.8227 13.2197 15.3206 13.8067C14.6278 14.6151 13.9941 15.3544 13.6025 15.6356C13.3887 15.734 13.1341 15.75 12.1603 15.75H11.8397C10.8659 15.75 10.6113 15.734 10.3975 15.6356C10.1838 15.5373 10.0059 15.3544 9.37216 14.6151L8.76673 13.9087C8.17729 13.2197 7.77961 12.7547 7.22924 12.5016C6.67886 12.2485 6.06705 12.2491 5.29454 12.2499C5.25031 12.25 5.20556 12.25 5.16026 12.25H2.75001C2.75 12.1675 2.75 12.0842 2.75 12C2.75 9.62177 2.75159 7.91356 2.92637 6.61358C3.09825 5.33517 3.42514 4.56445 3.9948 3.9948C4.56445 3.42514 5.33517 3.09825 6.61358 2.92637C7.91356 2.75159 9.62177 2.75 12 2.75C14.3782 2.75 16.0864 2.75159 17.3864 2.92637C18.6648 3.09825 19.4355 3.42514 20.0052 3.9948C20.5749 4.56445 20.9018 5.33517 21.0736 6.61358C21.2484 7.91356 21.25 9.62177 21.25 12Z"
+        d="M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0574C22.75 12.3718 22.75 12.6769 22.7495 12.9731C22.7498 12.982 22.75 12.991 22.75 13C22.75 13.0099 22.7498 13.0197 22.746 14.8816C22.7225 16.3793 22.5603 17.5863C22.366 19.031 21.9607 20.1711 21.0659 21.0659C20.1711 21.9607 19.031 22.366 17.5863 22.5603C16.1748 22.75 14.3658 22.75 12.0574 22.75H11.9426C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.03933 20.1711 1.63399 19.031 1.43975 17.5863C1.27747 16.3793 1.25397 14.8816 1.25057 13.0295C1.25 13 1.25047 12.9731 1.25 12.6769V11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM2.7535 13.75C2.76294 15.2526 2.79778 16.43 2.92637 17.3864C3.09825 18.6648 3.42514 19.4355 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62177 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.5749 19.4355 20.9018 18.6648 21.0736 17.3864C21.2022 16.43 21.2371 15.2526 21.2465 13.75H18.8397C17.8659 13.75 17.6113 13.766 17.3975 13.8644C17.1838 13.9627 17.0059 14.1456 16.3722 14.8849L15.7667 15.5913C15.7372 15.6257 15.7082 15.6597 15.6794 15.6933C15.1773 16.2803 14.7796 16.7453 14.2292 16.9984C13.6789 17.2515 13.067 17.2509 12.2945 17.2501C12.2503 17.25 12.2056 17.25 12.1603 17.25H11.8397C11.7944 17.25 11.7497 17.25 11.7055 17.2501C10.933 17.2509 10.3211 17.2515 9.77076 16.9984C9.22039 16.7453 8.82271 16.2803 8.32059 15.6933C8.23327 15.5913 8.26275 15.5627 8.23327 15.5913L7.62784 14.8849C6.9941 14.1456 6.81622 13.9627 6.60245 13.8644C6.38869 13.766 6.13407 13.75 5.16026 13.75H2.7535ZM21.25 12.25H18.8397C18.7944 12.25 18.7497 12.25 18.7055 12.2499C17.933 12.2491 17.3211 12.2485 16.7708 12.5016C16.2204 12.7547 15.8227 13.2197 15.3206 13.8067C15.2918 13.8403 15.2628 13.8743 15.2333 13.9087L14.6278 14.6151C13.9941 15.3544 13.8162 15.5373 13.6025 15.6356C13.3887 15.734 13.1341 15.75 12.1603 15.75H11.8397C10.8659 15.75 10.6113 15.734 10.3975 15.6356C10.1838 15.5373 10.0059 15.3544 9.37216 14.6151L8.76673 13.9087C8.73725 13.8743 8.70816 13.8403 8.67941 13.8067C8.17729 13.2197 7.77961 12.7547 7.22924 12.5016C6.67886 12.2485 6.06705 12.2491 5.29454 12.2499C5.25031 12.25 5.20556 12.25 5.16026 12.25H2.75001C2.75 12.1675 2.75 12.0842 2.75 12C2.75 9.62177 2.75159 7.91356 2.92637 6.61358C3.09825 5.33517 3.42514 4.56445 3.9948 3.9948C4.56445 3.42514 5.33517 3.09825 6.61358 2.92637C7.91356 2.75159 9.62177 2.75 12 2.75C14.3782 2.75 16.0864 2.75159 17.3864 2.92637C18.6648 3.09825 19.4355 3.42514 20.0052 3.9948C20.5749 4.56445 20.9018 5.33517 21.0736 6.61358C21.2484 7.91356 21.25 9.62177 21.25 12C21.25 12.0842 21.25 12.1675 21.25 12.25Z"
         fill="currentColor"
       />
     </svg>
@@ -1144,7 +961,7 @@ function FolderIcon({ className = 'w-5 h-5' }: { className?: string }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M6.85929 1.25001C6.88904 1.25001 6.91919 1.25002 6.94976 1.25002L6.98675 1.25001C7.33818 1.24999 7.56433 1.24998 7.78542 1.27065C8.7367 1.35961 9.63905 1.73337 10.3746 2.34313C10.5456 2.48485 10.7055 2.64477 10.954 2.89329L11.5303 3.46969C12.3761 4.3154 12.7012 4.6311 13.0768 4.84005C13.2948 4.96134 13.526 5.05713 13.766 5.12552C14.1793 5.24333 14.6324 5.25002 15.8284 5.25002L16.253 5.25002C17.526 5.25 18.5521 5.24998 19.364 5.35206C20.2054 5.45784 20.9204 5.68358 21.5077 6.21185C21.6061 6.30032 21.6997 6.39394 21.7882 6.49231C22.3165 7.07965 22.5422 7.79459 22.648 8.63601C22.75 9.4479 22.75 10.4741 22.75 11.747V14.0564C22.75 15.8942 22.75 17.3498 22.5969 18.489C22.4393 19.6615 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6615 22.4393 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0564 22.75H9.94361C8.10584 22.75 6.65021 22.75 5.51099 22.5969C4.33857 22.4393 3.38962 22.1071 2.64126 21.3588C1.8929 20.6104 1.56078 19.6615 1.40315 18.489C1.24999 17.3498 1.25 15.8942 1.25002 14.0564L1.25002 6.94976C1.25002 6.91919 1.25001 6.88904 1.25001 6.85929C1.2499 6.06338 1.24982 5.55685 1.33237 5.11935C1.6949 3.19788 3.19788 1.6949 5.11935 1.33237C5.55685 1.24982 6.06338 1.2499 6.85929 1.25001ZM6.94976 2.75002C6.03312 2.75002 5.67873 2.75329 5.39746 2.80636C4.08277 3.05441 3.05441 4.08277 2.80636 5.39746C2.75329 5.67873 2.75002 6.03312 2.75002 6.94976V14C2.75002 15.9068 2.75161 17.2615 2.88978 18.2892C3.02504 19.2953 3.27871 19.8749 3.70192 20.2981C4.12513 20.7213 4.70478 20.975 5.71087 21.1103C6.73853 21.2484 8.0932 21.25 10 21.25H14C15.9068 21.25 17.2615 21.2484 18.2892 21.1103C19.2953 20.975 19.8749 20.7213 20.2981 20.2981C20.7213 19.8749 20.975 19.2953 21.1103 18.2892C21.2484 17.2615 21.25 15.9068 21.25 14V11.7979C21.25 10.4621 21.2486 9.5305 21.1597 8.82312C21.0731 8.13448 20.9141 7.76356 20.6729 7.49539C20.6198 7.43637 20.5637 7.3802 20.5046 7.32712C20.2365 7.08592 19.8656 6.92692 19.1769 6.84034C18.4695 6.75141 17.538 6.75002 16.2021 6.75002H15.8284C15.7912 6.75002 15.7545 6.75002 15.7182 6.75003C14.6702 6.75025 13.9944 6.75038 13.3548 6.56806C13.0041 6.46811 12.6661 6.32811 12.3475 6.15083C11.7663 5.82747 11.2885 5.3495 10.5476 4.60833C10.4697 4.53035L9.91943 3.98009C9.63616 3.69682 9.52778 3.58951 9.41731 3.49793C8.91403 3.08073 8.29664 2.825 7.64576 2.76413C7.50289 2.75077 7.35038 2.75002 6.94976 2.75002ZM12.25 10C12.25 9.5858 12.5858 9.25002 13 9.25002H18C18.4142 9.25002 18.75 9.5858 18.75 10C18.75 10.4142 18.4142 10.75 18 10.75H13C12.5858 10.75 12.25 10.4142 12.25 10Z"
+        d="M6.85929 1.25001C6.88904 1.25001 6.91919 1.25002 6.94976 1.25002L6.98675 1.25001C7.33818 1.24999 7.56433 1.24998 7.78542 1.27065C8.7367 1.35961 9.63905 1.73337 10.3746 2.34313C10.5456 2.48485 10.7055 2.64477 10.954 2.89329L11.5303 3.46969C12.3761 4.3154 12.7012 4.6311 13.0768 4.84005C13.2948 4.96134 13.526 5.05713 13.766 5.12552C14.1793 5.24333 14.6324 5.25002 15.8284 5.25002L16.253 5.25002C17.526 5.25 18.5521 5.24998 19.364 5.35206C20.2054 5.45784 20.9204 5.68358 21.5077 6.21185C21.6061 6.30032 21.6997 6.39394 21.7882 6.49231C22.3165 7.07965 22.5422 7.79459 22.648 8.63601C22.75 9.4479 22.75 10.4741 22.75 11.747V14.0564C22.75 15.8942 22.75 17.3498 22.5969 18.489C22.4393 19.6615 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6615 22.4393 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0564 22.75H9.94361C8.10584 22.75 6.65021 22.75 5.51099 22.5969C4.33857 22.4393 3.38962 22.1071 2.64126 21.3588C1.8929 20.6104 1.56078 19.6615 1.40315 18.489C1.24999 17.3498 1.25 15.8942 1.25002 14.0564L1.25002 6.94976C1.25002 6.91919 1.25001 6.88904 1.25001 6.85929C1.2499 6.06338 1.24982 5.55685 1.33237 5.11935C1.6949 3.19788 3.19788 1.6949 5.11935 1.33237C5.55685 1.24982 6.06338 1.2499 6.85929 1.25001ZM6.94976 2.75002C6.03312 2.75002 5.67873 2.75329 5.39746 2.80636C4.08277 3.05441 3.05441 4.08277 2.80636 5.39746C2.75329 5.67873 2.75002 6.03312 2.75002 6.94976V14C2.75002 15.9068 2.75161 17.2615 2.88978 18.2892C3.02504 19.2953 3.27871 19.8749 3.70192 20.2981C4.12513 20.7213 4.70478 20.975 5.71087 21.1103C6.73853 21.2484 8.0932 21.25 10 21.25H14C15.9068 21.25 17.2615 21.2484 18.2892 21.1103C19.2953 20.975 19.8749 20.7213 20.2981 20.2981C20.7213 19.8749 20.975 19.2953 21.1103 18.2892C21.2484 17.2615 21.25 15.9068 21.25 14V11.7979C21.25 10.4621 21.2486 9.5305 21.1597 8.82312C21.0731 8.13448 20.9141 7.76356 20.6729 7.49539C20.6198 7.43637 20.5637 7.3802 20.5046 7.32712C20.2365 7.08592 19.8656 6.92692 19.1769 6.84034C18.4695 6.75141 17.538 6.75002 16.2021 6.75002H15.8284C15.7912 6.75002 15.7545 6.75002 15.7182 6.75003C14.6702 6.75025 13.9944 6.75038 13.3548 6.56806C13.0041 6.46811 12.6661 6.32811 12.3475 6.15083C11.7663 5.82747 11.2885 5.3495 10.5476 4.60833C10.522 4.58265 10.496 4.55666 10.4697 4.53035L9.91943 3.98009C9.63616 3.69682 9.52778 3.58951 9.41731 3.49793C8.91403 3.08073 8.29664 2.825 7.64576 2.76413C7.50289 2.75077 7.35038 2.75002 6.94976 2.75002ZM12.25 10C12.25 9.5858 12.5858 9.25002 13 9.25002H18C18.4142 9.25002 18.75 9.5858 18.75 10C18.75 10.4142 18.4142 10.75 18 10.75H13C12.5858 10.75 12.25 10.4142 12.25 10Z"
         fill="currentColor"
       />
     </svg>
@@ -1182,6 +999,19 @@ function CheckIcon({ className = 'w-4 h-4' }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M21.5303 5.46967C21.8232 5.76256 21.8232 6.23744 21.5303 6.53033L9.53033 18.5303C9.23744 18.8232 8.76256 18.8232 8.46967 18.5303L2.46967 12.5303C2.17678 12.2374 2.17678 11.7626 2.46967 11.4697C2.76256 11.1768 3.23744 11.1768 3.53033 11.4697L9 16.9393L20.4697 5.46967C20.7626 5.17678 21.2374 5.17678 21.5303 5.46967Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function ShieldIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8.72339 2.05112C10.1673 1.55658 11.0625 1.25 12 1.25C12.9375 1.25 13.8327 1.55658 15.2766 2.05112L16.004 2.30013C17.4854 2.8072 18.6286 3.19852 19.447 3.53099C19.8592 3.69846 20.2136 3.86067 20.499 4.02641C20.7737 4.1859 21.0492 4.38484 21.2364 4.65154C21.4214 4.91516 21.5171 5.23924 21.5772 5.55122C21.6397 5.87556 21.6774 6.26464 21.7017 6.71136C21.75 7.5984 21.75 8.81361 21.75 10.3898V11.9914C21.75 18.0924 17.142 21.0175 14.4017 22.2146L14.3746 22.2264C14.0348 22.3749 13.7154 22.5144 13.3484 22.6084C12.9609 22.7076 12.5493 22.75 12 22.75C11.4507 22.75 11.0391 22.7076 10.6516 22.6084C10.2846 22.5144 9.96523 22.3749 9.62543 22.2264L9.59833 22.2146C6.85803 21.0175 2.25 18.0924 2.25 11.9914V10.3899C2.25 8.81378 2.25 7.59836 2.2983 6.71136C2.32262 6.26464 2.36031 5.87556 2.42281 5.55122C2.48293 5.23924 2.5786 4.91516 2.76363 4.65154C2.95082 4.38484 3.22634 4.1859 3.50098 4.02641C3.78637 3.86067 4.14078 3.69846 4.55303 3.53099C5.3714 3.19852 6.51462 2.8072 7.99595 2.30014L8.72339 2.05112ZM11.25 2.83792C10.7525 2.94604 10.1152 3.16015 9.08062 3.5143L8.5078 3.71037C6.99521 4.22814 5.8921 4.60605 5.11759 4.92069C4.731 5.07774 4.4509 5.20935 4.25429 5.32353C4.15722 5.3799 4.09034 5.42642 4.04567 5.46273C4.0078 5.49351 3.99336 5.51095 3.99129 5.51349C3.98936 5.51663 3.97693 5.5374 3.95943 5.58654C3.93944 5.64265 3.91729 5.72309 3.89571 5.83506C3.85204 6.06169 3.81894 6.37301 3.79608 6.79292C3.75473 7.55226 3.75048 8.58298 3.75005 9.95941L11.25 7.45943V2.83792ZM12.75 2.83792V7.45943L20.25 9.95941C20.2495 8.58298 20.2453 7.55226 20.2039 6.79292C20.1811 6.37301 20.148 6.06169 20.1043 5.83506C20.0827 5.72309 20.0606 5.64265 20.0406 5.58654C20.0231 5.53737 20.0106 5.5166 20.0087 5.51348C20.0066 5.51092 19.9922 5.49349 19.9543 5.46273C19.9097 5.42642 19.8428 5.3799 19.7457 5.32353C19.5491 5.20935 19.269 5.07774 18.8824 4.92069C18.1079 4.60605 17.0048 4.22814 15.4922 3.71037L14.9194 3.5143C13.8848 3.16015 13.2475 2.94604 12.75 2.83792ZM11.25 9.04057L3.75 11.5406V11.9914C3.75 17.1665 7.6199 19.7135 10.1988 20.84C10.5703 21.0023 10.7848 21.0941 11.0236 21.1552C11.0931 21.173 11.1672 21.1888 11.25 21.2021V9.04057ZM12.75 21.2021V9.04057L20.25 11.5406V11.9914C20.25 17.1665 16.3801 19.7135 13.8012 20.84C13.4297 21.0023 13.2152 21.0941 12.9764 21.1552C12.9069 21.173 12.8328 21.1888 12.75 21.2021Z"
         fill="currentColor"
       />
     </svg>
