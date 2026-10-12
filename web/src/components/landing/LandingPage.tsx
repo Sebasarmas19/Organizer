@@ -2,19 +2,20 @@
 
 /* ============================================================================
    Organizer · Landing Page (Dark Titanium Studio)
-   Dirección seleccionada: Impeccable's Pick (Linear / Raycast / Cron style)
-   
-   Directivas Impeccable & Craft Floor:
-     - Fondo obsidiana (#090D0A), atmósfera con luz esmeralda volumétrica (#10B981).
-     - Micro-bordes de 1px de precisión (border-zinc-800/80).
-     - Sin texto en degradado, sin kickers/eyebrows innecesarios.
-     - Cero emojis: iconografía vectorial de precisión (Reicon).
-     - iPhone 16 Pro centrado en titanio oscuro con display limpio reservado para video.
-     - Tarjetas flotantes interactivas: captura Siri (<1.2s) y notificación matutina (8:00 AM).
-     - Animaciones fluidas GSAP con respeto a prefers-reduced-motion.
+   Dirección oficial seleccionada con Impeccable:
+     - Réplica exacta de la propuesta visual (dark-titanium.png)
+     - Navbar cápsula flotante con botón Early Access
+     - Titular y subtítulo limpios, centrados y sin ruido
+     - iPhone 16 Pro en Titanio Oscuro con display OLED limpio (#phone-video-slot)
+     - Flancos: orbe de Siri con latencia <1.2s y tarjeta push iOS de las 8:00 AM
+     - Bento Grid de 3 tarjetas:
+         1. Captura en 1s con Audio Waveform
+         2. Bloques de Foco con timeline y bloques de color
+         3. Bajo Estrés con medidor circular y rostro de calma (·‿·)
+     - Animaciones fluidas GSAP con respeto a prefers-reduced-motion
    ========================================================================= */
 
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -24,10 +25,13 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
+// Alturas del espectro de onda de audio para la tarjeta de Captura en 1s
+const WAVEFORM_HEIGHTS = [
+  8, 14, 18, 24, 34, 42, 28, 16, 24, 38, 48, 32, 20, 16, 28, 44, 34, 22, 14, 26, 36, 24, 16, 12, 18, 12, 6,
+];
+
 export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // GSAP Choreography
   useGSAP(
@@ -38,7 +42,7 @@ export function LandingPage() {
 
       if (prefersReducedMotion) return;
 
-      // 1. Hero Entrance Stagger
+      // 1. Entrada escalonada del Hero
       gsap.from('.gsap-hero-item', {
         y: 28,
         opacity: 0,
@@ -47,984 +51,357 @@ export function LandingPage() {
         ease: 'power3.out',
       });
 
-      // 2. Showcase Entrance & Device Scale
+      // 2. Chasis del teléfono y escala inicial
       gsap.from('.gsap-device-chassis', {
-        scale: 0.93,
-        y: 45,
+        scale: 0.92,
+        y: 40,
         opacity: 0,
         duration: 1.1,
         ease: 'power3.out',
-        delay: 0.25,
+        delay: 0.2,
       });
 
-      // 3. Flanking Floating Cards Entrance
-      gsap.from('.gsap-flank-card', {
-        x: (index) => (index === 0 ? -30 : 30),
+      // 3. Tarjetas flotantes laterales
+      gsap.from('.gsap-flank-card-left', {
+        x: -35,
         opacity: 0,
         duration: 0.9,
         ease: 'power2.out',
-        delay: 0.45,
+        delay: 0.4,
       });
 
-      // 4. Ambient Floating Physics for iPhone
+      gsap.from('.gsap-flank-card-right', {
+        x: 35,
+        opacity: 0,
+        duration: 0.9,
+        ease: 'power2.out',
+        delay: 0.4,
+      });
+
+      // 4. Física de flotación suave en el iPhone
       gsap.to('.gsap-phone-float', {
         y: -10,
-        duration: 3.6,
+        duration: 3.5,
         repeat: -1,
         yoyo: true,
         ease: 'sine.inOut',
       });
 
-      // 5. Bento Grid Scroll Reveal
+      // 5. Animación de respiración de la onda de audio (Waveform)
+      gsap.to('.gsap-waveform-bar', {
+        scaleY: (index) => 0.55 + ((index * 7) % 5) * 0.12,
+        duration: 1.2,
+        repeat: -1,
+        yoyo: true,
+        stagger: {
+          each: 0.04,
+          from: 'center',
+        },
+        ease: 'sine.inOut',
+      });
+
+      // 6. Revelado suave de las tarjetas Bento al hacer scroll
       gsap.from('.gsap-bento-card', {
         scrollTrigger: {
-          trigger: '#caracteristicas',
-          start: 'top 82%',
-          once: true,
-        },
-        y: 35,
-        opacity: 0,
-        duration: 0.75,
-        stagger: 0.12,
-        ease: 'power2.out',
-      });
-
-      // 6. Workflow Steps Scroll Reveal
-      gsap.from('.gsap-workflow-step', {
-        scrollTrigger: {
-          trigger: '#como-funciona',
-          start: 'top 82%',
-          once: true,
-        },
-        y: 32,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.12,
-        ease: 'power2.out',
-      });
-
-      // 7. Modules Scroll Reveal
-      gsap.from('.gsap-module-card', {
-        scrollTrigger: {
-          trigger: '#modulos',
-          start: 'top 82%',
+          trigger: '#bento-grid',
+          start: 'top 85%',
           once: true,
         },
         y: 30,
         opacity: 0,
-        duration: 0.75,
-        stagger: 0.14,
+        duration: 0.8,
+        stagger: 0.12,
         ease: 'power2.out',
       });
     },
     { scope: containerRef }
   );
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
-
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-[#090D0A] text-zinc-100 selection:bg-emerald-500/30 selection:text-emerald-100 antialiased overflow-x-hidden font-sans"
+      className="min-h-screen bg-[#080B09] text-zinc-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-200 antialiased overflow-x-hidden"
     >
       {/* ====================================================================
-          1. HEADER NAVEGACIÓN (Obsidian Frosted Glass)
+          1. HEADER / NAVBAR CÁPSULA FLOTANTE
           ==================================================================== */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#090D0A]/85 border-b border-zinc-800/80 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Brand Mark */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-700/80 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-inner group-hover:border-emerald-500/60 transition-colors">
-                O
-              </div>
-              <span className="font-semibold text-lg tracking-tight text-white group-hover:text-emerald-300 transition-colors">
-                Organizer
-              </span>
-            </Link>
-
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-medium text-emerald-400">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              PWA iOS Nativa
+      <header className="max-w-4xl mx-auto pt-6 px-4">
+        <nav className="w-full rounded-full bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/80 px-5 py-2.5 flex items-center justify-between shadow-2xl">
+          {/* Logo y Marca */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-lg bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-300 group-hover:text-emerald-400 group-hover:border-emerald-500/40 transition-colors">
+              <OrganizerIcon className="w-4 h-4" />
             </div>
-          </div>
+            <span className="text-white font-semibold text-sm tracking-tight">Organizer</span>
+          </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-            <a href="#caracteristicas" className="hover:text-white transition-colors">
-              Filosofía
-            </a>
-            <a href="#como-funciona" className="hover:text-white transition-colors">
-              Cómo funciona
-            </a>
-            <a href="#modulos" className="hover:text-white transition-colors">
-              Módulos
-            </a>
-            <a href="#faq" className="hover:text-white transition-colors">
-              Preguntas
-            </a>
-          </nav>
-
-          {/* Header Action Buttons */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/entrar"
-              className="hidden sm:inline-flex text-sm font-semibold text-zinc-400 hover:text-white px-3 py-2 rounded-lg hover:bg-zinc-800/60 transition-colors"
-            >
-              Iniciar sesión
-            </Link>
-
-            <Link
-              href="/entrar"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
-            >
-              <GoogleIcon className="w-4 h-4 bg-white rounded-full p-0.5" />
-              <span>Empezar gratis</span>
-            </Link>
-
-            {/* Mobile menu button */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800/60"
-              aria-label="Abrir menú de navegación"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile dropdown menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-b border-zinc-800 bg-[#090D0A]/95 backdrop-blur-xl px-4 pt-2 pb-4 space-y-2">
-            <a
-              href="#caracteristicas"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
-            >
-              Filosofía
-            </a>
-            <a
-              href="#como-funciona"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
-            >
-              Cómo funciona
-            </a>
-            <a
-              href="#modulos"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
-            >
-              Módulos
-            </a>
-            <a
-              href="#faq"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-md text-base font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
-            >
-              Preguntas
-            </a>
-            <div className="pt-2 border-t border-zinc-800 flex flex-col gap-2">
-              <Link
-                href="/entrar"
-                className="w-full text-center px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-200 font-semibold"
-              >
-                Iniciar sesión
-              </Link>
-              <Link
-                href="/entrar"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold"
-              >
-                <GoogleIcon className="w-4 h-4 bg-white rounded-full p-0.5" />
-                <span>Empezar con Google</span>
-              </Link>
-            </div>
-          </div>
-        )}
+          {/* Botón de Acción Principal (Pill blanco como en la comp) */}
+          <Link
+            href="/entrar"
+            className="px-4 py-1.5 rounded-full bg-white text-zinc-950 font-medium text-xs hover:bg-zinc-200 transition-colors shadow-sm active:scale-95"
+          >
+            Early Access
+          </Link>
+        </nav>
       </header>
 
       {/* ====================================================================
-          2. HERO SECTION CENTRADO (Volumetric Emerald Aura)
+          2. HERO SECTION: TITULAR Y SUBTÍTULO
           ==================================================================== */}
-      <section className="relative pt-16 pb-16 sm:pt-24 sm:pb-24 overflow-hidden">
-        {/* Atmósfera volumétrica esmeralda controlada detrás del Hero */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none -z-10" />
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Main Headline (monumental scale, sharp tracking) */}
-          <h1 className="gsap-hero-item text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08] mb-6">
-            Tu día resuelto antes de que abras la app.
-          </h1>
-
-          {/* Subtitle */}
-          <p className="gsap-hero-item max-w-2xl mx-auto text-base sm:text-xl text-zinc-400 leading-relaxed font-normal mb-8 sm:mb-10">
-            El asistente silencioso para estudiantes y mentes con TDAH. Sin listas infinitas que paralizan: captura ideas en 1 segundo y recibe tu plan completo en la pantalla de bloqueo a las 8:00 AM.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="gsap-hero-item flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-            <Link
-              href="/entrar"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-base font-semibold shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:shadow-[0_0_35px_rgba(16,185,129,0.35)] transition-all active:scale-[0.98]"
-            >
-              <GoogleIcon className="w-5 h-5 bg-white rounded-full p-0.5" />
-              <span>Empezar con Google</span>
-              <svg className="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-
-            <a
-              href="#como-funciona"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 hover:text-white text-base font-semibold shadow-inner transition-all active:scale-[0.98]"
-            >
-              <span>Ver cómo funciona</span>
-              <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </a>
-          </div>
-
-          {/* Social Proof & Metrics Badges */}
-          <div className="gsap-hero-item inline-flex flex-wrap items-center justify-center gap-3 px-4 py-2 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-sm text-zinc-300">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-emerald-400">
-              <CheckIcon className="w-3.5 h-3.5" />
-              Push, no pull
-            </span>
-            <span className="text-zinc-600">·</span>
-            <span className="inline-flex items-center gap-1.5 text-zinc-300">
-              <BoltIcon className="w-3.5 h-3.5 text-emerald-400" />
-              Captura &lt; 1.2s
-            </span>
-            <span className="text-zinc-600">·</span>
-            <span className="inline-flex items-center gap-1.5 text-zinc-400">
-              <ShieldIcon className="w-3.5 h-3.5 text-zinc-500" />
-              Cero deuda acumulada
-            </span>
-          </div>
-        </div>
+      <section className="pt-12 sm:pt-16 pb-4 text-center px-4 max-w-4xl mx-auto">
+        <h1 className="gsap-hero-item text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-[1.12]">
+          Tu día resuelto antes de que abras la app
+        </h1>
+        <p className="gsap-hero-item text-zinc-400 text-base sm:text-lg md:text-xl font-normal mt-4 max-w-xl mx-auto">
+          El asistente silencioso para estudiantes con TDAH.
+        </p>
       </section>
 
       {/* ====================================================================
-          3. DEVICE SHOWCASE: IPHONE 16 PRO EN TITANIO OSCURO & TARJETAS FLOTANTES
+          3. SHOWCASE CENTRAL: IPHONE 16 PRO, RESPLANDOR ESMERALDA & TARJETAS
           ==================================================================== */}
-      <section className="py-8 sm:py-16 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative max-w-5xl mx-auto flex items-center justify-center">
-            {/* Resplandor ambiental detrás del dispositivo */}
-            <div className="absolute inset-0 bg-radial from-emerald-500/15 via-emerald-900/5 to-transparent blur-[90px] -z-10 rounded-full" />
+      <section className="relative max-w-5xl mx-auto mt-6 sm:mt-10 px-4">
+        {/* Atmósfera: Fondo con micro-textura de puntos */}
+        <div
+          className="absolute inset-0 pointer-events-none -z-20 opacity-30"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
 
-            <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Tarjeta Flotante Izquierda: Captura de voz Siri (<1.2s) */}
-              <div className="hidden lg:block lg:col-span-3.5 order-1">
-                <div className="gsap-flank-card p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 shadow-2xl backdrop-blur-xl">
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-emerald-400">
-                        <MicIcon className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-bold text-zinc-200 tracking-wider uppercase">
-                        Captura Siri
-                      </span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-400">
-                      &lt; 1.2s
-                    </span>
-                  </div>
+        {/* Resplandor esmeralda volumétrico detrás del teléfono */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[520px] h-[340px] sm:h-[520px] rounded-full bg-emerald-500/20 blur-[110px] pointer-events-none -z-10" />
 
-                  <div className="mt-3.5 space-y-3">
-                    <p className="text-xs font-mono text-zinc-300 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800">
-                      &quot;Oye Siri, anota comprar cuaderno de física&quot;
-                    </p>
-                    {/* Visualizador de audio / waveform estilizado */}
-                    <div className="flex items-center justify-center gap-1 py-1.5 px-3 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
-                      {[40, 75, 100, 60, 90, 45, 80, 100, 70, 35, 85, 50].map((h, i) => (
-                        <span
-                          key={i}
-                          style={{ height: `${h * 0.16}px` }}
-                          className="w-1 bg-emerald-400/80 rounded-full"
-                        />
-                      ))}
-                    </div>
-                    <p className="text-[11px] text-zinc-500 leading-snug">
-                      Sin campos obligatorios ni fechas forzadas. La idea queda archivada en 1 toque.
-                    </p>
-                  </div>
-                </div>
+        {/* Contenedor del dispositivo flanqueado por las dos tarjetas */}
+        <div className="relative flex flex-col md:flex-row items-center justify-center gap-6 sm:gap-8 pt-4 pb-6">
+          {/* Tarjeta Flotante Izquierda: Siri con latencia <1.2s */}
+          <div className="gsap-flank-card-left order-2 md:order-1 md:-mr-6 z-10 w-full sm:w-auto flex justify-center">
+            <div className="bg-zinc-900/80 backdrop-blur-xl border border-emerald-500/30 rounded-2xl px-5 py-3.5 flex items-center gap-3.5 shadow-xl shadow-emerald-950/20 hover:border-emerald-500/50 transition-colors">
+              {/* Orbe de Siri con resplandor multicolor */}
+              <div className="relative w-9 h-9 rounded-full flex items-center justify-center shrink-0">
+                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffffff,#f43f5e_30%,#a855f7_55%,#06b6d4_80%,#10b981)] blur-[1px]" />
+                <div className="absolute inset-0.5 rounded-full bg-black/20 backdrop-blur-[1px]" />
+                <div className="relative w-3 h-3 rounded-full bg-white/95 blur-[0.5px]" />
               </div>
-
-              {/* Chasis Central iPhone 16 Pro (Frame limpio reservado para video) */}
-              <div className="lg:col-span-5 flex justify-center order-2">
-                <div className="gsap-device-chassis gsap-phone-float relative w-[310px] sm:w-[335px] h-[670px] bg-zinc-950 rounded-[52px] p-3 shadow-[0_0_60px_rgba(0,0,0,0.8),0_0_40px_rgba(16,185,129,0.12)] border-[4px] border-zinc-800">
-                  {/* Dynamic Island */}
-                  <div className="absolute top-5 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-30 flex items-center justify-end pr-2.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-800 ring-1 ring-zinc-700" />
-                  </div>
-
-                  {/* ==========================================================
-                      PANTALLA DEL IPHONE: FRAME LIMPIO RESERVADO PARA VIDEO
-                      (Sin imágenes artificiales de IA según la instrucción)
-                      ========================================================== */}
-                  <div
-                    id="phone-video-slot"
-                    className="relative w-full h-full bg-[#050705] rounded-[42px] overflow-hidden flex flex-col items-center justify-center text-center p-6 border border-zinc-900 select-none"
-                  >
-                    {/* Reflejo OLED de cristal sutil */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-white/[0.02] pointer-events-none" />
-
-                    {/* Placeholder elegante y funcional */}
-                    <div className="relative z-10 flex flex-col items-center justify-center space-y-4 max-w-[210px]">
-                      <div className="w-14 h-14 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-zinc-300 flex items-center justify-center shadow-inner">
-                        <VideoPlaceholderIcon className="w-7 h-7 text-emerald-400" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-zinc-200 tracking-wide uppercase">
-                          Demostración en video
-                        </p>
-                        <p className="text-[11px] text-zinc-500 leading-snug">
-                          Espacio preparado para la grabación de pantalla real de tu iPhone.
-                        </p>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-[10px] text-zinc-400 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        PWA iOS Standalone
-                      </div>
-                    </div>
-
-                    {/* Home Indicator */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-1 bg-zinc-700 rounded-full" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tarjeta Flotante Derecha: Notificación Push 8:00 AM */}
-              <div className="hidden lg:block lg:col-span-3.5 order-3">
-                <div className="gsap-flank-card p-5 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 shadow-2xl backdrop-blur-xl">
-                  <div className="flex items-center justify-between pb-3 border-b border-zinc-800/60">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-emerald-400">
-                        <BellIcon className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-bold text-zinc-200 tracking-wider uppercase">
-                        Push 8:00 AM
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono text-zinc-400">Ahora</span>
-                  </div>
-
-                  <div className="mt-3.5 space-y-3">
-                    <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">
-                          Plan del día
-                        </span>
-                      </div>
-                      <p className="text-xs font-mono font-semibold text-white leading-relaxed">
-                        &quot;Hoy: Cálculo 8:00 · Entrega Lab 11:00 · Gym 18:00&quot;
-                      </p>
-                    </div>
-                    <p className="text-[11px] text-zinc-500 leading-snug">
-                      Llega a tu pantalla de bloqueo antes de salir de la cama. Lo lees sin abrir nada.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <span className="text-emerald-400 font-mono text-2xl font-bold tracking-tight">&lt;1.2s</span>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ====================================================================
-          4. SECCIÓN BENTO GRID: LOS 3 PILARES DE ALTO RENDIMIENTO
-          ==================================================================== */}
-      <section id="caracteristicas" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#070A08]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Construida para cerebros que no toleran la fricción.
-            </h2>
-            <p className="text-zinc-400 text-base sm:text-lg mt-4 leading-relaxed">
-              Las aplicaciones tradicionales exigen categorizar, estimar horas y revisar listas infinitas. Organizer reduce el esfuerzo a cero.
-            </p>
-          </div>
-
-          {/* Bento Grid con bordes de 1px de precisión (Dark Titanium Studio) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Bento Card 1: Captura en 1s */}
-            <div className="gsap-bento-card p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 text-emerald-400 flex items-center justify-center mb-5">
-                  <BoltIcon className="w-5 h-5" />
+          {/* Teléfono iPhone 16 Pro en Titanio Oscuro */}
+          <div className="gsap-device-chassis order-1 md:order-2 z-20">
+            <div className="gsap-phone-float w-[260px] sm:w-[280px] aspect-[9/19] rounded-[48px] p-2.5 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-2xl border border-zinc-700/60 relative">
+              <div className="w-full h-full rounded-[40px] bg-black p-1 relative overflow-hidden flex flex-col border border-zinc-900">
+                {/* Dynamic Island */}
+                <div className="w-24 h-5 bg-black rounded-full mx-auto mt-2 flex items-center justify-end px-2 z-20 shrink-0">
+                  <div className="w-2 h-2 rounded-full bg-zinc-900 mr-1" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
-                  Captura en 1 segundo
-                </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  Por voz con Siri o con un toque en la pantalla de inicio. Sin carpetas forzadas ni fechas obligatorias: anotas la idea antes de que se esfume de tu cabeza.
-                </p>
-              </div>
-              <div className="mt-8 pt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-                <span className="text-zinc-500">Velocidad medida</span>
-                <span className="font-mono font-bold text-emerald-400">&lt; 1.2 segundos</span>
-              </div>
-            </div>
 
-            {/* Bento Card 2: Bloques de Foco */}
-            <div className="gsap-bento-card p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 text-emerald-400 flex items-center justify-center mb-5">
-                  <CalendarIcon className="w-5 h-5" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
-                  Bloques de foco real
-                </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  Tus clases universitarias se cargan una sola vez. Ubica tus tareas en los huecos de tiempo libres reales de tu semana, sin saturar ningún día.
-                </p>
-              </div>
-              {/* Mini visualizador de bloques de horario */}
-              <div className="mt-8 pt-4 border-t border-zinc-800/80 space-y-1.5 text-xs font-mono">
-                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300">
-                  <span>08:00 Cálculo III</span>
-                  <span className="text-[10px] text-emerald-400">Clase</span>
-                </div>
-                <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                  <span>11:00 Laboratorio Física</span>
-                  <span className="text-[10px] text-zinc-500">45m</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bento Card 3: Bajo Estrés / Cero Culpa */}
-            <div className="gsap-bento-card p-7 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
-              <div>
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-700/60 text-emerald-400 flex items-center justify-center mb-5">
-                  <ShieldIcon className="w-5 h-5" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
-                  Cero reproches ni deuda
-                </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  Si ayer no pudiste completar algo, la app no acumula deuda roja ni te hace sentir culpable. Te pregunta con calma qué hacer hoy y tu racha cuenta con comodines automáticos.
-                </p>
-              </div>
-              <div className="mt-8 pt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-                <span className="text-zinc-500">Comodines de perdón</span>
-                <span className="font-mono font-bold text-emerald-400">2 al mes activos</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          5. FLUJO COTIDIANO EN 4 PASOS
-          ==================================================================== */}
-      <section id="como-funciona" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#090D0A]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Cómo transcurre tu día con Organizer.
-            </h2>
-            <p className="text-zinc-400 text-base sm:text-lg mt-3">
-              Un ciclo diseñado para el ritmo real de estudio universitario y proyectos personales.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Step 1 */}
-            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">01</div>
-              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
-                <BoltIcon className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Captura instantánea</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Dictas la idea a Siri o anotas en 2 segundos mientras caminas. Queda a salvo en Pendientes sin interrumpirte.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">02</div>
-              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
-                <CalendarIcon className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Bloques con clases</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Tus materias estructuran la semana. Acomodas tus tareas en los huecos libres reales sin sobrecargar ningún día.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">03</div>
-              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
-                <SunIcon className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Notificación 8:00 AM</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                A las 8:00 AM tu iPhone vibra con el plan completo listo en la pantalla de bloqueo. Sabes qué toca sin abrir nada.
-              </p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="gsap-workflow-step p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-              <div className="text-3xl font-black text-zinc-800 font-mono mb-3">04</div>
-              <div className="w-9 h-9 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center mb-4">
-                <FireIcon className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Cierre y racha</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Marcas lo cumplido en 30 segundos. Tu racha avanza y, ante cualquier imprevisto, tus comodines protegen tu progreso.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          6. LOS CUATRO MÓDULOS DE ORGANIZER
-          ==================================================================== */}
-      <section id="modulos" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#070A08]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center mb-14 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Cuatro módulos independientes. Cero caos.
-            </h2>
-            <p className="text-zinc-400 text-base sm:text-lg mt-3">
-              Separación estricta entre la ejecución del día de hoy y tus notas de largo plazo.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Módulo Hoy */}
-            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
-                  <SunIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Módulo Hoy</h3>
-                  <p className="text-xs text-zinc-500">Ejecución inmediata sin scroll</p>
-                </div>
-              </div>
-              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
-                Tu pantalla matutina sin scroll. Muestra tu tarea activa bajo el pulgar (&quot;Ahora&quot;), el horario del día y tu racha de constancia.
-              </p>
-              <ul className="space-y-2.5 text-xs text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Acción rápida Hecho / Para después
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Lo de ayer con reajuste amigable sin deuda
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Racha con comodines automáticos
-                </li>
-              </ul>
-            </div>
-
-            {/* Módulo Calendario */}
-            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
-                  <CalendarIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Calendario & Clases</h3>
-                  <p className="text-xs text-zinc-500">Horario universitario fijo</p>
-                </div>
-              </div>
-              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
-                Tus materias fijas estructuran la semana. Visualiza tus bloques de tiempo libres para ubicar tareas de estudio sin fricción.
-              </p>
-              <ul className="space-y-2.5 text-xs text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Plantilla fija de horario universitario
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Vistas de Semana, Mes y Día
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Recordatorios con fecha y aviso anticipado
-                </li>
-              </ul>
-            </div>
-
-            {/* Módulo Pendientes */}
-            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
-                  <InboxIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Pendientes</h3>
-                  <p className="text-xs text-zinc-500">Inbox & Carpetas</p>
-                </div>
-              </div>
-              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
-                La bandeja de entrada para todo lo que capturaste al vuelo. Organízalo en carpetas solo cuando tengas tiempo, o déjalo esperando fecha sin estrés.
-              </p>
-              <ul className="space-y-2.5 text-xs text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Captura sin categorización forzada
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Carpetas limpias para proyectos
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Planificación en un toque hacia hoy
-                </li>
-              </ul>
-            </div>
-
-            {/* Módulo Recursos */}
-            <div className="gsap-module-card p-8 rounded-2xl bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-zinc-900 text-emerald-400 flex items-center justify-center border border-zinc-800">
-                  <FolderIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Recursos</h3>
-                  <p className="text-xs text-zinc-500">Módulo independiente</p>
-                </div>
-              </div>
-              <p className="text-zinc-400 text-sm leading-relaxed mb-5">
-                Tus notas, herramientas, artículos y referencias viven aislados. Nunca persiguen al usuario ni contaminan la planificación diaria.
-              </p>
-              <ul className="space-y-2.5 text-xs text-zinc-300">
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Totalmente aislado de tus tareas diarias
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  Enlaces, notas y apuntes de consulta
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  0 notificaciones, 0 presión de lectura
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-          7. FAQ ACCORDION (Dark Titanium Style)
-          ==================================================================== */}
-      <section id="faq" className="py-20 sm:py-28 border-t border-zinc-900 bg-[#090D0A]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              Preguntas Frecuentes
-            </h2>
-            <p className="text-zinc-400 text-base sm:text-lg mt-3">
-              Todo lo que necesitas saber sobre Organizer en tu día a día.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {[
-              {
-                q: '¿Cómo funcionan las notificaciones push en mi iPhone si es una PWA?',
-                a: 'Apple incorporó soporte nativo para Web Push a partir de iOS 16.4. Solo debes abrir Organizer en Safari, tocar en Compartir y seleccionar "Añadir a pantalla de inicio". Desde ese momento, la PWA funciona como una app nativa y nuestro servidor con pg_cron te envía la notificación matutina cada mañana a las 8:00 AM con tu plan detallado.',
-              },
-              {
-                q: '¿Por qué la pantalla de Inicio no tiene una lista larga con todas mis tareas?',
-                a: 'Porque está comprobado que las listas largas generan parálisis de decisión y agobio en personas con TDAH o sobrecarga académica. Organizer limita la pantalla de Inicio a lo que realmente vas a hacer hoy, destacando una sola tarea bajo tu pulgar en la tarjeta "Ahora".',
-              },
-              {
-                q: '¿Cómo funciona el acceso con Google?',
-                a: 'Inicias sesión con un solo toque utilizando tu cuenta de Google mediante autenticación OAuth segura con Supabase. No necesitas inventar contraseñas ni esperar enlaces por correo que expiren.',
-              },
-              {
-                q: '¿Mis datos están protegidos y completamente privados?',
-                a: 'Sí. Todo se almacena en PostgreSQL con políticas estrictas de Row Level Security (RLS) en Supabase. Tus tareas, notas y horarios están totalmente aislados y nadie más que tú tiene acceso a ellos.',
-              },
-              {
-                q: '¿Puedo usar Organizer en mi computadora además del teléfono?',
-                a: 'Totalmente. Organizer es responsivo y se adapta tanto a iPhone como a Mac o PC. En escritorio ofrece una vista expandida con barra lateral y calendario semanal para planificar cómodamente con ratón y teclado.',
-              },
-            ].map((faq, index) => (
-              <div
-                key={index}
-                className="rounded-2xl bg-zinc-950/80 border border-zinc-800/80 overflow-hidden transition-colors"
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleFaq(index)}
-                  className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 font-bold text-white hover:text-emerald-400 transition-colors"
+                {/* OLED Glass Screen Placeholder (Reservado para video real del usuario) */}
+                <div
+                  id="phone-video-slot"
+                  className="w-full flex-1 bg-[#000000] relative flex flex-col items-center justify-center p-6 text-center select-none rounded-b-[36px]"
                 >
-                  <span className="text-base sm:text-lg">{faq.q}</span>
-                  <span
-                    className={`w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 transition-transform duration-200 shrink-0 ${
-                      openFaq === index ? 'rotate-180 text-emerald-400 border-emerald-500/40' : ''
-                    }`}
-                  >
-                    ↓
-                  </span>
-                </button>
-                {openFaq === index && (
-                  <div className="px-6 pb-6 pt-1 text-zinc-400 text-sm sm:text-base leading-relaxed border-t border-zinc-900">
-                    {faq.a}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.04] via-transparent to-transparent pointer-events-none" />
+                  <div className="w-11 h-11 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-2.5 shadow-inner">
+                    <VideoPlaceholderIcon className="w-5 h-5 text-zinc-400" />
                   </div>
-                )}
+                  <p className="text-xs font-medium text-zinc-400">Video Demo</p>
+                  <p className="text-[10px] text-zinc-600 mt-0.5 max-w-[130px] leading-tight">
+                    Espacio reservado para grabación real de iPhone
+                  </p>
+                </div>
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* Tarjeta Flotante Derecha: Notificación Push iOS 8:00 AM */}
+          <div className="gsap-flank-card-right order-3 md:-ml-6 z-10 w-full sm:w-auto flex justify-center">
+            <div className="bg-zinc-900/85 backdrop-blur-xl border border-zinc-700/60 rounded-2xl p-4 shadow-2xl max-w-[270px] text-left hover:border-zinc-600 transition-colors">
+              <div className="flex items-center gap-2 text-xs">
+                <div className="w-4 h-4 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                  <OrganizerIcon className="w-2.5 h-2.5" />
+                </div>
+                <span className="text-zinc-400 text-[11px] font-medium">iOS push notification</span>
+                <span className="text-zinc-500 text-[11px] ml-auto">now</span>
+              </div>
+              <p className="text-white font-semibold text-xs mt-2">08:00 AM - Resumen del día</p>
+              <p className="text-zinc-300 text-[11px] mt-0.5 leading-snug">
+                Hoy: Cálculo 8:00 · Entrega Lab 11:00 · Gym 18:00
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-          8. BANNER CTA FINAL: CONTENEDOR OBSIDIANA CON HALO ESMERALDA
+          4. BENTO GRID DE 3 TARJETAS (EXACTO A LA PROPUESTA VISUAL)
           ==================================================================== */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 border-t border-zinc-900">
-        <div className="max-w-6xl mx-auto rounded-[36px] bg-black text-white p-8 sm:p-16 lg:p-20 relative overflow-hidden border border-zinc-800/90 shadow-[0_0_80px_rgba(16,185,129,0.08)]">
-          {/* Volumetric emerald backlight */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/15 blur-[120px] rounded-full pointer-events-none -z-0" />
+      <section id="bento-grid" className="max-w-5xl mx-auto mt-10 sm:mt-16 px-4">
+        <div className="rounded-3xl bg-zinc-950/70 backdrop-blur-xl border border-zinc-800/80 p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 shadow-2xl">
+          {/* Tarjeta 1: Captura en 1s + Audio Waveform */}
+          <div className="gsap-bento-card p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/60 flex flex-col justify-between h-full group hover:border-zinc-700/80 transition-all">
+            <div>
+              <span className="text-xs font-mono text-zinc-500">1</span>
+              <h3 className="text-lg font-bold text-white tracking-tight mt-1">Captura en 1s</h3>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-8 leading-relaxed">
+                Captura por voz sin abrir la app. Pensamientos directo a tu bandeja.
+              </p>
+            </div>
+            {/* Espectro Waveform realista */}
+            <div className="flex items-center justify-center gap-1.5 h-14 pt-2">
+              {WAVEFORM_HEIGHTS.map((height, idx) => (
+                <div
+                  key={idx}
+                  className="gsap-waveform-bar w-1 bg-zinc-300 rounded-full group-hover:bg-emerald-400 transition-colors origin-bottom"
+                  style={{ height: `${height}px` }}
+                />
+              ))}
+            </div>
+          </div>
 
-          <div className="relative z-10 max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight mb-6">
-              Toma el control de tu tiempo hoy mismo.
-            </h2>
+          {/* Tarjeta 2: Bloques de Foco + Timeline Schedule */}
+          <div className="gsap-bento-card p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/60 flex flex-col justify-between h-full group hover:border-zinc-700/80 transition-all">
+            <div>
+              <span className="text-xs font-mono text-zinc-500">2</span>
+              <h3 className="text-lg font-bold text-white tracking-tight mt-1">Bloques de Foco</h3>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-6 leading-relaxed">
+                Línea de tiempo limpia con código de colores para cada bloque.
+              </p>
+            </div>
+            {/* Mini Timeline con bloques coloreados */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-mono text-zinc-500 w-10 shrink-0">08:00</span>
+                <div className="flex-1 flex gap-1.5">
+                  <div className="h-5 bg-sky-500 rounded-md w-3/5" />
+                  <div className="h-5 bg-zinc-700/80 rounded-md w-2/5" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-mono text-zinc-500 w-10 shrink-0">09:00</span>
+                <div className="flex-1">
+                  <div className="h-5 bg-amber-500 rounded-md w-4/5" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-mono text-zinc-500 w-10 shrink-0">13:00</span>
+                <div className="flex-1">
+                  <div className="h-5 bg-emerald-500 rounded-md w-3/4" />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-mono text-zinc-500 w-10 shrink-0">16:00</span>
+                <div className="flex-1">
+                  <div className="h-5 bg-rose-500/90 rounded-md w-1/2" />
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-              Sin listas infinitas que agobian. Sin reproches si un día no llegas. Tu plan completo servido en tu pantalla de bloqueo cada mañana.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-              <Link
-                href="/entrar"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] transition-all active:scale-[0.98]"
-              >
-                <GoogleIcon className="w-5 h-5 bg-white rounded-full p-0.5" />
-                <span>Empezar con Google</span>
-                <svg className="w-4 h-4 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          {/* Tarjeta 3: Bajo Estrés + Medidor Circular con Carita de Calma */}
+          <div className="gsap-bento-card p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/60 flex flex-col justify-between h-full group hover:border-zinc-700/80 transition-all">
+            <div>
+              <span className="text-xs font-mono text-zinc-500">3</span>
+              <h3 className="text-lg font-bold text-white tracking-tight mt-1">Bajo Estrés</h3>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-6 leading-relaxed">
+                Impeccable Swiss design craft, sin culpa y con progreso limpio.
+              </p>
+            </div>
+            {/* Medidor circular con rostro sonriente y relajado */}
+            <div className="flex items-center justify-center h-20 pt-1">
+              <div className="relative w-20 h-20 flex items-center justify-center">
+                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80" aria-hidden="true">
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="32"
+                    fill="none"
+                    stroke="#27272a"
+                    strokeWidth="5"
+                    strokeDasharray="160 50"
+                    strokeLinecap="round"
+                  />
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="32"
+                    fill="none"
+                    stroke="#e4e4e7"
+                    strokeWidth="5"
+                    strokeDasharray="115 100"
+                    strokeLinecap="round"
+                  />
                 </svg>
-              </Link>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-zinc-400">
-              <span className="flex items-center gap-1.5">
-                <CheckIcon className="w-4 h-4 text-emerald-400" />
-                100% privado y seguro
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckIcon className="w-4 h-4 text-emerald-400" />
-                PWA nativa en iPhone & Web
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckIcon className="w-4 h-4 text-emerald-400" />
-                Configuración en 30 segundos
-              </span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-300">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-200" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-200" />
+                  </div>
+                  <svg className="w-4 h-2 text-zinc-200" viewBox="0 0 16 8" fill="none" aria-hidden="true">
+                    <path d="M2 1C4 5 12 5 14 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-          9. FOOTER PULIDO
+          5. ACCESO Y LLAMADA A LA ACCIÓN
           ==================================================================== */}
-      <footer className="border-t border-zinc-900 bg-black py-12 text-sm text-zinc-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-8 border-b border-zinc-900">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 text-emerald-400 flex items-center justify-center text-sm font-bold">
-                O
-              </div>
-              <div>
-                <span className="font-bold text-white text-base">Organizer</span>
-                <p className="text-xs text-zinc-500">Tu planificación devuelta a tiempo.</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-zinc-400">
-              <a href="#caracteristicas" className="hover:text-white transition-colors">
-                Filosofía
-              </a>
-              <a href="#como-funciona" className="hover:text-white transition-colors">
-                Cómo funciona
-              </a>
-              <a href="#modulos" className="hover:text-white transition-colors">
-                Módulos
-              </a>
-              <a href="#faq" className="hover:text-white transition-colors">
-                Preguntas
-              </a>
-              <Link href="/entrar" className="hover:text-white transition-colors font-semibold text-emerald-400">
-                Iniciar sesión
-              </Link>
-            </div>
-          </div>
-
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-            <p>© {new Date().getFullYear()} Organizer. Hecho para cumplir objetivos reales. Push, no pull.</p>
-            <p>Construido con Next.js, Tailwind CSS y Supabase Postgres.</p>
-          </div>
+      <section className="max-w-2xl mx-auto mt-20 sm:mt-28 text-center px-4">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          Tu semestre en calma, sin deuda invisible.
+        </h2>
+        <p className="text-zinc-400 text-sm sm:text-base mt-3 max-w-md mx-auto">
+          Push, no pull. Una notificación matutina con lo esencial. Cero configuraciones complejas.
+        </p>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/entrar"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-lg hover:shadow-white/10 active:scale-95"
+          >
+            <GoogleIcon className="w-4 h-4" />
+            <span>Empezar con Google</span>
+          </Link>
+          <Link
+            href="/atajo"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 text-sm font-medium transition-colors"
+          >
+            <span>Instalar Atajo de Siri</span>
+          </Link>
         </div>
+      </section>
+
+      {/* ====================================================================
+          6. FOOTER DISCRETO
+          ==================================================================== */}
+      <footer className="max-w-4xl mx-auto mt-24 pb-12 px-4 border-t border-zinc-800/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+        <div className="flex items-center gap-2">
+          <OrganizerIcon className="w-4 h-4 text-zinc-400" />
+          <span className="text-zinc-400 font-medium">Organizer</span>
+          <span>· Hecho para iPhone. Push, no pull.</span>
+        </div>
+        <p>© {new Date().getFullYear()} Organizer. Todos los derechos reservados.</p>
       </footer>
     </div>
   );
 }
 
 /* ============================================================================
-   ICONOS SVG DE ALTA PRECISIÓN (REICON OUTLINE)
+   ICONOS SVG DE PRECISIÓN (REICON OUTLINE)
    ========================================================================= */
 
-function BellIcon({ className = 'w-5 h-5' }: { className?: string }) {
+function OrganizerIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M12 1.25C7.71983 1.25 4.25004 4.71979 4.25004 9V9.7041C4.25004 10.401 4.04375 11.0824 3.65717 11.6622L2.50856 13.3851C1.17547 15.3848 2.19318 18.1028 4.51177 18.7351C5.26738 18.9412 6.02937 19.1155 6.79578 19.2581L6.79768 19.2632C7.56667 21.3151 9.62198 22.75 12 22.75C14.378 22.75 16.4333 21.3151 17.2023 19.2632L17.2042 19.2581C17.9706 19.1155 18.7327 18.9412 19.4883 18.7351C21.8069 18.1028 22.8246 15.3848 21.4915 13.3851L20.3429 11.6622C19.9563 11.0824 19.75 10.401 19.75 9.7041V9C19.75 4.71979 16.2802 1.25 12 1.25ZM15.3764 19.537C13.1335 19.805 10.8664 19.8049 8.62349 19.5369C9.33444 20.5585 10.571 21.25 12 21.25C13.4289 21.25 14.6655 20.5585 15.3764 19.537ZM5.75004 9C5.75004 5.54822 8.54826 2.75 12 2.75C15.4518 2.75 18.25 5.54822 18.25 9V9.7041C18.25 10.6972 18.544 11.668 19.0948 12.4943L20.2434 14.2172C21.0086 15.3649 20.4245 16.925 19.0936 17.288C14.4494 18.5546 9.5507 18.5546 4.90644 17.288C3.57561 16.925 2.99147 15.3649 3.75664 14.2172L4.90524 12.4943C5.45609 11.668 5.75004 10.6972 5.75004 9.7041V9Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function BoltIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M20.5279 10.3736C20.1572 9.73163 19.4779 9.5206 18.8294 9.42992C18.1757 9.33852 17.3008 9.33855 16.2426 9.33858L16.1824 9.33858C15.5523 9.33858 15.1403 9.33237 14.8402 9.29064C14.5688 9.2529 14.4825 9.19704 14.4456 9.16446C14.4187 9.13635 14.3706 9.07063 14.3379 8.83366C14.2993 8.55425 14.2976 8.1711 14.2976 7.55704V7.18255C14.2977 5.59503 14.2977 4.32329 14.1755 3.4166C14.0608 2.56554 13.7882 1.60969 12.844 1.32035C11.9164 1.03608 11.1384 1.64564 10.5337 2.27405C9.88942 2.9435 9.12413 3.97895 8.16596 5.27538L5.02896 9.51969C4.41863 10.3454 3.90984 11.0337 3.60669 11.6029C3.3028 12.1735 3.08164 12.8509 3.41872 13.5268L3.41989 13.5293L3.42344 13.5365L3.42748 13.5445L3.43146 13.5522L3.4358 13.5603L3.44023 13.5685L3.44441 13.576L3.44884 13.5838L3.45289 13.5907L3.45438 13.5931C3.82188 14.2296 4.49825 14.4524 5.1526 14.5523C5.82693 14.6553 6.72671 14.6619 7.81795 14.6619C8.45456 14.6619 8.86048 14.6633 9.1586 14.7013C9.42195 14.7349 9.50071 14.7867 9.53447 14.8165C9.56438 14.8478 9.61682 14.9207 9.6538 15.1663C9.69612 15.4473 9.70276 15.8364 9.70275 16.4435L9.70274 16.8178C9.7027 18.4053 9.70266 19.6771 9.82483 20.5838C9.9395 21.4349 10.2121 22.3907 11.1563 22.6801C12.0839 22.9644 12.8619 22.3548 13.4667 21.7264C14.1109 21.0569 14.8762 20.0215 15.8344 18.725L18.9338 14.5317C19.5646 13.6783 20.0834 12.9652 20.3893 12.3718C20.6887 11.7911 20.8976 11.1097 20.5636 10.44L20.5293 10.3759L20.5279 10.3736ZM11.6145 3.31416C11.0465 3.90435 10.3387 4.85927 9.335 6.21733L6.27286 10.3604C5.61517 11.2502 5.17513 11.849 4.93062 12.3081C4.81161 12.5315 4.76693 12.6725 4.75421 12.7578C4.74635 12.8105 4.75115 12.8343 4.75742 12.8496C4.78161 12.8852 4.88663 12.9943 5.379 13.0695C5.9169 13.1516 6.69032 13.1619 7.81795 13.1619L7.86392 13.1619C8.44106 13.1618 8.94393 13.1618 9.3483 13.2134C9.78148 13.2686 10.2118 13.3942 10.568 13.7293C10.5739 13.7348 10.5796 13.7404C10.9296 14.0839 11.0719 14.5099 11.1371 14.9429C11.1994 15.3568 11.2028 15.8658 11.2028 16.4435L11.2027 16.753C11.2027 18.42 11.2044 19.5894 11.3114 20.3835C11.3647 20.7789 11.4363 21.0108 11.505 21.1404C11.5564 21.2374 11.586 21.2438 11.5943 21.2456L11.5958 21.2459L11.5973 21.2464C11.6078 21.25 11.6446 21.2628 11.7583 21.2056C11.9003 21.1341 12.1032 20.98 12.3858 20.6863C12.9538 20.0961 13.6616 19.1412 14.6654 17.7831L17.7275 13.6401C18.3815 12.7553 18.8172 12.1478 19.0561 11.6845C19.2608 11.2873 19.2385 11.1528 19.2249 11.1171C19.2024 11.0843 19.1016 10.9826 18.6217 10.9155C18.0846 10.8404 17.3161 10.8386 16.1824 10.8386C15.5796 10.8386 15.0567 10.8352 14.6336 10.7763C14.1968 10.7156 13.7655 10.5841 13.4123 10.252C13.0476 9.89419 12.9114 9.46874 12.852 9.03887C12.7975 8.64454 12.7976 8.15622 12.7976 7.60538L12.7976 7.24733C12.7976 5.58044 12.7959 4.41099 12.6889 3.61692C12.6356 3.22153 12.564 2.98959 12.4954 2.86008C12.4439 2.76301 12.4143 2.75666 12.406 2.75487L12.4045 2.75451L12.403 2.75401C12.3925 2.7504 12.3557 2.73767 12.242 2.79487C12.1 2.86633 11.8972 3.02042 11.6145 3.31416Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function CalendarIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M17 14C17.5523 14 18 13.5523 18 13C18 12.4477 17.5523 12 17 12C16.4477 12 16 12.4477 16 13C16 13.5523 16.4477 14 17 14Z" fill="currentColor" />
-      <path d="M17 18C17.5523 18 18 17.5523 18 17C18 16.4477 17.5523 16 17 16C16.4477 16 16 16.4477 16 17C16 17.5523 16.4477 18 17 18Z" fill="currentColor" />
-      <path d="M13 13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13C11 12.4477 11.4477 12 12 12C12.5523 12 13 12.4477 13 13Z" fill="currentColor" />
-      <path d="M13 17C13 17.5523 12.5523 18 12 18C11.4477 18 11 17.5523 11 17C11 16.4477 11.4477 16 12 16C12.5523 16 13 16.4477 13 17Z" fill="currentColor" />
-      <path d="M7 14C7.55229 14 8 13.5523 8 13C8 12.4477 7.55229 12 7 12C6.44772 12 6 12.4477 6 13C6 13.5523 6.44772 14 7 14Z" fill="currentColor" />
-      <path d="M7 18C7.55229 18 8 17.5523 8 17C8 16.4477 7.55229 16 7 16C6.44772 16 6 16.4477 6 17C6 17.5523 6.44772 18 7 18Z" fill="currentColor" />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M7 1.75C7.41421 1.75 7.75 2.08579 7.75 2.5V3.26272C8.412 3.24999 9.14133 3.24999 9.94346 3.25H14.0564C14.8586 3.24999 15.588 3.24999 16.25 3.26272V2.5C16.25 2.08579 16.5858 1.75 17 1.75C17.4142 1.75 17.75 2.08579 17.75 2.5V3.32709C18.0099 3.34691 18.2561 3.37182 18.489 3.40313C19.6614 3.56076 20.6104 3.89288 21.3588 4.64124C22.1071 5.38961 22.4392 6.33855 22.5969 7.51098C22.75 8.65018 22.75 10.1058 22.75 11.9435V14.0564C22.75 15.8941 22.75 17.3498 22.5969 18.489C22.4392 19.6614 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6614 22.4392 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0565 22.75H9.94359C8.10585 22.75 6.65018 22.75 5.51098 22.5969C4.33856 22.4392 3.38961 22.1071 2.64124 21.3588C1.89288 20.6104 1.56076 19.6614 1.40314 18.489C1.24997 17.3498 1.24998 15.8942 1.25 14.0564V11.9436C1.24998 10.1058 1.24997 8.65019 1.40314 7.51098C1.56076 6.33855 1.89288 5.38961 2.64124 4.64124C3.38961 3.89288 4.33856 3.56076 5.51098 3.40313C5.7439 3.37182 5.99006 3.34691 6.25 3.32709V2.5C6.25 2.08579 6.58579 1.75 7 1.75ZM5.71085 4.88976C4.70476 5.02502 4.12511 5.27869 3.7019 5.7019C3.27869 6.12511 3.02502 6.70476 2.88976 7.71085C2.86685 7.88123 2.8477 8.06061 2.83168 8.25H21.1683C21.1523 8.06061 21.1331 7.88124 21.1102 7.71085C20.975 6.70476 20.7213 6.12511 20.2981 5.7019C19.8749 5.27869 19.2952 5.02502 18.2892 4.88976C17.2615 4.75159 15.9068 4.75 14 4.75H10C8.09318 4.75 6.73851 4.75159 5.71085 4.88976ZM2.75 12C2.75 11.146 2.75032 10.4027 2.76309 9.75H21.2369C21.2497 10.4027 21.25 11.146 21.25 12V14C21.25 15.9068 21.2484 17.2615 21.1102 18.2892C20.975 19.2952 20.7213 19.8749 20.2981 20.2981C19.8749 20.7213 19.2952 20.975 18.2892 21.1102C17.2615 21.2484 15.9068 21.25 14 21.25H10C8.09318 21.25 6.73851 21.2484 5.71085 21.1102C4.70476 20.975 4.12511 20.7213 3.7019 20.2981C3.27869 19.8749 3.02502 19.2952 2.88976 18.2892C2.75159 17.2615 2.75 15.9068 2.75 14V12Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function InboxIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0574C22.75 12.3718 22.75 12.6769 22.7495 12.9731C22.7498 12.982 22.75 12.991 22.75 13C22.75 13.0099 22.7498 13.0197 22.746 14.8816C22.7225 16.3793 22.5603 17.5863C22.366 19.031 21.9607 20.1711 21.0659 21.0659C20.1711 21.9607 19.031 22.366 17.5863 22.5603C16.1748 22.75 14.3658 22.75 12.0574 22.75H11.9426C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.03933 20.1711 1.63399 19.031 1.43975 17.5863C1.27747 16.3793 1.25397 14.8816 1.25057 13.0295C1.25 13 1.25047 12.9731 1.25 12.6769V11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM2.7535 13.75C2.76294 15.2526 2.79778 16.43 2.92637 17.3864C3.09825 18.6648 3.42514 19.4355 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62177 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.5749 19.4355 20.9018 18.6648 21.0736 17.3864C21.2022 16.43 21.2371 15.2526 21.2465 13.75H18.8397C17.8659 13.75 17.6113 13.766 17.3975 13.8644C17.1838 13.9627 17.0059 14.1456 16.3722 14.8849L15.7667 15.5913C15.7372 15.6257 15.7082 15.6597 15.6794 15.6933C15.1773 16.2803 14.7796 16.7453 14.2292 16.9984C13.6789 17.2515 13.067 17.2509 12.2945 17.2501C12.2503 17.25 12.2056 17.25 12.1603 17.25H11.8397C11.7944 17.25 11.7497 17.25 11.7055 17.2501C10.933 17.2509 10.3211 17.2515 9.77076 16.9984C9.22039 16.7453 8.82271 16.2803 8.32059 15.6933C8.23327 15.5913 8.26275 15.5627 8.23327 15.5913L7.62784 14.8849C6.9941 14.1456 6.81622 13.9627 6.60245 13.8644C6.38869 13.766 6.13407 13.75 5.16026 13.75H2.7535ZM21.25 12.25H18.8397C18.7944 12.25 18.7497 12.25 18.7055 12.2499C17.933 12.2491 17.3211 12.2485 16.7708 12.5016C16.2204 12.7547 15.8227 13.2197 15.3206 13.8067C15.2918 13.8403 15.2628 13.8743 15.2333 13.9087L14.6278 14.6151C13.9941 15.3544 13.8162 15.5373 13.6025 15.6356C13.3887 15.734 13.1341 15.75 12.1603 15.75H11.8397C10.8659 15.75 10.6113 15.734 10.3975 15.6356C10.1838 15.5373 10.0059 15.3544 9.37216 14.6151L8.76673 13.9087C8.73725 13.8743 8.70816 13.8403 8.67941 13.8067C8.17729 13.2197 7.77961 12.7547 7.22924 12.5016C6.67886 12.2485 6.06705 12.2491 5.29454 12.2499C5.25031 12.25 5.20556 12.25 5.16026 12.25H2.75001C2.75 12.1675 2.75 12.0842 2.75 12C2.75 9.62177 2.75159 7.91356 2.92637 6.61358C3.09825 5.33517 3.42514 4.56445 3.9948 3.9948C4.56445 3.42514 5.33517 3.09825 6.61358 2.92637C7.91356 2.75159 9.62177 2.75 12 2.75C14.3782 2.75 16.0864 2.75159 17.3864 2.92637C18.6648 3.09825 19.4355 3.42514 20.0052 3.9948C20.5749 4.56445 20.9018 5.33517 21.0736 6.61358C21.2484 7.91356 21.25 9.62177 21.25 12C21.25 12.0842 21.25 12.1675 21.25 12.25Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function FolderIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M6.85929 1.25001C6.88904 1.25001 6.91919 1.25002 6.94976 1.25002L6.98675 1.25001C7.33818 1.24999 7.56433 1.24998 7.78542 1.27065C8.7367 1.35961 9.63905 1.73337 10.3746 2.34313C10.5456 2.48485 10.7055 2.64477 10.954 2.89329L11.5303 3.46969C12.3761 4.3154 12.7012 4.6311 13.0768 4.84005C13.2948 4.96134 13.526 5.05713 13.766 5.12552C14.1793 5.24333 14.6324 5.25002 15.8284 5.25002L16.253 5.25002C17.526 5.25 18.5521 5.24998 19.364 5.35206C20.2054 5.45784 20.9204 5.68358 21.5077 6.21185C21.6061 6.30032 21.6997 6.39394 21.7882 6.49231C22.3165 7.07965 22.5422 7.79459 22.648 8.63601C22.75 9.4479 22.75 10.4741 22.75 11.747V14.0564C22.75 15.8942 22.75 17.3498 22.5969 18.489C22.4393 19.6615 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6615 22.4393 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0564 22.75H9.94361C8.10584 22.75 6.65021 22.75 5.51099 22.5969C4.33857 22.4393 3.38962 22.1071 2.64126 21.3588C1.8929 20.6104 1.56078 19.6615 1.40315 18.489C1.24999 17.3498 1.25 15.8942 1.25002 14.0564L1.25002 6.94976C1.25002 6.91919 1.25001 6.88904 1.25001 6.85929C1.2499 6.06338 1.24982 5.55685 1.33237 5.11935C1.6949 3.19788 3.19788 1.6949 5.11935 1.33237C5.55685 1.24982 6.06338 1.2499 6.85929 1.25001ZM6.94976 2.75002C6.03312 2.75002 5.67873 2.75329 5.39746 2.80636C4.08277 3.05441 3.05441 4.08277 2.80636 5.39746C2.75329 5.67873 2.75002 6.03312 2.75002 6.94976V14C2.75002 15.9068 2.75161 17.2615 2.88978 18.2892C3.02504 19.2953 3.27871 19.8749 3.70192 20.2981C4.12513 20.7213 4.70478 20.975 5.71087 21.1103C6.73853 21.2484 8.0932 21.25 10 21.25H14C15.9068 21.25 17.2615 21.2484 18.2892 21.1103C19.2953 20.975 19.8749 20.7213 20.2981 20.2981C20.7213 19.8749 20.975 19.2953 21.1103 18.2892C21.2484 17.2615 21.25 15.9068 21.25 14V11.7979C21.25 10.4621 21.2486 9.5305 21.1597 8.82312C21.0731 8.13448 20.9141 7.76356 20.6729 7.49539C20.6198 7.43637 20.5637 7.3802 20.5046 7.32712C20.2365 7.08592 19.8656 6.92692 19.1769 6.84034C18.4695 6.75141 17.538 6.75002 16.2021 6.75002H15.8284C15.7912 6.75002 15.7545 6.75002 15.7182 6.75003C14.6702 6.75025 13.9944 6.75038 13.3548 6.56806C13.0041 6.46811 12.6661 6.32811 12.3475 6.15083C11.7663 5.82747 11.2885 5.3495 10.5476 4.60833C10.522 4.58265 10.496 4.55666 10.4697 4.53035L9.91943 3.98009C9.63616 3.69682 9.52778 3.58951 9.41731 3.49793C8.91403 3.08073 8.29664 2.825 7.64576 2.76413C7.50289 2.75077 7.35038 2.75002 6.94976 2.75002ZM12.25 10C12.25 9.5858 12.5858 9.25002 13 9.25002H18C18.4142 9.25002 18.75 9.5858 18.75 10C18.75 10.4142 18.4142 10.75 18 10.75H13C12.5858 10.75 12.25 10.4142 12.25 10Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function SunIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V3C12.75 3.41421 12.4142 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3V2C11.25 1.58579 11.5858 1.25 12 1.25ZM4.39861 4.39861C4.6915 4.10572 5.16638 4.10572 5.45927 4.39861L5.85211 4.79145C6.145 5.08434 6.145 5.55921 5.85211 5.85211C5.55921 6.145 5.08434 6.145 4.79145 5.85211L4.39861 5.45927C4.10572 5.16638 4.10572 4.6915 4.39861 4.39861ZM19.6011 4.39887C19.894 4.69176 19.894 5.16664 19.6011 5.45953L19.2083 5.85237C18.9154 6.14526 18.4405 6.14526 18.1476 5.85237C17.8547 5.55947 17.8547 5.0846 18.1476 4.79171L18.5405 4.39887C18.8334 4.10598 19.3082 4.10598 19.6011 4.39887ZM12 6.75C9.1005 6.75 6.75 9.1005 6.75 12C6.75 14.8995 9.1005 17.25 12 17.25C14.8995 17.25 17.25 14.8995 17.25 12C17.25 9.1005 14.8995 6.75 12 6.75ZM5.25 12C5.25 8.27208 8.27208 5.25 12 5.25C15.7279 5.25 18.75 8.27208 18.75 12C18.75 15.7279 15.7279 18.75 12 18.75C8.27208 18.75 5.25 15.7279 5.25 12ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H3C3.41421 11.25 3.75 11.5858 3.75 12C3.75 12.4142 3.41421 12.75 3 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM20.25 12C20.25 11.5858 20.5858 11.25 21 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.4142 12.75 22 12.75H21C20.5858 12.75 20.25 12.4142 20.25 12ZM18.1476 18.1476C18.4405 17.8547 18.9154 17.8547 19.2083 18.1476L19.6011 18.5405C19.894 18.8334 19.894 19.3082 19.6011 19.6011C19.3082 19.894 18.8334 19.894 18.5405 19.6011L18.1476 19.2083C17.8547 18.9154 17.8547 18.4405 18.1476 18.1476ZM5.85211 18.1479C6.145 18.4408 6.145 18.9157 5.85211 19.2086L5.45927 19.6014C5.16638 19.8943 4.6915 19.8943 4.39861 19.6014C4.10572 19.3085 4.10572 18.8336 4.39861 18.5407L4.79145 18.1479C5.08434 17.855 5.55921 17.855 5.85211 18.1479ZM12 20.25C12.4142 20.25 12.75 20.5858 12.75 21V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V21C11.25 20.5858 11.5858 20.25 12 20.25Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function FireIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12.4803 2.76059C13.2315 2.30898 14.208 2.28697 15.0418 2.88997C17.7027 4.81436 20.75 8.2447 20.75 13.1111C20.75 16.9175 19.1146 19.3652 17.0325 20.835C15.7533 21.738 14.3232 22.2609 13.0331 22.5258C12.5577 22.6872 12.1 22.75 11.7333 22.75C11.6306 22.75 11.521 22.746 11.4058 22.7374C11.242 22.746 11.0843 22.75 10.9333 22.75C9.47245 22.75 7.31363 22.2658 5.50409 20.806C3.6625 19.3203 2.25 16.8771 2.25 13.1111C2.25 10.0344 3.87536 7.9652 5.40507 6.79826C6.04192 6.31244 6.80509 6.30435 7.40898 6.63407C7.99302 6.95295 8.40231 7.56762 8.47627 8.28958L8.5621 9.12741C8.59508 9.44943 8.75974 9.71671 8.93177 9.84683C9.0125 9.90789 9.07802 9.92706 9.12163 9.93034C9.15843 9.93311 9.21562 9.92815 9.30063 9.8729C9.95369 9.44849 10.4496 8.68506 10.7833 7.78664C11.1138 6.89653 11.25 5.96663 11.25 5.33336V5.00973C11.25 4.03696 11.7444 3.20294 12.4803 2.76059ZM12.6314 21.0766C12.2057 21.1595 11.7992 21.2101 11.4272 21.2338C10.9433 21.1848 10.3335 21.0197 9.82415 20.6704C9.23942 20.2694 8.75 19.6065 8.75 18.4445C8.75 17.0422 9.61756 15.9772 10.5398 15.295C10.5423 15.3051 10.5441 15.3178 10.5441 15.3334V15.3443C10.5441 15.572 10.5441 15.9166 10.587 16.275C10.6296 16.6315 10.7214 17.0698 10.9474 17.4553C11.1049 17.724 11.3471 17.9513 11.6758 18.0481C11.9989 18.1433 12.3068 18.0833 12.5468 17.97C13.0028 17.7545 13.3288 17.3047 13.4657 16.8303C13.8778 17.1659 14.25 17.6907 14.25 18.4445C14.25 19.648 13.8025 20.3145 13.3124 20.6986C13.0975 20.867 12.8624 20.99 12.6314 21.0766ZM15.5176 20.0225C15.7384 19.8964 15.9557 19.759 16.1675 19.6095C17.8631 18.4126 19.25 16.4159 19.25 13.1111C19.25 8.92389 16.6279 5.88822 14.1627 4.10543C13.838 3.8706 13.5133 3.88975 13.2531 4.04619C12.9775 4.21188 12.75 4.5528 12.75 5.00973V5.33336C12.75 6.14196 12.5831 7.24891 12.1894 8.30886C11.7988 9.3605 11.1494 10.4604 10.118 11.1306C9.38388 11.6077 8.59212 11.4706 8.02694 11.0432C7.49344 10.6397 7.14144 9.97856 7.0699 9.28027L6.98408 8.44244C6.95826 8.19039 6.82167 8.02241 6.69016 7.95061C6.5785 7.88965 6.45645 7.88284 6.31484 7.99087C5.04758 8.9576 3.75 10.6247 3.75 13.1111C3.75 16.4562 4.98195 18.4575 6.44591 19.6385C6.84345 19.9592 7.263 20.2233 7.68701 20.4381C7.41384 19.8888 7.25 19.2282 7.25 18.4445C7.25 16.341 8.57017 14.8717 9.69806 14.0521C10.2109 13.6795 10.8273 13.6907 11.2979 13.9755C11.7522 14.2504 12.0441 14.7589 12.0441 15.3334C12.0441 15.5682 12.0448 15.8335 12.0763 16.0969C12.0815 16.14 12.0873 16.1814 12.0938 16.221C12.254 15.8525 12.5484 15.5666 12.897 15.4155C13.3152 15.2342 13.847 15.2379 14.2912 15.5719C14.9907 16.098 15.75 17.0424 15.75 18.4445C15.75 19.0383 15.666 19.5627 15.5176 20.0225Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function CheckIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M21.5303 5.46967C21.8232 5.76256 21.8232 6.23744 21.5303 6.53033L9.53033 18.5303C9.23744 18.8232 8.76256 18.8232 8.46967 18.5303L2.46967 12.5303C2.17678 12.2374 2.17678 11.7626 2.46967 11.4697C2.76256 11.1768 3.23744 11.1768 3.53033 11.4697L9 16.9393L20.4697 5.46967C20.7626 5.17678 21.2374 5.17678 21.5303 5.46967Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function ShieldIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M8.72339 2.05112C10.1673 1.55658 11.0625 1.25 12 1.25C12.9375 1.25 13.8327 1.55658 15.2766 2.05112L16.004 2.30013C17.4854 2.8072 18.6286 3.19852 19.447 3.53099C19.8592 3.69846 20.2136 3.86067 20.499 4.02641C20.7737 4.1859 21.0492 4.38484 21.2364 4.65154C21.4214 4.91516 21.5171 5.23924 21.5772 5.55122C21.6397 5.87556 21.6774 6.26464 21.7017 6.71136C21.75 7.5984 21.75 8.81361 21.75 10.3898V11.9914C21.75 18.0924 17.142 21.0175 14.4017 22.2146L14.3746 22.2264C14.0348 22.3749 13.7154 22.5144 13.3484 22.6084C12.9609 22.7076 12.5493 22.75 12 22.75C11.4507 22.75 11.0391 22.7076 10.6516 22.6084C10.2846 22.5144 9.96523 22.3749 9.62543 22.2264L9.59833 22.2146C6.85803 21.0175 2.25 18.0924 2.25 11.9914V10.3899C2.25 8.81378 2.25 7.59836 2.2983 6.71136C2.32262 6.26464 2.36031 5.87556 2.42281 5.55122C2.48293 5.23924 2.5786 4.91516 2.76363 4.65154C2.95082 4.38484 3.22634 4.1859 3.50098 4.02641C3.78637 3.86067 4.14078 3.69846 4.55303 3.53099C5.3714 3.19852 6.51462 2.8072 7.99595 2.30014L8.72339 2.05112ZM11.25 2.83792C10.7525 2.94604 10.1152 3.16015 9.08062 3.5143L8.5078 3.71037C6.99521 4.22814 5.8921 4.60605 5.11759 4.92069C4.731 5.07774 4.4509 5.20935 4.25429 5.32353C4.15722 5.3799 4.09034 5.42642 4.04567 5.46273C4.0078 5.49351 3.99336 5.51095 3.99129 5.51349C3.98936 5.51663 3.97693 5.5374 3.95943 5.58654C3.93944 5.64265 3.91729 5.72309 3.89571 5.83506C3.85204 6.06169 3.81894 6.37301 3.79608 6.79292C3.75473 7.55226 3.75048 8.58298 3.75005 9.95941L11.25 7.45943V2.83792ZM12.75 2.83792V7.45943L20.25 9.95941C20.2495 8.58298 20.2453 7.55226 20.2039 6.79292C20.1811 6.37301 20.148 6.06169 20.1043 5.83506C20.0827 5.72309 20.0606 5.64265 20.0406 5.58654C20.0231 5.53737 20.0106 5.5166 20.0087 5.51348C20.0066 5.51092 19.9922 5.49349 19.9543 5.46273C19.9097 5.42642 19.8428 5.3799 19.7457 5.32353C19.5491 5.20935 19.269 5.07774 18.8824 4.92069C18.1079 4.60605 17.0048 4.22814 15.4922 3.71037L14.9194 3.5143C13.8848 3.16015 13.2475 2.94604 12.75 2.83792ZM11.25 9.04057L3.75 11.5406V11.9914C3.75 17.1665 7.6199 19.7135 10.1988 20.84C10.5703 21.0023 10.7848 21.0941 11.0236 21.1552C11.0931 21.173 11.1672 21.1888 11.25 21.2021V9.04057ZM12.75 21.2021V9.04057L20.25 11.5406V11.9914C20.25 17.1665 16.3801 19.7135 13.8012 20.84C13.4297 21.0023 13.2152 21.0941 12.9764 21.1552C12.9069 21.173 12.8328 21.1888 12.75 21.2021Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
-
-function MicIcon({ className = 'w-5 h-5' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M6.25 8C6.25 4.82436 8.82436 2.25 12 2.25C15.1756 2.25 17.75 4.82436 17.75 8V11C17.75 14.1756 15.1756 16.75 12 16.75C8.82436 16.75 6.25 14.1756 6.25 11V8ZM12 3.75C9.65279 3.75 7.75 5.65279 7.75 8V11C7.75 13.3472 9.65279 15.25 12 15.25C14.0913 15.25 15.8298 13.7395 16.184 11.75L13 11.75C12.5858 11.75 12.25 11.4142 12.25 11C12.25 10.5858 12.5858 10.25 13 10.25L16.25 10.25V8.75H13C12.5858 8.75 12.25 8.41421 12.25 8C12.25 7.58579 12.5858 7.25 13 7.25H16.184C15.8298 5.26049 14.0913 3.75 12 3.75ZM4 9.25C4.41421 9.25 4.75 9.58579 4.75 10V11C4.75 15.0041 7.99594 18.25 12 18.25C16.0041 18.25 19.25 15.0041 19.25 11V10C19.25 9.58579 19.5858 9.25 20 9.25C20.4142 9.25 20.75 9.58579 20.75 10V11C20.75 15.5798 17.2314 19.3379 12.75 19.7183V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V19.7183C6.7686 19.3379 3.25 15.5798 3.25 11V10C3.25 9.58579 3.58579 9.25 4 9.25Z"
+        d="M15 1.25H10.9436C9.10583 1.24998 7.65019 1.24997 6.51098 1.40314C5.33856 1.56076 4.38961 1.89288 3.64124 2.64124C2.89288 3.38961 2.56076 4.33856 2.40314 5.51098C2.24997 6.65019 2.24998 8.10582 2.25 9.94357V16C2.25 17.8722 3.62205 19.424 5.41551 19.7047C5.55348 20.4687 5.81753 21.1208 6.34835 21.6517C6.95027 22.2536 7.70814 22.5125 8.60825 22.6335C9.47522 22.75 10.5775 22.75 11.9451 22.75H15.0549C16.4225 22.75 17.5248 22.75 18.3918 22.6335C19.2919 22.5125 20.0497 22.2536 20.6517 21.6517C21.2536 21.0497 21.5125 20.2919 21.6335 19.3918C21.75 18.5248 21.75 17.4225 21.75 16.0549V10.9451C21.75 9.57754 21.75 8.47522 21.6335 7.60825C21.5125 6.70814 21.2536 5.95027 20.6517 5.34835C20.1208 4.81753 19.4687 4.55348 18.7047 4.41551C18.424 2.62205 16.8722 1.25 15 1.25ZM17.1293 4.27117C16.8265 3.38623 15.9876 2.75 15 2.75H11C9.09318 2.75 7.73851 2.75159 6.71085 2.88976C5.70476 3.02502 5.12511 3.27869 4.7019 3.7019C4.27869 4.12511 4.02502 4.70476 3.88976 5.71085C3.75159 6.73851 3.75 8.09318 3.75 10V16C3.75 16.9876 4.38624 17.8265 5.27117 18.1293C5.24998 17.5194 5.24999 16.8297 5.25 16.0549V10.9451C5.24998 9.57754 5.24996 8.47522 5.36652 7.60825C5.48754 6.70814 5.74643 5.95027 6.34835 5.34835C6.95027 4.74643 7.70814 4.48754 8.60825 4.36652C9.47522 4.24996 10.5775 4.24998 11.9451 4.25H15.0549C15.8297 4.24999 16.5194 4.24998 17.1293 4.27117ZM7.40901 6.40901C7.68577 6.13225 8.07435 5.9518 8.80812 5.85315C9.56347 5.75159 10.5646 5.75 12 5.75H15C16.4354 5.75 17.4365 5.75159 18.1919 5.85315C18.9257 5.9518 19.3142 6.13225 19.591 6.40901C19.8678 6.68577 20.0482 7.07435 20.1469 7.80812C20.2484 8.56347 20.25 9.56458 20.25 11V16C20.25 17.4354 20.2484 18.4365 20.1469 19.1919C20.0482 19.9257 19.8678 20.3142 19.591 20.591C19.3142 20.8678 18.9257 21.0482 18.1919 21.1469C17.4365 21.2484 16.4354 21.25 15 21.25H12C10.5646 21.25 9.56347 21.2484 8.80812 21.1469C8.07435 21.0482 7.68577 20.8678 7.40901 20.591C7.13225 20.3142 6.9518 19.9257 6.85315 19.1919C6.75159 18.4365 6.75 17.4354 6.75 16V11C6.75 9.56458 6.75159 8.56347 6.85315 7.80812C6.9518 7.07435 7.13225 6.68577 7.40901 6.40901Z"
         fill="currentColor"
       />
     </svg>
