@@ -1,21 +1,23 @@
 'use client';
 
 /* ============================================================================
-   Organizer · Landing Page (Dark Titanium Studio)
-   Dirección oficial seleccionada con Impeccable:
-     - Réplica exacta de la propuesta visual (dark-titanium.png)
-     - Navbar cápsula flotante con botón Early Access
-     - Titular y subtítulo limpios, centrados y sin ruido
-     - iPhone 16 Pro en Titanio Oscuro con display OLED limpio (#phone-video-slot)
-     - Flancos: orbe de Siri con latencia <1.2s y tarjeta push iOS de las 8:00 AM
-     - Bento Grid de 3 tarjetas:
-         1. Captura en 1s con Audio Waveform
-         2. Bloques de Foco con timeline y bloques de color
-         3. Bajo Estrés con medidor circular y rostro de calma (·‿·)
-     - Animaciones fluidas GSAP con respeto a prefers-reduced-motion
+   Organizer · Landing Page Completa (Dark Titanium Studio)
+   Creado bajo la directiva de la skill Impeccable (Craft Floor & Out-of-Distribution):
+     - Mantiene 100% la maqueta visual aprobada (dark-titanium.png)
+     - Navbar cápsula suspendida con navegación interna fluida
+     - Hero monumental centrado, iPhone 16 Pro (#phone-video-slot vacío para video)
+     - Tarjetas flotantes: orbe Siri (<1.2s) y notificación push 8:00 AM
+     - Bento Grid de 3 pilares con gráficos vivos (Waveform, Timeline, Medidor de Calma)
+     - Deep Dive 1: "Push, no pull" con mockup interactivo de pantalla de bloqueo de iOS
+     - Deep Dive 2: "Captura <1.2s" con desglose paso a paso del pipeline de Siri a Postgres
+     - Deep Dive 3: "Cero Culpa" con simulador interactivo de decisión de "Lo de ayer" y comodines
+     - Los 4 Módulos del Sistema (Inicio, Semana, Tareas, Recursos)
+     - Acordeón FAQ en Titanio Oscuro
+     - Llamada a la acción final con Google Auth
+     - Footer de ingeniería completo con notas de stack y zona horaria
    ========================================================================= */
 
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -32,6 +34,11 @@ const WAVEFORM_HEIGHTS = [
 
 export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Estados interactivos para las micro-demos de la página
+  const [notificationView, setNotificationView] = useState<'compact' | 'expanded'>('expanded');
+  const [yesterdayAction, setYesterdayAction] = useState<'none' | 'today' | 'another' | 'removed'>('none');
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   // GSAP Choreography
   useGSAP(
@@ -113,6 +120,20 @@ export function LandingPage() {
         stagger: 0.12,
         ease: 'power2.out',
       });
+
+      // 7. Revelado de secciones profundas
+      gsap.from('.gsap-deep-section', {
+        scrollTrigger: {
+          trigger: '.gsap-deep-section',
+          start: 'top 85%',
+          once: true,
+        },
+        y: 32,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power2.out',
+      });
     },
     { scope: containerRef }
   );
@@ -125,23 +146,41 @@ export function LandingPage() {
       {/* ====================================================================
           1. HEADER / NAVBAR CÁPSULA FLOTANTE
           ==================================================================== */}
-      <header className="max-w-4xl mx-auto pt-6 px-4">
-        <nav className="w-full rounded-full bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/80 px-5 py-2.5 flex items-center justify-between shadow-2xl">
+      <header className="max-w-4xl mx-auto pt-6 px-4 sticky top-4 z-50">
+        <nav className="w-full rounded-full bg-zinc-900/75 backdrop-blur-xl border border-zinc-800/80 px-5 py-2.5 flex items-center justify-between shadow-2xl">
           {/* Logo y Marca */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="w-7 h-7 rounded-lg bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-300 group-hover:text-emerald-400 group-hover:border-emerald-500/40 transition-colors">
               <OrganizerIcon className="w-4 h-4" />
             </div>
             <span className="text-white font-semibold text-sm tracking-tight">Organizer</span>
           </Link>
 
+          {/* Enlaces de Navegación Rápida (Desktop) */}
+          <div className="hidden md:flex items-center gap-6 text-xs text-zinc-400">
+            <a href="#filosofia" className="hover:text-white transition-colors">
+              Filosofía
+            </a>
+            <a href="#notificacion" className="hover:text-white transition-colors">
+              Push diario
+            </a>
+            <a href="#modulos" className="hover:text-white transition-colors">
+              Módulos
+            </a>
+            <a href="#faq" className="hover:text-white transition-colors">
+              Preguntas
+            </a>
+          </div>
+
           {/* Botón de Acción Principal (Pill blanco como en la comp) */}
-          <Link
-            href="/entrar"
-            className="px-4 py-1.5 rounded-full bg-white text-zinc-950 font-medium text-xs hover:bg-zinc-200 transition-colors shadow-sm active:scale-95"
-          >
-            Early Access
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/entrar"
+              className="px-4 py-1.5 rounded-full bg-white text-zinc-950 font-medium text-xs hover:bg-zinc-200 transition-colors shadow-sm active:scale-95 shrink-0"
+            >
+              Early Access
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -152,7 +191,7 @@ export function LandingPage() {
         <h1 className="gsap-hero-item text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white leading-[1.12]">
           Tu día resuelto antes de que abras la app
         </h1>
-        <p className="gsap-hero-item text-zinc-400 text-base sm:text-lg md:text-xl font-normal mt-4 max-w-xl mx-auto">
+        <p className="gsap-hero-item text-zinc-400 text-base sm:text-lg md:text-xl font-normal mt-4 max-w-xl mx-auto leading-relaxed">
           El asistente silencioso para estudiantes con TDAH.
         </p>
       </section>
@@ -350,49 +389,453 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          5. ACCESO Y LLAMADA A LA ACCIÓN
+          5. DEEP DIVE 1: PUSH, NO PULL (LA NOTIFICACIÓN ES EL PRODUCTO)
           ==================================================================== */}
-      <section className="max-w-2xl mx-auto mt-20 sm:mt-28 text-center px-4">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-          Tu semestre en calma, sin deuda invisible.
-        </h2>
-        <p className="text-zinc-400 text-sm sm:text-base mt-3 max-w-md mx-auto">
-          Push, no pull. Una notificación matutina con lo esencial. Cero configuraciones complejas.
-        </p>
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            href="/entrar"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-lg hover:shadow-white/10 active:scale-95"
-          >
-            <GoogleIcon className="w-4 h-4" />
-            <span>Empezar con Google</span>
-          </Link>
-          <Link
-            href="/atajo"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 text-sm font-medium transition-colors"
-          >
-            <span>Instalar Atajo de Siri</span>
-          </Link>
+      <section id="notificacion" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Columna Izquierda: Filosofía */}
+          <div className="lg:col-span-6 space-y-4">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+              La notificación lleva el contenido dentro
+            </h2>
+            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+              El estudiante con TDAH nunca vuelve a abrir apps por iniciativa propia: ese es exactamente su patrón de fracaso. Por eso, en Organizer la notificación es el producto, no un adorno.
+            </p>
+            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+              Nunca recibirás un mensaje genérico como <em className="text-zinc-200">«Tienes 3 pendientes hoy»</em>. Cada mañana a las 8:00 AM recibes un briefing completo que puedes leer en 2 segundos sin desbloquear el teléfono.
+            </p>
+
+            <div className="pt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setNotificationView('expanded')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  notificationView === 'expanded'
+                    ? 'bg-zinc-800 text-white border border-zinc-700'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Vista Detallada
+              </button>
+              <button
+                type="button"
+                onClick={() => setNotificationView('compact')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  notificationView === 'compact'
+                    ? 'bg-zinc-800 text-white border border-zinc-700'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Vista Bloqueo
+              </button>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Mockup Interactivo de Pantalla de Bloqueo de iOS */}
+          <div className="lg:col-span-6 flex justify-center">
+            <div className="w-full max-w-sm rounded-[36px] bg-zinc-950 p-4 border border-zinc-800 shadow-2xl relative overflow-hidden">
+              {/* Reloj Apple Lockscreen */}
+              <div className="text-center pt-3 pb-6">
+                <span className="text-[11px] font-medium text-zinc-400 block tracking-wide">
+                  Lunes, 12 de octubre
+                </span>
+                <span className="text-5xl font-light tracking-tight text-white block mt-0.5">
+                  08:00
+                </span>
+              </div>
+
+              {/* Notificación interactiva */}
+              <div className="bg-zinc-900/90 backdrop-blur-xl border border-zinc-700/60 rounded-2xl p-4 shadow-xl transition-all">
+                <div className="flex items-center justify-between text-xs text-zinc-400 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-zinc-800 flex items-center justify-center text-emerald-400">
+                      <OrganizerIcon className="w-2.5 h-2.5" />
+                    </div>
+                    <span className="font-semibold text-white text-[11px]">Organizer</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-500">ahora</span>
+                </div>
+
+                <p className="text-xs font-bold text-white mb-1.5">
+                  Hoy: 2 clases · 2 entregas prioritarias
+                </p>
+
+                {notificationView === 'expanded' ? (
+                  <div className="space-y-1.5 text-[11px] text-zinc-300 pt-1 border-t border-zinc-800/80">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sky-400 font-medium">08:00 Cálculo Diferencial</span>
+                      <span className="text-zinc-500">Aula 302</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-emerald-400 font-medium">11:00 Entrega Informe Física</span>
+                      <span className="text-zinc-500">Lab Central</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-amber-400 font-medium">15:00 Sesión de Estudio Álgebra</span>
+                      <span className="text-zinc-500">Biblioteca</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-400 font-medium">18:00 Entrenamiento Gym</span>
+                      <span className="text-zinc-500">45m</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-zinc-300 line-clamp-1">
+                    Cálculo 8:00 · Informe Física 11:00 · Estudio Álgebra 15:00 · Gym 18:00
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-center pb-1">
+                <div className="w-28 h-1 bg-zinc-800 rounded-full" />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ====================================================================
-          6. FOOTER DISCRETO
+          6. DEEP DIVE 2: CAPTURA EN 0 FRICCIÓN (<1.2S CON SIRI)
+          ==================================================================== */}
+      <section id="filosofia" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
+            Capturar no puede costar fricción mental
+          </h2>
+          <p className="text-zinc-400 text-sm sm:text-base mt-3 leading-relaxed">
+            Tu cerebro tiene ideas y fechas en momentos inesperados. Si la app exige categoría, fecha o carpeta antes de guardar, la tarea se pierde en el camino.
+          </p>
+        </div>
+
+        {/* Pipeline Visual en 3 Fases */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Fase 1 */}
+          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
+              <MicIcon className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-semibold text-white mb-2">1. Dictado natural</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+              Desde tus AirPods o la pantalla de bloqueo:
+            </p>
+            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-emerald-300">
+              «Oye Siri, anota parcial de cálculo el próximo martes a las 8»
+            </div>
+          </div>
+
+          {/* Fase 2 */}
+          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
+              <OrganizerIcon className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-semibold text-white mb-2">2. Parser semántico</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+              El servidor detecta automáticamente los metadatos:
+            </p>
+            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-zinc-300 space-y-1">
+              <div><span className="text-zinc-500">Tipo:</span> Parcial / Examen</div>
+              <div><span className="text-zinc-500">Fecha:</span> Próximo martes</div>
+              <div><span className="text-zinc-500">Hora:</span> 08:00 AM</div>
+            </div>
+          </div>
+
+          {/* Fase 3 */}
+          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
+              <CheckIcon className="w-4 h-4" />
+            </div>
+            <h3 className="text-base font-semibold text-white mb-2">3. Cero clasificación</h3>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+              Queda en tu base de datos protegida con RLS:
+            </p>
+            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-300 leading-snug">
+              Se agenda en tu semana y aparecerá en el push de ese día sin que hayas abierto la app.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          7. DEEP DIVE 3: CERO CULPA & PROTECCIÓN DE RACHA
+          ==================================================================== */}
+      <section className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Mockup Interactivo: Widget "Lo de ayer" */}
+          <div className="lg:col-span-6 flex justify-center order-2 lg:order-1">
+            <div className="w-full max-w-md p-6 rounded-3xl bg-zinc-950 border border-zinc-800/80 shadow-2xl">
+              <div className="flex items-center justify-between text-xs text-zinc-400 mb-4 pb-3 border-b border-zinc-850">
+                <span className="font-semibold text-white">Lo de ayer</span>
+                <span className="font-mono text-emerald-400">2 comodines activos</span>
+              </div>
+
+              {yesterdayAction === 'none' ? (
+                <div>
+                  <p className="text-xs text-zinc-400 mb-3">
+                    Quedó pendiente del día anterior sin reproches:
+                  </p>
+                  <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 mb-4">
+                    <span className="text-sm font-medium text-white block">
+                      Revisar ejercicios de termodinámica
+                    </span>
+                    <span className="text-[11px] text-zinc-500 mt-0.5 block">
+                      Programada originalmente para ayer 16:00
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-zinc-400 mb-2">Decide qué hacer hoy:</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setYesterdayAction('today')}
+                      className="py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium transition-all"
+                    >
+                      Hoy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setYesterdayAction('another')}
+                      className="py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium transition-all"
+                    >
+                      Otro día
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setYesterdayAction('removed')}
+                      className="py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium transition-all"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto mb-3">
+                    <CheckIcon className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-white mb-1">
+                    {yesterdayAction === 'today' && 'Movido al itinerario de hoy.'}
+                    {yesterdayAction === 'another' && 'Pospuesto para el fin de semana sin culpa.'}
+                    {yesterdayAction === 'removed' && 'Descartado limpiamente. Cero deuda.'}
+                  </p>
+                  <p className="text-xs text-zinc-400 mb-4">
+                    Tu racha sigue protegida por el comodín mensual.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setYesterdayAction('none')}
+                    className="text-xs text-zinc-500 hover:text-zinc-300 underline underline-offset-4"
+                  >
+                    Probar otra opción
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Filosofía Anti-Culpa */}
+          <div className="lg:col-span-6 space-y-4 order-1 lg:order-2">
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+              Una app que nunca te regaña ni acumula culpa
+            </h2>
+            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+              Las aplicaciones comunes acumulan números rojos, alertas vencidas y contadores crecientes. Para un cerebro con TDAH, esa deuda visual produce evasión inmediata y abandono.
+            </p>
+            <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+              En Organizer, si ayer no pudiste completar algo, la app no te reprocha nada. Te pregunta calmadamente al día siguiente con tres botones de decisión rápida: <strong className="text-white">Hoy</strong>, <strong className="text-white">Otro día</strong> o <strong className="text-white">Quitar</strong>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          8. LOS 4 MÓDULOS DE ORGANIZER
+          ==================================================================== */}
+      <section id="modulos" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
+            Cuatro módulos. Cero saturación.
+          </h2>
+          <p className="text-zinc-400 text-sm sm:text-base mt-3 leading-relaxed">
+            Cada módulo resuelve una necesidad concreta sin invadir a los demás.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Módulo 1: Inicio */}
+          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-3">
+                <SunIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">Inicio</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Cabe en una sola pantalla sin scroll. Tareas del día sin las clases mezcladas, lo de ayer y tu racha protegida.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Foco absoluto</span>
+          </div>
+
+          {/* Módulo 2: Semana */}
+          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sky-400 mb-3">
+                <CalendarIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">Semana</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Línea de tiempo con bloques horarios. Navega a semanas futuras para anticipar entregas y parciales sin agobio.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Perspectiva temporal</span>
+          </div>
+
+          {/* Módulo 3: Tareas */}
+          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-amber-400 mb-3">
+                <InboxIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">Tareas</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                La bandeja de entrada para lo anotado sin fecha fija. Organizable en carpetas limpias para clasificar cuando quieras.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Captura sin presión</span>
+          </div>
+
+          {/* Módulo 4: Recursos */}
+          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-purple-400 mb-3">
+                <BookOpenIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1.5">Recursos</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Herramientas, artículos y skills. Un espacio de biblioteca independiente que nunca te persigue ni genera push.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Consulta silenciosa</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          9. PREGUNTAS FRECUENTES (FAQ ACORDEÓN DARK TITANIUM)
+          ==================================================================== */}
+      <section id="faq" className="gsap-deep-section max-w-3xl mx-auto mt-24 sm:mt-32 px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
+            Preguntas frecuentes
+          </h2>
+          <p className="text-zinc-400 text-sm sm:text-base mt-2">
+            Todo lo que necesitas saber antes de empezar.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              q: '¿Por qué una PWA en iPhone y no una app en la App Store?',
+              a: 'Porque se instala directamente sin intermediarios, pesa menos de 5MB, actualiza al instante y soporta notificaciones Web Push nativas en iOS 16.4+ agregándola a tu pantalla de inicio.',
+            },
+            {
+              q: '¿Por qué no recibo una notificación por cada tarea individual?',
+              a: 'Las notificaciones continuas saturan la atención y generan ceguera de alertas en cerebros con TDAH. Organizer envía un único briefing condensado a las 8:00 AM para que tengas el día resuelto sin interrupciones.',
+            },
+            {
+              q: '¿Cómo funciona la captura por voz con Siri y Atajos?',
+              a: 'Instalas el Atajo oficial de Organizer con un solo tap. El atajo se conecta de forma segura a tu cuenta mediante un token personal único, permitiéndote dictar tareas desde tus AirPods o la pantalla de bloqueo en menos de 1.2 segundos.',
+            },
+            {
+              q: '¿Las clases del horario envían notificaciones push?',
+              a: 'No. Tus clases se muestran visualmente en el cronograma diario y en el calendario semanal, pero nunca mandan alertas individuales para no generar ruido innecesario.',
+            },
+            {
+              q: '¿Mis datos están seguros?',
+              a: 'Toda tu información vive en Postgres en Supabase con Row Level Security (RLS) estricto. Solo tu usuario autenticado puede leer y escribir tus datos personales.',
+            },
+          ].map((item, index) => {
+            const isOpen = openFaq === index;
+            return (
+              <div
+                key={index}
+                className="rounded-2xl bg-zinc-950 border border-zinc-800/80 overflow-hidden transition-all"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : index)}
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-zinc-900/40 transition-colors"
+                >
+                  <span className="text-sm font-semibold text-white">{item.q}</span>
+                  <ChevronDownIcon
+                    className={`w-4 h-4 text-zinc-400 transition-transform duration-200 shrink-0 ${
+                      isOpen ? 'rotate-180 text-emerald-400' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5 text-xs text-zinc-400 leading-relaxed border-t border-zinc-900 pt-3">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ====================================================================
+          10. ACCESO Y LLAMADA A LA ACCIÓN FINAL
+          ==================================================================== */}
+      <section className="gsap-deep-section max-w-3xl mx-auto mt-24 sm:mt-32 text-center px-4">
+        <div className="p-8 sm:p-12 rounded-3xl bg-zinc-950 border border-zinc-800 relative overflow-hidden shadow-2xl">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-emerald-500/15 blur-[90px] pointer-events-none -z-10" />
+
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
+            Tu semestre en calma, sin deuda invisible.
+          </h2>
+          <p className="text-zinc-400 text-sm sm:text-base mt-3 max-w-md mx-auto leading-relaxed">
+            Push, no pull. Una notificación matutina con lo esencial. Cero configuraciones complejas.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/entrar"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-lg hover:shadow-white/10 active:scale-95"
+            >
+              <GoogleIcon className="w-4 h-4" />
+              <span>Empezar con Google</span>
+            </Link>
+            <Link
+              href="/atajo"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 text-sm font-medium transition-colors"
+            >
+              <span>Instalar Atajo de Siri</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ====================================================================
+          11. FOOTER COMPLETO
           ==================================================================== */}
       <footer className="max-w-4xl mx-auto mt-24 pb-12 px-4 border-t border-zinc-800/80 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
         <div className="flex items-center gap-2">
           <OrganizerIcon className="w-4 h-4 text-zinc-400" />
           <span className="text-zinc-400 font-medium">Organizer</span>
-          <span>· Hecho para iPhone. Push, no pull.</span>
+          <span>· Hecho para iPhone (PWA). Push, no pull.</span>
         </div>
-        <p>© {new Date().getFullYear()} Organizer. Todos los derechos reservados.</p>
+        <div className="flex items-center gap-4 text-zinc-500">
+          <span>Zona: America/Caracas</span>
+          <span>·</span>
+          <span>Next.js · Supabase · GSAP</span>
+        </div>
       </footer>
     </div>
   );
 }
 
 /* ============================================================================
-   ICONOS SVG DE PRECISIÓN (REICON OUTLINE)
+   ICONOS SVG DE PRECISIÓN (REICON OUTLINE, STROKE 1.75)
    ========================================================================= */
 
 function OrganizerIcon({ className = 'w-5 h-5' }: { className?: string }) {
@@ -404,6 +847,96 @@ function OrganizerIcon({ className = 'w-5 h-5' }: { className?: string }) {
         d="M15 1.25H10.9436C9.10583 1.24998 7.65019 1.24997 6.51098 1.40314C5.33856 1.56076 4.38961 1.89288 3.64124 2.64124C2.89288 3.38961 2.56076 4.33856 2.40314 5.51098C2.24997 6.65019 2.24998 8.10582 2.25 9.94357V16C2.25 17.8722 3.62205 19.424 5.41551 19.7047C5.55348 20.4687 5.81753 21.1208 6.34835 21.6517C6.95027 22.2536 7.70814 22.5125 8.60825 22.6335C9.47522 22.75 10.5775 22.75 11.9451 22.75H15.0549C16.4225 22.75 17.5248 22.75 18.3918 22.6335C19.2919 22.5125 20.0497 22.2536 20.6517 21.6517C21.2536 21.0497 21.5125 20.2919 21.6335 19.3918C21.75 18.5248 21.75 17.4225 21.75 16.0549V10.9451C21.75 9.57754 21.75 8.47522 21.6335 7.60825C21.5125 6.70814 21.2536 5.95027 20.6517 5.34835C20.1208 4.81753 19.4687 4.55348 18.7047 4.41551C18.424 2.62205 16.8722 1.25 15 1.25ZM17.1293 4.27117C16.8265 3.38623 15.9876 2.75 15 2.75H11C9.09318 2.75 7.73851 2.75159 6.71085 2.88976C5.70476 3.02502 5.12511 3.27869 4.7019 3.7019C4.27869 4.12511 4.02502 4.70476 3.88976 5.71085C3.75159 6.73851 3.75 8.09318 3.75 10V16C3.75 16.9876 4.38624 17.8265 5.27117 18.1293C5.24998 17.5194 5.24999 16.8297 5.25 16.0549V10.9451C5.24998 9.57754 5.24996 8.47522 5.36652 7.60825C5.48754 6.70814 5.74643 5.95027 6.34835 5.34835C6.95027 4.74643 7.70814 4.48754 8.60825 4.36652C9.47522 4.24996 10.5775 4.24998 11.9451 4.25H15.0549C15.8297 4.24999 16.5194 4.24998 17.1293 4.27117ZM7.40901 6.40901C7.68577 6.13225 8.07435 5.9518 8.80812 5.85315C9.56347 5.75159 10.5646 5.75 12 5.75H15C16.4354 5.75 17.4365 5.75159 18.1919 5.85315C18.9257 5.9518 19.3142 6.13225 19.591 6.40901C19.8678 6.68577 20.0482 7.07435 20.1469 7.80812C20.2484 8.56347 20.25 9.56458 20.25 11V16C20.25 17.4354 20.2484 18.4365 20.1469 19.1919C20.0482 19.9257 19.8678 20.3142 19.591 20.591C19.3142 20.8678 18.9257 21.0482 18.1919 21.1469C17.4365 21.2484 16.4354 21.25 15 21.25H12C10.5646 21.25 9.56347 21.2484 8.80812 21.1469C8.07435 21.0482 7.68577 20.8678 7.40901 20.591C7.13225 20.3142 6.9518 19.9257 6.85315 19.1919C6.75159 18.4365 6.75 17.4354 6.75 16V11C6.75 9.56458 6.75159 8.56347 6.85315 7.80812C6.9518 7.07435 7.13225 6.68577 7.40901 6.40901Z"
         fill="currentColor"
       />
+    </svg>
+  );
+}
+
+function MicIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6.25 8C6.25 4.82436 8.82436 2.25 12 2.25C15.1756 2.25 17.75 4.82436 17.75 8V11C17.75 14.1756 15.1756 16.75 12 16.75C8.82436 16.75 6.25 14.1756 6.25 11V8ZM12 3.75C9.65279 3.75 7.75 5.65279 7.75 8V11C7.75 13.3472 9.65279 15.25 12 15.25C14.0913 15.25 15.8298 13.7395 16.184 11.75L13 11.75C12.5858 11.75 12.25 11.4142 12.25 11C12.25 10.5858 12.5858 10.25 13 10.25L16.25 10.25V8.75H13C12.5858 8.75 12.25 8.41421 12.25 8C12.25 7.58579 12.5858 7.25 13 7.25H16.184C15.8298 5.26049 14.0913 3.75 12 3.75ZM4 9.25C4.41421 9.25 4.75 9.58579 4.75 10V11C4.75 15.0041 7.99594 18.25 12 18.25C16.0041 18.25 19.25 15.0041 19.25 11V10C19.25 9.58579 19.5858 9.25 20 9.25C20.4142 9.25 20.75 9.58579 20.75 10V11C20.75 15.5798 17.2314 19.3379 12.75 19.7183V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V19.7183C6.7686 19.3379 3.25 15.5798 3.25 11V10C3.25 9.58579 3.58579 9.25 4 9.25Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function CalendarIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M17 14C17.5523 14 18 13.5523 18 13C18 12.4477 17.5523 12 17 12C16.4477 12 16 12.4477 16 13C16 13.5523 16.4477 14 17 14Z" fill="currentColor" />
+      <path d="M17 18C17.5523 18 18 17.5523 18 17C18 16.4477 17.5523 16 17 16C16.4477 16 16 16.4477 16 17C16 17.5523 16.4477 18 17 18Z" fill="currentColor" />
+      <path d="M13 13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13C11 12.4477 11 12 12 12C12.5523 12 13 12.4477 13 13Z" fill="currentColor" />
+      <path d="M13 17C13 17.5523 12.5523 18 12 18C11.4477 18 11 17.5523 11 17C11 16.4477 11 16 12 16C12.5523 16 13 16.4477 13 17Z" fill="currentColor" />
+      <path d="M7 14C7.55229 14 8 13.5523 8 13C8 12.4477 7.55229 12 7 12C6.44772 12 6 12.4477 6 13C6 13.5523 6.44772 14 7 14Z" fill="currentColor" />
+      <path d="M7 18C7.55229 18 8 17.5523 8 17C8 16.4477 7.55229 16 7 16C6.44772 16 6 16.4477 6 17C6 17.5523 6.44772 18 7 18Z" fill="currentColor" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M7 1.75C7.41421 1.75 7.75 2.08579 7.75 2.5V3.26272C8.412 3.24999 9.14133 3.24999 9.94346 3.25H14.0564C14.8586 3.24999 15.588 3.24999 16.25 3.26272V2.5C16.25 2.08579 16.5858 1.75 17 1.75C17.4142 1.75 17.75 2.08579 17.75 2.5V3.32709C18.0099 3.34691 18.2561 3.37182 18.489 3.40313C19.6614 3.56076 20.6104 3.89288 21.3588 4.64124C22.1071 5.38961 22.4392 6.33855 22.5969 7.51098C22.75 8.65018 22.75 10.1058 22.75 11.9435V14.0564C22.75 15.8941 22.75 17.3498 22.5969 18.489C22.4392 19.6614 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6614 22.4392 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0565 22.75H9.94359C8.10585 22.75 6.65018 22.75 5.51098 22.5969C4.33856 22.4392 3.38961 22.1071 2.64124 21.3588C1.89288 20.6104 1.56076 19.6614 1.40314 18.489C1.24997 17.3498 1.24998 15.8942 1.25 14.0564V11.9436C1.24998 10.1058 1.24997 8.65019 1.40314 7.51098C1.56076 6.33855 1.89288 5.38961 2.64124 4.64124C3.38961 3.89288 4.33856 3.56076 5.51098 3.40313C5.7439 3.37182 5.99006 3.34691 6.25 3.32709V2.5C6.25 2.08579 6.58579 1.75 7 1.75ZM5.71085 4.88976C4.70476 5.02502 4.12511 5.27869 3.7019 5.7019C3.27869 6.12511 3.02502 6.70476 2.88976 7.71085C2.86685 7.88123 2.8477 8.06061 2.83168 8.25H21.1683C21.1523 8.06061 21.1331 7.88124 21.1102 7.71085C20.975 6.70476 20.7213 6.12511 20.2981 5.7019C19.8749 5.27869 19.2952 5.02502 18.2892 4.88976C17.2615 4.75159 15.9068 4.75 14 4.75H10C8.09318 4.75 6.73851 4.75159 5.71085 4.88976ZM2.75 12C2.75 11.146 2.75032 10.4027 2.76309 9.75H21.2369C21.2497 10.4027 21.25 11.146 21.25 12V14C21.25 15.9068 21.2484 17.2615 21.1102 18.2892C20.975 19.2952 20.7213 19.8749 20.2981 20.2981C19.8749 20.7213 19.2952 20.975 18.2892 21.1102C17.2615 21.2484 15.9068 21.25 14 21.25H10C8.09318 21.25 6.73851 21.2484 5.71085 21.1102C4.70476 20.975 4.12511 20.7213 3.7019 20.2981C3.27869 19.8749 3.02502 19.2952 2.88976 18.2892C2.75159 17.2615 2.75 15.9068 2.75 14V12Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function InboxIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0574C22.75 12.3718 22.75 12.6769 22.7495 12.9731C22.7498 12.982 22.75 12.991 22.75 13C22.75 13.0099 22.7498 13.0197 22.746 14.8816C22.7225 16.3793 22.5603 17.5863C22.366 19.031 21.9607 20.1711 21.0659 21.0659C20.1711 21.9607 19.031 22.366 17.5863 22.5603C16.1748 22.75 14.3658 22.75 12.0574 22.75H11.9426C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.03933 20.1711 1.63399 19.031 1.43975 17.5863C1.27747 16.3793 1.25397 14.8816 1.25057 13.0295C1.25 13 1.25047 12.9731 1.25 12.6769V11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM2.7535 13.75C2.76294 15.2526 2.79778 16.43 2.92637 17.3864C3.09825 18.6648 3.42514 19.4355 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62177 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.5749 19.4355 20.9018 18.6648 21.0736 17.3864C21.2022 16.43 21.2371 15.2526 21.2465 13.75H18.8397C17.8659 13.75 17.6113 13.766 17.3975 13.8644C17.1838 13.9627 17.0059 14.1456 16.3722 14.8849L15.7667 15.5913C15.7372 15.6257 15.7082 15.6597 15.6794 15.6933C15.1773 16.2803 14.7796 16.7453 14.2292 16.9984C13.6789 17.2515 13.067 17.2509 12.2945 17.2501C12.2503 17.25 12.2056 17.25 12.1603 17.25H11.8397C11.7944 17.25 11.7497 17.25 11.7055 17.2501C10.933 17.2509 10.3211 17.2515 9.77076 16.9984C9.22039 16.7453 8.82271 16.2803 8.32059 15.6933C8.23327 15.5913 8.26275 15.5627 8.23327 15.5913L7.62784 14.8849C6.9941 14.1456 6.81622 13.9627 6.60245 13.8644C6.38869 13.766 6.13407 13.75 5.16026 13.75H2.7535ZM21.25 12.25H18.8397C18.7944 12.25 18.7497 12.25 18.7055 12.2499C17.933 12.2491 17.3211 12.2485 16.7708 12.5016C16.2204 12.7547 15.8227 13.2197 15.3206 13.8067C15.2918 13.8403 15.2628 13.8743 15.2333 13.9087L14.6278 14.6151C13.9941 15.3544 13.8162 15.5373 13.6025 15.6356C13.3887 15.734 13.1341 15.75 12.1603 15.75H11.8397C10.8659 15.75 10.6113 15.734 10.3975 15.6356C10.1838 15.5373 10.0059 15.3544 9.37216 14.6151L8.76673 13.9087C8.73725 13.8743 8.70816 13.8403 8.67941 13.8067C8.17729 13.2197 7.77961 12.7547 7.22924 12.5016C6.67886 12.2485 6.06705 12.2491 5.29454 12.2499C5.25031 12.25 5.20556 12.25 5.16026 12.25H2.75001C2.75 12.1675 2.75 12.0842 2.75 12C2.75 9.62177 2.75159 7.91356 2.92637 6.61358C3.09825 5.33517 3.42514 4.56445 3.9948 3.9948C4.56445 3.42514 5.33517 3.09825 6.61358 2.92637C7.91356 2.75159 9.62177 2.75 12 2.75C14.3782 2.75 16.0864 2.75159 17.3864 2.92637C18.6648 3.09825 19.4355 3.42514 20.0052 3.9948C20.5749 4.56445 20.9018 5.33517 21.0736 6.61358C21.2484 7.91356 21.25 9.62177 21.25 12C21.25 12.0842 21.25 12.1675 21.25 12.25Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function BookOpenIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M11.5265 21.0816L10.3204 20.1168C9.61902 19.5557 8.74758 19.25 7.84941 19.25H7.38104C5.97655 19.25 4.60349 19.6657 3.43488 20.4448C2.50095 21.0674 1.25 20.3979 1.25 19.2755V6.15248C1.25 5.49408 1.57905 4.87925 2.12687 4.51403L2.42391 4.31601C3.95558 3.29489 5.75524 2.75 7.59608 2.75C9.29734 2.75 10.9088 3.50297 12 4.80205C13.0912 3.50297 14.7027 2.75 16.4039 2.75C18.2448 2.75 20.0444 3.29489 21.5761 4.31601L21.8731 4.51403C22.4209 4.87925 22.75 5.49408 22.75 6.15248V19.2755C22.75 20.3979 21.499 21.0674 20.5651 20.4448C19.3965 19.6657 18.0234 19.25 16.619 19.25H16.1506C15.2524 19.25 14.381 19.5557 13.6796 20.1168L12.4735 21.0816C12.458 21.0943 12.442 21.1063 12.4254 21.1177C12.4083 21.1295 12.3907 21.1406 12.3725 21.151C12.1605 21.2723 11.8997 21.2839 11.6751 21.176C11.6597 21.1686 11.6446 21.1607 11.6298 21.1523C11.8414 21.2724 12.1012 21.2835 12.3249 21.176M3.25596 5.56408C4.54123 4.70723 6.05137 4.25 7.59608 4.25C8.88766 4.25 10.1092 4.83711 10.9161 5.84567L11.25 6.26309V18.9395C10.2839 18.1695 9.08503 17.75 7.84941 17.75H7.38104C5.73902 17.75 4.13248 18.2193 2.75 19.1008V6.15248C2.75 5.99561 2.8284 5.84912 2.95892 5.76211L3.25596 5.56408ZM12.75 18.9395C13.7161 18.1695 14.915 17.75 16.1506 17.75H16.619C18.261 17.75 19.8675 18.2193 21.25 19.1008V6.15248C21.25 5.99561 21.1716 5.84912 21.0411 5.76211L20.744 5.56408C19.4588 4.70723 17.9486 4.25 16.4039 4.25C15.1123 4.25 13.8908 4.83711 13.0839 5.84567L12.75 6.26309V18.9395Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function SunIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V3C12.75 3.41421 12.4142 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3V2C11.25 1.58579 11.5858 1.25 12 1.25ZM4.39861 4.39861C4.6915 4.10572 5.16638 4.10572 5.45927 4.39861L5.85211 4.79145C6.145 5.08434 6.145 5.55921 5.85211 5.85211C5.55921 6.145 5.08434 6.145 4.79145 5.85211L4.39861 5.45927C4.10572 5.16638 4.10572 4.6915 4.39861 4.39861ZM19.6011 4.39887C19.894 4.69176 19.894 5.16664 19.6011 5.45953L19.2083 5.85237C18.9154 6.14526 18.4405 6.14526 18.1476 5.85237C17.8547 5.55947 17.8547 5.0846 18.1476 4.79171L18.5405 4.39887C18.8334 4.10598 19.3082 4.10598 19.6011 4.39887ZM12 6.75C9.1005 6.75 6.75 9.1005 6.75 12C6.75 14.8995 9.1005 17.25 12 17.25C14.8995 17.25 17.25 14.8995 17.25 12C17.25 9.1005 14.8995 6.75 12 6.75ZM5.25 12C5.25 8.27208 8.27208 5.25 12 5.25C15.7279 5.25 18.75 8.27208 18.75 12C18.75 15.7279 15.7279 18.75 12 18.75C8.27208 18.75 5.25 15.7279 5.25 12ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H3C3.41421 11.25 3.75 11.5858 3.75 12C3.75 12.4142 3.41421 12.75 3 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM20.25 12C20.25 11.5858 20.5858 11.25 21 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.75 12.75 22.75 12H21C20.5858 12.75 20.25 12.4142 20.25 12ZM18.1476 18.1476C18.4405 17.8547 18.9154 17.8547 19.2083 18.1476L19.6011 18.5405C19.894 18.8334 19.894 19.3082 19.6011 19.6011C19.3082 19.894 18.8334 19.894 18.5405 19.6011L18.1476 19.2083C17.8547 18.9154 17.8547 18.4405 18.1476 18.1476ZM5.85211 18.1479C6.145 18.4408 6.145 18.9157 5.85211 19.2086L5.45927 19.6014C5.16638 19.8943 4.6915 19.8943 4.39861 19.6014C4.10572 19.3085 4.10572 18.8336 4.39861 18.5407L4.79145 18.1479C5.08434 17.855 5.55921 17.855 5.85211 18.1479ZM12 20.25C12.4142 20.25 12.75 20.5858 12.75 21V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V21C11.25 20.5858 11.5858 20.25 12 20.25Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M21.5303 5.46967C21.8232 5.76256 21.8232 6.23744 21.5303 6.53033L9.53033 18.5303C9.23744 18.8232 8.76256 18.8232 8.46967 18.5303L2.46967 12.5303C2.17678 12.2374 2.17678 11.7626 2.46967 11.4697C2.76256 11.1768 3.23744 11.1768 3.53033 11.4697L9 16.9393L20.4697 5.46967C20.7626 5.17678 21.2374 5.17678 21.5303 5.46967Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function ChevronDownIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <polyline points="20.3333 8.6666 12 17 3.6667 8.6666" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" />
     </svg>
   );
 }
