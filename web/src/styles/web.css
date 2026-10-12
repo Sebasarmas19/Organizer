@@ -364,3 +364,15 @@
 .field input[type="time"] {
   font-variant-numeric: tabular-nums;
 }
+
+/* -------------------------------------------------- Landing Page Safeguards */
+/* Asegura que los botones interactivos de la landing page mantengan su espaciado
+   y no sean reseteados a 0px por la capa base unlayered. */
+#faq button {
+  padding: 1.25rem 1.5rem !important;
+}
+@media (max-width: 640px) {
+  #faq button {
+    padding: 1.1rem 1.25rem !important;
+  }
+}

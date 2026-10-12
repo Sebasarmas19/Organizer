@@ -375,19 +375,37 @@ export function LandingPage() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
-            <div className="bg-zinc-900/80 backdrop-blur-xl border border-emerald-500/30 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-xl">
-              <div className="relative w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffffff,#f43f5e_30%,#a855f7_55%,#06b6d4_80%,#10b981)] blur-[1px]" />
-                <div className="absolute inset-0.5 rounded-full bg-black/20" />
-                <div className="relative w-2.5 h-2.5 rounded-full bg-white/95" />
+          {/* Widgets debajo del teléfono en móvil */}
+          <div className="w-full max-w-[280px] space-y-3">
+            {/* Widget Siri en móvil */}
+            <div className="bg-zinc-900/85 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-3.5 flex items-center justify-between shadow-xl shadow-emerald-950/20">
+              <div className="flex items-center gap-3">
+                <div className="relative w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                  <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffffff,#f43f5e_30%,#a855f7_55%,#06b6d4_80%,#10b981)] blur-[1px]" />
+                  <div className="absolute inset-0.5 rounded-full bg-black/20" />
+                  <div className="relative w-2.5 h-2.5 rounded-full bg-white/95" />
+                </div>
+                <div className="text-left">
+                  <span className="text-[10px] text-zinc-400 font-medium block">Captura por voz</span>
+                  <span className="text-xs text-white font-medium">AirPods / Atajos</span>
+                </div>
               </div>
-              <span className="text-emerald-400 font-mono text-xl font-bold">&lt;1.2s</span>
+              <span className="text-emerald-400 font-mono text-lg font-bold tracking-tight">&lt;1.2s</span>
             </div>
 
-            <div className="bg-zinc-900/85 backdrop-blur-xl border border-zinc-700/60 rounded-2xl p-3 shadow-xl text-left text-xs">
-              <span className="text-white font-semibold block text-[11px]">08:00 AM - Resumen diario</span>
-              <span className="text-zinc-400 text-[10px]">Cálculo 8:00 · Entrega Lab 11:00</span>
+            {/* Widget Push Notification en móvil */}
+            <div className="bg-zinc-900/85 backdrop-blur-xl border border-zinc-700/60 rounded-2xl p-3.5 shadow-xl text-left">
+              <div className="flex items-center gap-2 text-xs mb-1.5">
+                <div className="w-4 h-4 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                  <OrganizerIcon className="w-2.5 h-2.5" />
+                </div>
+                <span className="text-zinc-400 text-[11px] font-medium">iOS push notification</span>
+                <span className="text-zinc-500 text-[10px] ml-auto">8:00 AM</span>
+              </div>
+              <p className="text-white font-semibold text-xs">Resumen diario</p>
+              <p className="text-zinc-300 text-[11px] mt-0.5 leading-snug">
+                Hoy: Cálculo 8:00 · Lab 11:00 · Gym 18:00
+              </p>
             </div>
           </div>
         </div>
@@ -531,22 +549,24 @@ export function LandingPage() {
                 <button
                   type="button"
                   onClick={() => setNotificationView('expanded')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    notificationView === 'expanded'
-                      ? 'bg-zinc-800 text-white shadow-sm'
-                      : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
+                  style={{
+                    padding: '0.45rem 1.15rem',
+                    backgroundColor: notificationView === 'expanded' ? '#27272a' : 'transparent',
+                    color: notificationView === 'expanded' ? '#ffffff' : '#a1a1aa',
+                  }}
+                  className="rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer"
                 >
                   Vista Detallada
                 </button>
                 <button
                   type="button"
                   onClick={() => setNotificationView('compact')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    notificationView === 'compact'
-                      ? 'bg-zinc-800 text-white shadow-sm'
-                      : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
+                  style={{
+                    padding: '0.45rem 1.15rem',
+                    backgroundColor: notificationView === 'compact' ? '#27272a' : 'transparent',
+                    color: notificationView === 'compact' ? '#ffffff' : '#a1a1aa',
+                  }}
+                  className="rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer"
                 >
                   Vista Bloqueo
                 </button>
@@ -643,13 +663,13 @@ export function LandingPage() {
                 Desde tus AirPods o la pantalla de bloqueo:
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-emerald-300">
+            <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-[13px] font-mono text-emerald-300 leading-relaxed">
               «Oye Siri, anota parcial de cálculo el próximo martes a las 8»
             </div>
           </div>
 
           {/* Fase 2 */}
-          <div className="gsap-pipeline-step p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <div className="gsap-pipeline-step p-5 sm:p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
                 <OrganizerIcon className="w-4 h-4" />
@@ -659,7 +679,7 @@ export function LandingPage() {
                 El servidor extrae intención, fecha y hora sin clasificar a mano:
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-zinc-300 space-y-1">
+            <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-[13px] font-mono text-zinc-300 space-y-1.5 leading-relaxed">
               <div><span className="text-zinc-500">Tipo:</span> Parcial / Examen</div>
               <div><span className="text-zinc-500">Fecha:</span> Próximo martes</div>
               <div><span className="text-zinc-500">Hora:</span> 08:00 AM</div>
@@ -667,7 +687,7 @@ export function LandingPage() {
           </div>
 
           {/* Fase 3 */}
-          <div className="gsap-pipeline-step p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <div className="gsap-pipeline-step p-5 sm:p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
                 <CheckIcon className="w-4 h-4" />
@@ -677,7 +697,7 @@ export function LandingPage() {
                 Guardado en Postgres con RLS bajo tu usuario:
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-300 leading-snug">
+            <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-[13px] text-zinc-300 leading-relaxed">
               Aparecerá en el briefing matutino de ese día sin que hayas abierto la app.
             </div>
           </div>
@@ -702,35 +722,56 @@ export function LandingPage() {
                   <p className="text-xs text-zinc-400 mb-3">
                     Quedó pendiente del día anterior sin reproches:
                   </p>
-                  <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 mb-4">
-                    <span className="text-sm font-medium text-white block">
+                  <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 mb-4">
+                    <span className="text-sm font-semibold text-white block">
                       Revisar ejercicios de termodinámica
                     </span>
-                    <span className="text-[11px] text-zinc-500 mt-0.5 block">
+                    <span className="text-xs text-zinc-400 mt-1 block">
                       Programada originalmente para ayer 16:00
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-zinc-400 mb-2">Decide en un tap qué hacer hoy:</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <p className="text-xs text-zinc-400 mb-2.5">Decide en un tap qué hacer hoy:</p>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                     <button
                       type="button"
                       onClick={() => setYesterdayAction('today')}
-                      className="py-2 px-3 rounded-xl bg-zinc-900 border border-emerald-500/40 hover:bg-zinc-800 text-emerald-400 text-xs font-semibold transition-all"
+                      style={{
+                        padding: '0.625rem 0.75rem',
+                        minHeight: '44px',
+                        backgroundColor: '#18181b',
+                        border: '1px solid rgba(16, 185, 129, 0.45)',
+                        color: '#34d399',
+                      }}
+                      className="rounded-xl text-xs font-semibold transition-all flex items-center justify-center hover:bg-zinc-800 active:scale-95 cursor-pointer"
                     >
                       Hoy
                     </button>
                     <button
                       type="button"
                       onClick={() => setYesterdayAction('another')}
-                      className="py-2 px-3 rounded-xl bg-zinc-900 border border-amber-500/40 hover:bg-zinc-800 text-amber-300 text-xs font-semibold transition-all"
+                      style={{
+                        padding: '0.625rem 0.75rem',
+                        minHeight: '44px',
+                        backgroundColor: '#18181b',
+                        border: '1px solid rgba(245, 158, 11, 0.45)',
+                        color: '#fbbf24',
+                      }}
+                      className="rounded-xl text-xs font-semibold transition-all flex items-center justify-center hover:bg-zinc-800 active:scale-95 cursor-pointer"
                     >
                       Otro día
                     </button>
                     <button
                       type="button"
                       onClick={() => setYesterdayAction('removed')}
-                      className="py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-700/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition-all"
+                      style={{
+                        padding: '0.625rem 0.75rem',
+                        minHeight: '44px',
+                        backgroundColor: '#18181b',
+                        border: '1px solid rgba(63, 63, 70, 0.7)',
+                        color: '#a1a1aa',
+                      }}
+                      className="rounded-xl text-xs font-semibold transition-all flex items-center justify-center hover:bg-zinc-800 active:scale-95 cursor-pointer"
                     >
                       Quitar
                     </button>
@@ -752,7 +793,8 @@ export function LandingPage() {
                   <button
                     type="button"
                     onClick={() => setYesterdayAction('none')}
-                    className="text-xs text-zinc-500 hover:text-zinc-300 underline underline-offset-4"
+                    style={{ padding: '0.5rem 1rem' }}
+                    className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-4 inline-block"
                   >
                     Probar otra decisión
                   </button>
@@ -888,22 +930,45 @@ export function LandingPage() {
             return (
               <div
                 key={index}
-                className="rounded-2xl bg-zinc-950 border border-zinc-800/80 overflow-hidden transition-all"
+                className={`rounded-2xl transition-all duration-200 overflow-hidden ${
+                  isOpen
+                    ? 'bg-zinc-900/60 border border-emerald-500/30 shadow-lg shadow-black/40'
+                    : 'bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700/80'
+                }`}
               >
                 <button
                   type="button"
                   onClick={() => setOpenFaq(isOpen ? null : index)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 hover:bg-zinc-900/40 transition-colors"
+                  style={{
+                    padding: '1.25rem 1.5rem',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    textAlign: 'left',
+                  }}
+                  className="gap-4 hover:bg-zinc-900/40 active:bg-zinc-900/60 transition-colors group cursor-pointer"
                 >
-                  <span className="text-sm font-semibold text-white">{item.q}</span>
-                  <ChevronDownIcon
-                    className={`w-4 h-4 text-zinc-400 transition-transform duration-200 shrink-0 ${
-                      isOpen ? 'rotate-180 text-emerald-400' : ''
+                  <span className="text-sm sm:text-base font-semibold text-zinc-100 group-hover:text-white transition-colors leading-snug">
+                    {item.q}
+                  </span>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border transition-all duration-200 ${
+                      isOpen
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 rotate-180'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 group-hover:border-zinc-700 group-hover:text-zinc-200'
                     }`}
-                  />
+                  >
+                    <ChevronDownIcon className="w-3.5 h-3.5" />
+                  </div>
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-5 text-xs text-zinc-400 leading-relaxed border-t border-zinc-900 pt-3">
+                  <div
+                    style={{
+                      padding: '0 1.5rem 1.35rem 1.5rem',
+                    }}
+                    className="text-xs sm:text-sm text-zinc-400 leading-relaxed border-t border-zinc-850/80 pt-3.5"
+                  >
                     {item.a}
                   </div>
                 )}
@@ -917,7 +982,7 @@ export function LandingPage() {
           10. ACCESO Y LLAMADA A LA ACCIÓN FINAL
           ==================================================================== */}
       <section className="gsap-deep-section max-w-3xl mx-auto mt-24 sm:mt-32 text-center px-4">
-        <div className="p-8 sm:p-12 rounded-3xl bg-zinc-950 border border-zinc-800 relative overflow-hidden shadow-2xl">
+        <div className="p-6 sm:p-12 rounded-3xl bg-zinc-950 border border-zinc-800 relative overflow-hidden shadow-2xl">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-emerald-500/15 blur-[90px] pointer-events-none -z-10" />
 
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
@@ -926,17 +991,17 @@ export function LandingPage() {
           <p className="text-zinc-400 text-sm sm:text-base mt-3 max-w-md mx-auto leading-relaxed">
             Push, no pull. Una notificación matutina con lo esencial. Cero configuraciones complejas.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4">
             <Link
               href="/entrar"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-lg hover:shadow-white/10 active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-lg hover:shadow-white/10 active:scale-95"
             >
               <GoogleIcon className="w-4 h-4" />
               <span>Empezar con Google</span>
             </Link>
             <Link
               href="/atajo"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 text-sm font-medium transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 text-sm font-medium transition-colors active:scale-95"
             >
               <span>Instalar Atajo de Siri</span>
             </Link>
