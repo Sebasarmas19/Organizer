@@ -1,20 +1,17 @@
 'use client';
 
 /* ============================================================================
-   Organizer · Landing Page Completa (Dark Titanium Studio)
-   Creado bajo la directiva de la skill Impeccable (Craft Floor & Out-of-Distribution):
-     - Mantiene 100% la maqueta visual aprobada (dark-titanium.png)
-     - Navbar cápsula suspendida con navegación interna fluida
-     - Hero monumental centrado, iPhone 16 Pro (#phone-video-slot vacío para video)
-     - Tarjetas flotantes: orbe Siri (<1.2s) y notificación push 8:00 AM
-     - Bento Grid de 3 pilares con gráficos vivos (Waveform, Timeline, Medidor de Calma)
-     - Deep Dive 1: "Push, no pull" con mockup interactivo de pantalla de bloqueo de iOS
-     - Deep Dive 2: "Captura <1.2s" con desglose paso a paso del pipeline de Siri a Postgres
-     - Deep Dive 3: "Cero Culpa" con simulador interactivo de decisión de "Lo de ayer" y comodines
-     - Los 4 Módulos del Sistema (Inicio, Semana, Tareas, Recursos)
-     - Acordeón FAQ en Titanio Oscuro
-     - Llamada a la acción final con Google Auth
-     - Footer de ingeniería completo con notas de stack y zona horaria
+   Organizer · Landing Page (Dark Titanium Studio · Polish & Full Craft)
+   
+   Directivas Impeccable, GSAP & Craft Floor:
+     - Teléfono iPhone 16 Pro perfectamente centrado (grid simétrico [1fr_auto_1fr])
+     - Textos cuidados y empáticos para TDAH (diagnóstico real de docs/00-problema.md)
+     - Flancos perfectamente equilibrados: Siri <1.2s a la izquierda, Push 8:00 AM a la derecha
+     - Pantalla OLED limpia (#phone-video-slot) lista para incrustar el video real
+     - Coreografía fluida GSAP con ScrollTrigger en cada sección
+     - Animación interactiva en el medidor circular (strokeDashoffset) y waveform viva
+     - Micro-demos interactivas funcionales (lockscreen toggle, decisión de "Lo de ayer")
+     - Respeto a prefers-reduced-motion
    ========================================================================= */
 
 import { useState, useRef } from 'react';
@@ -27,7 +24,7 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
-// Alturas del espectro de onda de audio para la tarjeta de Captura en 1s
+// Alturas armónicas del espectro de onda de audio
 const WAVEFORM_HEIGHTS = [
   8, 14, 18, 24, 34, 42, 28, 16, 24, 38, 48, 32, 20, 16, 28, 44, 34, 22, 14, 26, 36, 24, 16, 12, 18, 12, 6,
 ];
@@ -36,7 +33,7 @@ export function LandingPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Estados interactivos para las micro-demos de la página
-  const [notificationView, setNotificationView] = useState<'compact' | 'expanded'>('expanded');
+  const [notificationView, setNotificationView] = useState<'expanded' | 'compact'>('expanded');
   const [yesterdayAction, setYesterdayAction] = useState<'none' | 'today' | 'another' | 'removed'>('none');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -49,7 +46,7 @@ export function LandingPage() {
 
       if (prefersReducedMotion) return;
 
-      // 1. Entrada escalonada del Hero
+      // 1. Entrada inicial escalonada del Hero (titular, subtítulo, navbar)
       gsap.from('.gsap-hero-item', {
         y: 28,
         opacity: 0,
@@ -58,9 +55,9 @@ export function LandingPage() {
         ease: 'power3.out',
       });
 
-      // 2. Chasis del teléfono y escala inicial
+      // 2. Chasis del teléfono y escalado inicial
       gsap.from('.gsap-device-chassis', {
-        scale: 0.92,
+        scale: 0.93,
         y: 40,
         opacity: 0,
         duration: 1.1,
@@ -68,36 +65,46 @@ export function LandingPage() {
         delay: 0.2,
       });
 
-      // 3. Tarjetas flotantes laterales
+      // 3. Tarjetas flotantes laterales (entrada desde los extremos hacia el centro)
       gsap.from('.gsap-flank-card-left', {
-        x: -35,
+        x: -40,
         opacity: 0,
         duration: 0.9,
         ease: 'power2.out',
-        delay: 0.4,
+        delay: 0.35,
       });
 
       gsap.from('.gsap-flank-card-right', {
-        x: 35,
+        x: 40,
         opacity: 0,
         duration: 0.9,
         ease: 'power2.out',
-        delay: 0.4,
+        delay: 0.35,
       });
 
-      // 4. Física de flotación suave en el iPhone
+      // 4. Física senoidal de flotación perpetua suave en el iPhone
       gsap.to('.gsap-phone-float', {
         y: -10,
-        duration: 3.5,
+        duration: 3.8,
         repeat: -1,
         yoyo: true,
         ease: 'sine.inOut',
       });
 
-      // 5. Animación de respiración de la onda de audio (Waveform)
+      // 5. Pulsación volumétrica del resplandor esmeralda ambiental
+      gsap.to('.gsap-glow-pulse', {
+        scale: 1.12,
+        opacity: 0.28,
+        duration: 4.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      // 6. Animación continua de la onda de audio (Waveform)
       gsap.to('.gsap-waveform-bar', {
-        scaleY: (index) => 0.55 + ((index * 7) % 5) * 0.12,
-        duration: 1.2,
+        scaleY: (index) => 0.5 + ((index * 9) % 6) * 0.11,
+        duration: 1.1,
         repeat: -1,
         yoyo: true,
         stagger: {
@@ -107,33 +114,96 @@ export function LandingPage() {
         ease: 'sine.inOut',
       });
 
-      // 6. Revelado suave de las tarjetas Bento al hacer scroll
-      gsap.from('.gsap-bento-card', {
-        scrollTrigger: {
-          trigger: '#bento-grid',
-          start: 'top 85%',
-          once: true,
-        },
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.12,
-        ease: 'power2.out',
+      // 7. ScrollTrigger: Revelado del Bento Grid
+      gsap.fromTo(
+        '.gsap-bento-card',
+        { opacity: 0, y: 35, scale: 0.98 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.12,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '#bento-grid',
+            start: 'top 88%',
+            once: true,
+          },
+        }
+      );
+
+      // 8. ScrollTrigger: Animación de llenado del medidor circular en Bento Card 3
+      gsap.fromTo(
+        '.gsap-gauge-arc',
+        { strokeDashoffset: 160 },
+        {
+          strokeDashoffset: 45,
+          duration: 1.4,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '#bento-grid',
+            start: 'top 85%',
+            once: true,
+          },
+        }
+      );
+
+      // 9. ScrollTrigger: Secciones profundas
+      const deepSections = gsap.utils.toArray<HTMLElement>('.gsap-deep-section');
+      deepSections.forEach((section) => {
+        gsap.fromTo(
+          section,
+          { opacity: 0, y: 36 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.85,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top 86%',
+              once: true,
+            },
+          }
+        );
       });
 
-      // 7. Revelado de secciones profundas
-      gsap.from('.gsap-deep-section', {
-        scrollTrigger: {
-          trigger: '.gsap-deep-section',
-          start: 'top 85%',
-          once: true,
-        },
-        y: 32,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: 'power2.out',
-      });
+      // 10. ScrollTrigger: Pasos del pipeline de Siri
+      gsap.fromTo(
+        '.gsap-pipeline-step',
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.12,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '#pipeline-steps',
+            start: 'top 86%',
+            once: true,
+          },
+        }
+      );
+
+      // 11. ScrollTrigger: Tarjetas de los 4 módulos
+      gsap.fromTo(
+        '.gsap-module-card',
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '#modulos-grid',
+            start: 'top 86%',
+            once: true,
+          },
+        }
+      );
     },
     { scope: containerRef }
   );
@@ -147,22 +217,25 @@ export function LandingPage() {
           1. HEADER / NAVBAR CÁPSULA FLOTANTE
           ==================================================================== */}
       <header className="max-w-4xl mx-auto pt-6 px-4 sticky top-4 z-50">
-        <nav className="w-full rounded-full bg-zinc-900/75 backdrop-blur-xl border border-zinc-800/80 px-5 py-2.5 flex items-center justify-between shadow-2xl">
+        <nav className="w-full rounded-full bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/80 px-5 py-2.5 flex items-center justify-between shadow-2xl">
           {/* Logo y Marca */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-zinc-800/80 border border-zinc-700/60 flex items-center justify-center text-zinc-300 group-hover:text-emerald-400 group-hover:border-emerald-500/40 transition-colors">
+            <div className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 flex items-center justify-center text-zinc-300 group-hover:text-emerald-400 group-hover:border-emerald-500/40 transition-colors">
               <OrganizerIcon className="w-4 h-4" />
             </div>
             <span className="text-white font-semibold text-sm tracking-tight">Organizer</span>
           </Link>
 
           {/* Enlaces de Navegación Rápida (Desktop) */}
-          <div className="hidden md:flex items-center gap-6 text-xs text-zinc-400">
-            <a href="#filosofia" className="hover:text-white transition-colors">
-              Filosofía
-            </a>
+          <div className="hidden md:flex items-center gap-6 text-xs text-zinc-400 font-medium">
             <a href="#notificacion" className="hover:text-white transition-colors">
               Push diario
+            </a>
+            <a href="#captura" className="hover:text-white transition-colors">
+              Captura Siri
+            </a>
+            <a href="#anti-culpa" className="hover:text-white transition-colors">
+              Anti-culpa
             </a>
             <a href="#modulos" className="hover:text-white transition-colors">
               Módulos
@@ -197,9 +270,9 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          3. SHOWCASE CENTRAL: IPHONE 16 PRO, RESPLANDOR ESMERALDA & TARJETAS
+          3. SHOWCASE CENTRAL: IPHONE 16 PRO (CENTRADISIMO), RESPLANDOR Y FLANCOS
           ==================================================================== */}
-      <section className="relative max-w-5xl mx-auto mt-6 sm:mt-10 px-4">
+      <section className="relative max-w-6xl mx-auto mt-6 sm:mt-10 px-4">
         {/* Atmósfera: Fondo con micro-textura de puntos */}
         <div
           className="absolute inset-0 pointer-events-none -z-20 opacity-30"
@@ -210,12 +283,16 @@ export function LandingPage() {
         />
 
         {/* Resplandor esmeralda volumétrico detrás del teléfono */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[520px] h-[340px] sm:h-[520px] rounded-full bg-emerald-500/20 blur-[110px] pointer-events-none -z-10" />
+        <div className="gsap-glow-pulse absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[540px] h-[340px] sm:h-[540px] rounded-full bg-emerald-500/20 blur-[110px] pointer-events-none -z-10" />
 
-        {/* Contenedor del dispositivo flanqueado por las dos tarjetas */}
-        <div className="relative flex flex-col md:flex-row items-center justify-center gap-6 sm:gap-8 pt-4 pb-6">
-          {/* Tarjeta Flotante Izquierda: Siri con latencia <1.2s */}
-          <div className="gsap-flank-card-left order-2 md:order-1 md:-mr-6 z-10 w-full sm:w-auto flex justify-center">
+        {/* ==================================================================
+            DISEÑO EN DESKTOP: Grid [1fr_auto_1fr] SIMÉTRICO PARA CENTRADO PERFECTO
+            Garantiza que la columna 1 y la columna 3 tengan exactamente el mismo ancho,
+            dejando el teléfono en la columna 2 en el centro exacto del viewport.
+            ================================================================== */}
+        <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] items-center gap-6 pt-4 pb-6 w-full">
+          {/* Flanco Izquierdo: Siri <1.2s empujado hacia la derecha para besar el teléfono */}
+          <div className="gsap-flank-card-left flex justify-end pr-3 z-10">
             <div className="bg-zinc-900/80 backdrop-blur-xl border border-emerald-500/30 rounded-2xl px-5 py-3.5 flex items-center gap-3.5 shadow-xl shadow-emerald-950/20 hover:border-emerald-500/50 transition-colors">
               {/* Orbe de Siri con resplandor multicolor */}
               <div className="relative w-9 h-9 rounded-full flex items-center justify-center shrink-0">
@@ -227,9 +304,9 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Teléfono iPhone 16 Pro en Titanio Oscuro */}
-          <div className="gsap-device-chassis order-1 md:order-2 z-20">
-            <div className="gsap-phone-float w-[260px] sm:w-[280px] aspect-[9/19] rounded-[48px] p-2.5 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-2xl border border-zinc-700/60 relative">
+          {/* Centro Absoluto: iPhone 16 Pro en Titanio Oscuro */}
+          <div className="gsap-device-chassis z-20 flex justify-center">
+            <div className="gsap-phone-float w-[280px] aspect-[9/19] rounded-[48px] p-2.5 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-2xl border border-zinc-700/60 relative">
               <div className="w-full h-full rounded-[40px] bg-black p-1 relative overflow-hidden flex flex-col border border-zinc-900">
                 {/* Dynamic Island */}
                 <div className="w-24 h-5 bg-black rounded-full mx-auto mt-2 flex items-center justify-end px-2 z-20 shrink-0">
@@ -255,8 +332,8 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Tarjeta Flotante Derecha: Notificación Push iOS 8:00 AM */}
-          <div className="gsap-flank-card-right order-3 md:-ml-6 z-10 w-full sm:w-auto flex justify-center">
+          {/* Flanco Derecho: Notificación Push iOS 8:00 AM empujada hacia la izquierda */}
+          <div className="gsap-flank-card-right flex justify-start pl-3 z-10">
             <div className="bg-zinc-900/85 backdrop-blur-xl border border-zinc-700/60 rounded-2xl p-4 shadow-2xl max-w-[270px] text-left hover:border-zinc-600 transition-colors">
               <div className="flex items-center gap-2 text-xs">
                 <div className="w-4 h-4 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
@@ -272,10 +349,52 @@ export function LandingPage() {
             </div>
           </div>
         </div>
+
+        {/* DISEÑO EN MÓVIL (< md): Apilado centrado natural */}
+        <div className="md:hidden flex flex-col items-center gap-5 pt-4 pb-6">
+          <div className="gsap-device-chassis z-20">
+            <div className="gsap-phone-float w-[260px] aspect-[9/19] rounded-[48px] p-2.5 bg-gradient-to-b from-zinc-700 via-zinc-800 to-zinc-900 shadow-2xl border border-zinc-700/60 relative">
+              <div className="w-full h-full rounded-[40px] bg-black p-1 relative overflow-hidden flex flex-col border border-zinc-900">
+                <div className="w-24 h-5 bg-black rounded-full mx-auto mt-2 flex items-center justify-end px-2 z-20 shrink-0">
+                  <div className="w-2 h-2 rounded-full bg-zinc-900 mr-1" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
+                </div>
+                <div
+                  id="phone-video-slot-mobile"
+                  className="w-full flex-1 bg-[#000000] relative flex flex-col items-center justify-center p-6 text-center select-none rounded-b-[36px]"
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-2.5 shadow-inner">
+                    <VideoPlaceholderIcon className="w-5 h-5 text-zinc-400" />
+                  </div>
+                  <p className="text-xs font-medium text-zinc-400">Video Demo</p>
+                  <p className="text-[10px] text-zinc-600 mt-0.5 max-w-[130px] leading-tight">
+                    Espacio reservado para grabación real
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-sm">
+            <div className="bg-zinc-900/80 backdrop-blur-xl border border-emerald-500/30 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-xl">
+              <div className="relative w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,#ffffff,#f43f5e_30%,#a855f7_55%,#06b6d4_80%,#10b981)] blur-[1px]" />
+                <div className="absolute inset-0.5 rounded-full bg-black/20" />
+                <div className="relative w-2.5 h-2.5 rounded-full bg-white/95" />
+              </div>
+              <span className="text-emerald-400 font-mono text-xl font-bold">&lt;1.2s</span>
+            </div>
+
+            <div className="bg-zinc-900/85 backdrop-blur-xl border border-zinc-700/60 rounded-2xl p-3 shadow-xl text-left text-xs">
+              <span className="text-white font-semibold block text-[11px]">08:00 AM - Resumen diario</span>
+              <span className="text-zinc-400 text-[10px]">Cálculo 8:00 · Entrega Lab 11:00</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ====================================================================
-          4. BENTO GRID DE 3 TARJETAS (EXACTO A LA PROPUESTA VISUAL)
+          4. BENTO GRID DE 3 TARJETAS (GRÁFICOS VIVOS Y TEXTO NO GENÉRICO)
           ==================================================================== */}
       <section id="bento-grid" className="max-w-5xl mx-auto mt-10 sm:mt-16 px-4">
         <div className="rounded-3xl bg-zinc-950/70 backdrop-blur-xl border border-zinc-800/80 p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 shadow-2xl">
@@ -285,10 +404,10 @@ export function LandingPage() {
               <span className="text-xs font-mono text-zinc-500">1</span>
               <h3 className="text-lg font-bold text-white tracking-tight mt-1">Captura en 1s</h3>
               <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-8 leading-relaxed">
-                Captura por voz sin abrir la app. Pensamientos directo a tu bandeja.
+                De tu voz en AirPods a tu base de datos en Postgres. Cero formularios y cero pérdida del hilo mental.
               </p>
             </div>
-            {/* Espectro Waveform realista */}
+            {/* Espectro Waveform vivo */}
             <div className="flex items-center justify-center gap-1.5 h-14 pt-2">
               {WAVEFORM_HEIGHTS.map((height, idx) => (
                 <div
@@ -306,7 +425,7 @@ export function LandingPage() {
               <span className="text-xs font-mono text-zinc-500">2</span>
               <h3 className="text-lg font-bold text-white tracking-tight mt-1">Bloques de Foco</h3>
               <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-6 leading-relaxed">
-                Línea de tiempo limpia con código de colores para cada bloque.
+                El tiempo no se estira: visualiza tus huecos libres exactos entre clases para no sobrecargarte.
               </p>
             </div>
             {/* Mini Timeline con bloques coloreados */}
@@ -339,16 +458,16 @@ export function LandingPage() {
             </div>
           </div>
 
-          {/* Tarjeta 3: Bajo Estrés + Medidor Circular con Carita de Calma */}
+          {/* Tarjeta 3: Bajo Estrés + Medidor Circular Animado */}
           <div className="gsap-bento-card p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800/60 flex flex-col justify-between h-full group hover:border-zinc-700/80 transition-all">
             <div>
               <span className="text-xs font-mono text-zinc-500">3</span>
               <h3 className="text-lg font-bold text-white tracking-tight mt-1">Bajo Estrés</h3>
               <p className="text-xs sm:text-sm text-zinc-400 mt-1 mb-6 leading-relaxed">
-                Impeccable Swiss design craft, sin culpa y con progreso limpio.
+                La vida pasa. Dos comodines de perdón al mes sostienen tu racha aunque un día se complique.
               </p>
             </div>
-            {/* Medidor circular con rostro sonriente y relajado */}
+            {/* Medidor circular con animación ScrollTrigger */}
             <div className="flex items-center justify-center h-20 pt-1">
               <div className="relative w-20 h-20 flex items-center justify-center">
                 <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80" aria-hidden="true">
@@ -363,13 +482,14 @@ export function LandingPage() {
                     strokeLinecap="round"
                   />
                   <circle
+                    className="gsap-gauge-arc"
                     cx="40"
                     cy="40"
                     r="32"
                     fill="none"
-                    stroke="#e4e4e7"
+                    stroke="#10b981"
                     strokeWidth="5"
-                    strokeDasharray="115 100"
+                    strokeDasharray="160 160"
                     strokeLinecap="round"
                   />
                 </svg>
@@ -389,57 +509,60 @@ export function LandingPage() {
       </section>
 
       {/* ====================================================================
-          5. DEEP DIVE 1: PUSH, NO PULL (LA NOTIFICACIÓN ES EL PRODUCTO)
+          5. DEEP DIVE 1: PUSH, NO PULL (EL DIAGNÓSTICO REAL DE TDAH)
           ==================================================================== */}
       <section id="notificacion" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Columna Izquierda: Filosofía */}
           <div className="lg:col-span-6 space-y-4">
             <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
-              La notificación lleva el contenido dentro
+              Tu problema nunca fue anotar. Fue volver a leer.
             </h2>
             <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-              El estudiante con TDAH nunca vuelve a abrir apps por iniciativa propia: ese es exactamente su patrón de fracaso. Por eso, en Organizer la notificación es el producto, no un adorno.
+              El patrón de fracaso del estudiante con TDAH no está en la captura: anotas en Notion, en WhatsApp contigo mismo o en notas rápidas. Lo que nunca ocurre es el regreso voluntario a revisar lo guardado.
             </p>
             <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-              Nunca recibirás un mensaje genérico como <em className="text-zinc-200">«Tienes 3 pendientes hoy»</em>. Cada mañana a las 8:00 AM recibes un briefing completo que puedes leer en 2 segundos sin desbloquear el teléfono.
+              Por eso en Organizer no dependemos de que te acuerdes de entrar. A las 8:00 AM recibes un único aviso en tu pantalla de bloqueo con tu itinerario completo. Lo lees en dos segundos y sigues con tu mañana.
             </p>
 
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setNotificationView('expanded')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  notificationView === 'expanded'
-                    ? 'bg-zinc-800 text-white border border-zinc-700'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                Vista Detallada
-              </button>
-              <button
-                type="button"
-                onClick={() => setNotificationView('compact')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  notificationView === 'compact'
-                    ? 'bg-zinc-800 text-white border border-zinc-700'
-                    : 'text-zinc-500 hover:text-zinc-300'
-                }`}
-              >
-                Vista Bloqueo
-              </button>
+            {/* Segmented Control iOS */}
+            <div className="pt-2">
+              <div className="inline-flex items-center gap-1.5 p-1 rounded-full bg-zinc-900 border border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setNotificationView('expanded')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    notificationView === 'expanded'
+                      ? 'bg-zinc-800 text-white shadow-sm'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  Vista Detallada
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNotificationView('compact')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    notificationView === 'compact'
+                      ? 'bg-zinc-800 text-white shadow-sm'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  Vista Bloqueo
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Columna Derecha: Mockup Interactivo de Pantalla de Bloqueo de iOS */}
+          {/* Columna Derecha: Mockup de Pantalla de Bloqueo de iOS */}
           <div className="lg:col-span-6 flex justify-center">
-            <div className="w-full max-w-sm rounded-[36px] bg-zinc-950 p-4 border border-zinc-800 shadow-2xl relative overflow-hidden">
+            <div className="w-full max-w-sm rounded-[36px] bg-zinc-950 p-5 border border-zinc-800 shadow-2xl relative overflow-hidden">
               {/* Reloj Apple Lockscreen */}
-              <div className="text-center pt-3 pb-6">
+              <div className="text-center pt-2 pb-6">
                 <span className="text-[11px] font-medium text-zinc-400 block tracking-wide">
                   Lunes, 12 de octubre
                 </span>
-                <span className="text-5xl font-light tracking-tight text-white block mt-0.5">
+                <span className="text-5xl font-light tracking-tight text-white block mt-0.5 font-sans">
                   08:00
                 </span>
               </div>
@@ -461,7 +584,7 @@ export function LandingPage() {
                 </p>
 
                 {notificationView === 'expanded' ? (
-                  <div className="space-y-1.5 text-[11px] text-zinc-300 pt-1 border-t border-zinc-800/80">
+                  <div className="space-y-1.5 text-[11px] text-zinc-300 pt-1.5 border-t border-zinc-800/80">
                     <div className="flex items-center justify-between">
                       <span className="text-sky-400 font-medium">08:00 Cálculo Diferencial</span>
                       <span className="text-zinc-500">Aula 302</span>
@@ -480,8 +603,8 @@ export function LandingPage() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-zinc-300 line-clamp-1">
-                    Cálculo 8:00 · Informe Física 11:00 · Estudio Álgebra 15:00 · Gym 18:00
+                  <p className="text-[11px] text-zinc-300 leading-tight">
+                    Cálculo 8:00 · Informe Física 11:00 · Álgebra 15:00 · Gym 18:00
                   </p>
                 )}
               </div>
@@ -497,41 +620,45 @@ export function LandingPage() {
       {/* ====================================================================
           6. DEEP DIVE 2: CAPTURA EN 0 FRICCIÓN (<1.2S CON SIRI)
           ==================================================================== */}
-      <section id="filosofia" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
+      <section id="captura" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
-            Capturar no puede costar fricción mental
+            Pensar rápido no debería exigir abrir menús
           </h2>
           <p className="text-zinc-400 text-sm sm:text-base mt-3 leading-relaxed">
-            Tu cerebro tiene ideas y fechas en momentos inesperados. Si la app exige categoría, fecha o carpeta antes de guardar, la tarea se pierde en el camino.
+            Un profesor cambia la fecha de entrega en el último minuto. Si tienes que abrir una app, elegir carpeta y buscar una fecha en un calendario, la tarea muere en el olvido.
           </p>
         </div>
 
         {/* Pipeline Visual en 3 Fases */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div id="pipeline-steps" className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Fase 1 */}
-          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
-              <MicIcon className="w-4 h-4" />
+          <div className="gsap-pipeline-step p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
+                <MicIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-semibold text-white mb-2">1. Dictado natural</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                Desde tus AirPods o la pantalla de bloqueo:
+              </p>
             </div>
-            <h3 className="text-base font-semibold text-white mb-2">1. Dictado natural</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-              Desde tus AirPods o la pantalla de bloqueo:
-            </p>
             <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-emerald-300">
               «Oye Siri, anota parcial de cálculo el próximo martes a las 8»
             </div>
           </div>
 
           {/* Fase 2 */}
-          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
-              <OrganizerIcon className="w-4 h-4" />
+          <div className="gsap-pipeline-step p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
+                <OrganizerIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-semibold text-white mb-2">2. Parser semántico</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                El servidor extrae intención, fecha y hora sin clasificar a mano:
+              </p>
             </div>
-            <h3 className="text-base font-semibold text-white mb-2">2. Parser semántico</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-              El servidor detecta automáticamente los metadatos:
-            </p>
             <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-zinc-300 space-y-1">
               <div><span className="text-zinc-500">Tipo:</span> Parcial / Examen</div>
               <div><span className="text-zinc-500">Fecha:</span> Próximo martes</div>
@@ -540,16 +667,18 @@ export function LandingPage() {
           </div>
 
           {/* Fase 3 */}
-          <div className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
-              <CheckIcon className="w-4 h-4" />
+          <div className="gsap-pipeline-step p-6 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+            <div>
+              <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-4">
+                <CheckIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-base font-semibold text-white mb-2">3. Sincronización silenciosa</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                Guardado en Postgres con RLS bajo tu usuario:
+              </p>
             </div>
-            <h3 className="text-base font-semibold text-white mb-2">3. Cero clasificación</h3>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-              Queda en tu base de datos protegida con RLS:
-            </p>
             <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] text-zinc-300 leading-snug">
-              Se agenda en tu semana y aparecerá en el push de ese día sin que hayas abierto la app.
+              Aparecerá en el briefing matutino de ese día sin que hayas abierto la app.
             </div>
           </div>
         </div>
@@ -558,14 +687,14 @@ export function LandingPage() {
       {/* ====================================================================
           7. DEEP DIVE 3: CERO CULPA & PROTECCIÓN DE RACHA
           ==================================================================== */}
-      <section className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
+      <section id="anti-culpa" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Mockup Interactivo: Widget "Lo de ayer" */}
           <div className="lg:col-span-6 flex justify-center order-2 lg:order-1">
             <div className="w-full max-w-md p-6 rounded-3xl bg-zinc-950 border border-zinc-800/80 shadow-2xl">
               <div className="flex items-center justify-between text-xs text-zinc-400 mb-4 pb-3 border-b border-zinc-850">
                 <span className="font-semibold text-white">Lo de ayer</span>
-                <span className="font-mono text-emerald-400">2 comodines activos</span>
+                <span className="font-mono text-emerald-400">2 comodines activos este mes</span>
               </div>
 
               {yesterdayAction === 'none' ? (
@@ -582,26 +711,26 @@ export function LandingPage() {
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-zinc-400 mb-2">Decide qué hacer hoy:</p>
+                  <p className="text-[11px] text-zinc-400 mb-2">Decide en un tap qué hacer hoy:</p>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setYesterdayAction('today')}
-                      className="py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium transition-all"
+                      className="py-2 px-3 rounded-xl bg-zinc-900 border border-emerald-500/40 hover:bg-zinc-800 text-emerald-400 text-xs font-semibold transition-all"
                     >
                       Hoy
                     </button>
                     <button
                       type="button"
                       onClick={() => setYesterdayAction('another')}
-                      className="py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium transition-all"
+                      className="py-2 px-3 rounded-xl bg-zinc-900 border border-amber-500/40 hover:bg-zinc-800 text-amber-300 text-xs font-semibold transition-all"
                     >
                       Otro día
                     </button>
                     <button
                       type="button"
                       onClick={() => setYesterdayAction('removed')}
-                      className="py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-medium transition-all"
+                      className="py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-700/60 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold transition-all"
                     >
                       Quitar
                     </button>
@@ -613,7 +742,7 @@ export function LandingPage() {
                     <CheckIcon className="w-5 h-5" />
                   </div>
                   <p className="text-sm font-semibold text-white mb-1">
-                    {yesterdayAction === 'today' && 'Movido al itinerario de hoy.'}
+                    {yesterdayAction === 'today' && 'Movido a los huecos libres de hoy.'}
                     {yesterdayAction === 'another' && 'Pospuesto para el fin de semana sin culpa.'}
                     {yesterdayAction === 'removed' && 'Descartado limpiamente. Cero deuda.'}
                   </p>
@@ -625,7 +754,7 @@ export function LandingPage() {
                     onClick={() => setYesterdayAction('none')}
                     className="text-xs text-zinc-500 hover:text-zinc-300 underline underline-offset-4"
                   >
-                    Probar otra opción
+                    Probar otra decisión
                   </button>
                 </div>
               )}
@@ -641,77 +770,77 @@ export function LandingPage() {
               Las aplicaciones comunes acumulan números rojos, alertas vencidas y contadores crecientes. Para un cerebro con TDAH, esa deuda visual produce evasión inmediata y abandono.
             </p>
             <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
-              En Organizer, si ayer no pudiste completar algo, la app no te reprocha nada. Te pregunta calmadamente al día siguiente con tres botones de decisión rápida: <strong className="text-white">Hoy</strong>, <strong className="text-white">Otro día</strong> o <strong className="text-white">Quitar</strong>.
+              En Organizer, si ayer no pudiste sentarte a estudiar, la app no te castiga. Cada mañana te pregunta calmadamente con tres botones de decisión rápida: <strong className="text-white">Hoy</strong>, <strong className="text-white">Otro día</strong> o <strong className="text-white">Quitar</strong>.
             </p>
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-          8. LOS 4 MÓDULOS DE ORGANIZER
+          8. LOS 4 MÓDULOS DE ORGANIZER (ARQUITECTURA CLARA)
           ==================================================================== */}
       <section id="modulos" className="gsap-deep-section max-w-5xl mx-auto mt-24 sm:mt-32 px-4">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
-            Cuatro módulos. Cero saturación.
+            Cuatro módulos. Ni una sola pantalla de más.
           </h2>
           <p className="text-zinc-400 text-sm sm:text-base mt-3 leading-relaxed">
-            Cada módulo resuelve una necesidad concreta sin invadir a los demás.
+            Arquitectura limpia diseñada para que la mente no se disperse entre menús infinitos.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div id="modulos-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Módulo 1: Inicio */}
-          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <div className="gsap-module-card p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-3">
                 <SunIcon className="w-4 h-4" />
               </div>
               <h3 className="text-base font-bold text-white mb-1.5">Inicio</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Cabe en una sola pantalla sin scroll. Tareas del día sin las clases mezcladas, lo de ayer y tu racha protegida.
+                Una sola pantalla, cero scroll. Tareas del día sin las clases mezcladas, lo de ayer y tu racha protegida.
               </p>
             </div>
             <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Foco absoluto</span>
           </div>
 
           {/* Módulo 2: Semana */}
-          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <div className="gsap-module-card p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sky-400 mb-3">
                 <CalendarIcon className="w-4 h-4" />
               </div>
               <h3 className="text-base font-bold text-white mb-1.5">Semana</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Línea de tiempo con bloques horarios. Navega a semanas futuras para anticipar entregas y parciales sin agobio.
+                El mapa del tiempo. Bloques horarios continuos para ver exactamente cuántas horas reales tienes entre clases.
               </p>
             </div>
             <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Perspectiva temporal</span>
           </div>
 
           {/* Módulo 3: Tareas */}
-          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <div className="gsap-module-card p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-amber-400 mb-3">
                 <InboxIcon className="w-4 h-4" />
               </div>
               <h3 className="text-base font-bold text-white mb-1.5">Tareas</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                La bandeja de entrada para lo anotado sin fecha fija. Organizable en carpetas limpias para clasificar cuando quieras.
+                Bandeja de descarga mental. Anota sin fecha forzada y rescata tareas solo cuando decidas sentarte a planificar.
               </p>
             </div>
             <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Captura sin presión</span>
           </div>
 
           {/* Módulo 4: Recursos */}
-          <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
+          <div className="gsap-module-card p-5 rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-zinc-700 transition-all flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-purple-400 mb-3">
                 <BookOpenIcon className="w-4 h-4" />
               </div>
               <h3 className="text-base font-bold text-white mb-1.5">Recursos</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Herramientas, artículos y skills. Un espacio de biblioteca independiente que nunca te persigue ni genera push.
+                Tu biblioteca silenciosa. Enlaces, apuntes y herramientas de ingeniería. Nunca te envía push ni te persigue.
               </p>
             </div>
             <span className="text-[10px] font-mono text-zinc-600 mt-6 block">Consulta silenciosa</span>
@@ -844,7 +973,7 @@ function OrganizerIcon({ className = 'w-5 h-5' }: { className?: string }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M15 1.25H10.9436C9.10583 1.24998 7.65019 1.24997 6.51098 1.40314C5.33856 1.56076 4.38961 1.89288 3.64124 2.64124C2.89288 3.38961 2.56076 4.33856 2.40314 5.51098C2.24997 6.65019 2.24998 8.10582 2.25 9.94357V16C2.25 17.8722 3.62205 19.424 5.41551 19.7047C5.55348 20.4687 5.81753 21.1208 6.34835 21.6517C6.95027 22.2536 7.70814 22.5125 8.60825 22.6335C9.47522 22.75 10.5775 22.75 11.9451 22.75H15.0549C16.4225 22.75 17.5248 22.75 18.3918 22.6335C19.2919 22.5125 20.0497 22.2536 20.6517 21.6517C21.2536 21.0497 21.5125 20.2919 21.6335 19.3918C21.75 18.5248 21.75 17.4225 21.75 16.0549V10.9451C21.75 9.57754 21.75 8.47522 21.6335 7.60825C21.5125 6.70814 21.2536 5.95027 20.6517 5.34835C20.1208 4.81753 19.4687 4.55348 18.7047 4.41551C18.424 2.62205 16.8722 1.25 15 1.25ZM17.1293 4.27117C16.8265 3.38623 15.9876 2.75 15 2.75H11C9.09318 2.75 7.73851 2.75159 6.71085 2.88976C5.70476 3.02502 5.12511 3.27869 4.7019 3.7019C4.27869 4.12511 4.02502 4.70476 3.88976 5.71085C3.75159 6.73851 3.75 8.09318 3.75 10V16C3.75 16.9876 4.38624 17.8265 5.27117 18.1293C5.24998 17.5194 5.24999 16.8297 5.25 16.0549V10.9451C5.24998 9.57754 5.24996 8.47522 5.36652 7.60825C5.48754 6.70814 5.74643 5.95027 6.34835 5.34835C6.95027 4.74643 7.70814 4.48754 8.60825 4.36652C9.47522 4.24996 10.5775 4.24998 11.9451 4.25H15.0549C15.8297 4.24999 16.5194 4.24998 17.1293 4.27117ZM7.40901 6.40901C7.68577 6.13225 8.07435 5.9518 8.80812 5.85315C9.56347 5.75159 10.5646 5.75 12 5.75H15C16.4354 5.75 17.4365 5.75159 18.1919 5.85315C18.9257 5.9518 19.3142 6.13225 19.591 6.40901C19.8678 6.68577 20.0482 7.07435 20.1469 7.80812C20.2484 8.56347 20.25 9.56458 20.25 11V16C20.25 17.4354 20.2484 18.4365 20.1469 19.1919C20.0482 19.9257 19.8678 20.3142 19.591 20.591C19.3142 20.8678 18.9257 21.0482 18.1919 21.1469C17.4365 21.2484 16.4354 21.25 15 21.25H12C10.5646 21.25 9.56347 21.2484 8.80812 21.1469C8.07435 21.0482 7.68577 20.8678 7.40901 20.591C7.13225 20.3142 6.9518 19.9257 6.85315 19.1919C6.75159 18.4365 6.75 17.4354 6.75 16V11C6.75 9.56458 6.75159 8.56347 6.85315 7.80812C6.9518 7.07435 7.13225 6.68577 7.40901 6.40901Z"
+        d="M15 1.25H10.9436C9.10583 1.24998 7.65019 1.24997 6.51098 1.40314C5.33856 1.56076 4.38961 1.89288 3.64124 2.64124C2.89288 3.38961 2.56076 4.33856 2.40314 5.51098C2.24997 6.65019 2.24998 8.10582 2.25 9.94357V16C2.25 17.8722 3.62205 19.424 5.41551 19.7047C5.55348 20.4687 5.81753 21.1208 6.34835 21.6517C6.95027 22.2536 7.70814 22.5125 8.60825 22.6335C9.47522 22.75 10.5775 22.75 11.9451 22.75H15.0549C16.4225 22.75 17.5248 22.75 18.3918 22.6335C19.2919 22.5125 20.0497 22.2536 20.6517 21.6517C21.2536 21.0497 21.5125 20.2919 21.6335 19.3918C21.75 18.5248 21.75 17.4225 21.75 16.0549V10.9451C21.75 9.57754 21.75 8.47522 21.6335 7.60825C21.5125 6.70814 21.2536 5.95027 20.6517 5.34835C20.1208 4.81753 19.4687 4.55348 18.7047 4.41551C18.424 2.62205 16.8722 1.25 15 1.25ZM17.1293 4.27117C16.8265 3.38623 15.9876 2.75 15 2.75H11C9.09318 2.75 7.73851 2.75159 6.71085 2.88976C5.70476 3.02502 5.12511 3.27869 4.7019 3.7019C4.27869 4.12511 4.02502 4.70476 3.88976 5.71085C3.75159 6.73851 3.75 8.09318 3.75 10V16C3.75 16.9876 4.38624 17.8265 5.27117 18.1293C5.24998 17.5194 5.24999 16.8297 5.25 16.0549V10.9451C5.24998 9.57754 5.24996 8.47522 5.36652 7.60825C5.48754 6.70814 5.74643 5.95027 6.34835 5.34835C6.95027 4.74643 7.70814 4.48754 8.60825 4.36652C9.47522 4.24996 10.5775 4.24998 11.9451 4.25H15.0549C15.8297 4.24999 16.5194 4.24998 17.1293 4.27117ZM7.40901 6.40901C7.68577 6.13225 8.07435 5.9518 8.80812 5.85315C9.56347 5.75159 10.5646 5.75 12 5.75H15C16.4354 5.75 17.4365 5.75159 18.1919 5.85315C18.9257 5.9518 19.3142 6.13225 19.591 6.40901C19.8678 6.68577 20.0482 7.07435 20.1469 7.80812C20.2484 8.56347 20.25 9.56458 20.25 11V16C20.25 17.4354 20.2484 18.4365 20.1469 19.1919C20.0482 19.9257 19.8678 20.3142 19.591 20.591C19.3142 20.8678 18.9257 21.0482 18.1919 21.1469C17.4365 21.2484 16.4354 21.25 15 21.25H12C10.5646 21.25 9.56347 21.2484 8.80812 21.1469C8.07435 21.0482 7.68577 20.8678 7.40901 20.591C7.13225 20.3142 6.9518 19.9257 6.85315 19.1919C6.75159 18.4365 6.75 17.4354 6.75 16V11C6.75 9.56458 6.75159 8.56347 6.85315 7.80812C6.9518 7.07435 7.13225 6.68577 7.40901 6.40901Z\"
         fill="currentColor"
       />
     </svg>
@@ -876,7 +1005,7 @@ function CalendarIcon({ className = 'w-5 h-5' }: { className?: string }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M7 1.75C7.41421 1.75 7.75 2.08579 7.75 2.5V3.26272C8.412 3.24999 9.14133 3.24999 9.94346 3.25H14.0564C14.8586 3.24999 15.588 3.24999 16.25 3.26272V2.5C16.25 2.08579 16.5858 1.75 17 1.75C17.4142 1.75 17.75 2.08579 17.75 2.5V3.32709C18.0099 3.34691 18.2561 3.37182 18.489 3.40313C19.6614 3.56076 20.6104 3.89288 21.3588 4.64124C22.1071 5.38961 22.4392 6.33855 22.5969 7.51098C22.75 8.65018 22.75 10.1058 22.75 11.9435V14.0564C22.75 15.8941 22.75 17.3498 22.5969 18.489C22.4392 19.6614 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6614 22.4392 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0565 22.75H9.94359C8.10585 22.75 6.65018 22.75 5.51098 22.5969C4.33856 22.4392 3.38961 22.1071 2.64124 21.3588C1.89288 20.6104 1.56076 19.6614 1.40314 18.489C1.24997 17.3498 1.24998 15.8942 1.25 14.0564V11.9436C1.24998 10.1058 1.24997 8.65019 1.40314 7.51098C1.56076 6.33855 1.89288 5.38961 2.64124 4.64124C3.38961 3.89288 4.33856 3.56076 5.51098 3.40313C5.7439 3.37182 5.99006 3.34691 6.25 3.32709V2.5C6.25 2.08579 6.58579 1.75 7 1.75ZM5.71085 4.88976C4.70476 5.02502 4.12511 5.27869 3.7019 5.7019C3.27869 6.12511 3.02502 6.70476 2.88976 7.71085C2.86685 7.88123 2.8477 8.06061 2.83168 8.25H21.1683C21.1523 8.06061 21.1331 7.88124 21.1102 7.71085C20.975 6.70476 20.7213 6.12511 20.2981 5.7019C19.8749 5.27869 19.2952 5.02502 18.2892 4.88976C17.2615 4.75159 15.9068 4.75 14 4.75H10C8.09318 4.75 6.73851 4.75159 5.71085 4.88976ZM2.75 12C2.75 11.146 2.75032 10.4027 2.76309 9.75H21.2369C21.2497 10.4027 21.25 11.146 21.25 12V14C21.25 15.9068 21.2484 17.2615 21.1102 18.2892C20.975 19.2952 20.7213 19.8749 20.2981 20.2981C19.8749 20.7213 19.2952 20.975 18.2892 21.1102C17.2615 21.2484 15.9068 21.25 14 21.25H10C8.09318 21.25 6.73851 21.2484 5.71085 21.1102C4.70476 20.975 4.12511 20.7213 3.7019 20.2981C3.27869 19.8749 3.02502 19.2952 2.88976 18.2892C2.75159 17.2615 2.75 15.9068 2.75 14V12Z"
+        d="M7 1.75C7.41421 1.75 7.75 2.08579 7.75 2.5V3.26272C8.412 3.24999 9.14133 3.24999 9.94346 3.25H14.0564C14.8586 3.24999 15.588 3.24999 16.25 3.26272V2.5C16.25 2.08579 16.5858 1.75 17 1.75C17.4142 1.75 17.75 2.08579 17.75 2.5V3.32709C18.0099 3.34691 18.2561 3.37182 18.489 3.40313C19.6614 3.56076 20.6104 3.89288 21.3588 4.64124C22.1071 5.38961 22.4392 6.33855 22.5969 7.51098C22.75 8.65018 22.75 10.1058 22.75 11.9435V14.0564C22.75 15.8941 22.75 17.3498 22.5969 18.489C22.4392 19.6614 22.1071 20.6104 21.3588 21.3588C20.6104 22.1071 19.6614 22.4392 18.489 22.5969C17.3498 22.75 15.8942 22.75 14.0565 22.75H9.94359C8.10585 22.75 6.65018 22.75 5.51098 22.5969C4.33856 22.4392 3.38961 22.1071 2.64124 21.3588C1.89288 20.6104 1.56076 19.6614 1.40314 18.489C1.24997 17.3498 1.24998 15.8942 1.25 14.0564V11.9436C1.24998 10.1058 1.24997 8.65019 1.40314 7.51098C1.56076 6.33855 1.89288 5.38961 2.64124 4.64124C3.38961 3.89288 4.33856 3.56076 5.51098 3.40313C5.7439 3.37182 5.99006 3.34691 6.25 3.32709V2.5C6.25 2.08579 6.58579 1.75 7 1.75ZM5.71085 4.88976C4.70476 5.02502 4.12511 5.27869 3.7019 5.7019C3.27869 6.12511 3.02502 6.70476 2.88976 5.71085C2.86685 7.88123 2.8477 8.06061 2.83168 8.25H21.1683C21.1523 8.06061 21.1331 7.88124 21.1102 7.71085C20.975 6.70476 20.7213 6.12511 20.2981 5.7019C19.8749 5.27869 19.2952 5.02502 18.2892 4.88976C17.2615 4.75159 15.9068 4.75 14 4.75H10C8.09318 4.75 6.73851 4.75159 5.71085 4.88976ZM2.75 12C2.75 11.146 2.75032 10.4027 2.76309 9.75H21.2369C21.2497 10.4027 21.25 11.146 21.25 12V14C21.25 15.9068 21.2484 17.2615 21.1102 18.2892C20.975 19.2952 20.7213 19.8749 20.2981 20.2981C19.8749 20.7213 19.2952 20.975 18.2892 21.1102C17.2615 21.2484 15.9068 21.25 14 21.25H10C8.09318 21.25 6.73851 21.2484 5.71085 21.1102C4.70476 20.975 4.12511 20.7213 3.7019 20.2981C3.27869 19.8749 3.02502 19.2952 2.88976 18.2892C2.75159 17.2615 2.75 15.9068 2.75 14V12Z"
         fill="currentColor"
       />
     </svg>
@@ -915,7 +1044,7 @@ function SunIcon({ className = 'w-5 h-5' }: { className?: string }) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V3C12.75 3.41421 12.4142 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3V2C11.25 1.58579 11.5858 1.25 12 1.25ZM4.39861 4.39861C4.6915 4.10572 5.16638 4.10572 5.45927 4.39861L5.85211 4.79145C6.145 5.08434 6.145 5.55921 5.85211 5.85211C5.55921 6.145 5.08434 6.145 4.79145 5.85211L4.39861 5.45927C4.10572 5.16638 4.10572 4.6915 4.39861 4.39861ZM19.6011 4.39887C19.894 4.69176 19.894 5.16664 19.6011 5.45953L19.2083 5.85237C18.9154 6.14526 18.4405 6.14526 18.1476 5.85237C17.8547 5.55947 17.8547 5.0846 18.1476 4.79171L18.5405 4.39887C18.8334 4.10598 19.3082 4.10598 19.6011 4.39887ZM12 6.75C9.1005 6.75 6.75 9.1005 6.75 12C6.75 14.8995 9.1005 17.25 12 17.25C14.8995 17.25 17.25 14.8995 17.25 12C17.25 9.1005 14.8995 6.75 12 6.75ZM5.25 12C5.25 8.27208 8.27208 5.25 12 5.25C15.7279 5.25 18.75 8.27208 18.75 12C18.75 15.7279 15.7279 18.75 12 18.75C8.27208 18.75 5.25 15.7279 5.25 12ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H3C3.41421 11.25 3.75 11.5858 3.75 12C3.75 12.4142 3.41421 12.75 3 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM20.25 12C20.25 11.5858 20.5858 11.25 21 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.75 12.75 22.75 12H21C20.5858 12.75 20.25 12.4142 20.25 12ZM18.1476 18.1476C18.4405 17.8547 18.9154 17.8547 19.2083 18.1476L19.6011 18.5405C19.894 18.8334 19.894 19.3082 19.6011 19.6011C19.3082 19.894 18.8334 19.894 18.5405 19.6011L18.1476 19.2083C17.8547 18.9154 17.8547 18.4405 18.1476 18.1476ZM5.85211 18.1479C6.145 18.4408 6.145 18.9157 5.85211 19.2086L5.45927 19.6014C5.16638 19.8943 4.6915 19.8943 4.39861 19.6014C4.10572 19.3085 4.10572 18.8336 4.39861 18.5407L4.79145 18.1479C5.08434 17.855 5.55921 17.855 5.85211 18.1479ZM12 20.25C12.4142 20.25 12.75 20.5858 12.75 21V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V21C11.25 20.5858 11.5858 20.25 12 20.25Z"
+        d="M12 1.25C12.4142 1.25 12.75 1.58579 12.75 2V3C12.75 3.41421 12.4142 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3V2C11.25 1.58579 11.5858 1.25 12 1.25ZM4.39861 4.39861C4.6915 4.10572 5.16638 4.10572 5.45927 4.39861L5.85211 4.79145C6.145 5.08434 6.145 5.55921 5.85211 5.85211C5.55921 6.145 5.08434 6.145 4.79145 5.85211L4.39861 5.45927C4.10572 5.16638 4.10572 4.6915 4.39861 4.39861ZM19.6011 4.39887C19.894 4.69176 19.894 5.16664 19.6011 5.45953L19.2083 5.85237C18.9154 6.14526 18.4405 6.14526 18.1476 5.85237C17.8547 5.55947 17.8547 5.0846 18.1476 4.79171L18.5405 4.39887C18.8334 4.10598 19.3082 4.10598 19.6011 4.39887ZM12 6.75C9.1005 6.75 6.75 9.1005 6.75 12C6.75 14.8995 9.1005 17.25 12 17.25C14.8995 17.25 17.25 14.8995 17.25 12C17.25 9.1005 14.8995 6.75 12 6.75ZM5.25 12C5.25 8.27208 8.27208 5.25 12 5.25C15.7279 5.25 18.75 8.27208 18.75 12C18.75 15.7279 15.7279 18.75 12 18.75C8.27208 18.75 5.25 15.7279 5.25 12ZM1.25 12C1.25 11.5858 1.58579 11.25 2 11.25H3C3.41421 11.25 3.75 11.5858 3.75 12C3.75 12.4142 3.41421 12.75 3 12.75H2C1.58579 12.75 1.25 12.4142 1.25 12ZM20.25 12C20.25 11.5858 20.5858 11.25 21 11.25H22C22.4142 11.25 22.75 11.5858 22.75 12C22.75 12.4142 22.4142 12.75 22 12.75H21C20.5858 12.75 20.25 12.4142 20.25 12ZM18.1476 18.1476C18.4405 17.8547 18.9154 17.8547 19.2083 18.1476L19.6011 18.5405C19.894 18.8334 19.894 19.3082 19.6011 19.6011C19.3082 19.894 18.8334 19.894 18.5405 19.6011L18.1476 19.2083C17.8547 18.9154 17.8547 18.4405 18.1476 18.1476ZM5.85211 18.1479C6.145 18.4408 6.145 18.9157 5.85211 19.2086L5.45927 19.6014C5.16638 19.8943 4.6915 19.8943 4.39861 19.6014C4.10572 19.3085 4.10572 18.8336 4.39861 18.5407L4.79145 18.1479C5.08434 17.855 5.55921 17.855 5.85211 18.1479ZM12 20.25C12.4142 20.25 12.75 20.5858 12.75 21V22C12.75 22.4142 12.4142 22.75 12 22.75C11.5858 22.75 11.25 22.4142 11.25 22V21C11.25 20.5858 11.5858 20.25 12 20.25Z"
         fill="currentColor"
       />
     </svg>
