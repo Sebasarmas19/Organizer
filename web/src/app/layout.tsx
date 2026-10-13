@@ -11,6 +11,7 @@ import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { NavigationProgress } from '@/components/NavigationProgress';
 import { ThemeColorSync } from '@/components/ThemeColorSync';
 import { THEME_BG } from '@/lib/theme-colors';
@@ -71,6 +72,8 @@ export default function RootLayout({
         {/* No pinta nada: mantiene vivo el service worker que recibe las
             notificaciones. Ver el propio componente. */}
         <ServiceWorkerRegistrar />
+        {/* Aviso flotante discreto cuando no hay conexión o se sincroniza. */}
+        <OfflineIndicator />
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>

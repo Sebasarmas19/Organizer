@@ -1,70 +1,190 @@
 /* ============================================================================
-   Organizer · Service Worker
-
+   Organizer · Service Worker con soporte offline real y Web Push
+   
    Vive en `public/`, o sea que se sirve tal cual en `/sw.js`, sin pasar por el
-   compilador. Eso es a proposito: el alcance de un service worker es la
-   carpeta desde la que se sirve, y solo desde la raiz puede recibir push de
-   toda la app. `src/proxy.ts` ya lo deja pasar sin sesion.
-
-   NO TIENE MANEJADOR DE `fetch`. No hay cache offline en esta fase, y anadir
-   uno a medias es la forma clasica de servir una version vieja de la app
-   durante dias sin enterarse. Aqui el service worker existe por una sola
-   razon: en iOS no se puede programar una notificacion local (no existe la
-   Notification Triggers API), asi que TODA notificacion llega del servidor y
-   necesita un service worker vivo que la reciba.
-
-   REGLA DE iOS QUE NO SE PUEDE SALTAR: la suscripcion se pide con
-   `userVisibleOnly: true`, y eso es un contrato — cada push TIENE que acabar
-   mostrando una notificacion. Si el manejador de `push` termina sin llamar a
-   `showNotification`, el navegador muestra una notificacion generica del
-   sistema y, si se repite, revoca el permiso. Por eso el `catch` de abajo
-   tambien muestra algo: un texto pobre es malo, silencio es peor.
+   compilador. Eso es a propósito: el alcance de un service worker es la
+   carpeta desde la que se sirve, y solo desde la raíz puede recibir push y
+   controlar la caché de toda la app.
+   
+   DOS RESPONSABILIDADES:
+   1. WEB PUSH (iOS / Android / Desktop):
+      Recibe la notificación del servidor a las 8:00 AM y la muestra inmediatamente.
+      Cumple estrictamente el contrato `userVisibleOnly: true`.
+   
+   2. OFFLINE REAL (Lectura sin Wi-Fi ni datos):
+      - Assets estáticos (_next/static, iconos, manifest): Cache-First con actualización.
+      - Navegación y páginas (HTML / RSC): Network-First con fallback a caché.
+        Esto garantiza que si hay red, SIEMPRE se ve la última versión en vivo (sin
+        riesgo de stale cache trap); y si no hay red, carga la última versión guardada.
+      - Peticiones POST y mutaciones pasan directo sin cachear.
    ========================================================================= */
 
-/* Que la version nueva del worker mande desde el primer momento. Sin esto, un
-   cambio en este archivo no llega hasta que el usuario cierra todas las
-   pestanas de la app — que en una PWA instalada puede ser nunca. */
-self.addEventListener('install', () => {
+const STATIC_CACHE = 'organizer-static-v2';
+const PAGES_CACHE = 'organizer-pages-v2';
+const ALLOWED_CACHES = [STATIC_CACHE, PAGES_CACHE];
+
+const PRECACHE_ASSETS = [
+  '/manifest.webmanifest',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png',
+  '/icon.png',
+  '/apple-icon.png',
+];
+
+/* ────────────────────────────────────────────────── ciclo de vida ── */
+
+self.addEventListener('install', (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(STATIC_CACHE).then((cache) => {
+      return cache.addAll(PRECACHE_ASSETS).catch(() => {});
+    })
+  );
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (!ALLOWED_CACHES.includes(key)) {
+              return caches.delete(key);
+            }
+          })
+        )
+      )
+      .then(() => self.clients.claim())
+  );
 });
 
-/* ────────────────────────────────────────────────── llega el mensaje ── */
+/* ────────────────────────────────────────────────── interceptar fetch (Offline) ── */
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+
+  // Solo interceptamos peticiones GET. Las mutaciones (POST, PUT, DELETE) pasan directo.
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Ignorar llamadas a Supabase, APIs externas y extensiones de navegador
+  if (url.origin !== self.location.origin) return;
+
+  // Ignorar endpoints de API y captura externa (/api/**)
+  if (url.pathname.startsWith('/api/')) return;
+
+  // 1. Assets estáticos inmutables (_next/static/** y precached icons): Cache-First
+  const isStaticAsset =
+    url.pathname.startsWith('/_next/static/') ||
+    PRECACHE_ASSETS.includes(url.pathname);
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        if (cached) return cached;
+        return fetch(req)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const clone = response.clone();
+              caches.open(STATIC_CACHE).then((cache) => cache.put(req, clone));
+            }
+            return response;
+          })
+          .catch(() => {
+            return new Response('', { status: 408 });
+          });
+      })
+    );
+    return;
+  }
+
+  // 2. Páginas de la app y datos RSC: Network-First con fallback a caché
+  const isNavigationOrPage =
+    req.mode === 'navigate' ||
+    req.headers.get('accept')?.includes('text/html') ||
+    req.headers.get('rsc') === '1' ||
+    url.searchParams.has('_rsc') ||
+    url.pathname.startsWith('/_next/data/');
+
+  if (isNavigationOrPage) {
+    event.respondWith(
+      fetch(req)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(PAGES_CACHE).then((cache) => cache.put(req, clone));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          // Fallo de red: intentar servir la copia en caché de esta página
+          const cached = await caches.match(req);
+          if (cached) return cached;
+
+          // Si navegaba a una página no guardada, intentar caer a la raíz '/'
+          if (req.mode === 'navigate') {
+            const rootCached = await caches.match('/');
+            if (rootCached) return rootCached;
+
+            // Pantalla de cortesía si absolutamente nada estaba cacheado
+            return new Response(
+              `<!DOCTYPE html>
+              <html lang="es">
+              <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+                <title>Organizer · Sin conexión</title>
+                <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #0B130E; color: #FAFAF9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 24px; box-sizing: border-box; text-align: center; }
+                  .card { background: #152219; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 32px 24px; max-width: 360px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+                  h1 { font-size: 20px; font-weight: 600; margin: 0 0 10px; color: #fff; }
+                  p { font-size: 14px; color: #8E9B90; margin: 0 0 24px; line-height: 1.5; }
+                  a { display: inline-block; background: #22593E; color: #fff; text-decoration: none; font-weight: 600; font-size: 15px; padding: 12px 24px; border-radius: 9999px; }
+                </style>
+              </head>
+              <body>
+                <div class="card">
+                  <h1>Modo sin conexión</h1>
+                  <p>No tienes conexión a internet y esta pantalla no se había guardado en el teléfono todavía. Abre tu pantalla de Inicio o vuelve a intentarlo cuando recuperes señal.</p>
+                  <a href="/">Ir a Inicio</a>
+                </div>
+              </body>
+              </html>`,
+              {
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                status: 200,
+              }
+            );
+          }
+
+          throw new Error('Sin conexión y recurso no disponible en caché');
+        })
+    );
+    return;
+  }
+});
+
+/* ────────────────────────────────────────────────── llega el mensaje push ── */
 
 self.addEventListener('push', (event) => {
-  /* El servidor manda JSON: { title, body, tag, url }. Si algo viniera mal
-     formado, se muestra igual — ver la regla de `userVisibleOnly` arriba. */
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
   } catch {
-    /* Sin enlace al error a proposito: da igual por que vino mal. Lo unico
-       que no se puede hacer es terminar sin mostrar nada (userVisibleOnly). */
     payload = {};
   }
 
   const title = payload.title || 'Organizer';
   const options = {
-    body: payload.body || 'Abre la app para ver tu dia.',
-
-    /* `tag` hace que la nueva SUSTITUYA a la anterior del mismo tipo en vez de
-       apilarse. Es una notificacion al dia (decision 33): si el telefono
-       estuvo apagado, lo que importa es la ultima, no tener tres iguales. */
+    body: payload.body || 'Abre la app para ver tu día.',
     tag: payload.tag || 'organizer',
     renotify: true,
-
-    /* En iOS el icono lo pone el sistema desde el de la PWA instalada; estos
-       dos los usa el escritorio y Android. */
     icon: '/icon-192.png',
     badge: '/icon-192.png',
-
-    /* Que no desaparezca sola: el usuario mira el telefono cuando lo mira, no
-       cuando le llega. Es el problema entero del proyecto. */
     requireInteraction: false,
-
     data: { url: payload.url || '/' },
   };
 
@@ -84,8 +204,6 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = (event.notification.data && event.notification.data.url) || '/';
 
-  /* Si la app ya esta abierta se le da el foco en vez de abrir otra ventana:
-     abrir una segunda instancia de una PWA en iOS deja la primera colgada. */
   event.waitUntil(
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
@@ -101,17 +219,6 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-/* ────────────────────────────────────────── la suscripcion se caduca ── */
-
-/*
-  iOS invalida la suscripcion al reinstalar la PWA, y el navegador avisa aqui.
-  No se puede re-suscribir desde el service worker sin la clave VAPID, asi que
-  lo unico honesto es dejar constancia: la app comprueba en cada arranque si
-  sigue habiendo suscripcion y lo dice en pantalla si no
-  (`/ajustes/notificaciones`). Una notificacion que no llega y nadie nota es el
-  peor fallo posible de este proyecto.
-*/
 self.addEventListener('pushsubscriptionchange', () => {
-  /* Sin `waitUntil`: no hay nada asincrono que esperar. El aviso util se da en
-     la app, no aqui. */
+  // Notificado en UI cuando abre la app
 });

@@ -21,7 +21,7 @@
 
 import Link from 'next/link';
 import { useOptimistic, useState, useTransition } from 'react';
-import { moveTaskToDate, toggleTask, unscheduleTask } from '@/lib/fd4-actions';
+import { safeToggleTask, safeMoveTask, safeUnscheduleTask } from '@/lib/offline-sync';
 import type { HomeReminder, HomeTask, OverdueTask } from '@/lib/home';
 import { shortWhen, type ClassNote } from '@/components/fd4/homeSchedule';
 import { digestRows, laterDays, listTitles, nextLines, weekSub, type DigestDay, type DigestRow } from '@/lib/thread';
@@ -135,7 +135,7 @@ export function InicioScreen({
     }
     run(
       () => patch({ type: 'done', id, done }),
-      () => toggleTask(id, done)
+      () => safeToggleTask(id, done)
     );
   };
 
@@ -158,7 +158,7 @@ export function InicioScreen({
 
   const decide = (id: string, decision: Decision) => {
     const day = decision.kind === 'today' ? todayStr : decision.kind === 'day' ? decision.dateStr : null;
-    const action = day ? () => moveTaskToDate(id, day) : () => unscheduleTask(id);
+    const action = day ? () => safeMoveTask(id, day) : () => safeUnscheduleTask(id);
     if (openAyer.length <= 1) setDecideOpen(false);
     run(() => patch({ type: 'resolve', id }), action);
   };

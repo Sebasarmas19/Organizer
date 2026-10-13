@@ -11,7 +11,7 @@
 
 import { useOptimistic, useTransition } from 'react';
 import Link from 'next/link';
-import { toggleTask } from '@/lib/fd4-actions';
+import { safeToggleTask } from '@/lib/offline-sync';
 import { Icon } from '@/components/Icon';
 
 export function RestTaskRow({
@@ -35,7 +35,7 @@ export function RestTaskRow({
   const onToggle = () => {
     startTransition(async () => {
       setDone(!done);
-      await toggleTask(id, !done);
+      await safeToggleTask(id, !done);
     });
   };
 

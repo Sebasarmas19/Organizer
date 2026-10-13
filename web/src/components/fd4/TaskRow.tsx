@@ -15,7 +15,7 @@
 
 import { useState, useOptimistic, useTransition } from 'react';
 import Link from 'next/link';
-import { toggleTask, deleteTask } from '@/lib/fd4-actions';
+import { safeToggleTask, safeDeleteTask } from '@/lib/offline-sync';
 import { Check, Flag } from './Marks';
 import { Icon } from '@/components/Icon';
 
@@ -38,7 +38,7 @@ export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: bo
   const onToggle = () => {
     startTransition(async () => {
       setDone(!done);
-      await toggleTask(task.id, !done);
+      await safeToggleTask(task.id, !done);
     });
   };
 
@@ -60,7 +60,7 @@ export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: bo
     setDeleted(true);
     startTransition(async () => {
       try {
-        await deleteTask(task.id);
+        await safeDeleteTask(task.id);
       } catch {
         setDeleted(false);
         setConfirmDelete(false);

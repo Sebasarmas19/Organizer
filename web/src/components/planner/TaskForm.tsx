@@ -13,8 +13,8 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Glyph } from '@/components/ios/Glyph';
 import { Icon } from '@/components/Icon';
-import { createTask, deleteTask, dropTask, updateTask } from '@/lib/planner-actions';
-import { toggleTask } from '@/lib/fd4-actions';
+import { createTask, dropTask, updateTask } from '@/lib/planner-actions';
+import { safeToggleTask, safeDeleteTask } from '@/lib/offline-sync';
 import type { ReminderOption } from '@/lib/planner-data';
 
 const DURATIONS = [
@@ -118,7 +118,11 @@ export function TaskForm({
             type="button"
             className="io-btn io-press"
             disabled={pending}
-            onClick={() => run(() => toggleTask(taskId, !done))}
+            onClick={() =>
+              run(async () => {
+                await safeToggleTask(taskId, !done);
+              })
+            }
             style={{
               width: '100%',
               minHeight: 48,
@@ -350,7 +354,11 @@ export function TaskForm({
                   justifyContent: 'center',
                   gap: 8,
                 }}
-                onClick={() => run(() => deleteTask(taskId))}
+                onClick={() =>
+                  run(async () => {
+                    await safeDeleteTask(taskId);
+                  })
+                }
               >
                 <Icon name="trash" size="sm" />
                 Sí, eliminar definitivamente

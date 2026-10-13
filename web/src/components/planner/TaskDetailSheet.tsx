@@ -19,11 +19,10 @@ import { Icon } from '@/components/Icon';
 import {
   getTaskForSheet,
   updateTask,
-  deleteTask,
   dropTask,
   type TaskInput,
 } from '@/lib/planner-actions';
-import { toggleTask } from '@/lib/fd4-actions';
+import { safeToggleTask, safeDeleteTask } from '@/lib/offline-sync';
 import type { ReminderOption, TaskDetail } from '@/lib/planner-data';
 
 const DURATIONS = [
@@ -122,7 +121,7 @@ export function TaskDetailSheet({
     setDone(nextDone);
     startTransition(async () => {
       try {
-        await toggleTask(taskId, nextDone);
+        await safeToggleTask(taskId, nextDone);
         router.refresh();
         if (onUpdated) onUpdated();
       } catch (err) {
@@ -176,7 +175,7 @@ export function TaskDetailSheet({
     if (!taskId || isPending) return;
     startTransition(async () => {
       try {
-        await deleteTask(taskId);
+        await safeDeleteTask(taskId);
         router.refresh();
         if (onDeleted) onDeleted();
         else if (onUpdated) onUpdated();

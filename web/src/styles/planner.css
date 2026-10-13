@@ -542,3 +542,71 @@
   padding: 4px 6px;
   cursor: pointer;
 }
+
+/* ------------------------------------------------ Offline Status Banner ---- */
+.pl-offline-banner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
+  animation: plFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pl-offline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(20, 24, 21, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  font-weight: 500;
+  color: #f5f5f7;
+  white-space: nowrap;
+}
+
+.pl-offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pl-offline-dot--amber {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.pl-offline-dot--blue {
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  animation: plPulse 1.2s infinite ease-in-out;
+}
+
+.pl-offline-dot--green {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes plFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes plPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+

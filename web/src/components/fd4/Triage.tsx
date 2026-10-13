@@ -19,7 +19,7 @@
    ========================================================================= */
 
 import { useCallback, useEffect, useMemo, useOptimistic, useState, useTransition } from 'react';
-import { moveTaskToDate, unscheduleTask, deleteTask } from '@/lib/fd4-actions';
+import { safeMoveTask, safeDeleteTask, safeUnscheduleTask } from '@/lib/offline-sync';
 import type { DayOption, InboxItem } from '@/lib/fd4-pendientes';
 import { Icon } from '@/components/Icon';
 
@@ -75,11 +75,11 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
   );
 
   const toDay = useCallback(
-    (d: DayOption) => decide(d.label, (id) => moveTaskToDate(id, d.dateStr)),
+    (d: DayOption) => decide(d.label, async (id) => { await safeMoveTask(id, d.dateStr); }),
     [decide]
   );
 
-  const someday = useCallback(() => decide('Algún día', (id) => unscheduleTask(id)), [decide]);
+  const someday = useCallback(() => decide('Algún día', async (id) => { await safeUnscheduleTask(id); }), [decide]);
 
   const skip = useCallback(() => {
     if (!current || queue.length < 2) return;
@@ -94,7 +94,7 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
     startTransition(async () => {
       setResolved({ id: last.id, add: false });
       /* Vuelve a como entro: sin dia y sin clasificar. */
-      await moveTaskToDate(last.id, null);
+      await safeMoveTask(last.id, null);
     });
   }, [history, setResolved]);
 
@@ -105,7 +105,7 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
     setShowDays(false);
     startTransition(async () => {
       setResolved({ id: item.id, add: true });
-      await deleteTask(item.id);
+      await safeDeleteTask(item.id);
     });
   }, [current, setResolved]);
 
