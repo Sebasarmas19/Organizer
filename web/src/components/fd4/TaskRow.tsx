@@ -13,10 +13,11 @@
    React revierte solo: nada se pierde en silencio (regla 5).
    ========================================================================= */
 
-import { useOptimistic, useTransition } from 'react';
+import { useState, useOptimistic, useTransition } from 'react';
 import Link from 'next/link';
-import { toggleTask } from '@/lib/fd4-actions';
+import { toggleTask, deleteTask } from '@/lib/fd4-actions';
 import { Check, Flag } from './Marks';
+import { Icon } from '@/components/Icon';
 
 export type TaskRowData = {
   id: string;
@@ -30,6 +31,8 @@ export type TaskRowData = {
 
 export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: boolean }) {
   const [done, setDone] = useOptimistic(task.done);
+  const [deleted, setDeleted] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [, startTransition] = useTransition();
 
   const onToggle = () => {
@@ -38,6 +41,34 @@ export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: bo
       await toggleTask(task.id, !done);
     });
   };
+
+  const onStartDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmDelete(true);
+  };
+
+  const onCancelDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmDelete(false);
+  };
+
+  const onConfirmDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleted(true);
+    startTransition(async () => {
+      try {
+        await deleteTask(task.id);
+      } catch {
+        setDeleted(false);
+        setConfirmDelete(false);
+      }
+    });
+  };
+
+  if (deleted) return null;
 
   return (
     <div className="pl-task fd-task--split" data-done={done ? 'true' : 'false'}>
@@ -68,6 +99,38 @@ export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: bo
           ) : null}
         </span>
       </Link>
+      <div className="pl-task__delete">
+        {confirmDelete ? (
+          <div className="pl-task__del-confirm">
+            <button
+              type="button"
+              className="pl-task__del-confirm-btn"
+              onClick={onConfirmDelete}
+              aria-label={`Confirmar borrado de ${task.title}`}
+            >
+              Borrar
+            </button>
+            <button
+              type="button"
+              className="pl-task__del-cancel-btn"
+              onClick={onCancelDelete}
+              aria-label="Cancelar borrado"
+            >
+              <Icon name="xmark" size="sm" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="pl-task__del-btn"
+            onClick={onStartDelete}
+            aria-label={`Eliminar tarea ${task.title}`}
+            title="Eliminar tarea"
+          >
+            <Icon name="trash" size="sm" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

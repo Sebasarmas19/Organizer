@@ -19,7 +19,7 @@
    ========================================================================= */
 
 import { useCallback, useEffect, useMemo, useOptimistic, useState, useTransition } from 'react';
-import { moveTaskToDate, unscheduleTask } from '@/lib/fd4-actions';
+import { moveTaskToDate, unscheduleTask, deleteTask } from '@/lib/fd4-actions';
 import type { DayOption, InboxItem } from '@/lib/fd4-pendientes';
 import { Icon } from '@/components/Icon';
 
@@ -36,6 +36,7 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
   const [skipped, setSkipped] = useState<string[]>([]);
   const [showDays, setShowDays] = useState(false);
   const [history, setHistory] = useState<Decision[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   /* Los ids ya decididos salen de la cola en el acto; si el servidor falla,
      React los devuelve. Deshacer los vuelve a meter. */
@@ -96,6 +97,19 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
       await moveTaskToDate(last.id, null);
     });
   }, [history, setResolved]);
+
+  const onConfirmDelete = useCallback(() => {
+    if (!current) return;
+    const item = current;
+    setConfirmDeleteId(null);
+    setShowDays(false);
+    startTransition(async () => {
+      setResolved({ id: item.id, add: true });
+      await deleteTask(item.id);
+    });
+  }, [current, setResolved]);
+
+  const isConfirmingDelete = Boolean(current && confirmDeleteId === current.id);
 
   /* Teclado. Solo cuando no se esta escribiendo en un campo. */
   useEffect(() => {
@@ -181,14 +195,48 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
             </button>
           </div>
 
-          <button
-            type="button"
-            className="fd5-cap__skip"
-            onClick={skip}
-            disabled={queue.length < 2}
-          >
-            Dejar sin fecha por ahora <kbd>espacio</kbd>
-          </button>
+          <div className="fd5-cap__foot">
+            <button
+              type="button"
+              className="fd5-cap__skip"
+              onClick={skip}
+              disabled={queue.length < 2}
+            >
+              Dejar sin fecha por ahora <kbd>espacio</kbd>
+            </button>
+            {isConfirmingDelete ? (
+              <div className="fd5-cap__del-confirm">
+                <span>¿Borrar?</span>
+                <button
+                  type="button"
+                  className="fd5-cap__del-confirm-btn"
+                  onClick={onConfirmDelete}
+                  aria-label="Confirmar borrado de la captura"
+                >
+                  Sí, eliminar
+                </button>
+                <button
+                  type="button"
+                  className="fd5-cap__del-cancel-btn"
+                  onClick={() => setConfirmDeleteId(null)}
+                  aria-label="Cancelar borrado"
+                >
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="fd5-cap__del"
+                onClick={() => setConfirmDeleteId(current.id)}
+                title="Eliminar captura definitivamente"
+                aria-label="Eliminar captura"
+              >
+                <Icon name="trash" size="sm" />
+                Descartar
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="fd5-cap fd5-cap--rest">

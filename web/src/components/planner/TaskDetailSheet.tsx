@@ -15,6 +15,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet } from '@/components/ios/Sheet';
 import { Glyph } from '@/components/ios/Glyph';
+import { Icon } from '@/components/Icon';
 import {
   getTaskForSheet,
   updateTask,
@@ -464,33 +465,61 @@ export function TaskDetailSheet({
           ) : null}
 
           {confirmDelete ? (
-            <button
-              type="button"
-              className="io-btn io-press"
-              disabled={isPending}
-              onClick={handleDelete}
-              style={{
-                background: '#FF3B30',
-                color: '#fff',
-                fontWeight: 600,
-                minHeight: 44,
-              }}
-            >
-              Sí, borrar definitivamente
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                type="button"
+                className="io-btn io-press"
+                disabled={isPending}
+                onClick={handleDelete}
+                style={{
+                  background: '#FF3B30',
+                  color: '#fff',
+                  fontWeight: 600,
+                  minHeight: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <Icon name="trash" size="sm" />
+                Sí, eliminar definitivamente
+              </button>
+              <button
+                type="button"
+                className="io-btn io-press"
+                disabled={isPending}
+                onClick={() => setConfirmDelete(false)}
+                style={{
+                  background: 'var(--io-cell)',
+                  color: 'var(--text-muted)',
+                  border: '1px solid var(--io-sep)',
+                  minHeight: 40,
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
           ) : (
             <button
               type="button"
               className="io-btn io-press"
               onClick={() => setConfirmDelete(true)}
               style={{
-                background: 'transparent',
+                background: 'rgba(255, 59, 48, 0.08)',
+                border: '1px solid rgba(255, 59, 48, 0.3)',
                 color: '#FF3B30',
                 fontSize: 15,
-                minHeight: 40,
+                fontWeight: 600,
+                minHeight: 44,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
               }}
             >
-              Borrar tarea
+              <Icon name="trash" size="sm" />
+              Eliminar tarea
             </button>
           )}
         </div>

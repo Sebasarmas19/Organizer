@@ -94,6 +94,23 @@ export async function deleteReminder(id: string) {
 }
 
 /**
+ * Eliminar una tarea definitivamente de la base de datos.
+ * Los bloques asociados caen automáticamente (`item_id references items on delete cascade`).
+ */
+export async function deleteTask(id: string) {
+  const { supabase, user } = await requireUser();
+
+  const { error } = await supabase
+    .from('items')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (error) throw new Error(error.message);
+  revalidateFd4();
+}
+
+/**
  * Marcar o desmarcar una tarea desde el Calendario (riel de horas o chip sin hora).
  * Mantiene sincronizados `blocks` y `items`.
  */

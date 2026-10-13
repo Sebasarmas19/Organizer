@@ -12,6 +12,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Glyph } from '@/components/ios/Glyph';
+import { Icon } from '@/components/Icon';
 import { createTask, deleteTask, dropTask, updateTask } from '@/lib/planner-actions';
 import { toggleTask } from '@/lib/fd4-actions';
 import type { ReminderOption } from '@/lib/planner-data';
@@ -334,27 +335,65 @@ export function TaskForm({
             </button>
           ) : null}
           {confirmDelete ? (
-            <button
-              type="button"
-              className="io-btn io-press"
-              disabled={pending}
-              style={{ background: '#FF3B30', color: '#fff', fontWeight: 600 }}
-              onClick={() => run(() => deleteTask(taskId))}
-            >
-              Sí, borrar definitivamente
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                type="button"
+                className="io-btn io-press"
+                disabled={pending}
+                style={{
+                  background: '#FF3B30',
+                  color: '#fff',
+                  fontWeight: 600,
+                  minHeight: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+                onClick={() => run(() => deleteTask(taskId))}
+              >
+                <Icon name="trash" size="sm" />
+                Sí, eliminar definitivamente
+              </button>
+              <button
+                type="button"
+                className="io-btn io-press"
+                disabled={pending}
+                style={{
+                  background: 'var(--io-cell)',
+                  color: 'var(--text-muted)',
+                  border: '1px solid var(--io-sep)',
+                  minHeight: 40,
+                }}
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancelar
+              </button>
+            </div>
           ) : (
             <button
               type="button"
               className="io-btn io-press"
-              style={{ background: 'transparent', color: '#FF3B30', fontSize: 15 }}
+              style={{
+                background: 'rgba(255, 59, 48, 0.08)',
+                border: '1px solid rgba(255, 59, 48, 0.3)',
+                color: '#FF3B30',
+                fontSize: 15,
+                fontWeight: 600,
+                minHeight: 44,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
               onClick={() => setConfirmDelete(true)}
             >
-              Borrar tarea
+              <Icon name="trash" size="sm" />
+              Eliminar tarea
             </button>
           )}
           <span className="io-field__hint" style={{ margin: '4px 8px 0', textAlign: 'center' }}>
-            Soltar = no la harás, pero queda en el historial. Borrar = desaparece.
+            Soltar = no la harás, pero queda en el historial. Eliminar = desaparece por completo.
           </span>
         </div>
       ) : null}

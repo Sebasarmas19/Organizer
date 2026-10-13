@@ -173,6 +173,71 @@
   font-size: var(--fd-body);
 }
 
+.pl-task__delete {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.pl-task__del-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--text-faint);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity var(--dur-fast), color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.pl-task:hover .pl-task__del-btn,
+.pl-task__del-btn:focus-visible {
+  opacity: 1;
+}
+
+.pl-task__del-btn:hover,
+.pl-task__del-btn:active {
+  color: #FF3B30;
+  background: rgba(255, 59, 48, 0.12);
+  opacity: 1;
+}
+
+.pl-task__del-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pl-task__del-confirm-btn {
+  font-size: 11px;
+  font-weight: var(--weight-semibold, 600);
+  color: #fff;
+  background: #FF3B30;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pl-task__del-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  border: 0;
+  cursor: pointer;
+}
+
 /* ---------------------------------------------------------- formulario ---- */
 
 .pl-form {
@@ -411,3 +476,69 @@
 
 .pl-blocks { pointer-events: none; }
 .pl-blocks .fd-block { pointer-events: auto; }
+
+/* ------------------------------------------------ Triage Discard Button ---- */
+.fd5-cap__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.fd5-cap__del {
+  min-height: var(--tap-min, 44px);
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: var(--fd-sub, 13px);
+  font-weight: 500;
+  color: var(--text-faint, #888);
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 10px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.fd5-cap__del:hover,
+.fd5-cap__del:active {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.fd5-cap__del-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fd-sub, 13px);
+  background: rgba(220, 38, 38, 0.08);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.fd5-cap__del-confirm-btn {
+  border: 0;
+  background: #dc2626;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.fd5-cap__del-cancel-btn {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #666);
+  font-size: 12px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
