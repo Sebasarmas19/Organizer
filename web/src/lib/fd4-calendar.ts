@@ -22,6 +22,7 @@ import {
   getMondayOfWeek,
   getMonthGrid,
   getTodayString,
+  isOccurrenceOn,
   parseDateString,
 } from './date-utils';
 
@@ -157,7 +158,7 @@ export async function getMonthView(
   const [blocksRes, itemsRes, remindersRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('id, item_id, title, starts_at, ends_at, source')
+      .select('id, item_id, reminder_id, title, starts_at, ends_at, source')
       .eq('user_id', userId)
       .gte('starts_at', dayStartUTC(firstStr))
       .lte('starts_at', dayEndUTC(lastStr))
@@ -171,18 +172,30 @@ export async function getMonthView(
       .lte('due_on', lastStr),
     supabase
       .from('reminders')
-      .select('id, title, occurs_on, occurs_at')
+      .select('id, title, occurs_on, occurs_at, recurrence')
       .eq('user_id', userId)
-      .gte('occurs_on', firstStr)
-      .lte('occurs_on', lastStr)
+      .or(`and(occurs_on.gte.${firstStr},occurs_on.lte.${lastStr}),recurrence.not.is.null`)
       .order('occurs_on', { ascending: true }),
   ]);
 
-  const hasReminder = new Set((remindersRes.data ?? []).map((r) => r.occurs_on));
+  const rawReminders = remindersRes.data ?? [];
+  const hasReminder = new Set<string>();
+  for (const r of rawReminders) {
+    if (r.occurs_on >= firstStr && r.occurs_on <= lastStr) {
+      hasReminder.add(r.occurs_on);
+    }
+    if (r.recurrence) {
+      for (const cell of cellsRaw) {
+        if (isOccurrenceOn(r.occurs_on, r.recurrence, cell.dateStr)) {
+          hasReminder.add(cell.dateStr);
+        }
+      }
+    }
+  }
   const hasTask = new Set<string>();
 
   /* Las clases no entran al calendario (#53): tienen su pestaña, Clases. */
-  const taskBlocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template');
+  const taskBlocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template' && !b.reminder_id);
 
   for (const b of taskBlocks) {
     hasTask.add(localDay(b.starts_at, timezone));
@@ -210,8 +223,8 @@ export async function getMonthView(
 
   for (const c of cellsRaw) {
     const dStr = c.dateStr;
-    const dayReminders = (remindersRes.data ?? [])
-      .filter((r) => r.occurs_on === dStr)
+    const dayReminders = rawReminders
+      .filter((r) => r.occurs_on === dStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dStr)))
       .map((r) => ({
         id: r.id,
         title: r.title,
@@ -396,7 +409,7 @@ export async function getWeekView(
   const [blocksRes, itemsRes, remindersRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('id, title, starts_at, ends_at, source')
+      .select('id, item_id, reminder_id, title, starts_at, ends_at, source')
       .eq('user_id', userId)
       .gte('starts_at', dayStartUTC(mondayStr))
       .lte('starts_at', dayEndUTC(sundayStr))
@@ -410,15 +423,14 @@ export async function getWeekView(
       .lte('due_on', sundayStr),
     supabase
       .from('reminders')
-      .select('id, title, occurs_on, occurs_at, notice_days, context_id, notes')
+      .select('id, title, occurs_on, occurs_at, notice_days, recurrence, reminder_min, context_id, notes')
       .eq('user_id', userId)
-      .gte('occurs_on', mondayStr)
-      .lte('occurs_on', sundayStr)
+      .or(`and(occurs_on.gte.${mondayStr},occurs_on.lte.${sundayStr}),recurrence.not.is.null`)
       .order('occurs_at', { ascending: true, nullsFirst: false }),
   ]);
 
   /* Las clases no entran al calendario (#53): tienen su pestaña, Clases. */
-  const blocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template');
+  const blocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template' && !b.reminder_id);
   const items = itemsRes.data ?? [];
   const reminders = (remindersRes.data ?? []) as Reminder[];
 
@@ -435,7 +447,9 @@ export async function getWeekView(
       .map((t) => ({ title: t.title, hora: '' }));
     const tasks = [...blockTasks, ...looseTasks];
 
-    const rem = reminders.find((r) => r.occurs_on === dateStr);
+    const rem = reminders.find(
+      (r) => r.occurs_on === dateStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dateStr))
+    );
 
     return {
       dateStr,
@@ -603,7 +617,7 @@ export async function getDayView(
   const [blocksRes, itemsRes, remindersRes, contextsRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('id, item_id, title, starts_at, ends_at, source, context_id, status')
+      .select('id, item_id, reminder_id, title, starts_at, ends_at, source, context_id, status')
       .eq('user_id', userId)
       .gte('starts_at', dayStartUTC(dateStr))
       .lte('starts_at', dayEndUTC(dateStr))
@@ -616,16 +630,18 @@ export async function getDayView(
       .eq('due_on', dateStr),
     supabase
       .from('reminders')
-      .select('id, title, occurs_on, occurs_at, notice_days, context_id, notes')
+      .select('id, title, occurs_on, occurs_at, notice_days, recurrence, reminder_min, context_id, notes')
       .eq('user_id', userId)
-      .eq('occurs_on', dateStr)
+      .or(`occurs_on.eq.${dateStr},recurrence.not.is.null`)
       .order('occurs_at', { ascending: true, nullsFirst: false }),
     supabase.from('contexts').select('id, name').eq('user_id', userId),
   ]);
 
   const rawBlocks = blocksRes.data ?? [];
   const items = (itemsRes.data ?? []) as Pick<Task, 'id' | 'title' | 'due_on' | 'context_id' | 'status'>[];
-  const reminders = (remindersRes.data ?? []) as Reminder[];
+  const reminders = ((remindersRes.data ?? []) as Reminder[]).filter(
+    (r) => r.occurs_on === dateStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dateStr))
+  );
   const contextName = new Map((contextsRes.data ?? []).map((c) => [c.id, c.name]));
 
   const toPx = (minutes: number) => ((minutes - DAY_START_HOUR * 60) / 60) * HOUR_PX;
@@ -642,7 +658,7 @@ export async function getDayView(
   const blocks: DayBlockView[] = [];
 
   for (const b of rawBlocks) {
-    if (b.source === 'template') continue;
+    if (b.source === 'template' || b.reminder_id) continue;
     const from = localMinutes(b.starts_at, timezone);
     const to = localMinutes(b.ends_at, timezone);
     const mins = Math.max(to - from, 30);

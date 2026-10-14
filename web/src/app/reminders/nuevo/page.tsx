@@ -48,7 +48,7 @@ export default async function NewReminderPage({
         </header>
         <ReminderForm
           mode="create"
-          initial={{ title: '', occursOn: date, occursAt: '', noticeDays: '', notes: '' }}
+          initial={{ title: '', occursOn: date, occursAt: '', noticeDays: '', recurrence: '', reminderMin: '', notes: '' }}
         />
       </main>
       <TabBar />

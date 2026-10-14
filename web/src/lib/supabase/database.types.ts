@@ -54,6 +54,9 @@ export type ContextKind = 'course' | 'project' | 'personal' | 'reading';
 /** `resource_kind` */
 export type ResourceKind = 'tool' | 'skill' | 'article' | 'video' | 'repo' | 'other';
 
+/** `recurrence` para recordatorios periódicos */
+export type ReminderRecurrence = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
 export interface Database {
   public: {
     Tables: {
@@ -171,6 +174,7 @@ export interface Database {
           user_id: string;
           item_id: string | null;
           template_id: string | null;
+          reminder_id: string | null;
           title: string;
           context_id: string | null;
           starts_at: string;
@@ -185,6 +189,7 @@ export interface Database {
           user_id: string;
           item_id?: string | null;
           template_id?: string | null;
+          reminder_id?: string | null;
           title: string;
           context_id?: string | null;
           starts_at: string;
@@ -372,6 +377,8 @@ export interface Database {
           occurs_on: string;
           occurs_at: string | null;
           notice_days: number | null;
+          recurrence: ReminderRecurrence | null;
+          reminder_min: number | null;
           created_at: string;
         };
         Insert: {
@@ -383,6 +390,8 @@ export interface Database {
           occurs_on: string;
           occurs_at?: string | null;
           notice_days?: number | null;
+          recurrence?: ReminderRecurrence | null;
+          reminder_min?: number | null;
           created_at?: string;
         };
         Update: Partial<Database['public']['Tables']['reminders']['Insert']>;

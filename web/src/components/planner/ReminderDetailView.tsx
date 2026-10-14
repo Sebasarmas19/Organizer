@@ -19,8 +19,9 @@ import { useRouter } from 'next/navigation';
 import type { ReminderDetail } from '@/lib/planner-data';
 import { createTask, linkTaskToReminder } from '@/lib/planner-actions';
 import { deleteReminder, toggleTask } from '@/lib/fd4-actions';
-import { addDays } from '@/lib/date-utils';
+import { addDays, formatRecurrenceLabel } from '@/lib/date-utils';
 import { Icon } from '@/components/Icon';
+import { Glyph } from '@/components/ios/Glyph';
 import { BackButton } from './BackButton';
 import { ReminderForm } from './ReminderForm';
 
@@ -129,6 +130,8 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
             occursOn: detail.occursOn,
             occursAt: detail.occursAt?.slice(0, 5) ?? '',
             noticeDays: detail.noticeDays ? String(detail.noticeDays) : '',
+            recurrence: detail.recurrence ?? '',
+            reminderMin: detail.reminderMin !== null && detail.reminderMin !== undefined ? String(detail.reminderMin) : '',
             notes: detail.notes ?? '',
           }}
           onDone={() => setEditing(false)}
@@ -153,10 +156,24 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
       </div>
 
       <header className="fd5-rhead">
-        <span className="fd5-chip">
-          <Icon name="flag" size="sm" className="fd5-flag" />
-          Reminder · {detail.past ? 'ya pasó' : detail.distance}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span className="fd5-chip">
+            <Icon name="flag" size="sm" className="fd5-flag" />
+            Reminder · {detail.past ? 'ya pasó' : detail.distance}
+          </span>
+          {detail.recurrence ? (
+            <span className="fd5-chip" style={{ color: 'var(--io-tint)' }}>
+              <Glyph name="repeat" style={{ width: 14, height: 14 }} />
+              {formatRecurrenceLabel(detail.recurrence)}
+            </span>
+          ) : null}
+          {detail.reminderMin !== null && detail.reminderMin !== undefined && detail.occursAt ? (
+            <span className="fd5-chip">
+              <Glyph name="clock" style={{ width: 14, height: 14 }} />
+              Aviso {detail.reminderMin} min antes
+            </span>
+          ) : null}
+        </div>
         <h1>{detail.title}</h1>
         <p>{detail.when}</p>
         {detail.notes ? <p className="fd5-rhead__notes">{detail.notes}</p> : null}

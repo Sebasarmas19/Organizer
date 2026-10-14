@@ -212,12 +212,41 @@ export function CreateTaskSheet({
                 <label htmlFor="task-sheet-time" className="io-field__label">
                   Hora (opcional)
                 </label>
-                <input
-                  id="task-sheet-time"
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
+                  {!time ? (
+                    <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                      Sin hora
+                    </span>
+                  ) : null}
+                  <input
+                    id="task-sheet-time"
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    style={!time ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
+                  />
+                  {time ? (
+                    <button
+                      type="button"
+                      aria-label="Quitar hora"
+                      onClick={() => {
+                        setTime('');
+                        setRemindBeforeMin('');
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 0,
+                        padding: 4,
+                        color: 'var(--io-label-3)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Glyph name="xmark" style={{ width: 14, height: 14 }} />
+                    </button>
+                  ) : null}
+                </div>
               </div>
 
               {time ? (

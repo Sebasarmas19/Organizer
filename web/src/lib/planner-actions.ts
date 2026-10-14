@@ -18,11 +18,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import type { ItemStatus, Update } from '@/lib/supabase/database.types';
+import type { ItemStatus, ReminderRecurrence, Update } from '@/lib/supabase/database.types';
 import { getProfileTimezone } from './profile';
 import { getTaskDetail, getReminderDetail, type TaskDetail, type ReminderDetail } from './planner-data';
 import { timeToMinutes, zonedIso } from './tz';
-import { addDays } from './date-utils';
+import { addDays, computeNextOccurrence, getTodayString } from './date-utils';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
@@ -72,6 +72,10 @@ export type ReminderInput = {
   occursAt?: string | null;
   /** Días de anticipación para que encabece la notificación. Null = 1. */
   noticeDays?: number | null;
+  /** Recurrencia periódica: daily, weekly, monthly, yearly. Null = no se repite. */
+  recurrence?: ReminderRecurrence | null;
+  /** Minutos de anticipación para notificación push antes del evento (0, 10, 15, 30, 60, 120). */
+  reminderMin?: number | null;
   notes?: string | null;
 };
 
@@ -82,36 +86,167 @@ function reminderRow(input: ReminderInput) {
   if (notice !== null && (!Number.isInteger(notice) || notice < 1 || notice > 60)) {
     throw new Error('El aviso tiene que ser entre 1 y 60 días.');
   }
+  const recurrence = input.recurrence ?? null;
+  if (recurrence !== null && !['daily', 'weekly', 'monthly', 'yearly'].includes(recurrence)) {
+    throw new Error('Recurrencia no válida.');
+  }
+  const reminderMin = input.reminderMin !== undefined && input.reminderMin !== null ? Number(input.reminderMin) : null;
+  if (reminderMin !== null && (!Number.isInteger(reminderMin) || reminderMin < 0)) {
+    throw new Error('El aviso previo tiene que ser un número mayor o igual a 0 minutos.');
+  }
   const time = cleanTime(input.occursAt);
   return {
     title: cleanTitle(input.title),
     occurs_on: occursOn,
     occurs_at: time ? `${time}:00` : null,
     notice_days: notice,
+    recurrence,
+    reminder_min: reminderMin,
     notes: cleanNotes(input.notes),
   };
 }
 
+/**
+ * El bloque en `blocks` para un reminder con hora.
+ * Permite que aparezca en el calendario y que el despachador de notificaciones
+ * push avise "15 min antes", "30 min antes", etc.
+ */
+async function syncReminderBlock(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  reminderId: string,
+  title: string,
+  contextId: string | null,
+  occursOn: string,
+  occursAt: string | null,
+  reminderMin: number | null | undefined
+): Promise<void> {
+  const { error: delErr } = await supabase
+    .from('blocks')
+    .delete()
+    .eq('user_id', userId)
+    .eq('reminder_id', reminderId);
+  if (delErr) throw new Error(delErr.message);
+
+  if (!occursAt) return;
+
+  const timezone = await getProfileTimezone(supabase, userId);
+  const time = occursAt.slice(0, 5);
+  const startMin = timeToMinutes(time);
+  const endTotal = startMin + 60; // Duración estándar de 1h
+  const endDate = endTotal >= 24 * 60 ? addDays(occursOn, 1) : occursOn;
+  const endMin = endTotal % (24 * 60);
+  const endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+
+  const { error } = await supabase.from('blocks').insert({
+    user_id: userId,
+    reminder_id: reminderId,
+    item_id: null,
+    title,
+    context_id: contextId,
+    starts_at: zonedIso(occursOn, time, timezone),
+    ends_at: zonedIso(endDate, endTime, timezone),
+    status: 'pending',
+    source: 'manual',
+    reminder_min: reminderMin !== null && reminderMin !== undefined && reminderMin >= 0 ? reminderMin : null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Revisa los recordatorios recurrentes que hayan quedado en el pasado
+ * y los adelanta al ciclo actual o próximo.
+ */
+export async function advancePastRecurringReminders(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  todayStr: string
+): Promise<void> {
+  const { data: pastReminders } = await supabase
+    .from('reminders')
+    .select('id, title, occurs_on, occurs_at, recurrence, reminder_min, context_id')
+    .eq('user_id', userId)
+    .not('recurrence', 'is', null)
+    .lt('occurs_on', todayStr);
+
+  if (!pastReminders || pastReminders.length === 0) return;
+
+  for (const rem of pastReminders) {
+    if (!rem.recurrence) continue;
+    const nextOccursOn = computeNextOccurrence(
+      rem.occurs_on,
+      rem.recurrence as ReminderRecurrence,
+      todayStr
+    );
+    if (nextOccursOn !== rem.occurs_on) {
+      await supabase
+        .from('reminders')
+        .update({ occurs_on: nextOccursOn })
+        .eq('id', rem.id)
+        .eq('user_id', userId);
+
+      await syncReminderBlock(
+        supabase,
+        userId,
+        rem.id,
+        rem.title,
+        rem.context_id,
+        nextOccursOn,
+        rem.occurs_at,
+        rem.reminder_min
+      );
+    }
+  }
+}
+
 export async function createReminder(input: ReminderInput): Promise<{ id: string }> {
   const { supabase, user } = await requireUser();
+  const row = reminderRow(input);
   const { data, error } = await supabase
     .from('reminders')
-    .insert({ user_id: user.id, ...reminderRow(input) })
-    .select('id')
+    .insert({ user_id: user.id, ...row })
+    .select('id, context_id')
     .single();
   if (error) throw new Error(error.message);
+
+  await syncReminderBlock(
+    supabase,
+    user.id,
+    data.id,
+    row.title,
+    data.context_id,
+    row.occurs_on,
+    row.occurs_at,
+    row.reminder_min
+  );
+
   revalidateAll();
   return { id: data.id };
 }
 
 export async function updateReminder(id: string, input: ReminderInput): Promise<void> {
   const { supabase, user } = await requireUser();
-  const { error } = await supabase
+  const row = reminderRow(input);
+  const { data, error } = await supabase
     .from('reminders')
-    .update(reminderRow(input))
+    .update(row)
     .eq('id', id)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .select('context_id')
+    .single();
   if (error) throw new Error(error.message);
+
+  await syncReminderBlock(
+    supabase,
+    user.id,
+    id,
+    row.title,
+    data?.context_id ?? null,
+    row.occurs_on,
+    row.occurs_at,
+    row.reminder_min
+  );
+
   revalidateAll();
 }
 

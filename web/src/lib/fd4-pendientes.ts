@@ -17,6 +17,7 @@ import {
   getTodayString,
   parseDateString,
 } from './date-utils';
+import { advancePastRecurringReminders } from './planner-actions';
 
 import type { ReminderOption } from './planner-data';
 
@@ -60,6 +61,8 @@ export async function getPendientesData(
   const todayStr = getTodayString(timezone);
   const weekEndStr = addDays(todayStr, 7);
 
+  await advancePastRecurringReminders(supabase, userId, todayStr);
+
   const [itemsRes, remindersRes, contextsRes] = await Promise.all([
     /* Todo lo vivo. `done` entra tambien: una tarea recien marcada tiene que
        quedarse en su sitio, tachada, hasta que recargues — si desapareciera
@@ -74,7 +77,7 @@ export async function getPendientesData(
 
     supabase
       .from('reminders')
-      .select('id, title, occurs_on, occurs_at, notice_days')
+      .select('id, title, occurs_on, occurs_at, notice_days, recurrence, reminder_min')
       .eq('user_id', userId)
       .gte('occurs_on', todayStr)
       .order('occurs_on', { ascending: true }),
@@ -172,6 +175,7 @@ export async function getPendientesData(
       when: formatWhen(r.occurs_on, r.occurs_at, timezone),
       dateStr: r.occurs_on,
       prep,
+      recurrence: r.recurrence,
       emptyLabel: prep.length
         ? ''
         : (doneByReminder.get(r.id) ?? 0) > 0

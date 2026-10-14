@@ -250,12 +250,38 @@ export function TaskForm({
           <>
             <div className="io-field io-field--row">
               <label className="io-field__label" htmlFor="task-time">Hora (opcional)</label>
-              <input
-                id="task-time"
-                type="time"
-                value={v.time}
-                onChange={(e) => setV({ ...v, time: e.target.value })}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
+                {!v.time ? (
+                  <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                    Sin hora
+                  </span>
+                ) : null}
+                <input
+                  id="task-time"
+                  type="time"
+                  value={v.time}
+                  onChange={(e) => setV({ ...v, time: e.target.value })}
+                  style={!v.time ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
+                />
+                {v.time ? (
+                  <button
+                    type="button"
+                    aria-label="Quitar hora"
+                    onClick={() => setV({ ...v, time: '', remindBeforeMin: '' })}
+                    style={{
+                      background: 'transparent',
+                      border: 0,
+                      padding: 4,
+                      color: 'var(--io-label-3)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Glyph name="xmark" style={{ width: 14, height: 14 }} />
+                  </button>
+                ) : null}
+              </div>
             </div>
             {v.time ? (
               <>

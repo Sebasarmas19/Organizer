@@ -10,7 +10,9 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Glyph } from '@/components/ios/Glyph';
 import { createReminder, updateReminder } from '@/lib/planner-actions';
+import type { ReminderRecurrence } from '@/lib/supabase/database.types';
 
 const NOTICE_OPTIONS = [
   { value: '', label: '1 día antes (normal)' },
@@ -21,11 +23,30 @@ const NOTICE_OPTIONS = [
   { value: '14', label: '2 semanas antes' },
 ];
 
+const RECURRENCE_OPTIONS = [
+  { value: '', label: 'Nunca (no se repite)' },
+  { value: 'daily', label: 'Cada día' },
+  { value: 'weekly', label: 'Cada semana' },
+  { value: 'monthly', label: 'Cada mes' },
+  { value: 'yearly', label: 'Cada año' },
+];
+
+const TIME_ALERT_OPTIONS = [
+  { value: '', label: 'Sin aviso previo' },
+  { value: '10', label: '10 min antes' },
+  { value: '15', label: '15 min antes' },
+  { value: '30', label: '30 min antes' },
+  { value: '60', label: '1 hora antes' },
+  { value: '120', label: '2 horas antes' },
+];
+
 export type ReminderFormValues = {
   title: string;
   occursOn: string;
   occursAt: string;
   noticeDays: string;
+  recurrence: string;
+  reminderMin: string;
   notes: string;
 };
 
@@ -58,6 +79,8 @@ export function ReminderForm({
       occursOn: values.occursOn,
       occursAt: values.occursAt || null,
       noticeDays: values.noticeDays ? Number(values.noticeDays) : null,
+      recurrence: (values.recurrence as ReminderRecurrence) || null,
+      reminderMin: values.occursAt && values.reminderMin !== '' ? Number(values.reminderMin) : null,
       notes: values.notes,
     };
     startTransition(async () => {
@@ -123,20 +146,70 @@ export function ReminderForm({
         </div>
         <div className="io-field io-field--row">
           <label className="io-field__label" htmlFor="rem-time">Hora (opcional)</label>
-          <input
-            id="rem-time"
-            type="time"
-            value={values.occursAt}
-            onChange={set('occursAt')}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
+            {!values.occursAt ? (
+              <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                Sin hora
+              </span>
+            ) : null}
+            <input
+              id="rem-time"
+              type="time"
+              value={values.occursAt}
+              onChange={set('occursAt')}
+              style={!values.occursAt ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
+            />
+            {values.occursAt ? (
+              <button
+                type="button"
+                aria-label="Quitar hora"
+                onClick={() => setValues((v) => ({ ...v, occursAt: '', reminderMin: '' }))}
+                style={{
+                  background: 'transparent',
+                  border: 0,
+                  padding: 4,
+                  color: 'var(--io-label-3)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Glyph name="xmark" style={{ width: 14, height: 14 }} />
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <div className="io-field io-field--row">
+          <label className="io-field__label" htmlFor="rem-recurrence">Repetir</label>
+          <select id="rem-recurrence" value={values.recurrence} onChange={set('recurrence')}>
+            {RECURRENCE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* GRUPO 3: Notificación */}
-      <span className="io-form__label">Notificación matutina</span>
+      {values.occursAt ? (
+        <>
+          <span className="io-form__label">Aviso previo al teléfono</span>
+          <div className="io-group">
+            <div className="io-field io-field--row">
+              <label className="io-field__label" htmlFor="rem-min">Avisar</label>
+              <select id="rem-min" value={values.reminderMin} onChange={set('reminderMin')}>
+                {TIME_ALERT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      <span className="io-form__label">Resumen matutino</span>
       <div className="io-group">
         <div className="io-field io-field--row">
-          <label className="io-field__label" htmlFor="rem-notice">Avisar</label>
+          <label className="io-field__label" htmlFor="rem-notice">Encabezar</label>
           <select id="rem-notice" value={values.noticeDays} onChange={set('noticeDays')}>
             {NOTICE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>

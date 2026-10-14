@@ -417,13 +417,14 @@ export interface BeforeBlockInput {
   range: string;
   location: string | null;
   isClass: boolean;
+  isReminder?: boolean;
 }
 
 export function composeBeforeBlock(input: BeforeBlockInput): NotificationText {
   const lead =
     input.minutesLeft <= 1 ? 'Ya: ' : 'En ' + input.minutesLeft + ' min: ';
   const parts = [input.range, input.location?.trim()].filter(Boolean);
-  const body = parts.join(SEPARATOR) || (input.isClass ? 'Clase' : 'Tarea');
+  const body = parts.join(SEPARATOR) || (input.isClass ? 'Clase' : input.isReminder ? 'Recordatorio' : 'Tarea');
   return { title: fitText(lead + input.title, TITLE_MAX), body: fitText(body, BODY_MAX) };
 }
 

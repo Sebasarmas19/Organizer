@@ -26,7 +26,8 @@ export type GlyphName =
   | 'chevron'
   | 'clock'
   | 'flame'
-  | 'sparkles';
+  | 'sparkles'
+  | 'repeat';
 
 const PATHS: Record<GlyphName, ReactNode> = {
   gear: (
@@ -79,6 +80,12 @@ const PATHS: Record<GlyphName, ReactNode> = {
     </>
   ),
   flame: <path d="M12 2.5c1.2 3.8 5.5 6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.4 1.3-4 2.7-5 .3 1.7 1.3 2.8 2.7 2.8-1.1-3-.6-6 .1-8.8z" />,
+  repeat: (
+    <>
+      <path d="M17 2l4 4-4 4M21 6H7a4 4 0 0 0-4 4v2" />
+      <path d="M7 22l-4-4 4-4M3 18h14a4 4 0 0 0 4-4v-2" />
+    </>
+  ),
 };
 
 /** Los que son silueta rellena y no trazo. */

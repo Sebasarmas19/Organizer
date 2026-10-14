@@ -4,7 +4,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/supabase/database.types';
+import type { Database, ReminderRecurrence } from '@/lib/supabase/database.types';
 import { formatDistance, formatWhen } from './home';
 import { addDays, getTodayString } from './date-utils';
 import { localDateOf, localTimeOf } from './tz';
@@ -29,6 +29,8 @@ export type ReminderDetail = {
   occursOn: string;
   occursAt: string | null;
   noticeDays: number | null;
+  recurrence: ReminderRecurrence | null;
+  reminderMin: number | null;
   notes: string | null;
   /** "viernes 15 · 10:00" */
   when: string;
@@ -100,7 +102,7 @@ export async function getReminderDetail(
   const [remRes, tasksRes, candRes] = await Promise.all([
     supabase
       .from('reminders')
-      .select('id, title, occurs_on, occurs_at, notice_days, notes')
+      .select('id, title, occurs_on, occurs_at, notice_days, recurrence, reminder_min, notes')
       .eq('id', id)
       .eq('user_id', userId)
       .maybeSingle(),
@@ -134,6 +136,8 @@ export async function getReminderDetail(
     occursOn: r.occurs_on,
     occursAt: r.occurs_at,
     noticeDays: r.notice_days,
+    recurrence: r.recurrence as ReminderRecurrence | null,
+    reminderMin: r.reminder_min,
     notes: r.notes,
     when: formatWhen(r.occurs_on, r.occurs_at, timezone),
     distance: formatDistance(todayStr, r.occurs_on),

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Dot, Flag } from './Marks';
 import { Icon } from '@/components/Icon';
 import { deleteReminder } from '@/lib/fd4-actions';
+import { formatRecurrenceLabel } from '@/lib/date-utils';
 
 export type ReminderCardData = {
   id: string;
@@ -13,6 +14,7 @@ export type ReminderCardData = {
   dateStr: string;
   prep: string[];
   emptyLabel: string;
+  recurrence?: string | null;
 };
 
 export function ReminderCard({
@@ -70,7 +72,10 @@ export function ReminderCard({
               <Flag />
               <span className="fd-remcard__text">
                 <span className="fd-remcard__title">{reminder.title}</span>
-                <span className="fd-meta">{reminder.when}</span>
+                <span className="fd-meta">
+                  {reminder.when}
+                  {reminder.recurrence ? ` · ${formatRecurrenceLabel(reminder.recurrence)}` : ''}
+                </span>
               </span>
             </Link>
 

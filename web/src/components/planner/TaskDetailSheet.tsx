@@ -343,17 +343,26 @@ export function TaskDetailSheet({
               <label className="io-field__label" htmlFor="task-time-input">
                 Hora (opcional)
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', minHeight: 48 }}>
+                {!time ? (
+                  <span style={{ color: 'var(--io-label-3)', fontSize: 17, pointerEvents: 'none' }}>
+                    Sin hora
+                  </span>
+                ) : null}
                 <input
                   id="task-time-input"
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
+                  style={!time ? { position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' } : undefined}
                 />
                 {time ? (
                   <button
                     type="button"
-                    onClick={() => setTime('')}
+                    onClick={() => {
+                      setTime('');
+                      setRemindBeforeMin('');
+                    }}
                     aria-label="Quitar hora"
                     style={{
                       background: 'none',
@@ -361,6 +370,8 @@ export function TaskDetailSheet({
                       padding: 4,
                       color: 'var(--io-label-3)',
                       cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                   >
                     <Glyph name="xmark" style={{ width: 14, height: 14 }} />

@@ -108,6 +108,7 @@ interface BeforeBlockRow {
   id: string;
   item_id: string | null;
   template_id: string | null;
+  reminder_id: string | null;
   title: string;
   starts_at: string;
   ends_at: string;
@@ -797,7 +798,7 @@ async function buildBeforeBlocks(
       '&starts_at=gt.' + encodeURIComponent(from) +
       '&starts_at=lte.' + encodeURIComponent(to) +
       '&order=starts_at.asc' +
-      '&select=id,item_id,template_id,title,starts_at,ends_at,source,reminder_min'
+      '&select=id,item_id,template_id,reminder_id,title,starts_at,ends_at,source,reminder_min'
   );
 
   const due = blocks
@@ -830,8 +831,13 @@ async function buildBeforeBlocks(
           formatLocalTime(block.ends_at, profile.timezone),
         location: block.template_id ? locations.get(block.template_id) ?? null : null,
         isClass: block.source === 'template',
+        isReminder: Boolean(block.reminder_id),
       }),
-      url: block.item_id ? '/tareas/' + block.item_id : '/calendario?v=dia&d=' + date,
+      url: block.reminder_id
+        ? '/reminders/' + block.reminder_id
+        : block.item_id
+          ? '/tareas/' + block.item_id
+          : '/calendario?v=dia&d=' + date,
     };
   });
 }

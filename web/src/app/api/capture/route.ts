@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
         title: parsed.title,
         occurs_on: parsed.date,
         occurs_at: parsed.time,
+        reminder_min: parsed.time ? REMIND_BEFORE_MIN : null,
       })
       .select('id, title')
       .single();
@@ -163,6 +164,27 @@ export async function POST(request: NextRequest) {
     if (error || !reminder) {
       console.error('Database insert error in /api/capture (reminder):', error);
       return NextResponse.json({ error: 'Error al crear el reminder' }, { status: 500 });
+    }
+
+    if (parsed.time) {
+      const time = parsed.time.slice(0, 5);
+      const startMin = timeToMinutes(time);
+      const endTotal = startMin + BLOCK_MINUTES;
+      const endDate = endTotal >= 24 * 60 ? addDays(parsed.date, 1) : parsed.date;
+      const endMin = endTotal % (24 * 60);
+      const endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+
+      await admin.from('blocks').insert({
+        user_id: profile.id,
+        reminder_id: reminder.id,
+        item_id: null,
+        title: parsed.title,
+        starts_at: zonedIso(parsed.date, time, timezone),
+        ends_at: zonedIso(endDate, endTime, timezone),
+        status: 'pending',
+        source: 'manual',
+        reminder_min: REMIND_BEFORE_MIN,
+      });
     }
 
     return NextResponse.json(

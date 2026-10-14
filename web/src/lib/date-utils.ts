@@ -281,3 +281,129 @@ export function formatTimeRange(startTimeStr: string, endTimeStr: string): strin
   };
   return `${clean(startTimeStr)} – ${clean(endTimeStr)}`;
 }
+
+/* ═══════════════════════════════════════════════════════ recurrencias ══ */
+
+export type ReminderRecurrence = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+export function formatRecurrenceLabel(recurrence: ReminderRecurrence | string | null | undefined): string {
+  switch (recurrence) {
+    case 'daily':
+      return 'Cada día';
+    case 'weekly':
+      return 'Cada semana';
+    case 'monthly':
+      return 'Cada mes';
+    case 'yearly':
+      return 'Cada año';
+    default:
+      return 'No se repite';
+  }
+}
+
+/**
+ * Devuelve el número de días en un mes de un año concreto (1-indexed month: 1=enero, 12=diciembre).
+ */
+export function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/**
+ * Avanza un paso en la recurrencia.
+ */
+export function stepRecurrence(
+  dateStr: string,
+  recurrence: ReminderRecurrence,
+  originalDateStr?: string
+): string {
+  const orig = parseDateString(originalDateStr || dateStr);
+  const cur = parseDateString(dateStr);
+
+  if (recurrence === 'daily') {
+    return addDays(dateStr, 1);
+  }
+
+  if (recurrence === 'weekly') {
+    return addDays(dateStr, 7);
+  }
+
+  if (recurrence === 'monthly') {
+    let nextYear = cur.year;
+    let nextMonth = cur.month + 1;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear += 1;
+    }
+    const maxDay = daysInMonth(nextYear, nextMonth);
+    const targetDay = Math.min(orig.day, maxDay);
+    return formatDateString(nextYear, nextMonth, targetDay);
+  }
+
+  if (recurrence === 'yearly') {
+    const nextYear = cur.year + 1;
+    const maxDay = daysInMonth(nextYear, orig.month);
+    const targetDay = Math.min(orig.day, maxDay);
+    return formatDateString(nextYear, orig.month, targetDay);
+  }
+
+  return dateStr;
+}
+
+/**
+ * Calcula la próxima ocurrencia a partir de hoy (o la fecha de referencia).
+ * Si ocurre hoy o en el futuro, se mantiene igual.
+ * Si ocurrió en el pasado, avanza periodo a periodo hasta >= todayStr.
+ */
+export function computeNextOccurrence(
+  occursOn: string,
+  recurrence: ReminderRecurrence,
+  todayStr: string
+): string {
+  if (occursOn >= todayStr) return occursOn;
+  let cur = occursOn;
+  let iterations = 0;
+  while (cur < todayStr && iterations < 600) {
+    iterations++;
+    cur = stepRecurrence(cur, recurrence, occursOn);
+  }
+  return cur;
+}
+
+/**
+ * Determina si una regla de recurrencia cae en targetDate (YYYY-MM-DD).
+ */
+export function isOccurrenceOn(
+  occursOn: string,
+  recurrence: ReminderRecurrence,
+  targetDate: string
+): boolean {
+  if (targetDate < occursOn) return false;
+  if (targetDate === occursOn) return true;
+
+  if (recurrence === 'daily') return true;
+
+  if (recurrence === 'weekly') {
+    const d1 = Date.parse(`${occursOn}T12:00:00Z`);
+    const d2 = Date.parse(`${targetDate}T12:00:00Z`);
+    const diffDays = Math.round((d2 - d1) / 86400000);
+    return diffDays >= 0 && diffDays % 7 === 0;
+  }
+
+  const orig = parseDateString(occursOn);
+  const target = parseDateString(targetDate);
+
+  if (recurrence === 'monthly') {
+    const maxDay = daysInMonth(target.year, target.month);
+    const expectedDay = Math.min(orig.day, maxDay);
+    return target.day === expectedDay;
+  }
+
+  if (recurrence === 'yearly') {
+    if (target.month !== orig.month) return false;
+    const maxDay = daysInMonth(target.year, target.month);
+    const expectedDay = Math.min(orig.day, maxDay);
+    return target.day === expectedDay;
+  }
+
+  return false;
+}
