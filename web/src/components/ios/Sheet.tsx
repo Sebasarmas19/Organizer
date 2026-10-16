@@ -43,12 +43,15 @@ function unlockBodyScroll() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   lockCount = Math.max(0, lockCount - 1);
   if (lockCount === 0) {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     const scrollY = savedScrollY;
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
     document.body.style.overflow = '';
-    window.scrollTo(0, scrollY);
+    window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' as ScrollBehavior });
   }
 }
 

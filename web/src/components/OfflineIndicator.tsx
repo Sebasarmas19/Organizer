@@ -4,13 +4,16 @@
    Organizer · Indicador y supervisor de estado offline / online
    
    Proporciona retroalimentación no invasiva al usuario:
-   - Avisa si se ha perdido la conexión (modo offline).
-   - Informa si hay acciones pendientes en cola esperando conexión.
+   - Al perder conexión, avisa arriba a la derecha durante unos segundos y luego
+     se contrae discretamente a un circulito rojo fijo en la esquina.
+   - El usuario puede tocar el circulito rojo en cualquier momento para alternar
+     y ver los detalles (modo lectura, cambios pendientes en cola).
+   - Informa si hay sincronización activa o si se ha recuperado la conexión.
    - Sincroniza automáticamente la cola en cuanto se recupera el Wi-Fi/datos.
    - Utiliza useSyncExternalStore para seguir navigator.onLine sin cascading renders.
    ========================================================================= */
 
-import { useEffect, useState, useSyncExternalStore, useTransition } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   getOfflineQueue,
@@ -55,6 +58,8 @@ function getServerQueueSnapshot(): number {
   return 0;
 }
 
+const AUTO_COLLAPSE_MS = 3800;
+
 export function OfflineIndicator() {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -64,55 +69,111 @@ export function OfflineIndicator() {
   const isSyncing = useSyncExternalStore(subscribeSync, isSyncInProgressSnapshot, () => false);
 
   const [justReconnected, setJustReconnected] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Programar colapso automático tras unos segundos
+  const scheduleCollapse = () => {
+    if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+    collapseTimerRef.current = setTimeout(() => {
+      setCollapsed(true);
+    }, AUTO_COLLAPSE_MS);
+  };
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
     const onOnline = () => {
       setJustReconnected(true);
+      setCollapsed(false);
       startTransition(() => {
         router.refresh();
       });
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(() => {
         setJustReconnected(false);
-      }, 3000);
+      }, 3500);
+    };
+
+    const onOffline = () => {
+      setCollapsed(false);
+      scheduleCollapse();
     };
 
     window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+
+    // Si al montar ya está offline, mostrar unos segundos y colapsar a circulito rojo
+    if (!isOnline) {
+      scheduleCollapse();
+    }
+
     return () => {
       window.removeEventListener('online', onOnline);
-      if (timer) clearTimeout(timer);
+      window.removeEventListener('offline', onOffline);
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
     };
-  }, [router]);
+  }, [router, isOnline]);
+
+  const toggleCollapsed = () => {
+    if (collapsed) {
+      setCollapsed(false);
+      scheduleCollapse();
+    } else {
+      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+      setCollapsed(true);
+    }
+  };
 
   // Si estamos online, no hay pendientes y no acabamos de reconectar, no pintamos nada
   if (isOnline && pendingCount === 0 && !justReconnected && !isSyncing) {
     return null;
   }
 
+  const isOffline = !isOnline;
+  const isCurrentlyCollapsed = collapsed && !justReconnected && !isSyncing;
+
   return (
     <aside
       className="pl-offline-banner"
-      data-state={!isOnline ? 'offline' : isSyncing ? 'syncing' : 'reconnected'}
+      data-state={isOffline ? 'offline' : isSyncing ? 'syncing' : 'reconnected'}
       role="status"
       aria-live="polite"
     >
-      <div className="pl-offline-pill">
-        {!isOnline ? (
+      <button
+        type="button"
+        className="pl-offline-pill"
+        data-collapsed={isCurrentlyCollapsed ? 'true' : 'false'}
+        onClick={toggleCollapsed}
+        aria-label={
+          isOffline
+            ? isCurrentlyCollapsed
+              ? 'Sin conexión. Toca para ver detalles.'
+              : 'Sin conexión · Modo lectura. Toca para minimizar.'
+            : isSyncing
+            ? 'Sincronizando cambios pendientes'
+            : 'Conexión restablecida'
+        }
+      >
+        {isOffline ? (
           <>
-            <span className="pl-offline-dot pl-offline-dot--amber" aria-hidden="true" />
-            <span className="pl-offline-text">
-              Sin conexión
-              {pendingCount > 0
-                ? ` · ${pendingCount} cambio${pendingCount > 1 ? 's' : ''} pendiente${pendingCount > 1 ? 's' : ''}`
-                : ' · Modo lectura'}
-            </span>
+            <span className="pl-offline-dot pl-offline-dot--red" aria-hidden="true" />
+            {!isCurrentlyCollapsed && (
+              <span className="pl-offline-text">
+                Sin conexión
+                {pendingCount > 0
+                  ? ` · ${pendingCount} cambio${pendingCount > 1 ? 's' : ''} pendiente${pendingCount > 1 ? 's' : ''}`
+                  : ' · Modo lectura'}
+              </span>
+            )}
           </>
         ) : isSyncing ? (
           <>
             <span className="pl-offline-dot pl-offline-dot--blue" aria-hidden="true" />
-            <span className="pl-offline-text">Sincronizando cambios pendientes…</span>
+            {!isCurrentlyCollapsed && (
+              <span className="pl-offline-text">Sincronizando cambios pendientes…</span>
+            )}
           </>
         ) : (
           <>
@@ -121,7 +182,7 @@ export function OfflineIndicator() {
             <Icon name="check" size="sm" />
           </>
         )}
-      </div>
+      </button>
     </aside>
   );
 }

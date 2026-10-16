@@ -58,6 +58,13 @@ if (a === 'bosque' || a === 'petroleo' || a === 'indigo' || a === 'grafito') doc
 try {
   document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
 } catch (e) {}
+try {
+  document.addEventListener('focusout', function(e) {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+      window.scrollTo({ top: window.scrollY, left: 0 });
+    }
+  }, { passive: true });
+} catch (e) {}
 `;
 
 export default function RootLayout({

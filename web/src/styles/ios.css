@@ -678,6 +678,10 @@ textarea,
   border-radius: 31px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .io-tab {
@@ -737,6 +741,10 @@ textarea,
   place-items: center;
   color: var(--io-label);
   cursor: pointer;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .io-fab svg {
