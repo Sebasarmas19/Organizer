@@ -26,7 +26,7 @@ export default async function ReminderPage({
   if (!user) redirect('/entrar');
 
   const timezone = await getProfileTimezone(supabase, user.id);
-  const detail = await getReminderDetail(supabase, user.id, id, timezone);
+  const detail = await getReminderDetail(supabase, user.id, id, timezone, { withCalendar: true });
   if (!detail) notFound();
 
   return (

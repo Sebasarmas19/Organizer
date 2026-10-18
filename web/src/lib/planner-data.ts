@@ -6,17 +6,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ReminderRecurrence } from '@/lib/supabase/database.types';
 import { formatDistance, formatWhen } from './home';
-import {
-  addDays,
-  getDayOfWeek,
-  getTodayString,
-  MONTH_NAMES_ES,
-  parseDateString,
-  WEEKDAY_FULL_ES,
-  WEEKDAY_SHORT_ES,
-} from './date-utils';
-import { dayRangeUtc, localDateOf, localTimeOf } from './tz';
-import { materializeScheduleTemplates } from './calendar';
+import { addDays, getTodayString, parseDateString } from './date-utils';
+import { dayRangeUtc, formatTimeOfDay, localDateOf, localTimeOf } from './tz';
+import { getMonthView, type MonthCell, type MonthPreviewItem } from './fd4-calendar';
 
 type Client = SupabaseClient<Database>;
 
@@ -32,21 +24,38 @@ export type PlannedTask = {
   overdue: boolean;
 };
 
-export type PreReminderDay = {
-  dateStr: string;
-  dow: string;
-  dayNum: number;
-  dayLabel: string;
-  isToday: boolean;
-  isReminderDay: boolean;
-  classesCount: number;
-  classHours: number;
-  classesSummary: string;
-  otherReminders: string[];
-  tasksCount: number;
-  reminderTasks: { id: string; title: string; done: boolean }[];
-  load: 'free' | 'moderate' | 'busy';
-  loadLabel: string;
+/* El calendario de la pantalla de preparación. Es el mismo mes del módulo
+   Calendario, con dos añadidos: qué días se pueden elegir (de hoy al día
+   del reminder) y las horas de clase, en gris y sin nombre como en Día
+   (#79). NO opina sobre si un día está libre u ocupado: eso lo decide el
+   usuario mirando lo que de verdad tiene. */
+export type PlanCalCell = MonthCell & {
+  /** Entre hoy y el día del reminder, ambos incluidos. */
+  selectable: boolean;
+  /** El día del propio reminder. */
+  isEvent: boolean;
+};
+
+export type PlanCalMonth = {
+  key: string;
+  /** "Octubre 2026" */
+  title: string;
+  cells: PlanCalCell[];
+};
+
+export type PlanCalDay = {
+  /** "Sábado 24 de octubre" */
+  label: string;
+  /** "Hoy", "Mañana" o vacío */
+  hint: string;
+  events: MonthPreviewItem[];
+  /** Franjas de clase ya fusionadas: "7:00 – 10:15" */
+  classes: string[];
+};
+
+export type PlanCalendar = {
+  months: PlanCalMonth[];
+  days: Record<string, PlanCalDay>;
 };
 
 export type ReminderDetail = {
@@ -67,8 +76,8 @@ export type ReminderDetail = {
   tasks: PlannedTask[];
   /** Tareas vivas sin reminder: se pueden colgar de este. */
   candidates: { id: string; title: string; meta: string }[];
-  /** Calendario de disponibilidad antes del evento */
-  timeline: PreReminderDay[];
+  /** El calendario de hoy al día del reminder. Solo en la pantalla completa. */
+  planCal: PlanCalendar | null;
 };
 
 export type TaskDetail = {
@@ -119,11 +128,105 @@ async function taskTimes(
   return out;
 }
 
+/** Une franjas de clase que se tocan (≤15 min de pasillo): "7:00 – 10:15". */
+function mergeClassBands(blocks: { starts_at: string; ends_at: string }[], timezone: string): string[] {
+  const sorted = [...blocks].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  const merged: { start: number; end: number; s: string; e: string }[] = [];
+  for (const b of sorted) {
+    const start = Date.parse(b.starts_at);
+    const end = Date.parse(b.ends_at);
+    const last = merged[merged.length - 1];
+    if (last && start - last.end <= 15 * 60000) {
+      if (end > last.end) {
+        last.end = end;
+        last.e = b.ends_at;
+      }
+    } else {
+      merged.push({ start, end, s: b.starts_at, e: b.ends_at });
+    }
+  }
+  return merged.map(
+    (m) => `${formatTimeOfDay(localTimeOf(m.s, timezone))} – ${formatTimeOfDay(localTimeOf(m.e, timezone))}`
+  );
+}
+
+/**
+ * Los meses que van de hoy al día del reminder (máximo 4), con lo que hay en
+ * cada día. Reutiliza `getMonthView` para que sea literalmente el mismo
+ * calendario que el del módulo Calendario.
+ */
+async function buildPlanCalendar(
+  supabase: Client,
+  userId: string,
+  todayStr: string,
+  eventStr: string,
+  timezone: string
+): Promise<PlanCalendar> {
+  const months: { year: number; month: number }[] = [];
+  let { year, month } = parseDateString(todayStr);
+  const end = parseDateString(eventStr);
+  while ((year < end.year || (year === end.year && month <= end.month)) && months.length < 4) {
+    months.push({ year, month });
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+  }
+
+  const views = await Promise.all(
+    months.map((m) => getMonthView(supabase, userId, m.year, m.month, todayStr, timezone))
+  );
+
+  const firstStr = views[0].cells[0].dateStr;
+  const lastView = views[views.length - 1];
+  const lastStr = lastView.cells[lastView.cells.length - 1].dateStr;
+
+  /* getMonthView ya materializó las plantillas de esos rangos. */
+  const { data: classBlocks } = await supabase
+    .from('blocks')
+    .select('starts_at, ends_at')
+    .eq('user_id', userId)
+    .eq('source', 'template')
+    .gte('starts_at', dayRangeUtc(firstStr, timezone).start)
+    .lt('starts_at', dayRangeUtc(lastStr, timezone).end);
+
+  const classesByDay = new Map<string, { starts_at: string; ends_at: string }[]>();
+  for (const b of classBlocks ?? []) {
+    const d = localDateOf(b.starts_at, timezone);
+    const list = classesByDay.get(d) ?? [];
+    list.push(b);
+    classesByDay.set(d, list);
+  }
+
+  const days: Record<string, PlanCalDay> = {};
+  const planMonths: PlanCalMonth[] = views.map((v) => ({
+    key: `${v.year}-${v.month}`,
+    title: v.title,
+    cells: v.cells.map((c) => {
+      const selectable = c.dateStr >= todayStr && c.dateStr <= eventStr;
+      if (selectable && !days[c.dateStr]) {
+        const p = v.previews[c.dateStr];
+        days[c.dateStr] = {
+          label: p?.label ?? c.dateStr,
+          hint: p?.hint ?? '',
+          events: p?.events ?? [],
+          classes: mergeClassBands(classesByDay.get(c.dateStr) ?? [], timezone),
+        };
+      }
+      return { ...c, isSelected: false, selectable, isEvent: c.dateStr === eventStr };
+    }),
+  }));
+
+  return { months: planMonths, days };
+}
+
 export async function getReminderDetail(
   supabase: Client,
   userId: string,
   id: string,
-  timezone: string
+  timezone: string,
+  opts: { withCalendar?: boolean } = {}
 ): Promise<ReminderDetail | null> {
   const todayStr = getTodayString(timezone);
 
@@ -156,109 +259,12 @@ export async function getReminderDetail(
   if (!r) return null;
 
   const tasks = tasksRes.data ?? [];
-  const times = await taskTimes(supabase, userId, tasks.map((t) => t.id), timezone);
-
-  const timeline: PreReminderDay[] = [];
-  if (r.occurs_on >= todayStr) {
-    const endWindow = r.occurs_on;
-    try {
-      await materializeScheduleTemplates(supabase, userId, todayStr, endWindow, timezone);
-    } catch {
-      // Ignore template materialization errors
-    }
-
-    const [blocksRes, otherRemsRes, allItemsRes] = await Promise.all([
-      supabase
-        .from('blocks')
-        .select('id, title, starts_at, ends_at, source, template_id')
-        .eq('user_id', userId)
-        .gte('starts_at', dayRangeUtc(todayStr, timezone).start)
-        .lt('starts_at', dayRangeUtc(endWindow, timezone).end),
-      supabase
-        .from('reminders')
-        .select('id, title, occurs_on, occurs_at')
-        .eq('user_id', userId)
-        .neq('id', id)
-        .gte('occurs_on', todayStr)
-        .lte('occurs_on', endWindow),
-      supabase
-        .from('items')
-        .select('id, title, due_on, status, reminder_id')
-        .eq('user_id', userId)
-        .neq('status', 'dropped')
-        .gte('due_on', todayStr)
-        .lte('due_on', endWindow),
-    ]);
-
-    const blocks = blocksRes.data ?? [];
-    const otherRems = otherRemsRes.data ?? [];
-    const allItems = allItemsRes.data ?? [];
-
-    for (let d = todayStr; d <= endWindow; d = addDays(d, 1)) {
-      const dowIndex = getDayOfWeek(d);
-      const dow = WEEKDAY_SHORT_ES[dowIndex];
-      const { day: dayNum, month } = parseDateString(d);
-      const isToday = d === todayStr;
-      const isReminderDay = d === r.occurs_on;
-
-      const dayBlocks = blocks.filter(
-        (b) => localDateOf(b.starts_at, timezone) === d && b.source === 'template'
-      );
-      const classesCount = dayBlocks.length;
-      const classMinutes = dayBlocks.reduce(
-        (acc, b) => acc + (Date.parse(b.ends_at) - Date.parse(b.starts_at)) / 60000,
-        0
-      );
-      const classHours = Math.round((classMinutes / 60) * 10) / 10;
-      const classesSummary =
-        classesCount > 0
-          ? `${classesCount} ${classesCount === 1 ? 'clase' : 'clases'} (${classHours}h)`
-          : 'Sin clases';
-
-      const dayOtherRems = otherRems.filter((rem) => rem.occurs_on === d).map((rem) => rem.title);
-      const dayItems = allItems.filter((item) => item.due_on === d);
-      const tasksCount = dayItems.length;
-      const reminderTasks = dayItems
-        .filter((item) => item.reminder_id === id)
-        .map((item) => ({ id: item.id, title: item.title, done: item.status === 'done' }));
-
-      let load: 'free' | 'moderate' | 'busy' = 'free';
-      let loadLabel = 'Libre';
-
-      if (isReminderDay) {
-        load = 'busy';
-        loadLabel = 'Día del evento';
-      } else if (classesCount >= 2 || classHours >= 4 || dayOtherRems.length > 0 || tasksCount >= 3) {
-        load = 'busy';
-        loadLabel = 'Ocupado';
-      } else if (classesCount === 1 || tasksCount >= 1) {
-        load = 'moderate';
-        loadLabel = 'Poco ocupado';
-      } else {
-        load = 'free';
-        loadLabel = 'Libre';
-      }
-
-      timeline.push({
-        dateStr: d,
-        dow,
-        dayNum,
-        dayLabel: `${WEEKDAY_FULL_ES[dowIndex]} ${dayNum} de ${MONTH_NAMES_ES[month - 1]}`,
-        isToday,
-        isReminderDay,
-        classesCount,
-        classHours,
-        classesSummary,
-        otherReminders: dayOtherRems,
-        tasksCount,
-        reminderTasks,
-        load,
-        loadLabel,
-      });
-
-      if (timeline.length >= 28) break;
-    }
-  }
+  const [times, planCal] = await Promise.all([
+    taskTimes(supabase, userId, tasks.map((t) => t.id), timezone),
+    opts.withCalendar && r.occurs_on >= todayStr
+      ? buildPlanCalendar(supabase, userId, todayStr, r.occurs_on, timezone).catch(() => null)
+      : Promise.resolve(null),
+  ]);
 
   return {
     id: r.id,
@@ -273,7 +279,7 @@ export async function getReminderDetail(
     distance: formatDistance(todayStr, r.occurs_on),
     past: r.occurs_on < todayStr,
     todayStr,
-    timeline,
+    planCal,
     tasks: tasks.map((t) => {
       const time = times.get(t.id)?.time;
       const done = t.status === 'done';

@@ -13,19 +13,23 @@
    resume en segmentos y una línea "Siguiente".
    ========================================================================= */
 
-import { useMemo, useOptimistic, useRef, useState, useTransition } from 'react';
+import { useOptimistic, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReminderDetail } from '@/lib/planner-data';
 import { createTask, linkTaskToReminder } from '@/lib/planner-actions';
 import { deleteReminder, toggleTask } from '@/lib/fd4-actions';
-import { addDays, formatRecurrenceLabel } from '@/lib/date-utils';
+import { WEEKDAY_SHORT_ES, formatRecurrenceLabel, getDayOfWeek, parseDateString } from '@/lib/date-utils';
 import { Icon } from '@/components/Icon';
 import { Glyph } from '@/components/ios/Glyph';
 import { BackButton } from './BackButton';
 import { ReminderForm } from './ReminderForm';
+import { ReminderPlanCalendar } from './ReminderPlanCalendar';
 
-type DateChoice = { label: string; value: string };
+/** "sáb 24" */
+function shortDay(dateStr: string): string {
+  return `${WEEKDAY_SHORT_ES[getDayOfWeek(dateStr)]} ${parseDateString(dateStr).day}`;
+}
 
 export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; isNew: boolean }) {
   const router = useRouter();
@@ -33,6 +37,7 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showCandidates, setShowCandidates] = useState(false);
   const [draft, setDraft] = useState('');
+  /* La fecha de la próxima tarea. Solo la pone el calendario; vacía = sin fecha. */
   const [draftDate, setDraftDate] = useState('');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
@@ -45,31 +50,6 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
 
   const total = detail.tasks.length;
   const doneCount = detail.tasks.filter((t) => doneMap[t.id]).length;
-  const daysAway = Math.round(
-    (Date.parse(`${detail.occursOn}T12:00:00Z`) - Date.parse(`${detail.todayStr}T12:00:00Z`)) / 86400000
-  );
-
-  /* Fechas rápidas para las tareas, contadas hacia atrás desde el reminder:
-     así se piensa una entrega ("dos días antes tengo que tener el borrador"). */
-  const choices = useMemo<DateChoice[]>(() => {
-    const out: DateChoice[] = [{ label: 'Sin fecha', value: '' }];
-    const today = detail.todayStr;
-    const add = (label: string, value: string) => {
-      if (value >= today && value <= detail.occursOn && !out.some((c) => c.value === value)) {
-        out.push({ label, value });
-      }
-    };
-    add('Hoy', today);
-    add('Mañana', addDays(today, 1));
-    add('3 días antes', addDays(detail.occursOn, -3));
-    add('El día antes', addDays(detail.occursOn, -1));
-    return out;
-  }, [detail.todayStr, detail.occursOn]);
-
-  const selectedDayInfo = useMemo(() => {
-    if (!draftDate || !detail.timeline) return null;
-    return detail.timeline.find((d) => d.dateStr === draftDate) ?? null;
-  }, [draftDate, detail.timeline]);
 
   const onToggle = (id: string) => {
     const next = !doneMap[id];
@@ -201,17 +181,6 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
             {doneCount === total ? <span>Listo para esto</span> : null}
           </span>
         </div>
-      ) : !detail.past ? (
-        <div className="fd5-ralert">
-          <Icon name="flag" size="sm" className="fd5-flag" />
-          <span>
-            {isNew ? 'Guardado. ' : ''}
-            {daysAway <= 7
-              ? `Faltan ${daysAway <= 0 ? '0' : daysAway} días y todavía no hay nada planificado.`
-              : 'Todavía no hay nada planificado.'}{' '}
-            Pártelo en 3 o 4 pasos pequeños con fecha.
-          </span>
-        </div>
       ) : null}
 
       {total > 0 ? (
@@ -271,110 +240,8 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
         </section>
       ) : null}
 
-      {detail.timeline && detail.timeline.length > 0 && !detail.past ? (
-        <section className="fd5-sec fd5-avail">
-          <div className="fd5-sec__head" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 2 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Glyph name="calendar" style={{ width: 16, height: 16, color: 'var(--accent-text)' }} />
-              <h2>Días previos y disponibilidad</h2>
-            </div>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              Toca un día libre para seleccionarlo y asignarle una sesión o tarea de preparación
-            </span>
-          </div>
-
-          <div className="fd5-avail__scroll">
-            {detail.timeline.map((day) => {
-              const isSelected = draftDate === day.dateStr;
-              return (
-                <button
-                  key={day.dateStr}
-                  type="button"
-                  className="fd5-avail__card io-press"
-                  data-selected={isSelected ? 'true' : undefined}
-                  onClick={() => setDraftDate(day.dateStr)}
-                  aria-pressed={isSelected}
-                >
-                  <div className="fd5-avail__head">
-                    <span className="fd5-avail__dow">{day.isToday ? 'Hoy' : day.dow}</span>
-                    <span className="fd5-avail__num">{day.dayNum}</span>
-                  </div>
-
-                  <div className="fd5-avail__status">
-                    <span className={`fd5-avail__dot fd5-avail__dot--${day.load}`} />
-                    <span className="fd5-avail__load">{day.loadLabel}</span>
-                  </div>
-
-                  <div className="fd5-avail__meta">
-                    {day.isReminderDay ? (
-                      <span className="fd5-avail__pill fd5-avail__pill--event">Evento</span>
-                    ) : day.classesCount > 0 ? (
-                      <span className="fd5-avail__pill">
-                        {day.classesCount} {day.classesCount === 1 ? 'clase' : 'clases'}
-                      </span>
-                    ) : (
-                      <span className="fd5-avail__pill fd5-avail__pill--free">Sin clases</span>
-                    )}
-
-                    {day.otherReminders.length > 0 ? (
-                      <span className="fd5-avail__pill fd5-avail__pill--alert" title={day.otherReminders.join(', ')}>
-                        ⚡ {day.otherReminders[0]}
-                      </span>
-                    ) : null}
-
-                    {day.reminderTasks.length > 0 ? (
-                      <span className="fd5-avail__pill fd5-avail__pill--tasks">
-                        {day.reminderTasks.length} {day.reminderTasks.length === 1 ? 'paso' : 'pasos'}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {selectedDayInfo ? (
-            <div className="fd5-avail__banner">
-              <div className="fd5-avail__banner-top">
-                <span className="fd5-avail__banner-title">
-                  <b>{selectedDayInfo.dayLabel}</b> {selectedDayInfo.isToday ? '(Hoy)' : ''}
-                </span>
-                <span className={`fd5-avail__pill fd5-avail__pill--${selectedDayInfo.load}`}>
-                  {selectedDayInfo.loadLabel}
-                </span>
-              </div>
-              <p className="fd5-avail__banner-desc">
-                {selectedDayInfo.isReminderDay
-                  ? 'Día programado para el recordatorio.'
-                  : selectedDayInfo.classesCount === 0 && selectedDayInfo.otherReminders.length === 0
-                  ? 'Día completamente libre (sin clases ni otras entregas). ¡Excelente momento para estudiar o preparar!'
-                  : `${selectedDayInfo.classesSummary}${
-                      selectedDayInfo.otherReminders.length > 0
-                        ? ` · ⚡ ${selectedDayInfo.otherReminders.join(', ')}`
-                        : ''
-                    }${
-                      selectedDayInfo.tasksCount > 0
-                        ? ` · ${selectedDayInfo.tasksCount} ${
-                            selectedDayInfo.tasksCount === 1 ? 'tarea' : 'tareas'
-                          } en agenda`
-                        : ''
-                    }`}
-              </p>
-              {selectedDayInfo.reminderTasks.length > 0 ? (
-                <div className="fd5-avail__banner-existing">
-                  <span>Pasos ya asignados para este día:</span>
-                  <ul>
-                    {selectedDayInfo.reminderTasks.map((st) => (
-                      <li key={st.id} data-done={st.done ? 'true' : 'false'}>
-                        {st.title} {st.done ? '✓' : ''}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
+      {detail.planCal && !detail.past ? (
+        <ReminderPlanCalendar cal={detail.planCal} selected={draftDate} onSelect={setDraftDate} />
       ) : null}
 
       {!detail.past ? (
@@ -387,11 +254,9 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={
-                selectedDayInfo
-                  ? `Paso para el ${selectedDayInfo.dow} ${selectedDayInfo.dayNum} (ej. Estudiar tema 1)`
-                  : total === 0
-                  ? 'Primer paso: p. ej. Leer el enunciado'
-                  : 'Otro paso'
+                draftDate
+                  ? `Tarea para el ${shortDay(draftDate)}`
+                  : 'Nueva tarea (toca un día en el calendario)'
               }
               aria-label="Nueva tarea para este reminder"
               autoCapitalize="sentences"
@@ -399,33 +264,9 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
               autoFocus={isNew}
             />
             <button type="submit" className="fd5-btn fd5-btn--accent" disabled={!draft.trim() || pending}>
-              {selectedDayInfo ? `Añadir al ${selectedDayInfo.dow} ${selectedDayInfo.dayNum}` : 'Añadir'}
+              {draftDate ? `Añadir (${shortDay(draftDate)})` : 'Añadir'}
             </button>
           </div>
-          <div className="fd5-chips" role="group" aria-label="Fecha de la tarea">
-            {choices.map((c) => (
-              <button
-                key={c.label}
-                type="button"
-                className="fd5-datechip"
-                aria-pressed={draftDate === c.value}
-                onClick={() => setDraftDate(c.value)}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-          <input
-            type="date"
-            className="fd5-input fd5-input--date"
-            aria-label="Otra fecha para la tarea"
-            value={draftDate}
-            max={detail.occursOn}
-            onChange={(e) => setDraftDate(e.target.value)}
-          />
-          <p className="fd5-hint">
-            Cada tarea con fecha entra en la notificación de ese día. Tócala después para ponerle hora.
-          </p>
         </form>
       ) : null}
 
