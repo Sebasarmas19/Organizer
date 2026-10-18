@@ -46,54 +46,80 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
       <div className="fd-scroll fd-scroll--week">
         <div className="fd-daylist">
           {data.days.map((d) => (
-            <Link
+            <div
               key={d.dateStr}
-              href={`/calendario?v=dia&d=${d.dateStr}`}
               className="fd-daycard"
               data-today={d.isToday ? 'true' : 'false'}
-              scroll={false}
             >
-              <span className="fd-daycard__head">
+              <Link
+                href={`/calendario?v=dia&d=${d.dateStr}`}
+                className="fd-daycard__head"
+                scroll={false}
+              >
                 <span className="fd-daycard__label">{d.label}</span>
                 {d.hint ? <span className="fd-daycard__hint">{d.hint}</span> : null}
                 <span style={{ flex: 1 }} />
                 <span className="fd-daycard__chev" aria-hidden>
                   ›
                 </span>
-              </span>
+              </Link>
 
-              <span className="fd-daycard__body">
+              <div className="fd-daycard__body">
                 {d.reminder ? (
-                  <span className="fd-daycard__rem">
+                  <Link
+                    href={`/reminders/${d.reminder.id}`}
+                    className="fd-daycard__rem io-press"
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
                     <Flag size="sm" />
                     <span>{d.reminder.title}</span>
                     {d.reminder.hora ? (
                       <span className="fd-remrow__when">{d.reminder.hora}</span>
                     ) : null}
-                  </span>
+                  </Link>
                 ) : null}
 
                 {d.extraRemindersCount > 0 ? (
-                  <span className="fd-daycard__more-rems">
+                  <Link
+                    href={`/calendario?v=dia&d=${d.dateStr}`}
+                    className="fd-daycard__more-rems"
+                    scroll={false}
+                    style={{ textDecoration: 'none' }}
+                  >
                     <span className="fd-daycard__more-badge">+{d.extraRemindersCount}</span>
                     <span>{d.extraRemindersCount === 1 ? 'y 1 más' : `y ${d.extraRemindersCount} más`}</span>
-                  </span>
+                  </Link>
                 ) : null}
 
                 {d.tasks.map((t, i) => (
-                  <span className="fd-daycard__task" key={`${d.dateStr}-t${i}`}>
+                  <Link
+                    href={`/calendario?v=dia&d=${d.dateStr}`}
+                    className="fd-daycard__task"
+                    key={`${d.dateStr}-t${i}`}
+                    scroll={false}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
                     {/* Casilla en version indicador: desde la vista Semana no
                         se marca nada. Marcar se hace en Inicio, en Pendientes
                         y en Dia, donde estas mirando UNA cosa. */}
                     <Check variant="mini" />
                     <span>{t.title}</span>
                     {t.hora ? <span className="fd-remrow__when">{t.hora}</span> : null}
-                  </span>
+                  </Link>
                 ))}
 
-                {d.free ? <span className="fd-empty">Sin nada planificado</span> : null}
-              </span>
-            </Link>
+                {d.free ? (
+                  <Link
+                    href={`/calendario?v=dia&d=${d.dateStr}`}
+                    className="fd-empty"
+                    scroll={false}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    Sin nada planificado
+                  </Link>
+                ) : null}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -129,10 +155,14 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
               {data.grid.map((d) => (
                 <div className="fd-weekgrid__cell" key={`ad-${d.dateStr}`}>
                   {d.reminder ? (
-                    <span className="fd-weekgrid__rem">
+                    <Link
+                      href={`/reminders/${d.reminder.id}`}
+                      className="fd-weekgrid__rem"
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
                       <Flag size="tiny" />
                       <span>{d.reminder.title}</span>
-                    </span>
+                    </Link>
                   ) : null}
 
                   {d.extraRemindersCount > 0 ? (

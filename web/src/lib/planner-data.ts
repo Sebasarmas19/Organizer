@@ -6,8 +6,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ReminderRecurrence } from '@/lib/supabase/database.types';
 import { formatDistance, formatWhen } from './home';
-import { addDays, getTodayString } from './date-utils';
-import { localDateOf, localTimeOf } from './tz';
+import {
+  addDays,
+  getDayOfWeek,
+  getTodayString,
+  MONTH_NAMES_ES,
+  parseDateString,
+  WEEKDAY_FULL_ES,
+  WEEKDAY_SHORT_ES,
+} from './date-utils';
+import { dayRangeUtc, localDateOf, localTimeOf } from './tz';
+import { materializeScheduleTemplates } from './calendar';
 
 type Client = SupabaseClient<Database>;
 
@@ -21,6 +30,23 @@ export type PlannedTask = {
   meta: string;
   done: boolean;
   overdue: boolean;
+};
+
+export type PreReminderDay = {
+  dateStr: string;
+  dow: string;
+  dayNum: number;
+  dayLabel: string;
+  isToday: boolean;
+  isReminderDay: boolean;
+  classesCount: number;
+  classHours: number;
+  classesSummary: string;
+  otherReminders: string[];
+  tasksCount: number;
+  reminderTasks: { id: string; title: string; done: boolean }[];
+  load: 'free' | 'moderate' | 'busy';
+  loadLabel: string;
 };
 
 export type ReminderDetail = {
@@ -41,6 +67,8 @@ export type ReminderDetail = {
   tasks: PlannedTask[];
   /** Tareas vivas sin reminder: se pueden colgar de este. */
   candidates: { id: string; title: string; meta: string }[];
+  /** Calendario de disponibilidad antes del evento */
+  timeline: PreReminderDay[];
 };
 
 export type TaskDetail = {
@@ -130,6 +158,108 @@ export async function getReminderDetail(
   const tasks = tasksRes.data ?? [];
   const times = await taskTimes(supabase, userId, tasks.map((t) => t.id), timezone);
 
+  const timeline: PreReminderDay[] = [];
+  if (r.occurs_on >= todayStr) {
+    const endWindow = r.occurs_on;
+    try {
+      await materializeScheduleTemplates(supabase, userId, todayStr, endWindow, timezone);
+    } catch {
+      // Ignore template materialization errors
+    }
+
+    const [blocksRes, otherRemsRes, allItemsRes] = await Promise.all([
+      supabase
+        .from('blocks')
+        .select('id, title, starts_at, ends_at, source, template_id')
+        .eq('user_id', userId)
+        .gte('starts_at', dayRangeUtc(todayStr, timezone).start)
+        .lt('starts_at', dayRangeUtc(endWindow, timezone).end),
+      supabase
+        .from('reminders')
+        .select('id, title, occurs_on, occurs_at')
+        .eq('user_id', userId)
+        .neq('id', id)
+        .gte('occurs_on', todayStr)
+        .lte('occurs_on', endWindow),
+      supabase
+        .from('items')
+        .select('id, title, due_on, status, reminder_id')
+        .eq('user_id', userId)
+        .neq('status', 'dropped')
+        .gte('due_on', todayStr)
+        .lte('due_on', endWindow),
+    ]);
+
+    const blocks = blocksRes.data ?? [];
+    const otherRems = otherRemsRes.data ?? [];
+    const allItems = allItemsRes.data ?? [];
+
+    for (let d = todayStr; d <= endWindow; d = addDays(d, 1)) {
+      const dowIndex = getDayOfWeek(d);
+      const dow = WEEKDAY_SHORT_ES[dowIndex];
+      const { day: dayNum, month } = parseDateString(d);
+      const isToday = d === todayStr;
+      const isReminderDay = d === r.occurs_on;
+
+      const dayBlocks = blocks.filter(
+        (b) => localDateOf(b.starts_at, timezone) === d && b.source === 'template'
+      );
+      const classesCount = dayBlocks.length;
+      const classMinutes = dayBlocks.reduce(
+        (acc, b) => acc + (Date.parse(b.ends_at) - Date.parse(b.starts_at)) / 60000,
+        0
+      );
+      const classHours = Math.round((classMinutes / 60) * 10) / 10;
+      const classesSummary =
+        classesCount > 0
+          ? `${classesCount} ${classesCount === 1 ? 'clase' : 'clases'} (${classHours}h)`
+          : 'Sin clases';
+
+      const dayOtherRems = otherRems.filter((rem) => rem.occurs_on === d).map((rem) => rem.title);
+      const dayItems = allItems.filter((item) => item.due_on === d);
+      const tasksCount = dayItems.length;
+      const reminderTasks = dayItems
+        .filter((item) => item.reminder_id === id)
+        .map((item) => ({ id: item.id, title: item.title, done: item.status === 'done' }));
+
+      let load: 'free' | 'moderate' | 'busy' = 'free';
+      let loadLabel = 'Libre';
+
+      if (isReminderDay) {
+        load = 'busy';
+        loadLabel = 'Día del evento';
+      } else if (classesCount >= 2 || classHours >= 4 || dayOtherRems.length > 0 || tasksCount >= 3) {
+        load = 'busy';
+        loadLabel = 'Ocupado';
+      } else if (classesCount === 1 || tasksCount >= 1) {
+        load = 'moderate';
+        loadLabel = 'Poco ocupado';
+      } else {
+        load = 'free';
+        loadLabel = 'Libre';
+      }
+
+      timeline.push({
+        dateStr: d,
+        dow,
+        dayNum,
+        dayLabel: `${WEEKDAY_FULL_ES[dowIndex]} ${dayNum} de ${MONTH_NAMES_ES[month - 1]}`,
+        isToday,
+        isReminderDay,
+        classesCount,
+        classHours,
+        classesSummary,
+        otherReminders: dayOtherRems,
+        tasksCount,
+        reminderTasks,
+        load,
+        loadLabel,
+      });
+
+      if (timeline.length >= 28) break;
+    }
+  }
+
   return {
     id: r.id,
     title: r.title,
@@ -143,6 +273,7 @@ export async function getReminderDetail(
     distance: formatDistance(todayStr, r.occurs_on),
     past: r.occurs_on < todayStr,
     todayStr,
+    timeline,
     tasks: tasks.map((t) => {
       const time = times.get(t.id)?.time;
       const done = t.status === 'done';

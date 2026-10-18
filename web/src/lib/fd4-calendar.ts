@@ -323,7 +323,7 @@ export type WeekDayCard = {
   /** "hoy" o vacio */
   hint: string;
   isToday: boolean;
-  reminder: { title: string; hora: string } | null;
+  reminder: { id: string; title: string; hora: string } | null;
   extraRemindersCount: number;
   tasks: { title: string; hora: string }[];
   free: boolean;
@@ -363,7 +363,7 @@ export type WeekGridDay = {
   dayNum: number;
   isToday: boolean;
   /** La banda de arriba: lo del dia que no tiene hora. */
-  reminder: { title: string; hora: string } | null;
+  reminder: { id: string; title: string; hora: string } | null;
   extraRemindersCount: number;
   loose: { id: string; title: string }[];
   blocks: WeekGridBlock[];
@@ -467,7 +467,7 @@ export async function getWeekView(
       hint: dateStr === todayStr ? 'hoy' : '',
       isToday: dateStr === todayStr,
       reminder: rem
-        ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
+        ? { id: rem.id, title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
       extraRemindersCount,
       tasks,
@@ -546,7 +546,7 @@ export async function getWeekView(
       dayNum: day,
       isToday: dateStr === todayStr,
       reminder: rem
-        ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
+        ? { id: rem.id, title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
       extraRemindersCount,
       loose,

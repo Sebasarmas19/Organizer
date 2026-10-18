@@ -460,6 +460,31 @@ export function ReminderDetailSheet({
 
         {/* 5. Acciones secundarias */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '8px 16px 0' }}>
+          {reminderId ? (
+            <Link
+              href={`/reminders/${reminderId}`}
+              className="io-btn io-press"
+              onClick={onClose}
+              style={{
+                background: 'var(--io-tint)',
+                color: '#fff',
+                border: 'none',
+                minHeight: 46,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: 15,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                borderRadius: 'var(--radius)',
+              }}
+            >
+              <Glyph name="calendar" style={{ width: 16, height: 16 }} />
+              Planificar preparación con calendario
+            </Link>
+          ) : null}
+
           <Link
             href={`/calendario?v=dia&d=${occursOn}`}
             className="io-btn io-press"

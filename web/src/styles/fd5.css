@@ -1253,6 +1253,198 @@
   color: var(--text-muted);
 }
 
+/* Disponibilidad antes del reminder (linea de tiempo previa) */
+.fd5-avail {
+  margin-top: 18px;
+}
+
+.fd5-avail__scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+  margin: 0 -4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fd5-avail__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.fd5-avail__card {
+  flex: 0 0 102px;
+  min-width: 102px;
+  padding: 10px 8px;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--text);
+  font: inherit;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.fd5-avail__card[data-selected="true"] {
+  border-color: var(--accent-text);
+  box-shadow: 0 0 0 2px var(--accent-text), 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--accent-text) 6%, var(--surface));
+}
+
+.fd5-avail__card:active {
+  transform: scale(0.97);
+}
+
+.fd5-avail__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.fd5-avail__dow {
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.fd5-avail__num {
+  font-size: 18px;
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.fd5-avail__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.fd5-avail__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.fd5-avail__dot--free {
+  background: var(--task, #10B981);
+}
+
+.fd5-avail__dot--moderate {
+  background: #F59E0B;
+}
+
+.fd5-avail__dot--busy {
+  background: var(--rem-strong, #EF4444);
+}
+
+.fd5-avail__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  align-items: center;
+}
+
+.fd5-avail__pill {
+  display: block;
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  border: 1px solid var(--line-faint);
+}
+
+.fd5-avail__pill--free {
+  background: color-mix(in srgb, var(--task, #10B981) 12%, transparent);
+  color: var(--task, #10B981);
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-avail__pill--alert {
+  background: color-mix(in srgb, #F59E0B 16%, transparent);
+  color: #D97706;
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-avail__pill--event {
+  background: color-mix(in srgb, var(--rem-strong, #EF4444) 14%, transparent);
+  color: var(--rem-strong, #EF4444);
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-avail__pill--tasks {
+  background: color-mix(in srgb, var(--accent-text) 14%, transparent);
+  color: var(--accent-text);
+  font-weight: var(--weight-semibold);
+}
+
+.fd5-avail__banner {
+  padding: 12px 14px;
+  border-radius: var(--radius-card);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fd5-avail__banner-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fd5-avail__banner-title {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.fd5-avail__banner-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.fd5-avail__banner-existing {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+
+.fd5-avail__banner-existing ul {
+  margin: 4px 0 0 16px;
+  padding: 0;
+}
+
+.fd5-avail__banner-existing li[data-done="true"] {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
 .fd5-rcand {
   margin-top: 6px;
 }

@@ -66,6 +66,11 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
     return out;
   }, [detail.todayStr, detail.occursOn]);
 
+  const selectedDayInfo = useMemo(() => {
+    if (!draftDate || !detail.timeline) return null;
+    return detail.timeline.find((d) => d.dateStr === draftDate) ?? null;
+  }, [draftDate, detail.timeline]);
+
   const onToggle = (id: string) => {
     const next = !doneMap[id];
     startTransition(async () => {
@@ -266,6 +271,112 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
         </section>
       ) : null}
 
+      {detail.timeline && detail.timeline.length > 0 && !detail.past ? (
+        <section className="fd5-sec fd5-avail">
+          <div className="fd5-sec__head" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Glyph name="calendar" style={{ width: 16, height: 16, color: 'var(--accent-text)' }} />
+              <h2>Días previos y disponibilidad</h2>
+            </div>
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              Toca un día libre para seleccionarlo y asignarle una sesión o tarea de preparación
+            </span>
+          </div>
+
+          <div className="fd5-avail__scroll">
+            {detail.timeline.map((day) => {
+              const isSelected = draftDate === day.dateStr;
+              return (
+                <button
+                  key={day.dateStr}
+                  type="button"
+                  className="fd5-avail__card io-press"
+                  data-selected={isSelected ? 'true' : undefined}
+                  onClick={() => setDraftDate(day.dateStr)}
+                  aria-pressed={isSelected}
+                >
+                  <div className="fd5-avail__head">
+                    <span className="fd5-avail__dow">{day.isToday ? 'Hoy' : day.dow}</span>
+                    <span className="fd5-avail__num">{day.dayNum}</span>
+                  </div>
+
+                  <div className="fd5-avail__status">
+                    <span className={`fd5-avail__dot fd5-avail__dot--${day.load}`} />
+                    <span className="fd5-avail__load">{day.loadLabel}</span>
+                  </div>
+
+                  <div className="fd5-avail__meta">
+                    {day.isReminderDay ? (
+                      <span className="fd5-avail__pill fd5-avail__pill--event">Evento</span>
+                    ) : day.classesCount > 0 ? (
+                      <span className="fd5-avail__pill">
+                        {day.classesCount} {day.classesCount === 1 ? 'clase' : 'clases'}
+                      </span>
+                    ) : (
+                      <span className="fd5-avail__pill fd5-avail__pill--free">Sin clases</span>
+                    )}
+
+                    {day.otherReminders.length > 0 ? (
+                      <span className="fd5-avail__pill fd5-avail__pill--alert" title={day.otherReminders.join(', ')}>
+                        ⚡ {day.otherReminders[0]}
+                      </span>
+                    ) : null}
+
+                    {day.reminderTasks.length > 0 ? (
+                      <span className="fd5-avail__pill fd5-avail__pill--tasks">
+                        {day.reminderTasks.length} {day.reminderTasks.length === 1 ? 'paso' : 'pasos'}
+                      </span>
+                    ) : null}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedDayInfo ? (
+            <div className="fd5-avail__banner">
+              <div className="fd5-avail__banner-top">
+                <span className="fd5-avail__banner-title">
+                  <b>{selectedDayInfo.dayLabel}</b> {selectedDayInfo.isToday ? '(Hoy)' : ''}
+                </span>
+                <span className={`fd5-avail__pill fd5-avail__pill--${selectedDayInfo.load}`}>
+                  {selectedDayInfo.loadLabel}
+                </span>
+              </div>
+              <p className="fd5-avail__banner-desc">
+                {selectedDayInfo.isReminderDay
+                  ? 'Día programado para el recordatorio.'
+                  : selectedDayInfo.classesCount === 0 && selectedDayInfo.otherReminders.length === 0
+                  ? 'Día completamente libre (sin clases ni otras entregas). ¡Excelente momento para estudiar o preparar!'
+                  : `${selectedDayInfo.classesSummary}${
+                      selectedDayInfo.otherReminders.length > 0
+                        ? ` · ⚡ ${selectedDayInfo.otherReminders.join(', ')}`
+                        : ''
+                    }${
+                      selectedDayInfo.tasksCount > 0
+                        ? ` · ${selectedDayInfo.tasksCount} ${
+                            selectedDayInfo.tasksCount === 1 ? 'tarea' : 'tareas'
+                          } en agenda`
+                        : ''
+                    }`}
+              </p>
+              {selectedDayInfo.reminderTasks.length > 0 ? (
+                <div className="fd5-avail__banner-existing">
+                  <span>Pasos ya asignados para este día:</span>
+                  <ul>
+                    {selectedDayInfo.reminderTasks.map((st) => (
+                      <li key={st.id} data-done={st.done ? 'true' : 'false'}>
+                        {st.title} {st.done ? '✓' : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {!detail.past ? (
         <form className="fd5-qadd" onSubmit={onAdd}>
           {error ? <p className="pl-error" role="alert">{error}</p> : null}
@@ -275,14 +386,20 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
               className="fd5-input"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={total === 0 ? 'Primer paso: p. ej. Leer el enunciado' : 'Otro paso'}
+              placeholder={
+                selectedDayInfo
+                  ? `Paso para el ${selectedDayInfo.dow} ${selectedDayInfo.dayNum} (ej. Estudiar tema 1)`
+                  : total === 0
+                  ? 'Primer paso: p. ej. Leer el enunciado'
+                  : 'Otro paso'
+              }
               aria-label="Nueva tarea para este reminder"
               autoCapitalize="sentences"
               enterKeyHint="done"
               autoFocus={isNew}
             />
             <button type="submit" className="fd5-btn fd5-btn--accent" disabled={!draft.trim() || pending}>
-              Añadir
+              {selectedDayInfo ? `Añadir al ${selectedDayInfo.dow} ${selectedDayInfo.dayNum}` : 'Añadir'}
             </button>
           </div>
           <div className="fd5-chips" role="group" aria-label="Fecha de la tarea">
