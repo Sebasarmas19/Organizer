@@ -109,7 +109,30 @@ export function DayView({ data }: { data: Fd4DayData }) {
           </button>
         </div>
 
-        {data.band ? (
+        {data.bands && data.bands.length > 0 ? (
+          data.bands.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              className="fd-band io-press"
+              onClick={() => setSelectedReminder({ id: b.id, title: b.title })}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                border: 0,
+                cursor: 'pointer',
+                background: 'var(--surface)',
+                marginBottom: '6px',
+              }}
+            >
+              <Flag />
+              <span className="fd-band__text">
+                <span className="fd-band__title">{b.title}</span>
+                <span className="fd-meta">{b.meta}</span>
+              </span>
+            </button>
+          ))
+        ) : data.band ? (
           <button
             type="button"
             className="fd-band io-press"

@@ -555,6 +555,17 @@
     white-space: nowrap;
   }
 
+  .fd-weekgrid__more {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: var(--weight-semibold);
+    color: var(--text-on-rem-soft);
+    background: var(--rem-soft);
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-top: 2px;
+  }
+
   /* ----------------------------------------------------------- el riel ---- */
 
   .fd-weekgrid__body {

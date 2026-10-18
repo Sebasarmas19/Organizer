@@ -324,6 +324,7 @@ export type WeekDayCard = {
   hint: string;
   isToday: boolean;
   reminder: { title: string; hora: string } | null;
+  extraRemindersCount: number;
   tasks: { title: string; hora: string }[];
   free: boolean;
 };
@@ -363,6 +364,7 @@ export type WeekGridDay = {
   isToday: boolean;
   /** La banda de arriba: lo del dia que no tiene hora. */
   reminder: { title: string; hora: string } | null;
+  extraRemindersCount: number;
   loose: { id: string; title: string }[];
   blocks: WeekGridBlock[];
 };
@@ -447,9 +449,17 @@ export async function getWeekView(
       .map((t) => ({ title: t.title, hora: '' }));
     const tasks = [...blockTasks, ...looseTasks];
 
-    const rem = reminders.find(
-      (r) => r.occurs_on === dateStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dateStr))
-    );
+    const dayReminders = reminders
+      .filter((r) => r.occurs_on === dateStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dateStr)))
+      .sort((a, b) => {
+        if (a.occurs_at && b.occurs_at) return a.occurs_at.localeCompare(b.occurs_at);
+        if (a.occurs_at && !b.occurs_at) return -1;
+        if (!a.occurs_at && b.occurs_at) return 1;
+        return a.title.localeCompare(b.title);
+      });
+
+    const rem = dayReminders[0];
+    const extraRemindersCount = dayReminders.length > 1 ? dayReminders.length - 1 : 0;
 
     return {
       dateStr,
@@ -459,6 +469,7 @@ export async function getWeekView(
       reminder: rem
         ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
+      extraRemindersCount,
       tasks,
       free: !rem && tasks.length === 0,
     };
@@ -485,7 +496,16 @@ export async function getWeekView(
 
   const grid: WeekGridDay[] = days.map((dateStr) => {
     const { day } = parseDateString(dateStr);
-    const rem = reminders.find((r) => r.occurs_on === dateStr);
+    const dayRems = reminders
+      .filter((r) => r.occurs_on === dateStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dateStr)))
+      .sort((a, b) => {
+        if (a.occurs_at && b.occurs_at) return a.occurs_at.localeCompare(b.occurs_at);
+        if (a.occurs_at && !b.occurs_at) return -1;
+        if (!a.occurs_at && b.occurs_at) return 1;
+        return a.title.localeCompare(b.title);
+      });
+    const rem = dayRems[0];
+    const extraRemindersCount = dayRems.length > 1 ? dayRems.length - 1 : 0;
 
     const dayBlocks = blocks.filter((b) => localDay(b.starts_at, timezone) === dateStr);
 
@@ -528,6 +548,7 @@ export async function getWeekView(
       reminder: rem
         ? { title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
+      extraRemindersCount,
       loose,
       blocks: positioned,
     };
@@ -592,6 +613,7 @@ export type Fd4DayData = {
   /** "8:52" */
   nowLabel: string;
   band: { id: string; title: string; meta: string } | null;
+  bands: { id: string; title: string; meta: string }[];
   /** Tareas del dia sin hora: no caben en el riel y no pueden desaparecer. */
   noHour: DayNoHourTask[];
   blocks: DayBlockView[];
@@ -698,17 +720,15 @@ export async function getDayView(
     });
   }
 
-  /* Y ademas encabeza el dia con una banda. No es duplicar: el bloque dice
-     "a las 10 estas ocupado", la banda dice "hoy es el dia del parcial". */
-  const band = reminders[0]
-    ? {
-        id: reminders[0].id,
-        title: reminders[0].title,
-        meta: `${dayLabel(dateStr).toLowerCase()} · ${
-          reminders[0].occurs_at ? formatTimeOfDay(reminders[0].occurs_at) : 'sin hora'
-        }`,
-      }
-    : null;
+  /* Y ademas encabeza el dia con sus bandas de reminder. */
+  const bands = reminders.map((r) => ({
+    id: r.id,
+    title: r.title,
+    meta: `${dayLabel(dateStr).toLowerCase()} · ${
+      r.occurs_at ? formatTimeOfDay(r.occurs_at) : 'sin hora'
+    }`,
+  }));
+  const band = bands[0] ?? null;
 
   const blockItemIds = new Set(rawBlocks.map((b) => b.item_id).filter(Boolean) as string[]);
   const noHour: DayNoHourTask[] = items
@@ -753,6 +773,7 @@ export async function getDayView(
     nowTop,
     nowLabel,
     band,
+    bands,
     noHour,
     blocks: blocks.sort((a, b) => a.top - b.top),
     classBands,

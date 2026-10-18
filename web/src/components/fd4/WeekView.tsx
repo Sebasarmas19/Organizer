@@ -73,6 +73,13 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
                   </span>
                 ) : null}
 
+                {d.extraRemindersCount > 0 ? (
+                  <span className="fd-daycard__more-rems">
+                    <span className="fd-daycard__more-badge">+{d.extraRemindersCount}</span>
+                    <span>{d.extraRemindersCount === 1 ? 'y 1 más' : `y ${d.extraRemindersCount} más`}</span>
+                  </span>
+                ) : null}
+
                 {d.tasks.map((t, i) => (
                   <span className="fd-daycard__task" key={`${d.dateStr}-t${i}`}>
                     {/* Casilla en version indicador: desde la vista Semana no
@@ -125,6 +132,12 @@ export function WeekView({ data }: { data: Fd4WeekData }) {
                     <span className="fd-weekgrid__rem">
                       <Flag size="tiny" />
                       <span>{d.reminder.title}</span>
+                    </span>
+                  ) : null}
+
+                  {d.extraRemindersCount > 0 ? (
+                    <span className="fd-weekgrid__more">
+                      +{d.extraRemindersCount} más
                     </span>
                   ) : null}
 
