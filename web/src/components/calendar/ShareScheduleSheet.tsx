@@ -40,7 +40,6 @@ export function ShareScheduleSheet({
   useEffect(() => {
     if (!open) return;
 
-    // Timeout breve para asegurar que el canvas esté listo
     const timer = setTimeout(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -99,7 +98,6 @@ export function ShareScheduleSheet({
     if (copied) {
       setToastMessage('¡Imagen copiada! Pégala directamente en WhatsApp');
     } else {
-      // Fallback a descarga si el navegador no permite ClipboardItem PNG
       downloadCanvasImage(canvas, filename);
       setToastMessage('Navegador no permite copiar PNG. Se descargó el archivo.');
     }
@@ -130,27 +128,23 @@ export function ShareScheduleSheet({
       subtitle={payload.subtitle || payload.period}
     >
       <div className="flex flex-col gap-4 p-4 pb-8 max-w-lg mx-auto w-full">
-        {/* Selector de formato: Imagen PNG o Texto */}
-        <div className="flex rounded-xl bg-slate-800/60 p-1 border border-white/5">
+        {/* Selector de formato: Segmented control nativo de iOS */}
+        <div className="fd-seg w-full flex" role="tablist" aria-label="Formato de exportación">
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === 'imagen'}
             onClick={() => setTab('imagen')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              tab === 'imagen'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
+            className="flex-1 py-2 text-xs font-semibold text-center transition-all"
           >
             Tarjeta PNG
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={tab === 'texto'}
             onClick={() => setTab('texto')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              tab === 'texto'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
+            className="flex-1 py-2 text-xs font-semibold text-center transition-all"
           >
             Texto WhatsApp
           </button>
@@ -173,12 +167,12 @@ export function ShareScheduleSheet({
         {tab === 'imagen' ? (
           <>
             {/* Vista previa de la tarjeta */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl max-h-[380px] overflow-y-auto">
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-slate-950/80 shadow-2xl max-h-[460px] overflow-y-auto">
               {previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={previewUrl}
-                  alt="Vista previa de agenda a compartir"
+                  alt="Vista previa de agenda"
                   className="w-full h-auto block select-none"
                 />
               ) : (
@@ -188,10 +182,6 @@ export function ShareScheduleSheet({
                 </div>
               )}
             </div>
-
-            <p className="text-[11px] text-slate-400 text-center px-2">
-              Incluye todas las clases, parciales y tareas de la semana de forma clara y sin recortes.
-            </p>
 
             {/* Acciones principales */}
             <div className="flex flex-col gap-2 pt-1">
@@ -231,13 +221,9 @@ export function ShareScheduleSheet({
         ) : (
           <>
             {/* Vista previa del texto WhatsApp */}
-            <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 max-h-[360px] overflow-y-auto font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap select-all">
+            <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 max-h-[380px] overflow-y-auto font-mono text-xs text-slate-200 leading-relaxed whitespace-pre-wrap select-all">
               {formatScheduleAsText(payload)}
             </div>
-
-            <p className="text-[11px] text-slate-400 text-center">
-              Formato con viñetas y negritas listo para pegar directamente en un chat de WhatsApp.
-            </p>
 
             <button
               type="button"

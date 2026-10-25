@@ -8,6 +8,7 @@
    ========================================================================= */
 
 import type { Fd4WeekData, Fd4DayData, Fd4MonthData } from './fd4-calendar';
+import { parseDateString, getDayOfWeek, WEEKDAY_SHORT_ES, MONTH_NAMES_ES } from './date-utils';
 
 export type ExportScheduleDay = {
   dateStr: string;
@@ -107,41 +108,51 @@ export function buildDayExportPayload(data: Fd4DayData): ExportSchedulePayload {
   };
 }
 
+function formatShortDateBadge(dateStr: string): string {
+  try {
+    const { month, day } = parseDateString(dateStr);
+    const dow = getDayOfWeek(dateStr);
+    const dowName = WEEKDAY_SHORT_ES[dow]?.toUpperCase() || '';
+    const monthName = MONTH_NAMES_ES[month - 1]?.slice(0, 3).toUpperCase() || '';
+    return `${dowName} ${day} ${monthName}`;
+  } catch {
+    return dateStr;
+  }
+}
+
 export function buildMonthExportPayload(data: Fd4MonthData): ExportSchedulePayload {
-  const reminders = data.reminders.map((r) => ({
+  const reminders = (data.reminders || []).map((r) => ({
     id: r.id,
     title: r.title,
     hora: r.when,
     dateStr: r.dateStr,
   }));
 
-  // Agrupar previews de los días con actividades
-  const daysWithEvents: ExportScheduleDay[] = [];
-  const sortedDates = Object.keys(data.previews).sort();
+  // Agrupar los reminders por fecha para el resumen ejecutivo mensual
+  const remindersByDate = new Map<string, { id?: string; title: string; hora: string }[]>();
+  for (const r of reminders) {
+    const list = remindersByDate.get(r.dateStr) || [];
+    list.push({ id: r.id, title: r.title, hora: r.hora });
+    remindersByDate.set(r.dateStr, list);
+  }
+
+  const days: ExportScheduleDay[] = [];
+  const sortedDates = Array.from(remindersByDate.keys()).sort();
 
   for (const dateStr of sortedDates) {
     const preview = data.previews[dateStr];
-    if (!preview || preview.events.length === 0) continue;
-
-    const dayReminders = preview.events
-      .filter((e) => e.kind === 'reminder')
-      .map((e) => ({ title: e.title, hora: e.hora ?? '' }));
-    const dayTasks = preview.events
-      .filter((e) => e.kind === 'task')
-      .map((e) => ({ title: e.title, hora: e.hora ?? '' }));
-
-    if (dayReminders.length > 0 || dayTasks.length > 0) {
-      daysWithEvents.push({
-        dateStr,
-        label: preview.label,
-        hint: preview.hint,
-        isToday: preview.hint === 'Hoy',
-        free: false,
-        classes: [],
-        reminders: dayReminders,
-        tasks: dayTasks,
-      });
-    }
+    const label = preview ? preview.label : formatShortDateBadge(dateStr);
+    const items = remindersByDate.get(dateStr) || [];
+    days.push({
+      dateStr,
+      label,
+      hint: preview?.hint,
+      isToday: preview?.hint === 'Hoy',
+      free: false,
+      classes: [],
+      reminders: items,
+      tasks: [],
+    });
   }
 
   return {
@@ -149,11 +160,11 @@ export function buildMonthExportPayload(data: Fd4MonthData): ExportSchedulePaylo
     title: `Mes: ${data.title}`,
     subtitle: `${reminders.length} evaluaciones programadas`,
     period: data.title,
-    days: daysWithEvents,
+    days,
     summary: {
       totalClasses: 0,
       totalReminders: reminders.length,
-      totalTasks: daysWithEvents.reduce((acc, d) => acc + d.tasks.length, 0),
+      totalTasks: 0,
     },
   };
 }
@@ -164,6 +175,25 @@ export function formatScheduleAsText(payload: ExportSchedulePayload): string {
   const lines: string[] = [];
   lines.push(`📅 *${payload.title}*`);
   if (payload.subtitle) lines.push(`_${payload.subtitle}_\n`);
+
+  if (payload.view === 'mes') {
+    if (payload.days.length === 0) {
+      lines.push('✨ No hay evaluaciones programadas para este mes.\n');
+    } else {
+      for (const day of payload.days) {
+        const shortBadge = formatShortDateBadge(day.dateStr);
+        lines.push(`*${shortBadge} (${day.label}):*`);
+        for (const r of day.reminders) {
+          const time = r.hora ? `[${r.hora}] ` : '';
+          lines.push(`  🚩 *${time}${r.title}*`);
+        }
+        lines.push('');
+      }
+    }
+    lines.push('—');
+    lines.push('Compartido desde mi agenda personal');
+    return lines.join('\n');
+  }
 
   for (const day of payload.days) {
     const marker = day.isToday ? ' (Hoy)' : '';
@@ -205,7 +235,7 @@ export function formatScheduleAsText(payload: ExportSchedulePayload): string {
 
 /* ------------------------------------------------ Renderizado de Canvas PNG */
 
-function roundRect(
+function drawRoundRect(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -213,10 +243,10 @@ function roundRect(
   h: number,
   r: number
 ) {
-  if (ctx.roundRect) {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
     ctx.roundRect(x, y, w, h, r);
   } else {
-    ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.arcTo(x + w, y, x + w, y + h, r);
     ctx.arcTo(x + w, y + h, x, y + h, r);
@@ -224,6 +254,19 @@ function roundRect(
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   }
+}
+
+function truncateText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number
+): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let tr = text;
+  while (tr.length > 0 && ctx.measureText(tr + '…').width > maxWidth) {
+    tr = tr.slice(0, -1);
+  }
+  return tr + '…';
 }
 
 export function renderScheduleCard(
@@ -237,62 +280,606 @@ export function renderScheduleCard(
   const paddingX = 48;
   const contentWidth = width - paddingX * 2;
 
-  // 1. Pre-cálculo de altura según contenido
-  let calculatedHeight = 220; // Header y padding superior
+  // Dispatch de render según vista
+  if (payload.view === 'dia') {
+    renderDayView(canvas, ctx, payload, width, paddingX, contentWidth);
+  } else if (payload.view === 'mes') {
+    renderMonthView(canvas, ctx, payload, width, paddingX, contentWidth);
+  } else {
+    renderWeekView(canvas, ctx, payload, width, paddingX, contentWidth);
+  }
+}
+
+/* ------------------------------------------------ 1. VISTA DE DÍA */
+
+function renderDayView(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  payload: ExportSchedulePayload,
+  width: number,
+  paddingX: number,
+  contentWidth: number
+): void {
+  const day = payload.days[0] || {
+    dateStr: '',
+    label: payload.title,
+    isToday: false,
+    free: true,
+    classes: [],
+    reminders: [],
+    tasks: [],
+  };
+
+  // Calcular alturas de secciones
+  let totalHeight = 220; // Header
+
+  const hasReminders = day.reminders.length > 0;
+  const hasClasses = day.classes.length > 0;
+  const hasTasks = day.tasks.length > 0;
+
+  let remCardH = 0;
+  if (hasReminders) {
+    remCardH = 54 + day.reminders.length * 48;
+    totalHeight += remCardH + 18;
+  }
+
+  let classCardH = 0;
+  if (hasClasses) {
+    classCardH = 54 + day.classes.length * 44;
+    totalHeight += classCardH + 18;
+  }
+
+  let taskCardH = 0;
+  if (hasTasks) {
+    taskCardH = 54 + day.tasks.length * 42;
+    totalHeight += taskCardH + 18;
+  }
+
+  let freeCardH = 0;
+  if (day.free) {
+    freeCardH = 110;
+    totalHeight += freeCardH + 18;
+  }
+
+  totalHeight += 90; // Footer
+
+  canvas.width = width;
+  canvas.height = totalHeight;
+
+  // Fondo Titanium Dark elegante
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, totalHeight);
+  bgGrad.addColorStop(0, '#0c0f17');
+  bgGrad.addColorStop(1, '#151922');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, totalHeight);
+
+  // Borde exterior
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  drawRoundRect(ctx, 16, 16, width - 32, totalHeight - 32, 28);
+  ctx.stroke();
+
+  // --- Header ---
+  let curY = 64;
+  ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.letterSpacing = '1.5px';
+  ctx.fillText('ORGANIZER · AGENDA DEL DÍA', paddingX, curY);
+  ctx.letterSpacing = '0px';
+
+  curY += 44;
+  ctx.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(payload.title, paddingX, curY);
+
+  curY += 38;
+  renderSummaryChips(ctx, payload, paddingX, curY);
+
+  curY += 36;
+  drawDivider(ctx, paddingX, width - paddingX, curY);
+
+  curY += 28;
+
+  // --- SECCIONES DE DÍA (Ancho Completo, Cero Colisiones) ---
+
+  // 1. Evaluaciones
+  if (hasReminders) {
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.07)';
+    drawRoundRect(ctx, paddingX, curY, contentWidth, remCardH, 20);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.28)';
+    ctx.lineWidth = 1.5;
+    drawRoundRect(ctx, paddingX, curY, contentWidth, remCardH, 20);
+    ctx.stroke();
+
+    ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#fbbf24';
+    ctx.letterSpacing = '1px';
+    ctx.fillText('🚩 EVALUACIONES Y PARCIALES', paddingX + 24, curY + 32);
+    ctx.letterSpacing = '0px';
+
+    let itemY = curY + 70;
+    for (const r of day.reminders) {
+      if (r.hora) {
+        ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText(r.hora, paddingX + 24, itemY);
+
+        const timeW = ctx.measureText(r.hora).width;
+        ctx.fillStyle = '#fef3c7';
+        const maxTitleW = contentWidth - 48 - timeW - 20;
+        const safeTitle = truncateText(ctx, ` · ${r.title}`, maxTitleW);
+        ctx.fillText(safeTitle, paddingX + 24 + timeW, itemY);
+      } else {
+        ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#fef3c7';
+        const safeTitle = truncateText(ctx, r.title, contentWidth - 48);
+        ctx.fillText(safeTitle, paddingX + 24, itemY);
+      }
+      itemY += 46;
+    }
+
+    curY += remCardH + 18;
+  }
+
+  // 2. Clases
+  if (hasClasses) {
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
+    drawRoundRect(ctx, paddingX, curY, contentWidth, classCardH, 20);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 1.5;
+    drawRoundRect(ctx, paddingX, curY, contentWidth, classCardH, 20);
+    ctx.stroke();
+
+    ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.letterSpacing = '1px';
+    ctx.fillText('📚 HORARIO DE CLASES', paddingX + 24, curY + 32);
+    ctx.letterSpacing = '0px';
+
+    let itemY = curY + 68;
+    for (const c of day.classes) {
+      ctx.font = '600 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      if (c.hora) {
+        ctx.fillStyle = '#7dd3fc';
+        ctx.fillText(c.hora, paddingX + 24, itemY);
+
+        const timeW = ctx.measureText(c.hora).width;
+        ctx.fillStyle = '#e0f2fe';
+        const maxTitleW = contentWidth - 48 - timeW - 20;
+        const safeTitle = truncateText(ctx, ` · ${c.title}`, maxTitleW);
+        ctx.fillText(safeTitle, paddingX + 24 + timeW, itemY);
+      } else {
+        ctx.fillStyle = '#e0f2fe';
+        const safeTitle = truncateText(ctx, c.title, contentWidth - 48);
+        ctx.fillText(safeTitle, paddingX + 24, itemY);
+      }
+      itemY += 44;
+    }
+
+    curY += classCardH + 18;
+  }
+
+  // 3. Tareas
+  if (hasTasks) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+    drawRoundRect(ctx, paddingX, curY, contentWidth, taskCardH, 20);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    drawRoundRect(ctx, paddingX, curY, contentWidth, taskCardH, 20);
+    ctx.stroke();
+
+    ctx.font = '700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.letterSpacing = '1px';
+    ctx.fillText('✓ TAREAS DEL DÍA', paddingX + 24, curY + 32);
+    ctx.letterSpacing = '0px';
+
+    let itemY = curY + 68;
+    for (const t of day.tasks) {
+      ctx.font = '500 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('•', paddingX + 24, itemY);
+
+      if (t.hora) {
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillText(`${t.hora} · `, paddingX + 44, itemY);
+        const timeW = ctx.measureText(`${t.hora} · `).width;
+
+        ctx.fillStyle = '#e2e8f0';
+        const maxTitleW = contentWidth - 48 - timeW - 24;
+        const safeTitle = truncateText(ctx, t.title, maxTitleW);
+        ctx.fillText(safeTitle, paddingX + 44 + timeW, itemY);
+      } else {
+        ctx.fillStyle = '#e2e8f0';
+        const safeTitle = truncateText(ctx, t.title, contentWidth - 68);
+        ctx.fillText(safeTitle, paddingX + 44, itemY);
+      }
+      itemY += 42;
+    }
+
+    curY += taskCardH + 18;
+  }
+
+  // 4. Libre
+  if (day.free) {
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.06)';
+    drawRoundRect(ctx, paddingX, curY, contentWidth, freeCardH, 20);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.22)';
+    ctx.lineWidth = 1.5;
+    drawRoundRect(ctx, paddingX, curY, contentWidth, freeCardH, 20);
+    ctx.stroke();
+
+    ctx.font = '600 21px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('✨ Día completamente despejado · Disponible para planes', paddingX + 28, curY + 62);
+
+    curY += freeCardH + 18;
+  }
+
+  renderFooter(ctx, width, paddingX, curY);
+}
+
+/* ------------------------------------------------ 2. VISTA DE SEMANA */
+
+function renderWeekView(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  payload: ExportSchedulePayload,
+  width: number,
+  paddingX: number,
+  contentWidth: number
+): void {
+  // 1. Calcular dinámicamente el ancho de la columna izquierda (nombre del día)
+  ctx.font = '700 23px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  let maxLabelW = 0;
+  for (const day of payload.days) {
+    const w = ctx.measureText(day.label).width;
+    if (w > maxLabelW) maxLabelW = w;
+  }
+  const leftColWidth = Math.max(180, Math.ceil(maxLabelW) + 24);
+  const leftColX = paddingX + 24;
+  const rightColX = leftColX + leftColWidth + 20;
+  const rightColMaxW = contentWidth - (leftColWidth + 24 + 20 + 20);
+
+  // 2. Pre-calcular altura total
+  let totalHeight = 220; // Header
   const dayHeights: number[] = [];
 
   for (const day of payload.days) {
     if (day.free) {
-      const h = 76;
+      const h = 80;
       dayHeights.push(h);
-      calculatedHeight += h + 14;
+      totalHeight += h + 14;
     } else {
       let itemsCount = day.reminders.length + day.classes.length + day.tasks.length;
       if (itemsCount === 0) itemsCount = 1;
-      const h = Math.max(90, 48 + itemsCount * 36);
+      const h = Math.max(92, 42 + itemsCount * 40);
       dayHeights.push(h);
-      calculatedHeight += h + 14;
+      totalHeight += h + 14;
     }
   }
 
-  calculatedHeight += 100; // Footer y padding inferior
+  totalHeight += 90; // Footer
 
   canvas.width = width;
-  canvas.height = calculatedHeight;
+  canvas.height = totalHeight;
 
-  // Fondo Titanium Dark elegante
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, calculatedHeight);
+  // Fondo
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, totalHeight);
   bgGrad.addColorStop(0, '#0c0f17');
   bgGrad.addColorStop(1, '#151922');
   ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, width, calculatedHeight);
+  ctx.fillRect(0, 0, width, totalHeight);
 
-  // Borde sutil del marco
+  // Borde exterior
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-  roundRect(ctx, 16, 16, width - 32, calculatedHeight - 32, 28);
+  drawRoundRect(ctx, 16, 16, width - 32, totalHeight - 32, 28);
   ctx.stroke();
 
-  // --- HEADER ---
+  // Header
   let curY = 64;
-
-  // Badge superior
   ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.letterSpacing = '1.5px';
   ctx.fillText('ORGANIZER · AGENDA PERSONAL', paddingX, curY);
   ctx.letterSpacing = '0px';
 
-  curY += 42;
-
-  // Título principal
-  ctx.font = '700 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  curY += 44;
+  ctx.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.fillText(payload.title, paddingX, curY);
 
   curY += 38;
+  renderSummaryChips(ctx, payload, paddingX, curY);
 
-  // Chips resumen en fila
+  curY += 36;
+  drawDivider(ctx, paddingX, width - paddingX, curY);
+
+  curY += 24;
+
+  // Tarjetas de días
+  for (let i = 0; i < payload.days.length; i++) {
+    const day = payload.days[i];
+    const cardH = dayHeights[i];
+    const cardY = curY;
+
+    // Fondo neutro y limpio
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+    drawRoundRect(ctx, paddingX, cardY, contentWidth, cardH, 18);
+    ctx.fill();
+
+    // Borde (si es hoy, azul sutil pero elegante)
+    ctx.strokeStyle = day.isToday ? 'rgba(59, 130, 246, 0.45)' : 'rgba(255, 255, 255, 0.07)';
+    ctx.lineWidth = day.isToday ? 2 : 1;
+    drawRoundRect(ctx, paddingX, cardY, contentWidth, cardH, 18);
+    ctx.stroke();
+
+    // Columna izquierda: Nombre del día
+    const titleY = cardY + 36;
+    ctx.font = '700 23px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = day.isToday ? '#60a5fa' : '#ffffff';
+    ctx.fillText(day.label, leftColX, titleY);
+
+    if (day.isToday) {
+      // Badge [HOY]
+      ctx.fillStyle = '#2563eb';
+      drawRoundRect(ctx, leftColX, titleY + 12, 48, 20, 6);
+      ctx.fill();
+
+      ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('HOY', leftColX + 11, titleY + 26);
+    }
+
+    // Columna derecha
+    let itemY = cardY + 36;
+
+    if (day.free) {
+      ctx.font = '600 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#34d399';
+      ctx.fillText('✨ Despejado · Disponible para planes', rightColX, cardY + cardH / 2 + 7);
+    } else {
+      // 1. Evaluaciones
+      for (const r of day.reminders) {
+        ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText('🚩', rightColX, itemY);
+
+        if (r.hora) {
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillText(r.hora, rightColX + 30, itemY);
+          const timeW = ctx.measureText(r.hora).width;
+
+          ctx.fillStyle = '#fef3c7';
+          const safeTitle = truncateText(ctx, ` · ${r.title}`, rightColMaxW - 30 - timeW);
+          ctx.fillText(safeTitle, rightColX + 30 + timeW, itemY);
+        } else {
+          ctx.fillStyle = '#fef3c7';
+          const safeTitle = truncateText(ctx, r.title, rightColMaxW - 30);
+          ctx.fillText(safeTitle, rightColX + 30, itemY);
+        }
+        itemY += 40;
+      }
+
+      // 2. Clases
+      for (const c of day.classes) {
+        ctx.font = '600 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('📚', rightColX, itemY);
+
+        if (c.hora) {
+          ctx.fillStyle = '#7dd3fc';
+          ctx.fillText(c.hora, rightColX + 30, itemY);
+          const timeW = ctx.measureText(c.hora).width;
+
+          ctx.fillStyle = '#e0f2fe';
+          const safeTitle = truncateText(ctx, ` · ${c.title}`, rightColMaxW - 30 - timeW);
+          ctx.fillText(safeTitle, rightColX + 30 + timeW, itemY);
+        } else {
+          ctx.fillStyle = '#e0f2fe';
+          const safeTitle = truncateText(ctx, c.title, rightColMaxW - 30);
+          ctx.fillText(safeTitle, rightColX + 30, itemY);
+        }
+        itemY += 40;
+      }
+
+      // 3. Tareas
+      for (const t of day.tasks) {
+        ctx.font = '500 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('•', rightColX + 6, itemY);
+
+        if (t.hora) {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillText(`${t.hora} · `, rightColX + 30, itemY);
+          const timeW = ctx.measureText(`${t.hora} · `).width;
+
+          ctx.fillStyle = '#e2e8f0';
+          const safeTitle = truncateText(ctx, t.title, rightColMaxW - 30 - timeW);
+          ctx.fillText(safeTitle, rightColX + 30 + timeW, itemY);
+        } else {
+          ctx.fillStyle = '#cbd5e1';
+          const safeTitle = truncateText(ctx, t.title, rightColMaxW - 30);
+          ctx.fillText(safeTitle, rightColX + 30, itemY);
+        }
+        itemY += 40;
+      }
+    }
+
+    curY += cardH + 14;
+  }
+
+  renderFooter(ctx, width, paddingX, curY);
+}
+
+/* ------------------------------------------------ 3. VISTA DE MES */
+
+function renderMonthView(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  payload: ExportSchedulePayload,
+  width: number,
+  paddingX: number,
+  contentWidth: number
+): void {
+  // En Mes nos enfocamos en el cronograma de evaluaciones del mes
+  // Aplanar todas las evaluaciones de los días
+  const items: { dateStr: string; label: string; title: string; hora: string }[] = [];
+  for (const d of payload.days) {
+    for (const r of d.reminders) {
+      items.push({
+        dateStr: d.dateStr,
+        label: d.label,
+        title: r.title,
+        hora: r.hora,
+      });
+    }
+  }
+
+  const rowH = 74;
+  const rowGap = 12;
+
+  let totalHeight = 220; // Header
+  if (items.length === 0) {
+    totalHeight += 110;
+  } else {
+    totalHeight += items.length * (rowH + rowGap);
+  }
+  totalHeight += 90; // Footer
+
+  canvas.width = width;
+  canvas.height = totalHeight;
+
+  // Fondo
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, totalHeight);
+  bgGrad.addColorStop(0, '#0c0f17');
+  bgGrad.addColorStop(1, '#151922');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, totalHeight);
+
+  // Borde exterior
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  drawRoundRect(ctx, 16, 16, width - 32, totalHeight - 32, 28);
+  ctx.stroke();
+
+  // Header
+  let curY = 64;
+  ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.letterSpacing = '1.5px';
+  ctx.fillText('ORGANIZER · AGENDA MENSUAL', paddingX, curY);
+  ctx.letterSpacing = '0px';
+
+  curY += 44;
+  ctx.font = '700 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(payload.title, paddingX, curY);
+
+  curY += 38;
+  renderSummaryChips(ctx, payload, paddingX, curY);
+
+  curY += 36;
+  drawDivider(ctx, paddingX, width - paddingX, curY);
+
+  curY += 24;
+
+  if (items.length === 0) {
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.06)';
+    drawRoundRect(ctx, paddingX, curY, contentWidth, 90, 18);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.2)';
+    ctx.lineWidth = 1;
+    drawRoundRect(ctx, paddingX, curY, contentWidth, 90, 18);
+    ctx.stroke();
+
+    ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#34d399';
+    ctx.fillText('✨ No hay evaluaciones programadas en este mes', paddingX + 28, curY + 52);
+
+    curY += 108;
+  } else {
+    for (const item of items) {
+      // Tarjeta de la evaluación
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+      drawRoundRect(ctx, paddingX, curY, contentWidth, rowH, 16);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+      ctx.lineWidth = 1;
+      drawRoundRect(ctx, paddingX, curY, contentWidth, rowH, 16);
+      ctx.stroke();
+
+      // Pastilla de fecha a la izquierda
+      const badgeW = 160;
+      const badgeH = 46;
+      const badgeX = paddingX + 16;
+      const badgeY = curY + (rowH - badgeH) / 2;
+
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+      drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+      ctx.lineWidth = 1;
+      drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
+      ctx.stroke();
+
+      const shortBadge = formatShortDateBadge(item.dateStr);
+      ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'center';
+      ctx.fillText(shortBadge, badgeX + badgeW / 2, badgeY + 28);
+      ctx.textAlign = 'left';
+
+      // Contenido a la derecha de la pastilla
+      const textX = badgeX + badgeW + 20;
+      const textY = curY + rowH / 2 + 7;
+      const maxTextW = contentWidth - (badgeW + 52);
+
+      ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText('🚩', textX, textY);
+
+      if (item.hora) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText(item.hora, textX + 30, textY);
+        const timeW = ctx.measureText(item.hora).width;
+
+        ctx.fillStyle = '#fef3c7';
+        const safeTitle = truncateText(ctx, ` · ${item.title}`, maxTextW - 30 - timeW);
+        ctx.fillText(safeTitle, textX + 30 + timeW, textY);
+      } else {
+        ctx.fillStyle = '#fef3c7';
+        const safeTitle = truncateText(ctx, item.title, maxTextW - 30);
+        ctx.fillText(safeTitle, textX + 30, textY);
+      }
+
+      curY += rowH + rowGap;
+    }
+  }
+
+  renderFooter(ctx, width, paddingX, curY);
+}
+
+/* ------------------------------------------------ Helpers Comunes de Canvas */
+
+function renderSummaryChips(
+  ctx: CanvasRenderingContext2D,
+  payload: ExportSchedulePayload,
+  startX: number,
+  y: number
+) {
   const chips: { label: string; bg: string; text: string }[] = [];
   if (payload.summary.totalReminders > 0) {
     chips.push({
@@ -316,7 +903,7 @@ export function renderScheduleCard(
     });
   }
 
-  let chipX = paddingX;
+  let chipX = startX;
   ctx.font = '600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   for (const c of chips) {
     const textWidth = ctx.measureText(c.label).width;
@@ -324,136 +911,37 @@ export function renderScheduleCard(
     const chipH = 30;
 
     ctx.fillStyle = c.bg;
-    roundRect(ctx, chipX, curY - 20, chipW, chipH, 15);
+    drawRoundRect(ctx, chipX, y - 20, chipW, chipH, 15);
     ctx.fill();
 
     ctx.fillStyle = c.text;
-    ctx.fillText(c.label, chipX + 12, curY);
+    ctx.fillText(c.label, chipX + 12, y);
     chipX += chipW + 10;
   }
+}
 
-  curY += 36;
-
-  // Separador sutil
+function drawDivider(
+  ctx: CanvasRenderingContext2D,
+  x1: number,
+  x2: number,
+  y: number
+) {
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(paddingX, curY);
-  ctx.lineTo(width - paddingX, curY);
+  ctx.moveTo(x1, y);
+  ctx.lineTo(x2, y);
   ctx.stroke();
+}
 
-  curY += 24;
-
-  // --- TARJETAS DE DÍAS ---
-  for (let i = 0; i < payload.days.length; i++) {
-    const day = payload.days[i];
-    const cardH = dayHeights[i];
-    const cardY = curY;
-
-    // Fondo de tarjeta del día
-    ctx.fillStyle = day.isToday ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255, 255, 255, 0.035)';
-    roundRect(ctx, paddingX, cardY, contentWidth, cardH, 18);
-    ctx.fill();
-
-    ctx.strokeStyle = day.isToday ? 'rgba(59, 130, 246, 0.35)' : 'rgba(255, 255, 255, 0.06)';
-    roundRect(ctx, paddingX, cardY, contentWidth, cardH, 18);
-    ctx.stroke();
-
-    // Columna izquierda: Nombre del día (Lunes 14, etc.)
-    const leftColX = paddingX + 22;
-    const titleY = cardY + 34;
-
-    ctx.font = '700 21px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = day.isToday ? '#60a5fa' : '#ffffff';
-    ctx.fillText(day.label, leftColX, titleY);
-
-    if (day.isToday) {
-      // Badge Hoy
-      ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#2563eb';
-      roundRect(ctx, leftColX, titleY + 10, 48, 20, 6);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('HOY', leftColX + 11, titleY + 24);
-    }
-
-    // Columna derecha: Actividades o Día Libre
-    const rightColX = paddingX + 240;
-    let itemY = cardY + 32;
-
-    if (day.free) {
-      ctx.font = '600 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#34d399';
-      ctx.fillText('✨ Despejado · Disponible para planes', rightColX, cardY + cardH / 2 + 6);
-    } else {
-      // 1. Evaluaciones / Reminders
-      for (const r of day.reminders) {
-        ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillText('🚩', rightColX, itemY);
-
-        if (r.hora) {
-          ctx.fillStyle = '#fbbf24';
-          ctx.fillText(r.hora, rightColX + 26, itemY);
-          const timeWidth = ctx.measureText(r.hora).width;
-          ctx.fillStyle = '#fef3c7';
-          ctx.fillText(` · ${r.title}`, rightColX + 26 + timeWidth, itemY);
-        } else {
-          ctx.fillStyle = '#fef3c7';
-          ctx.fillText(r.title, rightColX + 26, itemY);
-        }
-        itemY += 34;
-      }
-
-      // 2. Clases
-      for (const c of day.classes) {
-        ctx.font = '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillText('📚', rightColX, itemY);
-
-        if (c.hora) {
-          ctx.fillStyle = '#7dd3fc';
-          ctx.fillText(c.hora, rightColX + 26, itemY);
-          const timeWidth = ctx.measureText(c.hora).width;
-          ctx.fillStyle = '#e0f2fe';
-          ctx.fillText(` · ${c.title}`, rightColX + 26 + timeWidth, itemY);
-        } else {
-          ctx.fillStyle = '#e0f2fe';
-          ctx.fillText(c.title, rightColX + 26, itemY);
-        }
-        itemY += 34;
-      }
-
-      // 3. Tareas
-      for (const t of day.tasks) {
-        ctx.font = '500 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText('•', rightColX + 4, itemY);
-
-        if (t.hora) {
-          ctx.fillStyle = '#cbd5e1';
-          ctx.fillText(`${t.hora} · `, rightColX + 26, itemY);
-          const timeWidth = ctx.measureText(`${t.hora} · `).width;
-          ctx.fillStyle = '#e2e8f0';
-          ctx.fillText(t.title, rightColX + 26 + timeWidth, itemY);
-        } else {
-          ctx.fillStyle = '#cbd5e1';
-          ctx.fillText(t.title, rightColX + 26, itemY);
-        }
-        itemY += 34;
-      }
-    }
-
-    curY += cardH + 14;
-  }
-
-  // --- FOOTER ---
+function renderFooter(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  paddingX: number,
+  curY: number
+) {
   curY += 12;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
-  ctx.beginPath();
-  ctx.moveTo(paddingX, curY);
-  ctx.lineTo(width - paddingX, curY);
-  ctx.stroke();
+  drawDivider(ctx, paddingX, width - paddingX, curY);
 
   curY += 26;
   ctx.font = '500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
