@@ -27,7 +27,8 @@ export type GlyphName =
   | 'clock'
   | 'flame'
   | 'sparkles'
-  | 'repeat';
+  | 'repeat'
+  | 'share';
 
 const PATHS: Record<GlyphName, ReactNode> = {
   gear: (
@@ -84,6 +85,12 @@ const PATHS: Record<GlyphName, ReactNode> = {
     <>
       <path d="M17 2l4 4-4 4M21 6H7a4 4 0 0 0-4 4v2" />
       <path d="M7 22l-4-4 4-4M3 18h14a4 4 0 0 0 4-4v-2" />
+    </>
+  ),
+  share: (
+    <>
+      <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+      <path d="M12 15V3m-4.5 4.5L12 3l4.5 4.5" />
     </>
   ),
 };

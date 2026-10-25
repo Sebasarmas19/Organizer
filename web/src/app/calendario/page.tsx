@@ -33,6 +33,12 @@ import {
   getWeekView,
   type CalView,
 } from '@/lib/fd4-calendar';
+import {
+  buildWeekExportPayload,
+  buildDayExportPayload,
+  buildMonthExportPayload,
+  type ExportSchedulePayload,
+} from '@/lib/schedule-export';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { CalHeader } from '@/components/fd4/CalHeader';
@@ -77,23 +83,26 @@ export default async function CalendarioPage({
   const dateStr = safeDate(params.d, getTodayString(DEFAULT_TIMEZONE));
   const { year, month } = parseDateString(dateStr);
 
-  const [profileRes, [title, subtitle, body]] = await Promise.all([
+  const [profileRes, [title, subtitle, body, exportPayload]] = await Promise.all([
     supabase
       .from('profiles')
       .select('timezone')
       .eq('id', user.id)
       .maybeSingle(),
-    (async (): Promise<[string, string, React.ReactNode]> => {
+    (async (): Promise<[string, string, React.ReactNode, ExportSchedulePayload]> => {
       if (view === 'mes') {
         const data = await getMonthView(supabase, user.id, year, month, dateStr, DEFAULT_TIMEZONE);
-        return [data.title, 'Toca un día para abrirlo', <MonthView key="m" data={data} />];
+        const payload = buildMonthExportPayload(data);
+        return [data.title, 'Toca un día para abrirlo', <MonthView key="m" data={data} />, payload];
       }
       if (view === 'semana') {
         const data = await getWeekView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
-        return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />];
+        const payload = buildWeekExportPayload(data);
+        return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />, payload];
       }
       const data = await getDayView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
-      return [data.title, data.sub, <DayView key="d" data={data} />];
+      const payload = buildDayExportPayload(data);
+      return [data.title, data.sub, <DayView key="d" data={data} />, payload];
     })(),
   ]);
 
@@ -116,6 +125,7 @@ export default async function CalendarioPage({
           todayStr={todayStr}
           title={title}
           subtitle={subtitle}
+          payload={exportPayload}
         />
         {body}
       </main>

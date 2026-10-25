@@ -25,6 +25,8 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import type { CalView } from '@/lib/fd4-calendar';
 import { stepDate } from '@/lib/fd4-calendar';
+import { CalShareButton } from '@/components/calendar/CalShareButton';
+import type { ExportSchedulePayload } from '@/lib/schedule-export';
 
 const VIEWS: { id: CalView; label: string }[] = [
   { id: 'mes', label: 'Mes' },
@@ -38,12 +40,14 @@ export function CalHeader({
   todayStr,
   title,
   subtitle,
+  payload,
 }: {
   view: CalView;
   dateStr: string;
   todayStr: string;
   title: string;
   subtitle: string;
+  payload?: ExportSchedulePayload;
 }) {
   const to = (v: CalView, d: string) => `/calendario?v=${v}&d=${d}`;
 
@@ -56,6 +60,7 @@ export function CalHeader({
         </div>
 
         <div className="fd-calhead__nav">
+          {payload && <CalShareButton payload={payload} />}
           <Link
             href={to(view, stepDate(view, dateStr, -1))}
             className="fd-btn fd-btn--icon"

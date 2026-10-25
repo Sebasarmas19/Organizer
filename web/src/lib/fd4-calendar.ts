@@ -325,6 +325,8 @@ export type WeekDayCard = {
   isToday: boolean;
   reminder: { id: string; title: string; hora: string } | null;
   extraRemindersCount: number;
+  allReminders?: { id: string; title: string; hora: string }[];
+  classes?: { title: string; hora: string }[];
   tasks: { title: string; hora: string }[];
   free: boolean;
 };
@@ -433,11 +435,24 @@ export async function getWeekView(
 
   /* Las clases no entran al calendario (#53): tienen su pestaña, Clases. */
   const blocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template' && !b.reminder_id);
+  const classBlocks = (blocksRes.data ?? []).filter((b) => b.source === 'template');
   const items = itemsRes.data ?? [];
   const reminders = (remindersRes.data ?? []) as Reminder[];
 
   const cards: WeekDayCard[] = days.map((dateStr) => {
     const dayBlocks = blocks.filter((b) => localDay(b.starts_at, timezone) === dateStr);
+    const dayClassBlocks = classBlocks
+      .filter((b) => localDay(b.starts_at, timezone) === dateStr)
+      .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+
+    const classes = dayClassBlocks.map((b) => {
+      const start = formatClock(b.starts_at, timezone);
+      const end = b.ends_at ? formatClock(b.ends_at, timezone) : '';
+      return {
+        title: b.title,
+        hora: end ? `${start} – ${end}` : start,
+      };
+    });
 
     /* Una tarea puede llegar por dos caminos: tiene bloque ese dia, o tiene
        `due_on` ese dia y todavia no se planifico. Las dos son tareas del dia
@@ -460,6 +475,11 @@ export async function getWeekView(
 
     const rem = dayReminders[0];
     const extraRemindersCount = dayReminders.length > 1 ? dayReminders.length - 1 : 0;
+    const allReminders = dayReminders.map((r) => ({
+      id: r.id,
+      title: r.title,
+      hora: r.occurs_at ? formatTimeOfDay(r.occurs_at) : '',
+    }));
 
     return {
       dateStr,
@@ -470,8 +490,10 @@ export async function getWeekView(
         ? { id: rem.id, title: rem.title, hora: rem.occurs_at ? formatTimeOfDay(rem.occurs_at) : '' }
         : null,
       extraRemindersCount,
+      allReminders,
+      classes,
       tasks,
-      free: !rem && tasks.length === 0,
+      free: !rem && tasks.length === 0 && classes.length === 0,
     };
   });
 
@@ -614,6 +636,8 @@ export type Fd4DayData = {
   nowLabel: string;
   band: { id: string; title: string; meta: string } | null;
   bands: { id: string; title: string; meta: string }[];
+  allReminders?: { id: string; title: string; hora: string }[];
+  classes?: { title: string; hora: string }[];
   /** Tareas del dia sin hora: no caben en el riel y no pueden desaparecer. */
   noHour: DayNoHourTask[];
   blocks: DayBlockView[];
@@ -765,6 +789,25 @@ export async function getDayView(
         ? 'Ayer'
         : `${year}`;
 
+  const dayClassBlocks = rawBlocks
+    .filter((b) => b.source === 'template')
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+
+  const classes = dayClassBlocks.map((b) => {
+    const start = formatClock(b.starts_at, timezone);
+    const end = b.ends_at ? formatClock(b.ends_at, timezone) : '';
+    return {
+      title: b.title,
+      hora: end ? `${start} – ${end}` : start,
+    };
+  });
+
+  const allReminders = reminders.map((r) => ({
+    id: r.id,
+    title: r.title,
+    hora: r.occurs_at ? formatTimeOfDay(r.occurs_at) : '',
+  }));
+
   return {
     dateStr,
     title: dayFullLabel(dateStr),
@@ -774,6 +817,8 @@ export async function getDayView(
     nowLabel,
     band,
     bands,
+    allReminders,
+    classes,
     noHour,
     blocks: blocks.sort((a, b) => a.top - b.top),
     classBands,
