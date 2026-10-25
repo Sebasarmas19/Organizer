@@ -8,7 +8,14 @@
    ========================================================================= */
 
 import type { Fd4WeekData, Fd4DayData, Fd4MonthData } from './fd4-calendar';
-import { parseDateString, getDayOfWeek, WEEKDAY_SHORT_ES, MONTH_NAMES_ES } from './date-utils';
+import {
+  parseDateString,
+  formatDateString,
+  getDaysInMonth,
+  getDayOfWeek,
+  WEEKDAY_SHORT_ES,
+  MONTH_NAMES_ES,
+} from './date-utils';
 
 export type ExportScheduleDay = {
   dateStr: string;
@@ -121,50 +128,61 @@ function formatShortDateBadge(dateStr: string): string {
 }
 
 export function buildMonthExportPayload(data: Fd4MonthData): ExportSchedulePayload {
-  const reminders = (data.reminders || []).map((r) => ({
-    id: r.id,
-    title: r.title,
-    hora: r.when,
-    dateStr: r.dateStr,
-  }));
+  const monthFirst = formatDateString(data.year, data.month, 1);
+  const monthLast = formatDateString(data.year, data.month, getDaysInMonth(data.year, data.month));
 
-  // Agrupar los reminders por fecha para el resumen ejecutivo mensual
-  const remindersByDate = new Map<string, { id?: string; title: string; hora: string }[]>();
-  for (const r of reminders) {
-    const list = remindersByDate.get(r.dateStr) || [];
-    list.push({ id: r.id, title: r.title, hora: r.hora });
-    remindersByDate.set(r.dateStr, list);
-  }
+  const daysWithEvents: ExportScheduleDay[] = [];
+  const sortedDates = Object.keys(data.previews)
+    .filter((d) => d >= monthFirst && d <= monthLast)
+    .sort();
 
-  const days: ExportScheduleDay[] = [];
-  const sortedDates = Array.from(remindersByDate.keys()).sort();
+  let totalReminders = 0;
+  let totalTasks = 0;
 
   for (const dateStr of sortedDates) {
     const preview = data.previews[dateStr];
-    const label = preview ? preview.label : formatShortDateBadge(dateStr);
-    const items = remindersByDate.get(dateStr) || [];
-    days.push({
-      dateStr,
-      label,
-      hint: preview?.hint,
-      isToday: preview?.hint === 'Hoy',
-      free: false,
-      classes: [],
-      reminders: items,
-      tasks: [],
-    });
+    if (!preview || preview.events.length === 0) continue;
+
+    const dayReminders = preview.events
+      .filter((e) => e.kind === 'reminder')
+      .map((e) => ({ id: e.id, title: e.title, hora: e.hora ?? '' }));
+
+    const seenTaskTitles = new Set<string>();
+    const dayTasks: { title: string; hora: string }[] = [];
+    for (const e of preview.events) {
+      if (e.kind === 'task' && !seenTaskTitles.has(e.title)) {
+        seenTaskTitles.add(e.title);
+        dayTasks.push({ title: e.title, hora: e.hora ?? '' });
+      }
+    }
+
+    if (dayReminders.length > 0 || dayTasks.length > 0) {
+      totalReminders += dayReminders.length;
+      totalTasks += dayTasks.length;
+
+      daysWithEvents.push({
+        dateStr,
+        label: preview.label,
+        hint: preview.hint,
+        isToday: preview.hint === 'Hoy',
+        free: false,
+        classes: [], // Sin materias (#53 y petición explícita del usuario)
+        reminders: dayReminders,
+        tasks: dayTasks,
+      });
+    }
   }
 
   return {
     view: 'mes',
     title: `Mes: ${data.title}`,
-    subtitle: `${reminders.length} evaluaciones programadas`,
+    subtitle: `${totalReminders} evaluaciones · ${totalTasks} tareas programadas`,
     period: data.title,
-    days,
+    days: daysWithEvents,
     summary: {
       totalClasses: 0,
-      totalReminders: reminders.length,
-      totalTasks: 0,
+      totalReminders,
+      totalTasks,
     },
   };
 }
@@ -178,15 +196,27 @@ export function formatScheduleAsText(payload: ExportSchedulePayload): string {
 
   if (payload.view === 'mes') {
     if (payload.days.length === 0) {
-      lines.push('✨ No hay evaluaciones programadas para este mes.\n');
+      lines.push('✨ No hay evaluaciones ni tareas programadas para este mes.\n');
     } else {
       for (const day of payload.days) {
+        const marker = day.isToday ? ' (Hoy)' : '';
         const shortBadge = formatShortDateBadge(day.dateStr);
-        lines.push(`*${shortBadge} (${day.label}):*`);
-        for (const r of day.reminders) {
-          const time = r.hora ? `[${r.hora}] ` : '';
-          lines.push(`  🚩 *${time}${r.title}*`);
+        lines.push(`*${shortBadge} — ${day.label}${marker}:*`);
+
+        if (day.reminders.length > 0) {
+          for (const r of day.reminders) {
+            const time = r.hora ? `[${r.hora}] ` : '';
+            lines.push(`  🚩 *${time}${r.title}*`);
+          }
         }
+
+        if (day.tasks.length > 0) {
+          for (const t of day.tasks) {
+            const time = t.hora ? `${t.hora} · ` : '';
+            lines.push(`  • ${time}${t.title}`);
+          }
+        }
+
         lines.push('');
       }
     }
@@ -280,7 +310,6 @@ export function renderScheduleCard(
   const paddingX = 48;
   const contentWidth = width - paddingX * 2;
 
-  // Dispatch de render según vista
   if (payload.view === 'dia') {
     renderDayView(canvas, ctx, payload, width, paddingX, contentWidth);
   } else if (payload.view === 'mes') {
@@ -310,8 +339,7 @@ function renderDayView(
     tasks: [],
   };
 
-  // Calcular alturas de secciones
-  let totalHeight = 220; // Header
+  let totalHeight = 220;
 
   const hasReminders = day.reminders.length > 0;
   const hasClasses = day.classes.length > 0;
@@ -341,25 +369,22 @@ function renderDayView(
     totalHeight += freeCardH + 18;
   }
 
-  totalHeight += 90; // Footer
+  totalHeight += 90;
 
   canvas.width = width;
   canvas.height = totalHeight;
 
-  // Fondo Titanium Dark elegante
   const bgGrad = ctx.createLinearGradient(0, 0, 0, totalHeight);
   bgGrad.addColorStop(0, '#0c0f17');
   bgGrad.addColorStop(1, '#151922');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, totalHeight);
 
-  // Borde exterior
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   drawRoundRect(ctx, 16, 16, width - 32, totalHeight - 32, 28);
   ctx.stroke();
 
-  // --- Header ---
   let curY = 64;
   ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -380,9 +405,6 @@ function renderDayView(
 
   curY += 28;
 
-  // --- SECCIONES DE DÍA (Ancho Completo, Cero Colisiones) ---
-
-  // 1. Evaluaciones
   if (hasReminders) {
     ctx.fillStyle = 'rgba(245, 158, 11, 0.07)';
     drawRoundRect(ctx, paddingX, curY, contentWidth, remCardH, 20);
@@ -423,7 +445,6 @@ function renderDayView(
     curY += remCardH + 18;
   }
 
-  // 2. Clases
   if (hasClasses) {
     ctx.fillStyle = 'rgba(56, 189, 248, 0.06)';
     drawRoundRect(ctx, paddingX, curY, contentWidth, classCardH, 20);
@@ -463,7 +484,6 @@ function renderDayView(
     curY += classCardH + 18;
   }
 
-  // 3. Tareas
   if (hasTasks) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
     drawRoundRect(ctx, paddingX, curY, contentWidth, taskCardH, 20);
@@ -506,7 +526,6 @@ function renderDayView(
     curY += taskCardH + 18;
   }
 
-  // 4. Libre
   if (day.free) {
     ctx.fillStyle = 'rgba(16, 185, 129, 0.06)';
     drawRoundRect(ctx, paddingX, curY, contentWidth, freeCardH, 20);
@@ -537,7 +556,6 @@ function renderWeekView(
   paddingX: number,
   contentWidth: number
 ): void {
-  // 1. Calcular dinámicamente el ancho de la columna izquierda (nombre del día)
   ctx.font = '700 23px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   let maxLabelW = 0;
   for (const day of payload.days) {
@@ -549,8 +567,7 @@ function renderWeekView(
   const rightColX = leftColX + leftColWidth + 20;
   const rightColMaxW = contentWidth - (leftColWidth + 24 + 20 + 20);
 
-  // 2. Pre-calcular altura total
-  let totalHeight = 220; // Header
+  let totalHeight = 220;
   const dayHeights: number[] = [];
 
   for (const day of payload.days) {
@@ -567,25 +584,22 @@ function renderWeekView(
     }
   }
 
-  totalHeight += 90; // Footer
+  totalHeight += 90;
 
   canvas.width = width;
   canvas.height = totalHeight;
 
-  // Fondo
   const bgGrad = ctx.createLinearGradient(0, 0, 0, totalHeight);
   bgGrad.addColorStop(0, '#0c0f17');
   bgGrad.addColorStop(1, '#151922');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, totalHeight);
 
-  // Borde exterior
   ctx.lineWidth = 1.5;
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
   drawRoundRect(ctx, 16, 16, width - 32, totalHeight - 32, 28);
   ctx.stroke();
 
-  // Header
   let curY = 64;
   ctx.font = '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -606,31 +620,26 @@ function renderWeekView(
 
   curY += 24;
 
-  // Tarjetas de días
   for (let i = 0; i < payload.days.length; i++) {
     const day = payload.days[i];
     const cardH = dayHeights[i];
     const cardY = curY;
 
-    // Fondo neutro y limpio
     ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
     drawRoundRect(ctx, paddingX, cardY, contentWidth, cardH, 18);
     ctx.fill();
 
-    // Borde (si es hoy, azul sutil pero elegante)
     ctx.strokeStyle = day.isToday ? 'rgba(59, 130, 246, 0.45)' : 'rgba(255, 255, 255, 0.07)';
     ctx.lineWidth = day.isToday ? 2 : 1;
     drawRoundRect(ctx, paddingX, cardY, contentWidth, cardH, 18);
     ctx.stroke();
 
-    // Columna izquierda: Nombre del día
     const titleY = cardY + 36;
     ctx.font = '700 23px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = day.isToday ? '#60a5fa' : '#ffffff';
     ctx.fillText(day.label, leftColX, titleY);
 
     if (day.isToday) {
-      // Badge [HOY]
       ctx.fillStyle = '#2563eb';
       drawRoundRect(ctx, leftColX, titleY + 12, 48, 20, 6);
       ctx.fill();
@@ -640,7 +649,6 @@ function renderWeekView(
       ctx.fillText('HOY', leftColX + 11, titleY + 26);
     }
 
-    // Columna derecha
     let itemY = cardY + 36;
 
     if (day.free) {
@@ -648,7 +656,6 @@ function renderWeekView(
       ctx.fillStyle = '#34d399';
       ctx.fillText('✨ Despejado · Disponible para planes', rightColX, cardY + cardH / 2 + 7);
     } else {
-      // 1. Evaluaciones
       for (const r of day.reminders) {
         ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillStyle = '#f59e0b';
@@ -670,7 +677,6 @@ function renderWeekView(
         itemY += 40;
       }
 
-      // 2. Clases
       for (const c of day.classes) {
         ctx.font = '600 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillStyle = '#38bdf8';
@@ -692,7 +698,6 @@ function renderWeekView(
         itemY += 40;
       }
 
-      // 3. Tareas
       for (const t of day.tasks) {
         ctx.font = '500 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.fillStyle = '#94a3b8';
@@ -721,7 +726,7 @@ function renderWeekView(
   renderFooter(ctx, width, paddingX, curY);
 }
 
-/* ------------------------------------------------ 3. VISTA DE MES */
+/* ------------------------------------------------ 3. VISTA DE MES (Evaluaciones y Tareas, sin Clases) */
 
 function renderMonthView(
   canvas: HTMLCanvasElement,
@@ -731,29 +736,21 @@ function renderMonthView(
   paddingX: number,
   contentWidth: number
 ): void {
-  // En Mes nos enfocamos en el cronograma de evaluaciones del mes
-  // Aplanar todas las evaluaciones de los días
-  const items: { dateStr: string; label: string; title: string; hora: string }[] = [];
-  for (const d of payload.days) {
-    for (const r of d.reminders) {
-      items.push({
-        dateStr: d.dateStr,
-        label: d.label,
-        title: r.title,
-        hora: r.hora,
-      });
+  const rowGap = 14;
+  const dayHeights: number[] = [];
+  let totalHeight = 220; // Header
+
+  if (payload.days.length === 0) {
+    totalHeight += 110;
+  } else {
+    for (const day of payload.days) {
+      const itemsCount = day.reminders.length + day.tasks.length;
+      const h = Math.max(76, 28 + itemsCount * 38 + 10);
+      dayHeights.push(h);
+      totalHeight += h + rowGap;
     }
   }
 
-  const rowH = 74;
-  const rowGap = 12;
-
-  let totalHeight = 220; // Header
-  if (items.length === 0) {
-    totalHeight += 110;
-  } else {
-    totalHeight += items.length * (rowH + rowGap);
-  }
   totalHeight += 90; // Footer
 
   canvas.width = width;
@@ -793,7 +790,7 @@ function renderMonthView(
 
   curY += 24;
 
-  if (items.length === 0) {
+  if (payload.days.length === 0) {
     ctx.fillStyle = 'rgba(16, 185, 129, 0.06)';
     drawRoundRect(ctx, paddingX, curY, contentWidth, 90, 18);
     ctx.fill();
@@ -805,67 +802,116 @@ function renderMonthView(
 
     ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillStyle = '#34d399';
-    ctx.fillText('✨ No hay evaluaciones programadas en este mes', paddingX + 28, curY + 52);
+    ctx.fillText('✨ No hay evaluaciones ni tareas programadas en este mes', paddingX + 28, curY + 52);
 
     curY += 108;
   } else {
-    for (const item of items) {
-      // Tarjeta de la evaluación
+    for (let i = 0; i < payload.days.length; i++) {
+      const day = payload.days[i];
+      const cardH = dayHeights[i];
+      const hasReminders = day.reminders.length > 0;
+      const itemsCount = day.reminders.length + day.tasks.length;
+
+      // Tarjeta del día
       ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
-      drawRoundRect(ctx, paddingX, curY, contentWidth, rowH, 16);
+      drawRoundRect(ctx, paddingX, curY, contentWidth, cardH, 16);
       ctx.fill();
 
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
-      ctx.lineWidth = 1;
-      drawRoundRect(ctx, paddingX, curY, contentWidth, rowH, 16);
+      ctx.strokeStyle = day.isToday
+        ? 'rgba(59, 130, 246, 0.45)'
+        : hasReminders
+          ? 'rgba(245, 158, 11, 0.22)'
+          : 'rgba(255, 255, 255, 0.07)';
+      ctx.lineWidth = day.isToday ? 2 : 1;
+      drawRoundRect(ctx, paddingX, curY, contentWidth, cardH, 16);
       ctx.stroke();
 
       // Pastilla de fecha a la izquierda
       const badgeW = 160;
       const badgeH = 46;
       const badgeX = paddingX + 16;
-      const badgeY = curY + (rowH - badgeH) / 2;
+      const badgeY = itemsCount === 1 ? curY + (cardH - badgeH) / 2 : curY + 16;
 
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+      ctx.fillStyle = hasReminders
+        ? 'rgba(245, 158, 11, 0.14)'
+        : 'rgba(148, 163, 184, 0.12)';
       drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
       ctx.fill();
 
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+      ctx.strokeStyle = hasReminders
+        ? 'rgba(245, 158, 11, 0.35)'
+        : 'rgba(148, 163, 184, 0.25)';
       ctx.lineWidth = 1;
       drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 12);
       ctx.stroke();
 
-      const shortBadge = formatShortDateBadge(item.dateStr);
+      const shortBadge = formatShortDateBadge(day.dateStr);
       ctx.font = '700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#fbbf24';
+      ctx.fillStyle = hasReminders ? '#fbbf24' : '#cbd5e1';
       ctx.textAlign = 'center';
       ctx.fillText(shortBadge, badgeX + badgeW / 2, badgeY + 28);
       ctx.textAlign = 'left';
 
-      // Contenido a la derecha de la pastilla
-      const textX = badgeX + badgeW + 20;
-      const textY = curY + rowH / 2 + 7;
-      const maxTextW = contentWidth - (badgeW + 52);
+      if (day.isToday && itemsCount > 1) {
+        ctx.fillStyle = '#2563eb';
+        drawRoundRect(ctx, badgeX + 54, badgeY + badgeH + 8, 52, 20, 6);
+        ctx.fill();
 
-      ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = '#f59e0b';
-      ctx.fillText('🚩', textX, textY);
-
-      if (item.hora) {
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillText(item.hora, textX + 30, textY);
-        const timeW = ctx.measureText(item.hora).width;
-
-        ctx.fillStyle = '#fef3c7';
-        const safeTitle = truncateText(ctx, ` · ${item.title}`, maxTextW - 30 - timeW);
-        ctx.fillText(safeTitle, textX + 30 + timeW, textY);
-      } else {
-        ctx.fillStyle = '#fef3c7';
-        const safeTitle = truncateText(ctx, item.title, maxTextW - 30);
-        ctx.fillText(safeTitle, textX + 30, textY);
+        ctx.font = '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('HOY', badgeX + 66, badgeY + badgeH + 22);
       }
 
-      curY += rowH + rowGap;
+      // Contenido a la derecha de la pastilla
+      const textX = badgeX + badgeW + 20;
+      let itemY = curY + 34;
+      const maxTextW = contentWidth - (badgeW + 56);
+
+      // 1. Evaluaciones
+      for (const r of day.reminders) {
+        ctx.font = '700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText('🚩', textX, itemY);
+
+        if (r.hora) {
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillText(r.hora, textX + 30, itemY);
+          const timeW = ctx.measureText(r.hora).width;
+
+          ctx.fillStyle = '#fef3c7';
+          const safeTitle = truncateText(ctx, ` · ${r.title}`, maxTextW - 30 - timeW);
+          ctx.fillText(safeTitle, textX + 30 + timeW, itemY);
+        } else {
+          ctx.fillStyle = '#fef3c7';
+          const safeTitle = truncateText(ctx, r.title, maxTextW - 30);
+          ctx.fillText(safeTitle, textX + 30, itemY);
+        }
+        itemY += 38;
+      }
+
+      // 2. Tareas
+      for (const t of day.tasks) {
+        ctx.font = '500 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('•', textX + 6, itemY);
+
+        if (t.hora) {
+          ctx.fillStyle = '#cbd5e1';
+          ctx.fillText(`${t.hora} · `, textX + 30, itemY);
+          const timeW = ctx.measureText(`${t.hora} · `).width;
+
+          ctx.fillStyle = '#e2e8f0';
+          const safeTitle = truncateText(ctx, t.title, maxTextW - 30 - timeW);
+          ctx.fillText(safeTitle, textX + 30 + timeW, itemY);
+        } else {
+          ctx.fillStyle = '#e2e8f0';
+          const safeTitle = truncateText(ctx, t.title, maxTextW - 30);
+          ctx.fillText(safeTitle, textX + 30, itemY);
+        }
+        itemY += 38;
+      }
+
+      curY += cardH + rowGap;
     }
   }
 
