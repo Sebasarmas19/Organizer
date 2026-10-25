@@ -179,18 +179,25 @@ export function composeMorning(input: MorningInput): NotificationText {
   const suffix = overdueSuffix(input.overdue);
 
   if (input.reminder) {
+    const isToday = input.reminder.whenLabel.toLowerCase() === 'hoy';
     const prefix = input.reminder.whenLabel + ': ';
     const title = fitText(prefix + input.reminder.title, TITLE_MAX);
 
-    /* `Hoy: ` delante, porque el titulo ya esta hablando de otro dia y sin la
-       marca la lista se leeria como si fuera del dia del parcial. */
-    const lead = 'Hoy: ';
-    const day = renderDay(input.slots, BODY_MAX - lead.length - suffix.length);
+    /* `Hoy: ` delante solo cuando el titulo habla de otro dia (ej. Mañana).
+       Si el titulo ya dice "Hoy: ...", no se repite "Hoy: " en el cuerpo. */
+    const lead = isToday ? '' : 'Hoy: ';
+
+    /* Si el reminder de hoy ya encabeza el titulo, no lo duplicamos en los slots del cuerpo. */
+    const displaySlots = isToday
+      ? input.slots.filter((s) => s.title !== input.reminder!.title)
+      : input.slots;
+
+    const day = renderDay(displaySlots, BODY_MAX - lead.length - suffix.length);
     const body = day
       ? lead + day + suffix
       : suffix
-        ? 'Hoy nada planificado' + suffix
-        : 'Hoy no tienes nada planificado para eso.';
+        ? (isToday ? 'Día de evaluación' : 'Hoy nada planificado') + suffix
+        : (isToday ? 'Día de evaluación. Todo listo.' : 'Hoy no tienes nada planificado para eso.');
     return { title, body: fitText(body, BODY_MAX) };
   }
 
@@ -220,21 +227,21 @@ export interface EveningInput {
 }
 
 /**
- * Pregunta, no senala. "Quedo abierto", nunca "no cumpliste" — y nada se
- * arrastra solo al dia siguiente: la respuesta la da el (decisiones 5 y 56).
+ * Pregunta y recuerda marcar lo hecho. "Pendiente", nunca "no cumpliste" —
+ * si ya la hizo, invita a marcarla; si no, pasarla a mañana sin culpa (decisiones 5 y 56).
  */
 export function composeEvening(input: EveningInput): NotificationText {
   const title = 'Cierre del día';
 
   if (input.open.length === 0) {
-    return { title, body: 'Cumpliste todo lo de hoy. No queda nada abierto.' };
+    return { title, body: '¡Todo listo por hoy! Cumpliste todas tus tareas planificadas.' };
   }
 
   const one = input.open.length === 1;
-  const prefix = one ? 'Quedó abierto: ' : 'Quedaron abiertos: ';
+  const prefix = one ? 'Pendiente: ' : 'Pendientes: ';
   const question = one
-    ? '. ¿Lo pasas a mañana o lo sueltas?'
-    : '. ¿Los pasas a mañana o los sueltas?';
+    ? '. Si ya la hiciste, márcala; o pásala a mañana.'
+    : '. Si ya las hiciste, márcalas; o pásalas a mañana.';
 
   const budget = BODY_MAX - prefix.length - question.length;
   const names = fitList(input.open, budget);
@@ -374,9 +381,20 @@ export interface PrepAlertInput {
 export function composePrepAlert(input: PrepAlertInput): NotificationText {
   const when =
     input.daysAway <= 0 ? 'Hoy' : input.daysAway === 1 ? 'Mañana' : 'En ' + input.daysAway + ' días';
+  const title = fitText(when + ': ' + input.title, TITLE_MAX);
+
+  let body: string;
+  if (input.daysAway <= 1) {
+    body = 'Es mañana y no tiene tareas asignadas. Toca para revisar tu preparación.';
+  } else if (input.daysAway <= 3) {
+    body = 'Se acerca la fecha y aún no tiene tareas. Toca para organizar tu plan.';
+  } else {
+    body = 'Sin tareas de preparación todavía. Toca para planificar con calma.';
+  }
+
   return {
-    title: fitText(when + ': ' + input.title, TITLE_MAX),
-    body: 'Todavía no tiene ninguna tarea. Tócala y pártelo en 3 o 4 pasos con fecha.',
+    title,
+    body: fitText(body, BODY_MAX),
   };
 }
 

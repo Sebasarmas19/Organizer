@@ -69,6 +69,7 @@ import { sendPush, type PushSubscription, type VapidKeys } from './webpush.ts';
 interface BlockRow {
   id: string;
   item_id: string | null;
+  reminder_id: string | null;
   title: string;
   starts_at: string;
   ends_at: string;
@@ -443,7 +444,7 @@ async function readDayBlocks(
     'blocks?user_id=eq.' + profile.id +
       '&starts_at=gte.' + range.start +
       '&starts_at=lt.' + range.end +
-      '&order=starts_at.asc&select=id,item_id,title,starts_at,ends_at,status,source'
+      '&order=starts_at.asc&select=id,item_id,reminder_id,title,starts_at,ends_at,status,source'
   );
 }
 
@@ -473,6 +474,21 @@ async function buildDaySlots(
   }));
 
   const plannedItemIds = new Set(blocks.map((block) => block.item_id).filter(Boolean));
+  const plannedReminderIds = new Set(blocks.map((block) => block.reminder_id).filter(Boolean));
+
+  /* Reminders que ocurren hoy pero no tienen bloque en `blocks`. */
+  const remindersToday = await select<ReminderRow>(
+    env.db,
+    'reminders?user_id=eq.' + profile.id +
+      '&occurs_on=eq.' + date +
+      '&select=id,title,occurs_on,occurs_at,notice_days'
+  );
+
+  for (const reminder of remindersToday) {
+    if (plannedReminderIds.has(reminder.id)) continue;
+    const time = reminder.occurs_at ? reminder.occurs_at.slice(0, 5) : null;
+    slots.push({ time, title: reminder.title, isClass: false });
+  }
 
   const dueToday = await select<ItemRow>(
     env.db,
@@ -494,17 +510,15 @@ async function buildDaySlots(
  * El reminder que encabeza hoy, si hay alguno.
  *
  * Decision 60: la anticipacion es `notice_days`, y un dia si esta vacio.
- * Decision 61: si TODAS sus tareas estan hechas, no encabeza. Estar preparado
- * es justamente la senal de que no hace falta avisar.
+ * Decision 61: si TODAS sus tareas estan hechas, no encabeza, salvo que sea hoy.
+ * Se limita a hoy o mañana para que eventos lejanos no desplacen el día de hoy.
  */
 async function findLeadReminder(
   env: DispatchEnvironment,
   profile: NotifyProfile,
   today: string
 ): Promise<{ title: string; whenLabel: string } | null> {
-  /* Se pide una ventana generosa y se filtra aqui, porque el umbral depende de
-     `notice_days` fila a fila y PostgREST no compara dos columnas. */
-  const horizon = shiftDate(today, 30);
+  const horizon = shiftDate(today, 1);
   const reminders = await select<ReminderRow>(
     env.db,
     'reminders?user_id=eq.' + profile.id +
@@ -515,11 +529,11 @@ async function findLeadReminder(
 
   const inRange = reminders.filter(
     (reminder) =>
-      daysBetween(today, reminder.occurs_on) <= (reminder.notice_days ?? DEFAULT_NOTICE_DAYS)
+      daysBetween(today, reminder.occurs_on) <= Math.min(reminder.notice_days ?? DEFAULT_NOTICE_DAYS, 1)
   );
   if (inRange.length === 0) return null;
 
-  /* Decision 61 · un reminder con todas sus tareas hechas no encabeza. */
+  /* Decision 61 · un reminder con todas sus tareas hechas no encabeza, salvo que sea hoy. */
   const tasks = await select<ItemRow>(
     env.db,
     'items?user_id=eq.' + profile.id +
@@ -528,13 +542,14 @@ async function findLeadReminder(
   );
 
   for (const reminder of inRange) {
+    const isToday = reminder.occurs_on === today;
     const own = tasks.filter((task) => task.reminder_id === reminder.id);
     const prepared = own.length > 0 && own.every((task) => task.status === 'done');
-    if (prepared) continue;
+    if (prepared && !isToday) continue;
 
     return {
       title: reminder.title,
-      whenLabel: relativeDayLabel(today, reminder.occurs_on),
+      whenLabel: isToday ? 'Hoy' : relativeDayLabel(today, reminder.occurs_on),
     };
   }
 
@@ -577,20 +592,28 @@ async function buildEvening(
   const blocks = await readDayBlocks(env, profile, date);
 
   /* Las materias no se "cumplen": una clase no es deuda (decision 52). */
-  const own = blocks.filter((block) => block.source !== 'template');
-  if (own.length === 0) {
-    const dueToday = await select<ItemRow>(
-      env.db,
-      'items?user_id=eq.' + profile.id +
-        '&due_on=eq.' + date +
-        '&status=in.' + OPEN_ITEM_STATUSES +
-        '&select=id,title,status,due_on,advance_notice_days,reminder_id'
-    );
-    if (dueToday.length === 0) return null;
-    return composeEvening({ open: dueToday.map((item) => item.title) });
+  const ownBlocks = blocks.filter((block) => block.source !== 'template');
+  const plannedItemIds = new Set(blocks.map((b) => b.item_id).filter(Boolean));
+
+  const dueToday = await select<ItemRow>(
+    env.db,
+    'items?user_id=eq.' + profile.id +
+      '&due_on=eq.' + date +
+      '&status=in.' + OPEN_ITEM_STATUSES +
+      '&select=id,title,status,due_on,advance_notice_days,reminder_id'
+  );
+
+  const unblockedDueToday = dueToday.filter((item) => !plannedItemIds.has(item.id));
+
+  /* Si no habia ninguna tarea planificada ni por bloques ni por fecha tope, no se manda nada. */
+  if (ownBlocks.length === 0 && dueToday.length === 0) {
+    return null;
   }
 
-  const open = own.filter((block) => block.status === 'pending').map((block) => block.title);
+  const openBlocks = ownBlocks.filter((b) => b.status === 'pending').map((b) => b.title);
+  const openDue = unblockedDueToday.map((item) => item.title);
+  const open = [...openBlocks, ...openDue];
+
   return composeEvening({ open });
 }
 
@@ -783,7 +806,10 @@ async function buildResource(
   };
 }
 
-/** Avisos "X minutos antes" que tocan en esta pasada. */
+/**
+ * Avisos "X minutos antes" que tocan en esta pasada.
+ * Solo para reminders o tareas específicas con hora; las clases rutinarias no notifican (AGENTS.md).
+ */
 async function buildBeforeBlocks(
   env: DispatchEnvironment,
   profile: NotifyProfile,
@@ -794,7 +820,7 @@ async function buildBeforeBlocks(
   const blocks = await select<BeforeBlockRow>(
     env.db,
     'blocks?user_id=eq.' + profile.id +
-      '&status=eq.pending&reminder_min=not.is.null' +
+      '&status=eq.pending&reminder_min=not.is.null&source=neq.template' +
       '&starts_at=gt.' + encodeURIComponent(from) +
       '&starts_at=lte.' + encodeURIComponent(to) +
       '&order=starts_at.asc' +
@@ -802,6 +828,7 @@ async function buildBeforeBlocks(
   );
 
   const due = blocks
+    .filter((block) => block.source !== 'template')
     .map((block) => ({ block, left: minutesBeforeStart(now, block.starts_at, block.reminder_min) }))
     .filter((x): x is { block: BeforeBlockRow; left: number } => x.left !== null);
   if (due.length === 0) return [];

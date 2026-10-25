@@ -106,12 +106,29 @@ test('2b · el título no lleva ningún símbolo de alarma', () => {
   assert.doesNotMatch(text.title, /[⚠!❗🔴👀]/u);
 });
 
+test('2c · con reminder de hoy · no repite "Hoy:" en el cuerpo', () => {
+  const text = composeMorning({
+    weekdayLabel: 'jueves',
+    dayNumber: 17,
+    slots: [
+      { time: '8:00', title: 'Cálculo', isClass: true },
+      { time: '12:00', title: 'Parcial de Cálculo', isClass: false },
+      { time: '15:00', title: 'Migrar el schema', isClass: false },
+    ],
+    reminder: { title: 'Parcial de Cálculo', whenLabel: 'Hoy' },
+  });
+  assert.equal(text.title, 'Hoy: Parcial de Cálculo');
+  assert.doesNotMatch(text.body, /^Hoy: /);
+  assert.equal(text.body, '8:00 Cálculo · 15:00 Migrar el schema');
+  within(text, 'reminder de hoy');
+});
+
 test('3 · noche · pregunta, no señala', () => {
   const text = composeEvening({ open: ['Resumen de Cálculo'] });
   assert.equal(text.title, 'Cierre del día');
-  assert.equal(text.body, 'Quedó abierto: Resumen de Cálculo. ¿Lo pasas a mañana o lo sueltas?');
+  assert.equal(text.body, 'Pendiente: Resumen de Cálculo. Si ya la hiciste, márcala; o pásala a mañana.');
   assert.equal(text.title.length, 14);
-  assert.equal(text.body.length, 67);
+  assert.equal(text.body.length, 76);
   assert.doesNotMatch(text.body, /no cumpliste|fallaste|deberías/i);
 });
 
@@ -227,7 +244,7 @@ test('muchas tareas abiertas por la noche siguen cabiendo', () => {
     ],
   });
   within(text, 'noche cargada');
-  assert.match(text.body, /¿Los pasas a mañana o los sueltas\?$/);
+  assert.match(text.body, /Si ya las hiciste, márcalas; o pásalas a mañana\.$/);
 });
 
 /* ══════════════════════════════════════════════════ los días vacíos ══ */
@@ -246,7 +263,7 @@ test('un día sin nada planificado no manda una notificación vacía', () => {
 
 test('cerrar el día completo se dice como un logro, no como un hueco', () => {
   const text = composeEvening({ open: [] });
-  assert.equal(text.body, 'Cumpliste todo lo de hoy. No queda nada abierto.');
+  assert.equal(text.body, '¡Todo listo por hoy! Cumpliste todas tus tareas planificadas.');
   within(text, 'día cerrado');
 });
 

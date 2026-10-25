@@ -99,7 +99,7 @@ test('con reminder encabezando, el recuento también cabe', () => {
 test('prep alert: dice cuánto falta y qué hacer', () => {
   const text = composePrepAlert({ title: 'Entrega Proyecto 1 BD', daysAway: 3 });
   assert.equal(text.title, 'En 3 días: Entrega Proyecto 1 BD');
-  assert.match(text.body, /ninguna tarea/);
+  assert.match(text.body, /no tiene tareas/);
   fits(text);
 });
 
