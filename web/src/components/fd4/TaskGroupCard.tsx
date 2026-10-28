@@ -9,33 +9,41 @@
    se esconde en silencio: el enlace dice que hay mas.
    ========================================================================= */
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import type { TaskRowData } from './TaskRow';
 import { TaskRow } from './TaskRow';
 import { Icon } from '@/components/Icon';
 
 const VISIBLE = 5;
 
+const noopSubscribe = () => () => {};
+
 export function TaskGroupCard({ label, items }: { label: string; items: TaskRowData[] }) {
   const storageKey = `organizer:group:${label}`;
-  const [open, setOpen] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return sessionStorage.getItem(storageKey) === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const isStoredOpen = useSyncExternalStore(
+    noopSubscribe,
+    () => {
+      try {
+        return sessionStorage.getItem(storageKey) === 'true';
+      } catch {
+        return false;
+      }
+    },
+    () => false
+  );
+
+  const [overrideOpen, setOverrideOpen] = useState<boolean | null>(null);
+  const open = overrideOpen ?? isStoredOpen;
 
   const handleOpen = () => {
-    setOpen(true);
+    setOverrideOpen(true);
     try {
       sessionStorage.setItem(storageKey, 'true');
     } catch {}
   };
 
   const handleClose = () => {
-    setOpen(false);
+    setOverrideOpen(false);
     try {
       sessionStorage.setItem(storageKey, 'false');
     } catch {}

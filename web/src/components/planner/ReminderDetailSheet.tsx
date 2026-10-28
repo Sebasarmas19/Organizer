@@ -20,7 +20,8 @@ import {
   createTask,
   type ReminderInput,
 } from '@/lib/planner-actions';
-import { deleteReminder, toggleTask } from '@/lib/fd4-actions';
+import { deleteReminder } from '@/lib/fd4-actions';
+import { safeToggleTask } from '@/lib/offline-sync';
 import type { ReminderDetail } from '@/lib/planner-data';
 import type { ReminderRecurrence } from '@/lib/supabase/database.types';
 import Link from 'next/link';
@@ -152,7 +153,7 @@ export function ReminderDetailSheet({
     );
     startTransition(async () => {
       try {
-        await toggleTask(taskId, !currentDone);
+        await safeToggleTask(taskId, !currentDone);
         router.refresh();
         if (onUpdated) onUpdated();
       } catch (err) {

@@ -58,6 +58,7 @@ export const TABS: Tab[] = [
 
 export function TabBar({ onCreate }: { onCreate?: () => void }) {
   const pathname = usePathname();
+  const currentPath = pathname || '';
   const [pendingId, setPendingId] = useState<TabIconName | null>(null);
   const [prevPath, setPrevPath] = useState(pathname);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -69,7 +70,7 @@ export function TabBar({ onCreate }: { onCreate?: () => void }) {
 
   const isCurrent = (tab: Tab) =>
     tab.match.some(
-      (route) => pathname === route || (route !== '/' && pathname.startsWith(route + '/'))
+      (route) => currentPath === route || (route !== '/' && currentPath.startsWith(route + '/'))
     );
 
   return (
@@ -116,7 +117,7 @@ export function TabBar({ onCreate }: { onCreate?: () => void }) {
         <CreateSheet
           open={sheetOpen}
           onClose={() => setSheetOpen(false)}
-          showResource={pathname.startsWith('/recursos')}
+          showResource={currentPath.startsWith('/recursos')}
         />
       ) : null}
     </>

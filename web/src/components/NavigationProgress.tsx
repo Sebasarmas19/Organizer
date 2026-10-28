@@ -205,14 +205,16 @@ export function NavigationProgress() {
             }
           }, 500);
 
-          transition.finished?.finally(() => {
-            clearTimeout(safetyTimer);
-            if (slowTimerRef.current) {
-              clearTimeout(slowTimerRef.current);
-              slowTimerRef.current = null;
-            }
-            setIsSlowNav(false);
-          });
+          transition.finished
+            ?.catch(() => {})
+            .finally(() => {
+              clearTimeout(safetyTimer);
+              if (slowTimerRef.current) {
+                clearTimeout(slowTimerRef.current);
+                slowTimerRef.current = null;
+              }
+              setIsSlowNav(false);
+            });
         }
       } catch {
         // En caso de URL inválida

@@ -97,7 +97,7 @@ self.addEventListener('fetch', (event) => {
           .then((response) => {
             if (response && response.status === 200) {
               const clone = response.clone();
-              caches.open(STATIC_CACHE).then((cache) => cache.put(req, clone));
+              caches.open(STATIC_CACHE).then((cache) => cache.put(req, clone).catch(() => {})).catch(() => {});
             }
             return response;
           })
@@ -123,7 +123,7 @@ self.addEventListener('fetch', (event) => {
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
-            caches.open(PAGES_CACHE).then((cache) => cache.put(req, clone));
+            caches.open(PAGES_CACHE).then((cache) => cache.put(req, clone).catch(() => {})).catch(() => {});
           }
           return networkResponse;
         })

@@ -26,6 +26,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
+import { DEFAULT_TIMEZONE } from '@/lib/profile';
 import { getPendientesData, type PendView } from '@/lib/fd4-pendientes';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
@@ -52,9 +53,17 @@ export default async function PendientesPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/entrar');
 
+  const profileRes = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
+
   const [params, data] = await Promise.all([
     searchParams,
-    getPendientesData(supabase, user.id),
+    getPendientesData(supabase, user.id, timezone),
   ]);
 
   const view: PendView = params.v === 'recordatorios' ? 'recordatorios' : 'tareas';
