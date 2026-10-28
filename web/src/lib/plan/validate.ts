@@ -40,12 +40,19 @@ const FALLBACK_REPLY: Record<Intent, string> = {
   unclear: 'No entendí qué quieres planificar. Dime qué quieres hacer y te busco hueco.',
 };
 
+function sanitizeText(s: string, max: number): string {
+  return s
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    .trim()
+    .slice(0, max);
+}
+
 export function validateAnswer(out: unknown, slots: FreeSlot[], tasks: TaskRef[] = []): PlanAnswer | null {
   if (!out || typeof out !== 'object') return null;
   const o = out as { intent?: unknown; reply?: unknown; options?: unknown };
 
   const intent: Intent = INTENTS.includes(o.intent as Intent) ? (o.intent as Intent) : 'unclear';
-  let reply = typeof o.reply === 'string' ? o.reply.trim().slice(0, 600) : '';
+  let reply = typeof o.reply === 'string' ? sanitizeText(o.reply, 600) : '';
 
   const options: PlanOption[] = [];
   if (intent === 'plan') {
@@ -66,7 +73,7 @@ export function validateAnswer(out: unknown, slots: FreeSlot[], tasks: TaskRef[]
         const from = typeof s.start === 'string' ? fromClock(s.start) : null;
         const minutes = typeof s.minutes === 'number' ? Math.round(s.minutes) : NaN;
         const task = typeof s.task === 'string' ? taskByRef.get(s.task.trim().toUpperCase()) : undefined;
-        const title = task ? task.title : typeof s.title === 'string' ? s.title.trim().slice(0, 120) : '';
+        const title = task ? task.title : typeof s.title === 'string' ? sanitizeText(s.title, 120) : '';
         if (!slot || from === null || !title || !(minutes >= 15 && minutes <= 180)) continue;
         if (!fitsInSlots([slot], slot.date, from, minutes)) continue;
         if (taken.some((t) => t.date === slot.date && from < t.to && t.from < from + minutes)) continue;
@@ -80,8 +87,8 @@ export function validateAnswer(out: unknown, slots: FreeSlot[], tasks: TaskRef[]
       if (sessions.length === 0) continue;
       sessions.sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
       options.push({
-        title: typeof opt.title === 'string' && opt.title.trim() ? opt.title.trim().slice(0, 80) : 'Propuesta',
-        why: typeof opt.why === 'string' ? opt.why.trim().slice(0, 300) : '',
+        title: typeof opt.title === 'string' && opt.title.trim() ? sanitizeText(opt.title, 80) : 'Propuesta',
+        why: typeof opt.why === 'string' ? sanitizeText(opt.why, 300) : '',
         sessions,
       });
     }

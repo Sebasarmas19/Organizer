@@ -60,3 +60,71 @@ export async function isSafePublicUrl(urlStr: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Obtiene los secretos válidos del servidor para firmar tokens.
+ */
+function getValidServerSecrets(secretOverride?: string): string[] {
+  return [
+    secretOverride,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.CRON_SECRET,
+    process.env.VAPID_PRIVATE_KEY,
+  ].filter((s): s is string => Boolean(s && s.trim().length >= 16));
+}
+
+/**
+ * Genera un token HMAC firmado para acciones interactivas de push (ej. /api/push/action).
+ * Formato: `${userId}.${itemId}.${expiresAt}.${signature}`
+ */
+export function signPushActionToken(
+  userId: string,
+  itemId: string,
+  secretOverride?: string,
+  ttlSeconds = 86400 * 7 // 7 días de vigencia
+): string {
+  const secrets = getValidServerSecrets(secretOverride);
+  if (secrets.length === 0) {
+    throw new Error('Falta una clave secreta del servidor para firmar tokens de acción');
+  }
+  const secret = secrets[0];
+  const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
+  const payload = `${userId}:${itemId}:${expiresAt}`;
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  return `${userId}.${itemId}.${expiresAt}.${sig}`;
+}
+
+/**
+ * Verifica la autenticidad e integridad de un token de acción de push mediante HMAC-SHA256 en tiempo constante.
+ */
+export function verifyPushActionToken(
+  token: string | null | undefined,
+  expectedItemId: string,
+  secretOverride?: string
+): { valid: boolean; userId?: string } {
+  if (!token || typeof token !== 'string') return { valid: false };
+  const parts = token.split('.');
+  if (parts.length !== 4) return { valid: false };
+  const [userId, itemId, expiresAtStr, sig] = parts;
+  if (!userId || !itemId || !expiresAtStr || !sig) return { valid: false };
+  if (itemId !== expectedItemId) return { valid: false };
+
+  const expiresAt = parseInt(expiresAtStr, 10);
+  if (isNaN(expiresAt) || Math.floor(Date.now() / 1000) > expiresAt) {
+    return { valid: false };
+  }
+
+  const validSecrets = getValidServerSecrets(secretOverride);
+  if (validSecrets.length === 0) return { valid: false };
+
+  const payload = `${userId}:${itemId}:${expiresAt}`;
+  let matchFound = false;
+  for (const sec of validSecrets) {
+    const expectedSig = crypto.createHmac('sha256', sec).update(payload).digest('hex');
+    if (timingSafeCompare(sig, expectedSig)) {
+      matchFound = true;
+    }
+  }
+
+  return matchFound ? { valid: true, userId } : { valid: false };
+}

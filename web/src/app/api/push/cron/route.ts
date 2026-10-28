@@ -21,14 +21,31 @@ async function handleCron(request: NextRequest) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const cronSecret = process.env.CRON_SECRET;
 
-  const validTokens = [serviceRoleKey, cronSecret].filter((t): t is string => Boolean(t));
-  const providedToken = authHeader?.replace(/^Bearer\s+/i, '').trim();
+  const validTokens = [serviceRoleKey, cronSecret].filter(
+    (t): t is string => Boolean(t && t.trim().length >= 16)
+  );
 
+  if (validTokens.length === 0) {
+    console.error('CRON: Faltan secretos válidos (CRON_SECRET o SUPABASE_SERVICE_ROLE_KEY) en el entorno');
+    return NextResponse.json({ error: 'Configuración de servidor incompleta' }, { status: 500 });
+  }
+
+  if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  const providedToken = authHeader.slice(7).trim();
   if (!providedToken) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const isAuthorized = validTokens.some((tok) => timingSafeCompare(providedToken, tok));
+  let isAuthorized = false;
+  for (const tok of validTokens) {
+    if (timingSafeCompare(providedToken, tok)) {
+      isAuthorized = true;
+    }
+  }
+
   if (!isAuthorized) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }

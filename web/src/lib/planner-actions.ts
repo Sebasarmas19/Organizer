@@ -322,6 +322,18 @@ export async function createTask(input: TaskInput): Promise<{ id: string }> {
   const dueOn = cleanDate(input.dueOn);
   const time = dueOn ? cleanTime(input.time) : null;
 
+  let reminderId: string | null = null;
+  if (input.reminderId) {
+    const { data: rem, error: remErr } = await supabase
+      .from('reminders')
+      .select('id')
+      .eq('id', input.reminderId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (remErr || !rem) throw new Error('Recordatorio no encontrado');
+    reminderId = rem.id;
+  }
+
   const { data, error } = await supabase
     .from('items')
     .insert({
@@ -331,7 +343,7 @@ export async function createTask(input: TaskInput): Promise<{ id: string }> {
          (desde un reminder), ya está clasificada: no va al clasificador. */
       status: dueOn ? 'planned' : 'someday',
       due_on: dueOn,
-      reminder_id: input.reminderId || null,
+      reminder_id: reminderId,
       notes: cleanNotes(input.notes),
     })
     .select('id, context_id')
@@ -361,6 +373,18 @@ export async function updateTask(id: string, input: TaskInput): Promise<void> {
   if (readErr) throw new Error(readErr.message);
   if (!current) throw new Error('Esa tarea ya no existe.');
 
+  let reminderId: string | null = null;
+  if (input.reminderId) {
+    const { data: rem, error: remErr } = await supabase
+      .from('reminders')
+      .select('id')
+      .eq('id', input.reminderId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (remErr || !rem) throw new Error('Recordatorio no encontrado');
+    reminderId = rem.id;
+  }
+
   const title = cleanTitle(input.title);
   const dueOn = cleanDate(input.dueOn);
   const time = dueOn ? cleanTime(input.time) : null;
@@ -372,7 +396,7 @@ export async function updateTask(id: string, input: TaskInput): Promise<void> {
   const patch: Update<'items'> = {
     title,
     due_on: dueOn,
-    reminder_id: input.reminderId || null,
+    reminder_id: reminderId,
     notes: cleanNotes(input.notes),
     status,
   };
@@ -412,6 +436,17 @@ export async function deleteTask(id: string): Promise<void> {
 /** Colgar (o descolgar) una tarea que ya existe de un reminder. */
 export async function linkTaskToReminder(taskId: string, reminderId: string | null): Promise<void> {
   const { supabase, user } = await requireUser();
+
+  if (reminderId) {
+    const { data: rem, error: remErr } = await supabase
+      .from('reminders')
+      .select('id')
+      .eq('id', reminderId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (remErr || !rem) throw new Error('Recordatorio no encontrado');
+  }
+
   const { error } = await supabase
     .from('items')
     .update({ reminder_id: reminderId })
@@ -443,6 +478,18 @@ export async function getReminderForSheet(id: string): Promise<ReminderDetail | 
  */
 export async function markReminderCompletedAction(reminderId: string): Promise<void> {
   const { supabase, user } = await requireUser();
+
+  // 1. Verificar que el reminder existe y pertenece al usuario (anti-IDOR)
+  const { data: reminder, error: remErr } = await supabase
+    .from('reminders')
+    .select('id')
+    .eq('id', reminderId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (remErr || !reminder) {
+    throw new Error('Recordatorio no encontrado');
+  }
 
   const { data: childItems, error: itemsErr } = await supabase
     .from('items')

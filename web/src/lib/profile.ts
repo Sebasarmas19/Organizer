@@ -52,3 +52,48 @@ export async function getProfileTimezone(
   const { data } = await supabase.from('profiles').select('timezone').eq('id', userId).maybeSingle();
   return data?.timezone ?? DEFAULT_TIMEZONE;
 }
+
+/**
+ * Resuelve de forma determinista el perfil del dueño de la aplicación.
+ * Si se especifica ALLOWED_EMAILS en el entorno, prioriza la cuenta autorizada.
+ * Si no o en caso de fallo, selecciona el primer perfil creado (orden determinista por created_at).
+ */
+export async function getOwnerProfile(
+  admin: SupabaseClient<Database>
+): Promise<{ id: string; timezone: string } | null> {
+  const allowed = process.env.ALLOWED_EMAILS?.split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (allowed && allowed.length > 0 && !allowed.includes('*')) {
+    try {
+      const { data: usersData } = await admin.auth.admin.listUsers();
+      const ownerUser = usersData?.users?.find(
+        (u) => u.email && allowed.includes(u.email.toLowerCase())
+      );
+      if (ownerUser) {
+        const { data: p } = await admin
+          .from('profiles')
+          .select('id, timezone')
+          .eq('id', ownerUser.id)
+          .maybeSingle();
+        if (p) return { id: p.id, timezone: p.timezone || DEFAULT_TIMEZONE };
+      }
+    } catch {
+      // Continuar con el fallback determinista
+    }
+  }
+
+  const { data: fallback } = await admin
+    .from('profiles')
+    .select('id, timezone')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (fallback) {
+    return { id: fallback.id, timezone: fallback.timezone || DEFAULT_TIMEZONE };
+  }
+  return null;
+}
+

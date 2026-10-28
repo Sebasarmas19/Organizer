@@ -9,6 +9,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { captureToken } from '@/lib/env';
 import { timingSafeCompare, isValidHttpUrl, isSafePublicUrl } from '@/lib/security';
+import { getOwnerProfile } from '@/lib/profile';
 import type { ResourceKind } from '@/lib/supabase/database.types';
 
 export const dynamic = 'force-dynamic';
@@ -114,17 +115,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    if (!timingSafeCompare(providedToken, expectedToken)) {
+    if (!expectedToken || expectedToken.trim().length < 16 || !timingSafeCompare(providedToken, expectedToken)) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const { data: ownerProfile, error: pErr } = await admin
-      .from('profiles')
-      .select('id')
-      .limit(1)
-      .maybeSingle();
-
-    if (pErr || !ownerProfile) {
+    const ownerProfile = await getOwnerProfile(admin);
+    if (!ownerProfile) {
       return NextResponse.json({ error: 'No se encontró el usuario en profiles' }, { status: 500 });
     }
     profile = ownerProfile;

@@ -458,6 +458,7 @@ export async function getTaskDetail(
       .from('blocks')
       .select('starts_at')
       .eq('item_id', t.id)
+      .eq('user_id', userId)
       .eq('source', 'manual')
       .order('starts_at', { ascending: true })
       .limit(1)

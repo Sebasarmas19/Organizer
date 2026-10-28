@@ -32,6 +32,122 @@ export type OfflineAction =
   | { id: string; type: 'create_task'; input: CreateTaskPayload; timestamp: number };
 
 const QUEUE_STORAGE_KEY = 'organizer:offline-actions-v1';
+const MAX_OFFLINE_QUEUE_SIZE = 100;
+const DATE_STR_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Valida estrictamente la forma y contenido de una acción offline proveniente
+ * de localStorage antes de procesarla o enviarla a los Server Actions.
+ * Previene XSS, prototype pollution y estados corruptos.
+ */
+export function validateOfflineAction(raw: unknown): OfflineAction | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+
+  // Validar id
+  if (typeof o.id !== 'string' || !o.id || o.id.length > 100) return null;
+
+  // Validar timestamp
+  if (typeof o.timestamp !== 'number' || !Number.isFinite(o.timestamp) || o.timestamp <= 0) {
+    return null;
+  }
+
+  // Validar type
+  if (typeof o.type !== 'string') return null;
+
+  switch (o.type) {
+    case 'toggle_task': {
+      if (typeof o.taskId !== 'string' || !o.taskId.trim() || o.taskId.length > 120) return null;
+      if (typeof o.done !== 'boolean') return null;
+      return {
+        id: o.id,
+        type: 'toggle_task',
+        taskId: o.taskId.trim(),
+        done: o.done,
+        timestamp: o.timestamp,
+      };
+    }
+    case 'delete_task': {
+      if (typeof o.taskId !== 'string' || !o.taskId.trim() || o.taskId.length > 120) return null;
+      return {
+        id: o.id,
+        type: 'delete_task',
+        taskId: o.taskId.trim(),
+        timestamp: o.timestamp,
+      };
+    }
+    case 'move_task': {
+      if (typeof o.taskId !== 'string' || !o.taskId.trim() || o.taskId.length > 120) return null;
+      let dateStr: string | null = null;
+      if (typeof o.dateStr === 'string') {
+        const trimmed = o.dateStr.trim();
+        if (!DATE_STR_RE.test(trimmed)) return null;
+        dateStr = trimmed;
+      } else if (o.dateStr !== null && o.dateStr !== undefined) {
+        return null;
+      }
+      return {
+        id: o.id,
+        type: 'move_task',
+        taskId: o.taskId.trim(),
+        dateStr,
+        timestamp: o.timestamp,
+      };
+    }
+    case 'unschedule_task': {
+      if (typeof o.taskId !== 'string' || !o.taskId.trim() || o.taskId.length > 120) return null;
+      return {
+        id: o.id,
+        type: 'unschedule_task',
+        taskId: o.taskId.trim(),
+        timestamp: o.timestamp,
+      };
+    }
+    case 'create_task': {
+      if (!o.input || typeof o.input !== 'object' || Array.isArray(o.input)) return null;
+      const inp = o.input as Record<string, unknown>;
+      if (typeof inp.title !== 'string') return null;
+      const cleanTitle = inp.title.trim().replace(/\s+/g, ' ').slice(0, 200);
+      if (!cleanTitle) return null;
+
+      let dueOn: string | null = null;
+      if (typeof inp.dueOn === 'string') {
+        const trimmed = inp.dueOn.trim();
+        if (DATE_STR_RE.test(trimmed)) dueOn = trimmed;
+      }
+
+      const reminderId =
+        typeof inp.reminderId === 'string' && inp.reminderId.trim()
+          ? inp.reminderId.trim().slice(0, 120)
+          : null;
+
+      const contextId =
+        typeof inp.contextId === 'string' && inp.contextId.trim()
+          ? inp.contextId.trim().slice(0, 120)
+          : null;
+
+      let estimateMin: number | null = null;
+      if (typeof inp.estimateMin === 'number' && Number.isInteger(inp.estimateMin) && inp.estimateMin > 0 && inp.estimateMin <= 1440) {
+        estimateMin = inp.estimateMin;
+      }
+
+      return {
+        id: o.id,
+        type: 'create_task',
+        input: {
+          title: cleanTitle,
+          dueOn,
+          reminderId,
+          contextId,
+          estimateMin,
+        },
+        timestamp: o.timestamp,
+      };
+    }
+    default:
+      return null;
+  }
+}
 
 export type SyncExecutor = {
   toggleTask: (id: string, done: boolean) => Promise<unknown>;
@@ -80,14 +196,21 @@ export function isNetworkFailure(error: unknown): boolean {
   return false;
 }
 
-/** Lee las acciones pendientes del almacenamiento local. */
+/** Lee las acciones pendientes del almacenamiento local con validación estricta de esquema. */
 export function getOfflineQueue(): OfflineAction[] {
   if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    const validated: OfflineAction[] = [];
+    for (const item of parsed) {
+      const v = validateOfflineAction(item);
+      if (v) validated.push(v);
+      if (validated.length >= MAX_OFFLINE_QUEUE_SIZE) break;
+    }
+    return validated;
   } catch {
     return [];
   }
@@ -97,10 +220,11 @@ export function getOfflineQueue(): OfflineAction[] {
 function saveOfflineQueue(queue: OfflineAction[]): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+    const safeQueue = queue.slice(0, MAX_OFFLINE_QUEUE_SIZE);
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(safeQueue));
     notifySyncStatus({
       isOnline: isNetworkOnline(),
-      pendingCount: queue.length,
+      pendingCount: safeQueue.length,
       syncing: isSyncInProgress,
       lastSyncAt,
     });

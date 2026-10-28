@@ -51,8 +51,13 @@ function dayName(date: string): string {
   return WEEKDAYS[new Date(date + 'T00:00:00Z').getUTCDay()];
 }
 
-/* Los textos del usuario no pueden cerrar el bloque de datos. */
-const clean = (s: string) => s.replace(/<\/?agenda>/gi, '').replace(/\s+/g, ' ').trim();
+/* Los textos del usuario no pueden cerrar el bloque de datos ni inyectar caracteres de control. */
+const clean = (s: string) =>
+  s
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+    .replace(/<\s*\/?\s*agenda\b[^>]*>/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 function describeContext(ctx: PlanContext): string {
   const days = ctx.days

@@ -159,7 +159,10 @@ self.addEventListener('fetch', (event) => {
               </body>
               </html>`,
               {
-                headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                headers: {
+                  'Content-Type': 'text/html; charset=utf-8',
+                  'X-Content-Type-Options': 'nosniff',
+                },
                 status: 200,
               }
             );
@@ -177,12 +180,15 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   let payload = {};
   try {
-    payload = event.data ? event.data.json() : {};
+    const parsed = event.data ? event.data.json() : null;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      payload = parsed;
+    }
   } catch {
     payload = {};
   }
 
-  const title = payload.title || 'Organizer';
+  const title = (typeof payload.title === 'string' && payload.title.trim()) || 'Organizer';
   const actions = [];
   if (payload.itemId) {
     actions.push(
@@ -192,17 +198,18 @@ self.addEventListener('push', (event) => {
   }
 
   const options = {
-    body: payload.body || 'Abre la app para ver tu día.',
-    tag: payload.tag || 'organizer',
+    body: (typeof payload.body === 'string' && payload.body.trim()) || 'Abre la app para ver tu día.',
+    tag: typeof payload.tag === 'string' ? payload.tag : 'organizer',
     renotify: true,
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     requireInteraction: false,
     actions,
     data: {
-      url: payload.url || '/',
+      url: typeof payload.url === 'string' ? payload.url : '/',
       itemId: payload.itemId || null,
       blockId: payload.blockId || null,
+      actionToken: payload.actionToken || null,
     },
   };
 
@@ -228,18 +235,36 @@ self.addEventListener('notificationclick', (event) => {
     event.waitUntil(
       fetch('/api/push/action', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action,
           itemId: data.itemId,
           blockId: data.blockId,
+          actionToken: data.actionToken || null,
         }),
       }).catch(() => {})
     );
     return;
   }
 
-  const target = data.url || '/';
+  // Validar y sanitizar URL de destino para prevenir Open Redirect o inyecciones de protocolo
+  let target = '/';
+  try {
+    if (typeof data.url === 'string' && data.url.trim()) {
+      const raw = data.url.trim();
+      if (raw.startsWith('/') && !raw.startsWith('//')) {
+        target = raw;
+      } else {
+        const parsed = new URL(raw, self.location.origin);
+        if (parsed.origin === self.location.origin) {
+          target = parsed.pathname + parsed.search + parsed.hash;
+        }
+      }
+    }
+  } catch {
+    target = '/';
+  }
 
   event.waitUntil(
     self.clients

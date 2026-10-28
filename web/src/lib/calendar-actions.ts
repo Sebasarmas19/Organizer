@@ -13,6 +13,9 @@ import { addDays, getTodayString } from './date-utils';
 import { getProfileTimezone } from './profile';
 import { dayRangeUtc } from './tz';
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
+
 export async function saveScheduleTemplatesAction(payload: {
   activeFrom: string;
   activeUntil: string;
@@ -32,8 +35,44 @@ export async function saveScheduleTemplatesAction(payload: {
 
   if (!user) return { ok: false, error: 'No autenticado' };
 
-  const bad = payload.templates.find((t) => t.endTime <= t.startTime);
-  if (bad) return { ok: false, error: `"${bad.title}": la hora de fin tiene que ser después del inicio.` };
+  if (!payload || !Array.isArray(payload.templates)) {
+    return { ok: false, error: 'Datos de horario no válidos' };
+  }
+
+  if (!payload.activeFrom || !DATE_RE.test(payload.activeFrom)) {
+    return { ok: false, error: 'Fecha de inicio del horario no válida.' };
+  }
+
+  if (payload.activeUntil && !DATE_RE.test(payload.activeUntil)) {
+    return { ok: false, error: 'Fecha de fin del horario no válida.' };
+  }
+
+  if (payload.activeUntil && payload.activeUntil < payload.activeFrom) {
+    return { ok: false, error: 'La fecha de fin no puede ser anterior a la de inicio.' };
+  }
+
+  for (const t of payload.templates) {
+    const title = typeof t.title === 'string' ? t.title.trim() : '';
+    if (!title) return { ok: false, error: 'Todas las materias deben tener nombre.' };
+    if (title.length > 200) return { ok: false, error: `"${title.slice(0, 30)}...": nombre demasiado largo.` };
+    if (!Number.isInteger(t.weekday) || t.weekday < 0 || t.weekday > 6) {
+      return { ok: false, error: `"${title}": día de la semana no válido.` };
+    }
+    const start = typeof t.startTime === 'string' ? t.startTime.slice(0, 5) : '';
+    const end = typeof t.endTime === 'string' ? t.endTime.slice(0, 5) : '';
+    if (!TIME_RE.test(start) || !TIME_RE.test(end)) {
+      return { ok: false, error: `"${title}": formato de hora no válido.` };
+    }
+    if (end <= start) {
+      return { ok: false, error: `"${title}": la hora de fin tiene que ser después del inicio.` };
+    }
+    if (t.reminderMin !== undefined && t.reminderMin !== null) {
+      const rm = Number(t.reminderMin);
+      if (!Number.isInteger(rm) || rm < 0 || rm > 1440) {
+        return { ok: false, error: `"${title}": aviso previo no válido.` };
+      }
+    }
+  }
 
   const timezone = await getProfileTimezone(supabase, user.id);
   const todayStr = getTodayString(timezone);

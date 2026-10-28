@@ -197,10 +197,19 @@ export function buildMonthExportPayload(data: Fd4MonthData): ExportSchedulePaylo
 
 /* ------------------------------------------------ Formato Texto (WhatsApp) */
 
+/**
+ * Sanitiza textos de títulos y notas antes de dibujarlos en canvas o exportarlos a texto.
+ * Remueve caracteres de control (0x00-0x1F, 0x7F) y delimitadores bidi peligrosos.
+ */
+function sanitizeExportText(text: string): string {
+  if (!text) return '';
+  return text.replace(/[\u0000-\u001F\u007F-\u009F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, '').trim();
+}
+
 export function formatScheduleAsText(payload: ExportSchedulePayload): string {
   const lines: string[] = [];
-  lines.push(`📅 *${payload.title}*`);
-  if (payload.subtitle) lines.push(`_${payload.subtitle}_\n`);
+  lines.push(`📅 *${sanitizeExportText(payload.title)}*`);
+  if (payload.subtitle) lines.push(`_${sanitizeExportText(payload.subtitle)}_\n`);
 
   if (payload.view === 'mes') {
     if (payload.days.length === 0) {
@@ -209,19 +218,19 @@ export function formatScheduleAsText(payload: ExportSchedulePayload): string {
       for (const day of payload.days) {
         const marker = day.isToday ? ' (Hoy)' : '';
         const shortBadge = formatShortDateBadge(day.dateStr);
-        lines.push(`*${shortBadge} — ${day.label}${marker}:*`);
+        lines.push(`*${shortBadge} — ${sanitizeExportText(day.label)}${marker}:*`);
 
         if (day.reminders.length > 0) {
           for (const r of day.reminders) {
             const time = r.hora ? `[${r.hora}] ` : '';
-            lines.push(`  🚩 *${time}${r.title}*`);
+            lines.push(`  🚩 *${time}${sanitizeExportText(r.title)}*`);
           }
         }
 
         if (day.tasks.length > 0) {
           for (const t of day.tasks) {
             const time = t.hora ? `${t.hora} · ` : '';
-            lines.push(`  • ${time}${t.title}`);
+            lines.push(`  • ${time}${sanitizeExportText(t.title)}`);
           }
         }
 
@@ -235,7 +244,7 @@ export function formatScheduleAsText(payload: ExportSchedulePayload): string {
 
   for (const day of payload.days) {
     const marker = day.isToday ? ' (Hoy)' : '';
-    lines.push(`*${day.label}${marker}*`);
+    lines.push(`*${sanitizeExportText(day.label)}${marker}*`);
 
     if (day.free) {
       lines.push('  ✨ Despejado / Libre\n');
@@ -245,21 +254,21 @@ export function formatScheduleAsText(payload: ExportSchedulePayload): string {
     if (day.reminders.length > 0) {
       for (const r of day.reminders) {
         const time = r.hora ? `[${r.hora}] ` : '';
-        lines.push(`  🚩 *${time}${r.title}*`);
+        lines.push(`  🚩 *${time}${sanitizeExportText(r.title)}*`);
       }
     }
 
     if (day.classes.length > 0) {
       for (const c of day.classes) {
         const time = c.hora ? `${c.hora} · ` : '';
-        lines.push(`  📚 ${time}${c.title}`);
+        lines.push(`  📚 ${time}${sanitizeExportText(c.title)}`);
       }
     }
 
     if (day.tasks.length > 0) {
       for (const t of day.tasks) {
         const time = t.hora ? `${t.hora} · ` : '';
-        lines.push(`  • ${time}${t.title}`);
+        lines.push(`  • ${time}${sanitizeExportText(t.title)}`);
       }
     }
 
@@ -296,9 +305,10 @@ function drawRoundRect(
 
 function truncateText(
   ctx: CanvasRenderingContext2D,
-  text: string,
+  rawText: string,
   maxWidth: number
 ): string {
+  const text = sanitizeExportText(rawText);
   if (ctx.measureText(text).width <= maxWidth) return text;
   let tr = text;
   while (tr.length > 0 && ctx.measureText(tr + '…').width > maxWidth) {

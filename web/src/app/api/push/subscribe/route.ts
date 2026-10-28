@@ -16,6 +16,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isSafePublicUrl } from '@/lib/security';
 
 /* Depende de la cookie de sesion: nunca estatica. */
 export const dynamic = 'force-dynamic';
@@ -55,9 +56,15 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!endpoint.startsWith('https://')) {
+  if (
+    endpoint.length > 2048 ||
+    p256dh.length > 256 ||
+    auth.length > 128 ||
+    !endpoint.startsWith('https://') ||
+    !(await isSafePublicUrl(endpoint))
+  ) {
     return NextResponse.json(
-      { error: 'El endpoint de suscripción debe utilizar HTTPS' },
+      { error: 'Parámetros de suscripción inválidos o endpoint no seguro' },
       { status: 400 }
     );
   }
@@ -95,8 +102,8 @@ export async function DELETE(request: Request) {
   if (!user) return NextResponse.json({ error: 'Sin sesión' }, { status: 401 });
 
   const endpoint = new URL(request.url).searchParams.get('endpoint');
-  if (!endpoint) {
-    return NextResponse.json({ error: 'Falta el endpoint' }, { status: 400 });
+  if (!endpoint || endpoint.length > 2048 || !endpoint.startsWith('https://')) {
+    return NextResponse.json({ error: 'Endpoint inválido' }, { status: 400 });
   }
 
   /* El filtro por `user_id` es redundante con RLS y se deja a proposito: si

@@ -12,11 +12,17 @@ import { isValidHttpUrl } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  if (!id || !UUID_REGEX.test(id)) {
+    return NextResponse.redirect(new URL('/recursos', request.url));
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

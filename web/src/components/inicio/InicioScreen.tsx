@@ -92,16 +92,17 @@ export function InicioScreen({
   const [taskSheetOpen, setTaskSheetOpen] = useState(false);
   const [reminderSheetOpen, setReminderSheetOpen] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
+  const [timerPaused, setTimerPaused] = useState(false);
 
   useEffect(() => {
-    if (timerSeconds === null || timerSeconds <= 0) return;
+    if (timerSeconds === null || timerSeconds <= 0 || timerPaused) return;
     const interval = setInterval(() => {
       setTimerSeconds((prev) => {
         if (prev === null) return null;
         if (prev <= 1) {
           if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
             try {
-              navigator.vibrate([100, 50, 100]);
+              navigator.vibrate([200, 100, 200]);
             } catch {}
           }
           return 0;
@@ -110,7 +111,7 @@ export function InicioScreen({
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [timerSeconds]);
+  }, [timerSeconds, timerPaused]);
 
   /* ---------------------------------------------- lo que se ve ahora --- */
 
@@ -242,6 +243,7 @@ export function InicioScreen({
                     className="in-btn in-btn--pri io-press"
                     onClick={() => {
                       setTimerSeconds(null);
+                      setTimerPaused(false);
                       setDone(next.id, next.title, true);
                     }}
                   >
@@ -254,6 +256,7 @@ export function InicioScreen({
                       className="in-btn io-press"
                       onClick={() => {
                         setTimerSeconds(null);
+                        setTimerPaused(false);
                         onLater();
                       }}
                       title="Mandarla al final de hoy"
@@ -265,7 +268,10 @@ export function InicioScreen({
                     <button
                       type="button"
                       className="in-btn io-press"
-                      onClick={() => setTimerSeconds(300)}
+                      onClick={() => {
+                        setTimerSeconds(300);
+                        setTimerPaused(false);
+                      }}
                       title="Micro-arranque de 5 minutos"
                       style={{ fontSize: 13, gap: 4 }}
                     >
@@ -279,21 +285,36 @@ export function InicioScreen({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: timerSeconds === 0 ? 'var(--io-tint)' : 'var(--io-label)' }}>
                         {timerSeconds > 0
-                          ? `⏱ Micro-arranque: ${Math.floor(timerSeconds / 60)}:${String(timerSeconds % 60).padStart(2, '0')}`
+                          ? `⏱ Micro-arranque: ${Math.floor(timerSeconds / 60)}:${String(timerSeconds % 60).padStart(2, '0')}${timerPaused ? ' (Pausado)' : ''}`
                           : '🎉 ¡5 minutos cumplidos!'}
                       </span>
                       {timerSeconds > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => setTimerSeconds(null)}
-                          style={{ background: 'none', border: 'none', color: 'var(--io-label-3)', cursor: 'pointer', fontSize: 13 }}
-                        >
-                          Parar
-                        </button>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => setTimerPaused((p) => !p)}
+                            style={{ background: 'none', border: 'none', color: 'var(--io-tint)', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+                          >
+                            {timerPaused ? 'Reanudar' : 'Pausar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTimerSeconds(null);
+                              setTimerPaused(false);
+                            }}
+                            style={{ background: 'none', border: 'none', color: 'var(--io-label-3)', cursor: 'pointer', fontSize: 13 }}
+                          >
+                            Parar
+                          </button>
+                        </div>
                       ) : (
                         <button
                           type="button"
-                          onClick={() => setTimerSeconds(1200)}
+                          onClick={() => {
+                            setTimerSeconds(1200);
+                            setTimerPaused(false);
+                          }}
                           style={{ background: 'none', border: 'none', color: 'var(--io-tint)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
                         >
                           +20 min más

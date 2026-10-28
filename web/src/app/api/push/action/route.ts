@@ -1,6 +1,8 @@
 /* ============================================================================
    Organizer · POST /api/push/action
    Acciones interactivas desde notificaciones Push (✓ Ya la hice, Pasar a mañana).
+   Hardening: Autenticación por sesión o token firmado HMAC, verificación estricta
+   de propiedad del recurso (anti-IDOR) y validación de parámetros.
    ========================================================================= */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -8,11 +10,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { addDays, getTodayString } from '@/lib/date-utils';
 import { DEFAULT_TIMEZONE } from '@/lib/profile';
+import { verifyPushActionToken } from '@/lib/security';
 
 export const dynamic = 'force-dynamic';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function POST(request: NextRequest) {
-  let body: { action?: string; itemId?: string; blockId?: string };
+  let body: { action?: string; itemId?: string; blockId?: string; actionToken?: string; token?: string };
   try {
     body = await request.json();
   } catch {
@@ -24,7 +29,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Parámetros insuficientes' }, { status: 400 });
   }
 
-  // Intentar obtener usuario de sesión
+  if (!UUID_REGEX.test(itemId) || (blockId && !UUID_REGEX.test(blockId))) {
+    return NextResponse.json({ error: 'Identificador con formato inválido' }, { status: 400 });
+  }
+
+  // 1. Obtener usuario de sesión (cookies)
   let userId: string | null = null;
   try {
     const supabase = await createClient();
@@ -34,20 +43,34 @@ export async function POST(request: NextRequest) {
     if (user) userId = user.id;
   } catch {}
 
+  // 2. Si no hay sesión en cookies del SW, validar el actionToken criptográfico HMAC
+  if (!userId) {
+    const pushToken = body.actionToken || body.token;
+    if (pushToken) {
+      const verified = verifyPushActionToken(pushToken, itemId);
+      if (verified.valid && verified.userId) {
+        userId = verified.userId;
+      }
+    }
+  }
+
+  // Si no se pudo verificar la identidad ni por sesión ni por token firmado, rechazar
+  if (!userId) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const admin = createAdminClient();
 
-  // Si no hay sesión en cookies del SW, buscar el user_id del item
-  if (!userId) {
-    const { data: item } = await admin
-      .from('items')
-      .select('user_id')
-      .eq('id', itemId)
-      .maybeSingle();
+  // 3. Verificar que la tarea exista y pertenezca estrictamente al usuario (anti-IDOR)
+  const { data: item, error: itemErr } = await admin
+    .from('items')
+    .select('id, user_id')
+    .eq('id', itemId)
+    .eq('user_id', userId)
+    .maybeSingle();
 
-    if (!item) {
-      return NextResponse.json({ error: 'Tarea no encontrada' }, { status: 404 });
-    }
-    userId = item.user_id;
+  if (itemErr || !item) {
+    return NextResponse.json({ error: 'Tarea no encontrada o no autorizada' }, { status: 404 });
   }
 
   const { data: profile } = await admin

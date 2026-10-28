@@ -63,6 +63,7 @@ import {
   type NotifyProfile,
 } from './schedule.ts';
 import { sendPush, type PushSubscription, type VapidKeys } from './webpush.ts';
+import { signPushActionToken } from '../../security.ts';
 
 /* ───────────────────────────────────────────────────── filas de la base ── */
 
@@ -384,6 +385,14 @@ async function deliver(
     return;
   }
 
+  let actionToken: string | null = null;
+  if (options.itemId) {
+    const secret = env.vapid.privateKey || env.db.serviceRoleKey;
+    if (secret) {
+      actionToken = signPushActionToken(userId, options.itemId, secret);
+    }
+  }
+
   const payload = {
     title: text.title,
     body: text.body,
@@ -393,6 +402,7 @@ async function deliver(
     url: options.url ?? '/',
     itemId: options.itemId ?? null,
     blockId: options.blockId ?? null,
+    actionToken,
   };
 
   let delivered = 0;

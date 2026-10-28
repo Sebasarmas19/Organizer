@@ -19,6 +19,7 @@ import { timingSafeCompare } from '@/lib/security';
 import { parseCapture, type ParsedCapture } from '@/lib/capture/parse';
 import { interpretWithLlm } from '@/lib/capture/llm';
 import { localDateOf, localTimeOf, timeToMinutes, zonedIso } from '@/lib/tz';
+import { getOwnerProfile } from '@/lib/profile';
 
 const BLOCK_MINUTES = 60;
 const REMIND_BEFORE_MIN = 15;
@@ -109,17 +110,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    if (!timingSafeCompare(providedToken, expectedToken)) {
+    if (!expectedToken || expectedToken.trim().length < 16 || !timingSafeCompare(providedToken, expectedToken)) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    const { data: ownerProfile, error: pErr } = await admin
-      .from('profiles')
-      .select('id, timezone')
-      .limit(1)
-      .maybeSingle();
-
-    if (pErr || !ownerProfile) {
+    const ownerProfile = await getOwnerProfile(admin);
+    if (!ownerProfile) {
       return NextResponse.json({ error: 'No se encontró el usuario en profiles' }, { status: 500 });
     }
     profile = ownerProfile;

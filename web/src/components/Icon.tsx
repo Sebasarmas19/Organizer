@@ -35,7 +35,10 @@ export function Icon({
   className?: string;
   style?: CSSProperties;
 }) {
-  const def = ICONS[name];
+  const def = Object.prototype.hasOwnProperty.call(ICONS, name) ? ICONS[name] : undefined;
+  if (!def || typeof def.d !== 'string' || typeof def.vb !== 'string') {
+    return null;
+  }
   const classes = className ? SIZE_CLASS[size] + ' ' + className : SIZE_CLASS[size];
 
   return (

@@ -9,6 +9,9 @@ import { createClient } from '@/lib/supabase/server';
 import { isValidHttpUrl } from '@/lib/security';
 import type { ResourceKind } from './fd4-resources';
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const VALID_KINDS: ResourceKind[] = ['tool', 'skill', 'article', 'video', 'repo', 'other'];
+
 export interface CreateResourcePayload {
   title: string;
   url?: string;
@@ -40,7 +43,7 @@ export async function createResourceAction(payload: CreateResourcePayload) {
     url = rawUrl;
   }
 
-  const kind = payload.kind ?? 'other';
+  const kind: ResourceKind = payload.kind && VALID_KINDS.includes(payload.kind) ? payload.kind : 'other';
   const notes = payload.notes?.trim().slice(0, 2000) || null;
   const tags = (payload.tags ?? [])
     .map((t) => t.trim().replace(/^#/, '').slice(0, 50))
@@ -77,9 +80,11 @@ export async function trackResourceOpenAction(resourceId: string) {
     .select('open_count')
     .eq('id', resourceId)
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
-  const newCount = (current?.open_count ?? 0) + 1;
+  if (!current) return;
+
+  const newCount = (current.open_count ?? 0) + 1;
 
   await supabase
     .from('resources')
@@ -144,7 +149,26 @@ export async function planResourceAction(resourceId: string, title: string, dueO
 
   if (!user) throw new Error('No autorizado');
 
-  const taskTitle = `Consultar: ${title.trim()}`;
+  if (!dueOn || !DATE_RE.test(dueOn)) {
+    throw new Error('Fecha no válida');
+  }
+
+  // 1. Verificar pertenencia del recurso al usuario (anti-IDOR)
+  const { data: resource, error: resErr } = await supabase
+    .from('resources')
+    .select('id, title')
+    .eq('id', resourceId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (resErr || !resource) {
+    throw new Error('Recurso no encontrado');
+  }
+
+  const cleanTitle = (title?.trim() || resource.title || '').slice(0, 200);
+  if (!cleanTitle) throw new Error('Título no válido');
+
+  const taskTitle = `Consultar: ${cleanTitle}`;
 
   const { error } = await supabase.from('items').insert({
     user_id: user.id,

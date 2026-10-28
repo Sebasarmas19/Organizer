@@ -156,6 +156,8 @@ export async function toggleBlockTask(
 }
 
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 /* ------------------------------------------------------------- de ayer ----
    Las tres salidas del bloque "De ayer". Ninguna borra nada, que es la
    regla 5 del proyecto: si una tarea no se cumple, la app pregunta que
@@ -163,11 +165,16 @@ export async function toggleBlockTask(
 
 /** "Hoy" · la tarea se mueve a la fecha de hoy. */
 export async function moveTaskToDate(id: string, dateStr: string | null) {
+  const targetDate = dateStr && dateStr.trim() ? dateStr.trim() : null;
+  if (targetDate && !DATE_RE.test(targetDate)) {
+    throw new Error('Fecha no válida');
+  }
+
   const { supabase, user } = await requireUser();
 
   const { error } = await supabase
     .from('items')
-    .update({ due_on: dateStr, status: dateStr ? 'planned' : 'inbox' })
+    .update({ due_on: targetDate, status: targetDate ? 'planned' : 'inbox' })
     .eq('id', id)
     .eq('user_id', user.id);
 
@@ -245,7 +252,7 @@ export async function unscheduleTask(id: string) {
    `inbox` y se clasifica despues, o nunca.                               */
 
 export async function captureTask(title: string) {
-  const raw = title.trim();
+  const raw = title.trim().replace(/\s+/g, ' ').slice(0, 500);
   if (!raw) return null;
 
   const { supabase, user } = await requireUser();
