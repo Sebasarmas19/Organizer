@@ -107,7 +107,7 @@ export default async function PendientesPage({
               data.groups.length > 0 || data.inbox.length > 0 ? (
                 <>
                   <div className="fd-pend__triage">
-                    <Triage items={data.inbox} days={data.dayOptions} />
+                    <Triage items={data.inbox} days={data.dayOptions} reminders={data.reminderOptions} />
                   </div>
                   <div className="fd-pend__groups">
                     {data.groups.map((g) => (

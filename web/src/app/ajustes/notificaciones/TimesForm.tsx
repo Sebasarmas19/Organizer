@@ -44,31 +44,56 @@ export function TimesForm({
   );
 
   return (
-    <form action={action} className="gutter" style={{ display: 'grid', gap: 'var(--space-4)' }}>
-      <Field
-        id="morning"
-        label="Por la mañana"
-        hint="El día entero, con sus horas."
-        name="morning"
-        defaultValue={morning}
-      />
-      <Field
-        id="evening"
-        label="Por la noche"
-        hint="Qué quedó abierto, para cerrar el día."
-        name="evening"
-        defaultValue={evening}
-      />
+    <form action={action} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="io-group">
+        <div className="io-field io-field--row">
+          <div>
+            <label className="io-field__label" htmlFor="morning" style={{ display: 'block' }}>
+              Por la mañana
+            </label>
+            <span style={{ fontSize: 12, color: 'var(--io-label-3)' }}>
+              El día entero con sus horas
+            </span>
+          </div>
+          <input
+            id="morning"
+            type="time"
+            name="morning"
+            defaultValue={morning}
+            required
+            style={{ textAlign: 'right' }}
+          />
+        </div>
 
-      <div>
-        <label className="t-label c-muted" htmlFor="weeklyDow" style={{ fontWeight: 600 }}>
-          La revisión semanal
-        </label>
-        <p className="t-meta c-faint" style={{ marginTop: 2 }}>
-          Unos diez minutos para armar la semana.
-        </p>
-        <div className="timepair" style={{ marginTop: 'var(--space-2)' }}>
-          <div className="field">
+        <div className="io-field io-field--row">
+          <div>
+            <label className="io-field__label" htmlFor="evening" style={{ display: 'block' }}>
+              Por la noche
+            </label>
+            <span style={{ fontSize: 12, color: 'var(--io-label-3)' }}>
+              Qué quedó abierto para cerrar el día
+            </span>
+          </div>
+          <input
+            id="evening"
+            type="time"
+            name="evening"
+            defaultValue={evening}
+            required
+            style={{ textAlign: 'right' }}
+          />
+        </div>
+
+        <div className="io-field io-field--row" style={{ alignItems: 'flex-start' }}>
+          <div>
+            <label className="io-field__label" htmlFor="weeklyDow" style={{ display: 'block' }}>
+              Revisión semanal
+            </label>
+            <span style={{ fontSize: 12, color: 'var(--io-label-3)' }}>
+              10 minutos para armar la semana
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <select
               id="weeklyDow"
               name="weeklyDow"
@@ -81,75 +106,68 @@ export function TimesForm({
                 </option>
               ))}
             </select>
-          </div>
-          <div className="field">
             <input
               type="time"
               name="weeklyTime"
               defaultValue={weeklyTime}
               required
               aria-label="Hora de la revisión semanal"
+              style={{ textAlign: 'right' }}
             />
           </div>
         </div>
+
+        <label
+          htmlFor="resources"
+          className="io-field io-field--row"
+          style={{ cursor: 'pointer' }}
+        >
+          <div>
+            <span className="io-field__label" style={{ display: 'block' }}>
+              Algo para leer
+            </span>
+            <span style={{ fontSize: 12, color: 'var(--io-label-3)' }}>
+              Martes y sábado 19:00, un recurso guardado
+            </span>
+          </div>
+          <input
+            id="resources"
+            type="checkbox"
+            name="resources"
+            defaultChecked={resources}
+            style={{ width: 22, height: 22, accentColor: 'var(--io-tint)', cursor: 'pointer' }}
+          />
+        </label>
       </div>
 
-      <label
-        htmlFor="resources"
-        style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minHeight: 44, cursor: 'pointer' }}
+      <button
+        type="submit"
+        className="in-btn in-btn--pri io-press"
+        disabled={pending}
+        style={{
+          width: '100%',
+          minHeight: 46,
+          borderRadius: 14,
+          fontWeight: 600,
+          fontSize: 16,
+        }}
       >
-        <input
-          id="resources"
-          type="checkbox"
-          name="resources"
-          defaultChecked={resources}
-          style={{ width: 22, height: 22, marginTop: 2, accentColor: 'var(--task)', flex: 'none' }}
-        />
-        <span>
-          <span className="t-label c-muted" style={{ fontWeight: 600, display: 'block' }}>
-            Algo para leer
-          </span>
-          <span className="t-meta c-faint">
-            Martes y sábado a las 19:00, uno de tus Recursos guardados que nunca abriste.
-          </span>
-        </span>
-      </label>
-
-      <button type="submit" className="btn btn--full" disabled={pending}>
         {pending ? 'Guardando…' : 'Guardar las horas'}
       </button>
 
-      <p aria-live="polite" className="t-meta c-muted" style={{ minHeight: 20, marginTop: -8 }}>
-        {result ? result.message : null}
-      </p>
+      {result ? (
+        <p
+          aria-live="polite"
+          style={{
+            fontSize: 13,
+            textAlign: 'center',
+            margin: '0',
+            color: result.ok ? 'var(--class)' : 'var(--io-danger, #FF3B30)',
+          }}
+        >
+          {result.message}
+        </p>
+      ) : null}
     </form>
-  );
-}
-
-function Field({
-  id,
-  label,
-  hint,
-  name,
-  defaultValue,
-}: {
-  id: string;
-  label: string;
-  hint: string;
-  name: string;
-  defaultValue: string;
-}) {
-  return (
-    <div>
-      <label className="t-label c-muted" htmlFor={id} style={{ fontWeight: 600 }}>
-        {label}
-      </label>
-      <p className="t-meta c-faint" style={{ marginTop: 2 }}>
-        {hint}
-      </p>
-      <div className="field" style={{ marginTop: 'var(--space-2)' }}>
-        <input id={id} type="time" name={name} defaultValue={defaultValue} required />
-      </div>
-    </div>
   );
 }

@@ -6,7 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, ReminderRecurrence } from '@/lib/supabase/database.types';
 import { formatDistance, formatWhen } from './home';
-import { addDays, getTodayString, parseDateString } from './date-utils';
+import { addDays, getDayOfWeek, getTodayString, parseDateString } from './date-utils';
 import { dayRangeUtc, formatTimeOfDay, localDateOf, localTimeOf } from './tz';
 import { getMonthView, type MonthCell, type MonthPreviewItem } from './fd4-calendar';
 
@@ -303,6 +303,99 @@ export async function getReminderDetail(
 }
 
 /** Reminders que tiene sentido elegir: los de hoy en adelante. */
+export type ScheduleSubject = {
+  title: string;
+  weekday: number;
+  startTime: string;
+  location?: string | null;
+};
+
+export type NextClassInfo = {
+  title: string;
+  nextDate: string;
+  dayLabel: string;
+  time: string;
+};
+
+export function getUpcomingClasses(
+  subjects: ScheduleSubject[],
+  todayStr: string,
+  nowMinutes?: number
+): NextClassInfo[] {
+  if (!subjects || subjects.length === 0) return [];
+  const currentDow = getDayOfWeek(todayStr);
+
+  const byTitle = new Map<string, ScheduleSubject[]>();
+  for (const s of subjects) {
+    const list = byTitle.get(s.title) ?? [];
+    list.push(s);
+    byTitle.set(s.title, list);
+  }
+
+  const result: NextClassInfo[] = [];
+
+  for (const [title, slots] of byTitle.entries()) {
+    let bestDate = '';
+    let bestSlot: ScheduleSubject | null = null;
+    let minDiff = 999;
+
+    for (const slot of slots) {
+      let diff = (slot.weekday - currentDow + 7) % 7;
+      if (diff === 0 && nowMinutes != null) {
+        const [hh, mm] = slot.startTime.split(':').map(Number);
+        const classMin = hh * 60 + mm;
+        if (nowMinutes >= classMin) {
+          diff = 7;
+        }
+      }
+
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestSlot = slot;
+        bestDate = addDays(todayStr, diff);
+      }
+    }
+
+    if (bestSlot && bestDate) {
+      let dayLabel = '';
+      if (minDiff === 0) dayLabel = 'Hoy';
+      else if (minDiff === 1) dayLabel = 'Mañana';
+      else {
+        const dow = getDayOfWeek(bestDate);
+        const names = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        dayLabel = names[dow] || 'Próxima clase';
+      }
+
+      result.push({
+        title,
+        nextDate: bestDate,
+        dayLabel,
+        time: bestSlot.startTime,
+      });
+    }
+  }
+
+  return result;
+}
+
+export async function getScheduleSubjects(
+  supabase: Client,
+  userId: string
+): Promise<ScheduleSubject[]> {
+  const { data } = await supabase
+    .from('schedule_templates')
+    .select('title, weekday, start_time, location')
+    .eq('user_id', userId)
+    .order('weekday', { ascending: true })
+    .order('start_time', { ascending: true });
+  return (data ?? []).map((t) => ({
+    title: t.title,
+    weekday: t.weekday,
+    startTime: (t.start_time || '08:00').slice(0, 5),
+    location: t.location,
+  }));
+}
+
 export async function getReminderOptions(
   supabase: Client,
   userId: string,

@@ -80,34 +80,33 @@ export default async function CalendarioPage({
   /* La pestaña Clases existió un día: el enlace viejo lleva a su sitio. */
   if (params.v === 'clases') redirect('/clases');
   const view = safeView(params.v);
-  const dateStr = safeDate(params.d, getTodayString(DEFAULT_TIMEZONE));
-  const { year, month } = parseDateString(dateStr);
 
-  const [profileRes, [title, subtitle, body, exportPayload]] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('timezone')
-      .eq('id', user.id)
-      .maybeSingle(),
-    (async (): Promise<[string, string, React.ReactNode, ExportSchedulePayload]> => {
-      if (view === 'mes') {
-        const data = await getMonthView(supabase, user.id, year, month, dateStr, DEFAULT_TIMEZONE);
-        const payload = buildMonthExportPayload(data);
-        return [data.title, 'Toca un día para abrirlo', <MonthView key="m" data={data} />, payload];
-      }
-      if (view === 'semana') {
-        const data = await getWeekView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
-        const payload = buildWeekExportPayload(data);
-        return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />, payload];
-      }
-      const data = await getDayView(supabase, user.id, dateStr, DEFAULT_TIMEZONE);
-      const payload = buildDayExportPayload(data);
-      return [data.title, data.sub, <DayView key="d" data={data} />, payload];
-    })(),
-  ]);
+  const profileRes = await supabase
+    .from('profiles')
+    .select('timezone')
+    .eq('id', user.id)
+    .maybeSingle();
 
   const timezone = profileRes.data?.timezone ?? DEFAULT_TIMEZONE;
   const todayStr = getTodayString(timezone);
+  const dateStr = safeDate(params.d, todayStr);
+  const { year, month } = parseDateString(dateStr);
+
+  const [title, subtitle, body, exportPayload] = await (async (): Promise<[string, string, React.ReactNode, ExportSchedulePayload]> => {
+    if (view === 'mes') {
+      const data = await getMonthView(supabase, user.id, year, month, dateStr, timezone);
+      const payload = buildMonthExportPayload(data);
+      return [data.title, 'Toca un día para abrirlo', <MonthView key="m" data={data} />, payload];
+    }
+    if (view === 'semana') {
+      const data = await getWeekView(supabase, user.id, dateStr, timezone);
+      const payload = buildWeekExportPayload(data);
+      return [data.title, 'Toca un día para abrirlo', <WeekView key="s" data={data} />, payload];
+    }
+    const data = await getDayView(supabase, user.id, dateStr, timezone);
+    const payload = buildDayExportPayload(data);
+    return [data.title, data.sub, <DayView key="d" data={data} />, payload];
+  })();
 
   return (
     <div className="fd-app">

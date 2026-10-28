@@ -27,6 +27,7 @@ import { usePathname } from 'next/navigation';
 import { TabIcon, type TabIconName } from './TabIcon';
 import { Glyph } from '@/components/ios/Glyph';
 import { Spinner } from '@/components/Spinner';
+import { CreateSheet } from '@/components/ios/CreateSheet';
 
 type Tab = {
   id: TabIconName;
@@ -59,6 +60,7 @@ export function TabBar({ onCreate }: { onCreate?: () => void }) {
   const pathname = usePathname();
   const [pendingId, setPendingId] = useState<TabIconName | null>(null);
   const [prevPath, setPrevPath] = useState(pathname);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (prevPath !== pathname) {
     setPrevPath(pathname);
@@ -100,21 +102,23 @@ export function TabBar({ onCreate }: { onCreate?: () => void }) {
         })}
       </nav>
 
-      {onCreate ? (
-        <button
-          type="button"
-          className="io-glass io-fab io-press"
-          aria-label="Crear"
-          aria-haspopup="dialog"
-          onClick={onCreate}
-        >
-          <Glyph name="plus" />
-        </button>
-      ) : (
-        <Link href="/anadir" prefetch={true} className="io-glass io-fab io-press" aria-label="Anotar">
-          <Glyph name="plus" />
-        </Link>
-      )}
+      <button
+        type="button"
+        className="io-glass io-fab io-press"
+        aria-label="Crear"
+        aria-haspopup="dialog"
+        onClick={onCreate ? onCreate : () => setSheetOpen(true)}
+      >
+        <Glyph name="plus" />
+      </button>
+
+      {!onCreate ? (
+        <CreateSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          showResource={pathname.startsWith('/recursos')}
+        />
+      ) : null}
     </>
   );
 }

@@ -20,7 +20,7 @@
    ========================================================================= */
 
 import Link from 'next/link';
-import { useOptimistic, useState, useTransition } from 'react';
+import { useEffect, useOptimistic, useState, useTransition } from 'react';
 import { safeToggleTask, safeMoveTask, safeUnscheduleTask } from '@/lib/offline-sync';
 import type { HomeReminder, HomeTask, OverdueTask } from '@/lib/home';
 import { shortWhen, type ClassNote } from '@/components/fd4/homeSchedule';
@@ -91,6 +91,26 @@ export function InicioScreen({
   const [createOpen, setCreateOpen] = useState(false);
   const [taskSheetOpen, setTaskSheetOpen] = useState(false);
   const [reminderSheetOpen, setReminderSheetOpen] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (timerSeconds === null || timerSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try {
+              navigator.vibrate([100, 50, 100]);
+            } catch {}
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerSeconds]);
 
   /* ---------------------------------------------- lo que se ve ahora --- */
 
@@ -220,7 +240,10 @@ export function InicioScreen({
                   <button
                     type="button"
                     className="in-btn in-btn--pri io-press"
-                    onClick={() => setDone(next.id, next.title, true)}
+                    onClick={() => {
+                      setTimerSeconds(null);
+                      setDone(next.id, next.title, true);
+                    }}
                   >
                     <Glyph name="check" />
                     Hecho
@@ -229,13 +252,72 @@ export function InicioScreen({
                     <button
                       type="button"
                       className="in-btn io-press"
-                      onClick={onLater}
+                      onClick={() => {
+                        setTimerSeconds(null);
+                        onLater();
+                      }}
                       title="Mandarla al final de hoy"
                     >
                       Después
                     </button>
                   ) : null}
+                  {timerSeconds === null ? (
+                    <button
+                      type="button"
+                      className="in-btn io-press"
+                      onClick={() => setTimerSeconds(300)}
+                      title="Micro-arranque de 5 minutos"
+                      style={{ fontSize: 13, gap: 4 }}
+                    >
+                      ⏱ 5 min
+                    </button>
+                  ) : null}
                 </div>
+
+                {timerSeconds !== null ? (
+                  <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 12, background: 'var(--io-cell-up)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: timerSeconds === 0 ? 'var(--io-tint)' : 'var(--io-label)' }}>
+                        {timerSeconds > 0
+                          ? `⏱ Micro-arranque: ${Math.floor(timerSeconds / 60)}:${String(timerSeconds % 60).padStart(2, '0')}`
+                          : '🎉 ¡5 minutos cumplidos!'}
+                      </span>
+                      {timerSeconds > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => setTimerSeconds(null)}
+                          style={{ background: 'none', border: 'none', color: 'var(--io-label-3)', cursor: 'pointer', fontSize: 13 }}
+                        >
+                          Parar
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setTimerSeconds(1200)}
+                          style={{ background: 'none', border: 'none', color: 'var(--io-tint)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+                        >
+                          +20 min más
+                        </button>
+                      )}
+                    </div>
+                    {timerSeconds > 0 ? (
+                      <div style={{ width: '100%', height: 4, borderRadius: 2, background: 'var(--io-fill)', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                            width: `${((300 - timerSeconds) / 300) * 100}%`,
+                            background: 'var(--io-tint)',
+                            transition: 'width 1s linear',
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: 12, color: 'var(--io-label-2)' }}>
+                        ¿Terminaste la tarea o seguimos con más ritmo? Cero culpa si paras aquí.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
               </div>
             ) : view.length > 0 ? (
               <div key="cerrado" className={animate ? 'in-arrive' : undefined}>
@@ -372,10 +454,26 @@ export function InicioScreen({
               <h2 id="in-semana" className="in-small__t">
                 Armar la semana
               </h2>
-              <span className="in-small__m">Son unos 10 minutos.</span>
-              <Link href="/domingo" className="in-btn in-btn--soft io-press">
-                Empezar
-              </Link>
+              <span className="in-small__m">
+                {openAyer.length > 0
+                  ? `${openAyer.length} de ayer · 10 min de repaso`
+                  : 'Son unos 10 minutos.'}
+              </span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {openAyer.length > 0 ? (
+                  <button
+                    type="button"
+                    className="in-btn in-btn--soft io-press"
+                    aria-haspopup="dialog"
+                    onClick={() => setDecideOpen(true)}
+                  >
+                    Lo de ayer ({openAyer.length})
+                  </button>
+                ) : null}
+                <Link href="/domingo" className="in-btn in-btn--pri io-press">
+                  Empezar
+                </Link>
+              </div>
             </section>
           ) : (
             <section className="in-tile in-small in-a-ayer" aria-labelledby="in-ayer">

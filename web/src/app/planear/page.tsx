@@ -11,8 +11,10 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/env';
-import { DEFAULT_TIMEZONE } from '@/lib/profile';
-import { getTodayString } from '@/lib/date-utils';
+import { getProfileTimezone } from '@/lib/profile';
+import { getCurrentTimeMinutes, getTodayString } from '@/lib/date-utils';
+import { dayRangeUtc, localDateOf, localTimeOf, timeToMinutes } from '@/lib/tz';
+import { addDays, computeFreeSlots, type Busy } from '@/lib/plan/slots';
 import { Icon } from '@/components/Icon';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
@@ -33,9 +35,38 @@ export default async function PlanearPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/entrar');
 
+  const timezone = await getProfileTimezone(supabase, user.id);
+  const today = getTodayString(timezone);
+  const nowMinutes = getCurrentTimeMinutes(timezone);
+  const last = addDays(today, 3);
+
+  const { data: blocks } = await supabase
+    .from('blocks')
+    .select('title, starts_at, ends_at, source, status')
+    .eq('user_id', user.id)
+    .neq('status', 'rescheduled')
+    .gte('starts_at', dayRangeUtc(today, timezone).start)
+    .lt('starts_at', dayRangeUtc(last, timezone).end)
+    .order('starts_at', { ascending: true });
+
+  const busy: Busy[] = (blocks ?? []).map((b) => ({
+    date: localDateOf(b.starts_at, timezone),
+    from: timeToMinutes(localTimeOf(b.starts_at, timezone)),
+    to: timeToMinutes(localTimeOf(b.ends_at, timezone)),
+  }));
+
+  const initialSlots = computeFreeSlots({
+    today,
+    nowMinutes,
+    days: 3,
+    busy,
+    buffer: 10,
+    minMinutes: 30,
+  }).slice(0, 3);
+
   return (
     <div className="fd-app">
-      <DeskSidebar active="planear" todayStr={getTodayString(DEFAULT_TIMEZONE)} />
+      <DeskSidebar active="planear" todayStr={today} />
 
       <main className="fd-screen fd-screen--split">
         <div className="fd-fixedhead">
@@ -53,7 +84,7 @@ export default async function PlanearPage() {
           </div>
         </div>
 
-        <PlanClient />
+        <PlanClient initialSlots={initialSlots} />
       </main>
 
       <TabBar />

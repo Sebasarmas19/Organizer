@@ -40,12 +40,10 @@ export type { PlanAnswer, PlanOption, PlanSession, Intent, ChatTurn } from './va
    primera respuesta válida y las demás se cortan. Si uno falla rápido (500,
    429), el siguiente sale ya. Todo dentro de DEADLINE_MS, que deja margen al
    maxDuration (60 s) de /planear y del domingo. */
-const DEFAULT_MODEL = 'gemini-3.8-flash';
-const LITE_MODEL = 'gemini-3.5-flash-lite';
-const SECOND_FLASH = 'gemini-3.5-flash';
-const DEADLINE_MS = 50000;
-/* El Lite sale pronto porque casi nunca agota cupo y suele tardar 2 s. */
-const HEDGES_AT_MS = [0, 9000, 18000, 30000];
+const DEFAULT_MODEL = 'gemini-2.5-flash';
+const LITE_MODEL = 'gemini-2.5-flash-lite';
+const PRIMARY_TIMEOUT_MS = 12000;
+const DEADLINE_MS = 18000;
 
 const WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 
@@ -269,8 +267,6 @@ export async function proposeWithLlm(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   const primary = process.env.GEMINI_PLAN_MODEL || DEFAULT_MODEL;
-  const others = [LITE_MODEL, SECOND_FLASH, LITE_MODEL].filter((m, i) => i === 2 || m !== primary);
-  const models = [primary, ...others].slice(0, HEDGES_AT_MS.length);
   const system = instructions(ctx, mode);
 
   /* Gemini exige que la conversación empiece por el usuario. */
@@ -281,61 +277,51 @@ export async function proposeWithLlm(
   ];
 
   const started = Date.now();
-  const deadline = AbortSignal.timeout(DEADLINE_MS);
-  const runs: AbortController[] = [];
 
-  return new Promise<PlanAnswer | null>((resolve) => {
-    let next = 0;
-    let running = 0;
-    let settled = false;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    const finish = (answer: PlanAnswer | null) => {
-      if (settled) return;
-      settled = true;
-      timers.forEach(clearTimeout);
-      runs.forEach((c) => c.abort(WON));
-      deadline.removeEventListener('abort', onDeadline);
-      if (!answer) console.error('plan: ningún modelo respondió', { mode, ms: Date.now() - started, tried: next });
-      resolve(answer);
-    };
-    const onDeadline = () => finish(null);
-    deadline.addEventListener('abort', onDeadline);
-
-    const launch = () => {
-      if (settled || next >= models.length) return;
-      const model = models[next++];
-      const run = new AbortController();
-      runs.push(run);
-      running++;
-      const t0 = Date.now();
-      void callModel(model, apiKey, system, contents, AbortSignal.any([run.signal, deadline])).then(({ raw, retry }) => {
-        running--;
-        if (settled) return;
-        if (raw) {
-          try {
-            const answer = validateAnswer(JSON.parse(raw), ctx.slots, ctx.tasks);
-            if (answer) {
-              /* Sin contenido: solo lo necesario para depurar desde los logs de Vercel. */
-              console.info('plan', { mode, model, ms: Date.now() - t0, total: Date.now() - started, intent: answer.intent, options: answer.options.length, turns: turns.length });
-              finish(answer);
-              return;
-            }
-          } catch {
-            console.error('Gemini (plan) devolvió algo que no es JSON válido:', raw.slice(0, 200));
-          }
+  // 1. Intento primario con modelo principal
+  const primaryController = new AbortController();
+  const primaryTimer = setTimeout(() => primaryController.abort('timeout'), PRIMARY_TIMEOUT_MS);
+  try {
+    const { raw, retry } = await callModel(primary, apiKey, system, contents, primaryController.signal);
+    clearTimeout(primaryTimer);
+    if (raw) {
+      try {
+        const answer = validateAnswer(JSON.parse(raw), ctx.slots, ctx.tasks);
+        if (answer) {
+          console.info('plan', { mode, model: primary, ms: Date.now() - started, intent: answer.intent, options: answer.options.length });
+          return answer;
         }
-        /* Un 400 es culpa de la petición: los demás modelos fallarían igual. */
-        if (!raw && !retry) return finish(null);
-        /* Falló rápido: el siguiente no espera a su turno. */
-        if (running === 0) {
-          if (next >= models.length) finish(null);
-          else launch();
-        }
-      });
-    };
+      } catch {
+        console.error('Gemini (plan) devolvió algo que no es JSON válido:', raw.slice(0, 200));
+      }
+    }
+    if (!raw && !retry) return null;
+  } catch {
+    clearTimeout(primaryTimer);
+  }
 
-    launch();
-    for (const at of HEDGES_AT_MS.slice(1)) timers.push(setTimeout(launch, at));
-  });
+  // 2. Fallback único con modelo Lite si el primario no respondió
+  const remainingMs = Math.max(DEADLINE_MS - (Date.now() - started), 3000);
+  const fallbackController = new AbortController();
+  const fallbackTimer = setTimeout(() => fallbackController.abort('timeout'), remainingMs);
+  try {
+    const { raw } = await callModel(LITE_MODEL, apiKey, system, contents, fallbackController.signal);
+    clearTimeout(fallbackTimer);
+    if (raw) {
+      try {
+        const answer = validateAnswer(JSON.parse(raw), ctx.slots, ctx.tasks);
+        if (answer) {
+          console.info('plan fallback', { mode, model: LITE_MODEL, ms: Date.now() - started, intent: answer.intent });
+          return answer;
+        }
+      } catch {
+        console.error('Gemini fallback (plan) devolvió algo que no es JSON válido:', raw.slice(0, 200));
+      }
+    }
+  } catch {
+    clearTimeout(fallbackTimer);
+  }
+
+  console.error('plan: ningún modelo respondió a tiempo', { mode, ms: Date.now() - started });
+  return null;
 }

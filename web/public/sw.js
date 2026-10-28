@@ -32,14 +32,22 @@ const PRECACHE_ASSETS = [
   '/apple-icon.png',
 ];
 
+const PRECACHE_ROUTES = [
+  '/',
+  '/calendario',
+  '/pendientes',
+  '/recursos',
+];
+
 /* ────────────────────────────────────────────────── ciclo de vida ── */
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch(() => {});
-    })
+    Promise.all([
+      caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_ASSETS).catch(() => {})),
+      caches.open(PAGES_CACHE).then((cache) => cache.addAll(PRECACHE_ROUTES).catch(() => {})),
+    ])
   );
 });
 
@@ -124,12 +132,9 @@ self.addEventListener('fetch', (event) => {
           const cached = await caches.match(req);
           if (cached) return cached;
 
-          // Si navegaba a una página no guardada, intentar caer a la raíz '/'
+          // Si navegaba a una página no guardada en caché, mostrar pantalla de cortesía limpia
+          // (NUNCA servir '/' cruzado para no romper la hidratación de React/Next.js)
           if (req.mode === 'navigate') {
-            const rootCached = await caches.match('/');
-            if (rootCached) return rootCached;
-
-            // Pantalla de cortesía si absolutamente nada estaba cacheado
             return new Response(
               `<!DOCTYPE html>
               <html lang="es">
@@ -178,6 +183,14 @@ self.addEventListener('push', (event) => {
   }
 
   const title = payload.title || 'Organizer';
+  const actions = [];
+  if (payload.itemId) {
+    actions.push(
+      { action: 'done', title: '✓ Ya la hice' },
+      { action: 'tomorrow', title: 'Pasar a mañana' }
+    );
+  }
+
   const options = {
     body: payload.body || 'Abre la app para ver tu día.',
     tag: payload.tag || 'organizer',
@@ -185,7 +198,12 @@ self.addEventListener('push', (event) => {
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     requireInteraction: false,
-    data: { url: payload.url || '/' },
+    actions,
+    data: {
+      url: payload.url || '/',
+      itemId: payload.itemId || null,
+      blockId: payload.blockId || null,
+    },
   };
 
   event.waitUntil(
@@ -202,7 +220,26 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || '/';
+  const data = (event.notification && event.notification.data) || {};
+  const action = event.action;
+
+  // Acciones en segundo plano sin abrir ventana si el usuario tocó un botón
+  if ((action === 'done' || action === 'tomorrow') && data.itemId) {
+    event.waitUntil(
+      fetch('/api/push/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          itemId: data.itemId,
+          blockId: data.blockId,
+        }),
+      }).catch(() => {})
+    );
+    return;
+  }
+
+  const target = data.url || '/';
 
   event.waitUntil(
     self.clients

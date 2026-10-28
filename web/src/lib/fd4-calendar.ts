@@ -5,7 +5,6 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Reminder, Task } from '@/lib/supabase/database.types';
-import { materializeScheduleTemplates } from './calendar';
 import { formatClock, formatWhen } from './home';
 import { dayRangeUtc, formatTimeOfDay, timeToMinutes } from './tz';
 import {
@@ -150,18 +149,13 @@ export async function getMonthView(
   const firstStr = cellsRaw[0].dateStr;
   const lastStr = cellsRaw[cellsRaw.length - 1].dateStr;
 
-  /* La rejilla desborda a los meses vecinos y esos dias tambien llevan punto:
-     si ves el 31 de agosto en la rejilla de septiembre, tiene que decirte la
-     verdad sobre el 31 de agosto. */
-  await materializeScheduleTemplates(supabase, userId, firstStr, lastStr, timezone);
-
   const [blocksRes, itemsRes, remindersRes] = await Promise.all([
     supabase
       .from('blocks')
       .select('id, item_id, reminder_id, title, starts_at, ends_at, source')
       .eq('user_id', userId)
-      .gte('starts_at', dayStartUTC(firstStr))
-      .lte('starts_at', dayEndUTC(lastStr))
+      .gte('starts_at', dayStartUTC(firstStr, timezone))
+      .lte('starts_at', dayEndUTC(lastStr, timezone))
       .order('starts_at', { ascending: true }),
     supabase
       .from('items')
@@ -408,15 +402,13 @@ export async function getWeekView(
   const mondayStr = days[0];
   const sundayStr = days[6];
 
-  await materializeScheduleTemplates(supabase, userId, mondayStr, sundayStr, timezone);
-
   const [blocksRes, itemsRes, remindersRes] = await Promise.all([
     supabase
       .from('blocks')
       .select('id, item_id, reminder_id, title, starts_at, ends_at, source')
       .eq('user_id', userId)
-      .gte('starts_at', dayStartUTC(mondayStr))
-      .lte('starts_at', dayEndUTC(sundayStr))
+      .gte('starts_at', dayStartUTC(mondayStr, timezone))
+      .lte('starts_at', dayEndUTC(sundayStr, timezone))
       .order('starts_at', { ascending: true }),
     supabase
       .from('items')
@@ -433,26 +425,13 @@ export async function getWeekView(
       .order('occurs_at', { ascending: true, nullsFirst: false }),
   ]);
 
-  /* Las clases no entran al calendario (#53): tienen su pestaña, Clases. */
+  /* Las clases no entran al calendario (#79): tienen su módulo Clases/Horario. */
   const blocks = (blocksRes.data ?? []).filter((b) => b.source !== 'template' && !b.reminder_id);
-  const classBlocks = (blocksRes.data ?? []).filter((b) => b.source === 'template');
   const items = itemsRes.data ?? [];
   const reminders = (remindersRes.data ?? []) as Reminder[];
 
   const cards: WeekDayCard[] = days.map((dateStr) => {
     const dayBlocks = blocks.filter((b) => localDay(b.starts_at, timezone) === dateStr);
-    const dayClassBlocks = classBlocks
-      .filter((b) => localDay(b.starts_at, timezone) === dateStr)
-      .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-
-    const classes = dayClassBlocks.map((b) => {
-      const start = formatClock(b.starts_at, timezone);
-      const end = b.ends_at ? formatClock(b.ends_at, timezone) : '';
-      return {
-        title: b.title,
-        hora: end ? `${start} – ${end}` : start,
-      };
-    });
 
     /* Una tarea puede llegar por dos caminos: tiene bloque ese dia, o tiene
        `due_on` ese dia y todavia no se planifico. Las dos son tareas del dia
@@ -491,9 +470,9 @@ export async function getWeekView(
         : null,
       extraRemindersCount,
       allReminders,
-      classes,
+      classes: [],
       tasks,
-      free: !rem && tasks.length === 0 && classes.length === 0,
+      free: !rem && tasks.length === 0,
     };
   });
 
@@ -643,7 +622,7 @@ export type Fd4DayData = {
   blocks: DayBlockView[];
   /** Las horas de clase como franja gris "En clase", sin nombre (#53). Solo
       dicen que ese rato no está libre; el horario vive en la pestaña Clases. */
-  classBands: { id: string; top: number; height: number }[];
+  classBands: { id: string; top: number; height: number; title?: string; location?: string | null }[];
 };
 
 export async function getDayView(
@@ -655,18 +634,13 @@ export async function getDayView(
   const todayStr = getTodayString(timezone);
   const isToday = dateStr === todayStr;
 
-  /* Se materializa la semana entera y no solo el dia: el usuario va a tocar
-     las flechas, y hacerlo dia a dia dispara una escritura por navegacion. */
-  const week = getDaysOfWeek(dateStr);
-  await materializeScheduleTemplates(supabase, userId, week[0], week[6], timezone);
-
-  const [blocksRes, itemsRes, remindersRes, contextsRes] = await Promise.all([
+  const [blocksRes, itemsRes, remindersRes, contextsRes, templatesRes] = await Promise.all([
     supabase
       .from('blocks')
-      .select('id, item_id, reminder_id, title, starts_at, ends_at, source, context_id, status')
+      .select('id, item_id, template_id, reminder_id, title, starts_at, ends_at, source, context_id, status')
       .eq('user_id', userId)
-      .gte('starts_at', dayStartUTC(dateStr))
-      .lte('starts_at', dayEndUTC(dateStr))
+      .gte('starts_at', dayStartUTC(dateStr, timezone))
+      .lte('starts_at', dayEndUTC(dateStr, timezone))
       .order('starts_at', { ascending: true }),
     supabase
       .from('items')
@@ -681,6 +655,10 @@ export async function getDayView(
       .or(`occurs_on.eq.${dateStr},recurrence.not.is.null`)
       .order('occurs_at', { ascending: true, nullsFirst: false }),
     supabase.from('contexts').select('id, name').eq('user_id', userId),
+    supabase
+      .from('schedule_templates')
+      .select('id, title, weekday, start_time, end_time, location, active_from, active_until')
+      .eq('user_id', userId),
   ]);
 
   const rawBlocks = blocksRes.data ?? [];
@@ -689,17 +667,48 @@ export async function getDayView(
     (r) => r.occurs_on === dateStr || (r.recurrence && isOccurrenceOn(r.occurs_on, r.recurrence, dateStr))
   );
   const contextName = new Map((contextsRes.data ?? []).map((c) => [c.id, c.name]));
+  const templateMap = new Map((templatesRes.data ?? []).map((t) => [t.id, t]));
 
   const toPx = (minutes: number) => ((minutes - DAY_START_HOUR * 60) / 60) * HOUR_PX;
 
-  /* Las clases solo marcan dónde NO hay hueco: una franja gris sin nombre. */
-  const classBands = rawBlocks
-    .filter((b) => b.source === 'template')
-    .map((b) => {
+  /* Las clases del día: si están materializadas en blocks se usan; si no, se proyectan
+     directamente en memoria desde schedule_templates sin requerir escrituras en la BD. */
+  const templateBlocks = rawBlocks.filter((b) => b.source === 'template');
+  let classBands: { id: string; top: number; height: number; title?: string; location?: string | null }[] = [];
+
+  if (templateBlocks.length > 0) {
+    classBands = templateBlocks.map((b) => {
       const from = localMinutes(b.starts_at, timezone);
       const to = localMinutes(b.ends_at, timezone);
-      return { id: b.id, top: toPx(from), height: (Math.max(to - from, 15) / 60) * HOUR_PX };
+      const tmpl = b.template_id ? templateMap.get(b.template_id) : undefined;
+      return {
+        id: b.id,
+        top: toPx(from),
+        height: (Math.max(to - from, 15) / 60) * HOUR_PX,
+        title: b.title || tmpl?.title,
+        location: tmpl?.location || null,
+      };
     });
+  } else {
+    const dow = getDayOfWeek(dateStr);
+    const dayTemplates = (templatesRes.data ?? []).filter(
+      (t) =>
+        t.weekday === dow &&
+        (!t.active_from || t.active_from <= dateStr) &&
+        (!t.active_until || t.active_until >= dateStr)
+    );
+    classBands = dayTemplates.map((t) => {
+      const from = timeToMinutes(t.start_time);
+      const to = timeToMinutes(t.end_time);
+      return {
+        id: `tpl-${t.id}`,
+        top: toPx(from),
+        height: (Math.max(to - from, 15) / 60) * HOUR_PX,
+        title: t.title,
+        location: t.location || null,
+      };
+    });
+  }
 
   const blocks: DayBlockView[] = [];
 

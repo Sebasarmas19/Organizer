@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useOptimistic, useState, useTransition } from 'react';
 import { safeMoveTask, safeDeleteTask, safeUnscheduleTask } from '@/lib/offline-sync';
 import type { DayOption, InboxItem } from '@/lib/fd4-pendientes';
+import type { ReminderOption } from '@/lib/planner-data';
 import { Icon } from '@/components/Icon';
 
 type Decision = { id: string; title: string; label: string };
@@ -31,7 +32,15 @@ function undoPhrase(label: string): string {
   return `para el ${label}`;
 }
 
-export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] }) {
+export function Triage({
+  items,
+  days,
+  reminders,
+}: {
+  items: InboxItem[];
+  days: DayOption[];
+  reminders?: ReminderOption[];
+}) {
   const [, startTransition] = useTransition();
   const [skipped, setSkipped] = useState<string[]>([]);
   const [showDays, setShowDays] = useState(false);
@@ -187,13 +196,58 @@ export function Triage({ items, days }: { items: InboxItem[]; days: DayOption[] 
                 ))}
               </div>
             ) : null}
-            <button type="button" className="fd5-dayopt" onClick={someday}>
+            <button
+              type="button"
+              className="fd5-dayopt"
+              onClick={someday}
+            >
               <span>
                 Algún día <kbd>A</kbd>
               </span>
               <small>sin fecha</small>
             </button>
           </div>
+
+          {reminders && reminders.length > 0 ? (
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-faint)', display: 'block', marginBottom: 6 }}>
+                O vincular para preparar un recordatorio:
+              </span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {reminders.slice(0, 4).map((rem) => (
+                  <button
+                    key={rem.id}
+                    type="button"
+                    className="io-chip io-press"
+                    style={{
+                      height: 28,
+                      padding: '0 10px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--text)',
+                      borderRadius: 8,
+                      border: '1px solid var(--line)',
+                    }}
+                    onClick={() =>
+                      decide(`para ${rem.title}`, async (id) => {
+                        const { linkTaskToReminder } = await import('@/lib/planner-actions');
+                        await linkTaskToReminder(id, rem.id);
+                      })
+                    }
+                  >
+                    <Icon name="flag" size="sm" />
+                    <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {rem.title}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="fd5-cap__foot">
             <button

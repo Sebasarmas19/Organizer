@@ -64,43 +64,7 @@ export function HorarioView({
   // Agrupar initialTemplates por título
   const buildInitialSubjects = (): SubjectForm[] => {
     if (initialTemplates.length === 0) {
-      return [
-        {
-          id: 's-1',
-          title: 'Cálculo III',
-          notify: false,
-          slots: [
-            {
-              id: 'sl-1',
-              days: [1, 3, 5], // L, X, V
-              startTime: '08:00',
-              endTime: '09:30',
-              room: 'Aula 204',
-            },
-          ],
-        },
-        {
-          id: 's-2',
-          title: 'Álgebra Lineal',
-          notify: false,
-          slots: [
-            {
-              id: 'sl-2',
-              days: [2, 4], // M, J
-              startTime: '11:00',
-              endTime: '12:30',
-              room: 'Aula 112',
-            },
-            {
-              id: 'sl-3',
-              days: [3], // X
-              startTime: '14:00',
-              endTime: '16:00',
-              room: 'Lab 3',
-            },
-          ],
-        },
-      ];
+      return [];
     }
 
     const byTitle = new Map<string, ClassTemplate[]>();
@@ -406,7 +370,23 @@ export function HorarioView({
 
       {/* Lista de materias */}
       <div className="gutter flex flex-col gap-4 pb-12">
-        {subjects.map((sub) => (
+        {subjects.length === 0 ? (
+          <div className="io-card text-center py-10 px-4 flex flex-col items-center gap-3">
+            <p className="t-body font-medium">Aún no has añadido materias</p>
+            <p className="t-meta c-muted max-w-sm">
+              Añade tus materias del semestre para verlas en la vista de Día del calendario y recibir avisos antes de clase.
+            </p>
+            <button
+              type="button"
+              className="io-btn io-btn--primary mt-2"
+              onClick={addSubject}
+            >
+              <Icon name="plus" size="sm" />
+              Añadir primera materia
+            </button>
+          </div>
+        ) : (
+          subjects.map((sub) => (
           <div key={sub.id} className="matcard">
             <div className="matcard__head">
               <input
@@ -528,17 +508,19 @@ export function HorarioView({
               <span className="toggle__switch" aria-hidden="true" />
             </button>
           </div>
-        ))}
+        )))}
 
         {/* Añadir otra materia */}
-        <button
-          type="button"
-          className="btn btn--full mt-4"
-          onClick={addSubject}
-        >
-          <Icon name="plus" size="sm" />
-          Otra materia
-        </button>
+        {subjects.length > 0 ? (
+          <button
+            type="button"
+            className="btn btn--full mt-4"
+            onClick={addSubject}
+          >
+            <Icon name="plus" size="sm" />
+            Otra materia
+          </button>
+        ) : null}
 
         <p className="t-label c-faint mt-4" style={{ paddingBottom: 'var(--space-6)' }}>
           Con esto basta: la semana se repite sola hasta el final del semestre.

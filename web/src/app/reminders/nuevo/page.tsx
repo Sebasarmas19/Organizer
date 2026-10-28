@@ -8,6 +8,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileTimezone } from '@/lib/profile';
+import { getScheduleSubjects } from '@/lib/planner-data';
 import { getTodayString } from '@/lib/date-utils';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
@@ -29,8 +30,10 @@ export default async function NewReminderPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/entrar');
 
-  const todayStr = getTodayString(await getProfileTimezone(supabase, user.id));
+  const timezone = await getProfileTimezone(supabase, user.id);
+  const todayStr = getTodayString(timezone);
   const date = sp.d && /^\d{4}-\d{2}-\d{2}$/.test(sp.d) ? sp.d : todayStr;
+  const subjects = await getScheduleSubjects(supabase, user.id);
 
   return (
     <div className="fd-app">
@@ -48,6 +51,8 @@ export default async function NewReminderPage({
         </header>
         <ReminderForm
           mode="create"
+          todayStr={todayStr}
+          subjects={subjects}
           initial={{ title: '', occursOn: date, occursAt: '', noticeDays: '', recurrence: '', reminderMin: '', notes: '' }}
         />
       </main>

@@ -17,7 +17,6 @@ import {
   getTodayString,
   parseDateString,
 } from './date-utils';
-import { advancePastRecurringReminders } from './planner-actions';
 
 import type { ReminderOption } from './planner-data';
 
@@ -61,8 +60,6 @@ export async function getPendientesData(
   const todayStr = getTodayString(timezone);
   const weekEndStr = addDays(todayStr, 7);
 
-  await advancePastRecurringReminders(supabase, userId, todayStr);
-
   const [itemsRes, remindersRes, contextsRes] = await Promise.all([
     /* Todo lo vivo. `done` entra tambien: una tarea recien marcada tiene que
        quedarse en su sitio, tachada, hasta que recargues — si desapareciera
@@ -96,19 +93,29 @@ export async function getPendientesData(
     (t) => t.status !== 'done' || (t.completed_at ?? '').slice(0, 10) === todayStr
   );
 
-  const toRow = (t: Task): TaskRowData => ({
-    id: t.id,
-    title: t.title,
-    meta: [
-      t.due_on ? taskWhen(t.due_on, todayStr) : '',
-      t.context_id ? contextName.get(t.context_id) : '',
-    ]
-      .filter(Boolean)
-      .join(' · '),
-    rem: t.reminder_id ? reminderTitle.get(t.reminder_id) : undefined,
-    done: t.status === 'done',
-    isOverdue: Boolean(t.due_on && t.due_on < todayStr),
-  });
+  const toRow = (t: Task): TaskRowData => {
+    const isOverdue = Boolean(t.due_on && t.due_on < todayStr);
+    const overdueLabel = isOverdue
+      ? t.due_on === addDays(todayStr, -1)
+        ? 'De ayer'
+        : `Hace ${formatDistance(todayStr, t.due_on as string)}`
+      : undefined;
+
+    return {
+      id: t.id,
+      title: t.title,
+      meta: [
+        t.due_on ? taskWhen(t.due_on, todayStr) : '',
+        t.context_id ? contextName.get(t.context_id) : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      rem: t.reminder_id ? reminderTitle.get(t.reminder_id) : undefined,
+      done: t.status === 'done',
+      isOverdue,
+      overdueLabel,
+    };
+  };
 
   const hoy = alive.filter((t) => t.due_on === todayStr);
   const semana = alive.filter(

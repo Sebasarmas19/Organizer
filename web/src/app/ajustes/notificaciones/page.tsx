@@ -68,86 +68,80 @@ export default async function NotificationsSettingsPage() {
       <DeskSidebar active="ajustes" todayStr={getTodayString(timezone)} />
 
       <main className="fd-screen" style={{ paddingBottom: 'calc(var(--tab-bar-h) + var(--space-6))' }}>
-        <div className="calhead">
-          <Link href="/ajustes" className="uplevel" data-back="true">
-            <Icon name="chevron-left" size="sm" />
-            Ajustes
-          </Link>
-        </div>
+        <div style={{ maxWidth: 540, margin: '0 auto', width: '100%', padding: '12px 16px 40px' }}>
+          <div style={{ marginBottom: 12 }}>
+            <Link href="/ajustes" className="pl-back" data-back="true">
+              <Icon name="chevron-left" size="sm" />
+              Ajustes
+            </Link>
+          </div>
 
-      <header className="pagehead">
-        <h1 className="t-title">Notificaciones</h1>
-      </header>
+          <header style={{ marginBottom: 16 }}>
+            <h1 className="fd-h1" style={{ fontSize: 26, fontWeight: 700, margin: '0 0 6px' }}>Notificaciones</h1>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--io-label-2)', lineHeight: 1.4 }}>
+              Una al día, con tu día dentro. Para leerla desde la pantalla de bloqueo sin abrir nada.
+            </p>
+          </header>
 
-      <p className="gutter t-meta c-muted">
-        Una al día, con tu día dentro. Para leerla desde la pantalla de bloqueo
-        sin abrir nada.
-      </p>
+          <span className="io-form__label" style={{ margin: '20px 0 8px 4px', display: 'block' }}>
+            Este teléfono
+          </span>
+          <PushPanel
+            vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''}
+            storedCount={count ?? 0}
+          />
 
-      <h2 className="sectionhead" style={{ marginTop: 'var(--space-6)' }}>
-        Este teléfono
-      </h2>
-      <PushPanel
-        vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ''}
-        storedCount={count ?? 0}
-      />
+          <span className="io-form__label" style={{ margin: '24px 0 8px 4px', display: 'block' }}>
+            Cuándo te hablo
+          </span>
+          {profile ? (
+            <TimesForm
+              morning={toInputTime(profile.notify_morning, '08:00')}
+              evening={toInputTime(profile.notify_evening, '21:00')}
+              weeklyTime={toInputTime(profile.notify_weekly_time, '19:00')}
+              weeklyDow={profile.notify_weekly_dow ?? 0}
+              resources={profile.notify_resources ?? true}
+            />
+          ) : (
+            <p style={{ fontSize: 13, color: 'var(--io-label-2)' }}>
+              Falta tu fila en <code>profiles</code>. Vuelve a entrar desde /entrar.
+            </p>
+          )}
 
-      <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>
-        Cuándo te hablo
-      </h2>
-      {profile ? (
-        <TimesForm
-          morning={toInputTime(profile.notify_morning, '08:00')}
-          evening={toInputTime(profile.notify_evening, '21:00')}
-          weeklyTime={toInputTime(profile.notify_weekly_time, '19:00')}
-          weeklyDow={profile.notify_weekly_dow ?? 0}
-          resources={profile.notify_resources ?? true}
-        />
-      ) : (
-        <p className="gutter t-meta c-muted">
-          Falta tu fila en <code>profiles</code>. Vuelve a entrar desde /entrar.
-        </p>
-      )}
+          <p style={{ fontSize: 12, color: 'var(--io-label-3)', margin: '10px 4px 0' }}>
+            Las horas corresponden a tu zona: {profile?.timezone ?? 'America/Caracas'}.
+          </p>
 
-      <p className="gutter t-meta c-faint" style={{ marginTop: 'var(--space-3)' }}>
-        Las horas son las tuyas: {profile?.timezone ?? 'America/Caracas'}.
-      </p>
-
-      {/* ------------------------------------------------ así se va a ver --
-          Un recordatorio de para qué es todo esto. El texto de ejemplo es el
-          del comp aprobado (`app/comps/notificacion.html`), con su largo real. */}
-      <h2 className="sectionhead" style={{ marginTop: 'var(--space-8)' }}>
-        Así se va a ver
-      </h2>
-      <div className="gutter">
-        <div
-          style={{
-            background: 'var(--lock-bg)',
-            padding: 'var(--space-3) var(--space-4)',
-            borderRadius: 'var(--radius)',
-          }}
-        >
-          <div className="notif" style={{ border: 0, background: 'rgb(255 255 255 / .11)' }}>
-            <div className="notif__head">
-              <span className="notif__icon">
-                <span />
-              </span>
-              <span className="notif__app">Organizer</span>
-              <span className="notif__when">ahora</span>
+          <span className="io-form__label" style={{ margin: '28px 0 8px 4px', display: 'block' }}>
+            Así se va a ver
+          </span>
+          <div>
+            <div
+              style={{
+                background: 'var(--lock-bg)',
+                padding: '14px 16px',
+                borderRadius: 16,
+              }}
+            >
+              <div className="notif" style={{ border: 0, background: 'rgb(255 255 255 / .11)' }}>
+                <div className="notif__head">
+                  <span className="notif__icon">
+                    <span />
+                  </span>
+                  <span className="notif__app">Organizer</span>
+                  <span className="notif__when">ahora</span>
+                </div>
+                <p className="notif__title">Hoy, jueves 17</p>
+                <p className="notif__body clamp2">
+                  8:00 Cálculo · 11:00 Álgebra · 15:00 Migrar el schema · 20:00 Resumen
+                </p>
+              </div>
             </div>
-            <p className="notif__title">Hoy, jueves 17</p>
-            <p className="notif__body clamp2">
-              8:00 Cálculo · 11:00 Álgebra · 15:00 Migrar el schema · 20:00 Resumen
+            <p style={{ fontSize: 12, color: 'var(--io-label-2)', marginTop: 8, padding: '0 4px' }}>
+              Si hay un parcial o una entrega cerca, se lleva el título y las tareas se recortan para que quepa.
             </p>
           </div>
         </div>
-        <p className="t-meta c-muted" style={{ marginTop: 'var(--space-3)' }}>
-          Si hay un parcial o una entrega cerca, se lleva el título y las tareas
-          se recortan para que quepa.
-        </p>
-      </div>
-
-      <div style={{ height: 'var(--space-16)' }} />
       </main>
 
       <TabBar />

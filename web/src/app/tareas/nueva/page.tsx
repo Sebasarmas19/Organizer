@@ -7,7 +7,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileTimezone } from '@/lib/profile';
-import { getReminderOptions } from '@/lib/planner-data';
+import { getReminderOptions, getScheduleSubjects } from '@/lib/planner-data';
 import { getTodayString } from '@/lib/date-utils';
 import { TabBar } from '@/components/fd4/TabBar';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
@@ -32,7 +32,10 @@ export default async function NewTaskPage({
   const todayStr = getTodayString(timezone);
   const date = sp.d && /^\d{4}-\d{2}-\d{2}$/.test(sp.d) ? sp.d : '';
   const time = sp.t && /^\d{2}:\d{2}$/.test(sp.t) ? sp.t : '';
-  const reminders = await getReminderOptions(supabase, user.id, timezone, sp.r ?? null);
+  const [reminders, subjects] = await Promise.all([
+    getReminderOptions(supabase, user.id, timezone, sp.r ?? null),
+    getScheduleSubjects(supabase, user.id),
+  ]);
   const fallback = date ? `/calendario?v=dia&d=${date}` : '/pendientes';
 
   return (
@@ -49,6 +52,7 @@ export default async function NewTaskPage({
           mode="create"
           todayStr={todayStr}
           reminders={reminders}
+          subjects={subjects}
           fallback={fallback}
           initial={{
             title: '',

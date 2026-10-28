@@ -29,6 +29,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { acceptPlan, proposePlan } from '@/lib/plan/actions';
 import type { ChatTurn, PlanAnswer, PlanMode, PlanOption } from '@/lib/plan/llm';
+import { toClock, type FreeSlot } from '@/lib/plan/slots';
 
 const EXAMPLES = [
   'Quiero leer Atomic Habits',
@@ -44,9 +45,9 @@ const WAIT_TEXT = [
   'Sigue pensando: casi está…',
   'Está tardando más de lo normal. Sigue esperando…',
 ];
-const WAIT_STEP_MS = 12000;
-/* El servidor corta a los 60 s; si a los 70 no hay nada, no va a llegar. */
-const CLIENT_TIMEOUT_MS = 70000;
+const WAIT_STEP_MS = 4000;
+/* Timeout de cliente ajustado a 20 s (máximo 1 reintento ligero) */
+const CLIENT_TIMEOUT_MS = 20000;
 /* La conversación guardada vale media hora: después, se empieza de cero. */
 const STORE_KEY = 'organizer:plan';
 const STORE_TTL_MS = 30 * 60 * 1000;
@@ -115,7 +116,15 @@ function when(date: string, start: string, minutes: number): string {
 /** Lo que se ve de los turnos anteriores: tu frase y la respuesta corta. */
 type Shown = { you: string; reply: string };
 
-export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; active?: boolean }) {
+export function PlanClient({
+  mode = 'chat',
+  active = true,
+  initialSlots = [],
+}: {
+  mode?: PlanMode;
+  active?: boolean;
+  initialSlots?: FreeSlot[];
+}) {
   const week = mode === 'week';
   const [text, setText] = useState('');
   const [history, setHistory] = useState<ChatTurn[]>([]);
@@ -462,13 +471,88 @@ export function PlanClient({ mode = 'chat', active = true }: { mode?: PlanMode; 
         </form>
 
         {!week && !inConversation && !thinking && !failed && saved === null ? (
-          <div className="fd-plan__examples">
-            {EXAMPLES.map((ex) => (
-              <button key={ex} type="button" className="fd-secbtn" onClick={() => ask(ex)}>
-                {ex}
-              </button>
-            ))}
-          </div>
+          <>
+            {initialSlots.length > 0 ? (
+              <div style={{ marginTop: 12, marginBottom: 16 }}>
+                <span className="io-form__label" style={{ margin: '0 0 8px 4px', display: 'block' }}>
+                  Huecos libres detectados (0 ms)
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {initialSlots.map((slot) => {
+                    const fromClock = toClock(slot.from);
+                    const durationMin = slot.to - slot.from;
+                    return (
+                      <div
+                        key={slot.id}
+                        className="io-card"
+                        style={{
+                          padding: '12px 14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                        }}
+                      >
+                        <div>
+                          <strong style={{ fontSize: 14, display: 'block', color: 'var(--io-label)' }}>
+                            {when(slot.date, fromClock, durationMin)}
+                          </strong>
+                          <span style={{ fontSize: 12, color: 'var(--io-label-2)' }}>
+                            {durationMin >= 60
+                              ? `${Math.floor(durationMin / 60)}h ${durationMin % 60 ? durationMin % 60 + 'm' : ''} disponibles`
+                              : `${durationMin} min disponibles`}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="io-chip io-press"
+                          disabled={saving}
+                          onClick={() => {
+                            const title = text.trim() || 'Sesión de enfoque';
+                            const mins = Math.min(durationMin, 60);
+                            accept(
+                              {
+                                title,
+                                why: 'Hueco libre inmediato',
+                                sessions: [
+                                  {
+                                    date: slot.date,
+                                    start: fromClock,
+                                    minutes: mins,
+                                    title,
+                                  },
+                                ],
+                              },
+                              0
+                            );
+                          }}
+                          style={{
+                            height: 32,
+                            padding: '0 12px',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: 'var(--io-tint-fill)',
+                            color: 'var(--io-on-tint)',
+                            flexShrink: 0,
+                          }}
+                        >
+                          Agendar aquí
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="fd-plan__examples">
+              {EXAMPLES.map((ex) => (
+                <button key={ex} type="button" className="fd-secbtn" onClick={() => ask(ex)}>
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </>
         ) : null}
       </div>
     </div>

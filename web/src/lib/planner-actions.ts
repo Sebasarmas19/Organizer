@@ -20,9 +20,9 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { ItemStatus, ReminderRecurrence, Update } from '@/lib/supabase/database.types';
 import { getProfileTimezone } from './profile';
-import { getTaskDetail, getReminderDetail, type TaskDetail, type ReminderDetail } from './planner-data';
+import { getTaskDetail, getReminderDetail, type TaskDetail, type ReminderDetail, getScheduleSubjects, type ScheduleSubject } from './planner-data';
 import { timeToMinutes, zonedIso } from './tz';
-import { addDays, computeNextOccurrence, getTodayString } from './date-utils';
+import { addDays, computeNextOccurrence } from './date-utils';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
@@ -433,4 +433,55 @@ export async function getReminderForSheet(id: string): Promise<ReminderDetail | 
   const { supabase, user } = await requireUser();
   const timezone = await getProfileTimezone(supabase, user.id);
   return getReminderDetail(supabase, user.id, id, timezone);
+}
+
+/**
+ * Marca un reminder como entregado/listo antes de tiempo (Decisión #61).
+ * Completa todas sus tareas hijas (o inserta una completada si no había).
+ * Esto hace que se trate como 'todo preparado' y silencia las alertas push previas
+ * sin borrar el evento del historial.
+ */
+export async function markReminderCompletedAction(reminderId: string): Promise<void> {
+  const { supabase, user } = await requireUser();
+
+  const { data: childItems, error: itemsErr } = await supabase
+    .from('items')
+    .select('id, status')
+    .eq('reminder_id', reminderId)
+    .eq('user_id', user.id);
+
+  if (itemsErr) throw new Error(itemsErr.message);
+
+  const nowIso = new Date().toISOString();
+
+  if (childItems && childItems.length > 0) {
+    await supabase
+      .from('items')
+      .update({ status: 'done', completed_at: nowIso })
+      .eq('reminder_id', reminderId)
+      .eq('user_id', user.id);
+  } else {
+    await supabase
+      .from('items')
+      .insert({
+        user_id: user.id,
+        reminder_id: reminderId,
+        title: 'Entregado',
+        status: 'done',
+        completed_at: nowIso,
+      });
+  }
+
+  await supabase
+    .from('blocks')
+    .update({ status: 'done' })
+    .eq('reminder_id', reminderId)
+    .eq('user_id', user.id);
+
+  revalidateAll();
+}
+
+export async function getScheduleSubjectsAction(): Promise<ScheduleSubject[]> {
+  const { supabase, user } = await requireUser();
+  return getScheduleSubjects(supabase, user.id);
 }

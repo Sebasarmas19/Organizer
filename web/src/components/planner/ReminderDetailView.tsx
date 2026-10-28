@@ -18,7 +18,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ReminderDetail } from '@/lib/planner-data';
 import { createTask, linkTaskToReminder } from '@/lib/planner-actions';
-import { deleteReminder, toggleTask } from '@/lib/fd4-actions';
+import { deleteReminder } from '@/lib/fd4-actions';
+import { safeToggleTask } from '@/lib/offline-sync';
 import { WEEKDAY_SHORT_ES, formatRecurrenceLabel, getDayOfWeek, parseDateString } from '@/lib/date-utils';
 import { Icon } from '@/components/Icon';
 import { Glyph } from '@/components/ios/Glyph';
@@ -35,6 +36,7 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deliveredSuccess, setDeliveredSuccess] = useState(false);
   const [showCandidates, setShowCandidates] = useState(false);
   const [draft, setDraft] = useState('');
   /* La fecha de la próxima tarea. Solo la pone el calendario; vacía = sin fecha. */
@@ -55,7 +57,7 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
     const next = !doneMap[id];
     startTransition(async () => {
       setDone({ id, done: next });
-      await toggleTask(id, next);
+      await safeToggleTask(id, next);
     });
   };
 
@@ -81,6 +83,19 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
     startTransition(async () => {
       await linkTaskToReminder(taskId, detail.id);
       router.refresh();
+    });
+  };
+
+  const onMarkDelivered = () => {
+    startTransition(async () => {
+      try {
+        const { markReminderCompletedAction } = await import('@/lib/planner-actions');
+        await markReminderCompletedAction(detail.id);
+        setDeliveredSuccess(true);
+        router.refresh();
+      } catch {
+        setError('No se pudo marcar como entregado.');
+      }
     });
   };
 
@@ -110,6 +125,7 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
         <ReminderForm
           mode="edit"
           reminderId={detail.id}
+          todayStr={detail.todayStr}
           initial={{
             title: detail.title,
             occursOn: detail.occursOn,
@@ -298,6 +314,16 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
       ) : null}
 
       <div className="fd5-rfoot" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 36px)' }}>
+        {!detail.past && !deliveredSuccess ? (
+          <button
+            type="button"
+            className="fd5-btn fd5-btn--accent"
+            onClick={onMarkDelivered}
+            disabled={pending}
+          >
+            ✓ Ya lo entregué
+          </button>
+        ) : null}
         <Link href={`/calendario?v=dia&d=${detail.occursOn}`} className="fd5-btn">
           Ver el día
         </Link>
@@ -311,6 +337,11 @@ export function ReminderDetailView({ detail, isNew }: { detail: ReminderDetail; 
           </button>
         )}
       </div>
+      {deliveredSuccess ? (
+        <p className="fd5-hint" style={{ color: 'var(--class)' }}>
+          ✓ Marcado como entregado. Se silenciaron las alertas y quedó registrado.
+        </p>
+      ) : null}
       {confirmDelete ? (
         <p className="fd5-hint">Sus tareas no se borran: se quedan en Pendientes, sueltas.</p>
       ) : null}

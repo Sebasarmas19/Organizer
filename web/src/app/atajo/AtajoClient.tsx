@@ -90,96 +90,130 @@ export function AtajoClient({ token }: { token: string }) {
   }
 
   return (
-    <div className="gutter pb-6 pt-2">
-      {/* Navegacion superior */}
-      <div className="calhead">
-        <Link href="/ajustes" className="uplevel">
+    <div style={{ maxWidth: 560, margin: '0 auto', width: '100%', padding: '16px 16px 40px' }}>
+      {/* Navegación superior */}
+      <div style={{ marginBottom: 12 }}>
+        <Link href="/ajustes" className="pl-back">
           <Icon name="chevron-left" size="sm" />
           Ajustes
         </Link>
       </div>
 
-      <header className="pagehead" style={{ paddingInline: 0, paddingBottom: 'var(--space-3)' }}>
-        <div>
-          <h1 className="t-title">Atajo de Siri</h1>
-          <p className="t-meta c-muted mt-1">
-            Configura el comando <strong>&ldquo;Oye Siri, anota…&rdquo;</strong> en tu iPhone para capturar con 0 friccion.
-          </p>
-        </div>
+      <header style={{ marginBottom: 20 }}>
+        <h1 className="fd-h1" style={{ fontSize: 26, fontWeight: 700, margin: '0 0 6px' }}>Atajo de Siri</h1>
+        <p style={{ margin: 0, fontSize: 14, color: 'var(--io-label-2)', lineHeight: 1.4 }}>
+          Configura el comando <strong>&ldquo;Oye Siri, anota…&rdquo;</strong> en tu iPhone para capturar con 0 fricción.
+        </p>
       </header>
 
-      {/* Que entiende */}
-      <section className="rounded bg-sunken p-4 mb-6">
-        <h2 className="t-section mb-2" style={{ fontSize: 'var(--text-body)' }}>
+      {/* Qué entiende */}
+      <section className="io-card" style={{ padding: '16px 18px', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 10px', color: 'var(--io-label)' }}>
           Qué puedes decir
         </h2>
-        <ul className="t-meta c-muted space-y-2 m-0 pl-4 list-disc">
+        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: 'var(--io-label-2)', lineHeight: 1.6 }}>
           <li>
-            <strong>&ldquo;Comprar pan&rdquo;</strong> → tarea sin fecha, a la bandeja.
+            <strong style={{ color: 'var(--io-label)' }}>&ldquo;Comprar pan&rdquo;</strong> → tarea sin fecha, a la bandeja.
           </li>
           <li>
-            <strong>&ldquo;Llamar al banco mañana&rdquo;</strong> → tarea para mañana.
+            <strong style={{ color: 'var(--io-label)' }}>&ldquo;Llamar al banco mañana&rdquo;</strong> → tarea para mañana.
           </li>
           <li>
-            <strong>&ldquo;Entregar informe el viernes a las 3&rdquo;</strong> → tarea el viernes 15:00, en el
-            calendario y con aviso 15 min antes.
+            <strong style={{ color: 'var(--io-label)' }}>&ldquo;Entregar informe el viernes a las 3&rdquo;</strong> → tarea el viernes 15:00, en el calendario y con aviso 15 min antes.
           </li>
           <li>
-            <strong>&ldquo;Recordatorio parcial de cálculo el 15 de octubre&rdquo;</strong> → reminder (empieza con
-            &ldquo;recordatorio&rdquo;).
+            <strong style={{ color: 'var(--io-label)' }}>&ldquo;Recordatorio parcial de cálculo el 15 de octubre&rdquo;</strong> → reminder (empieza con &ldquo;recordatorio&rdquo;).
           </li>
         </ul>
-        <p className="t-meta c-muted mt-2">
+        <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--io-label-3)', lineHeight: 1.4 }}>
           Entiende hoy, mañana, pasado mañana, días de la semana, &ldquo;el 15&rdquo;, &ldquo;15 de octubre&rdquo;,
           &ldquo;15/10&rdquo;, &ldquo;en 3 días&rdquo;, &ldquo;a las 3&rdquo;, &ldquo;a las 8 de la mañana&rdquo;,
-          &ldquo;y media&rdquo;. &ldquo;A las 3&rdquo; sin más se entiende como de la tarde.
+          &ldquo;y media&rdquo;.
         </p>
       </section>
 
       {/* Credenciales y URL */}
-      <section className="rounded bg-sunken p-4 mb-6">
-        <h2 className="t-section mb-3" style={{ fontSize: 'var(--text-body)' }}>
-          Datos de conexion
+      <section className="io-card" style={{ padding: '16px 18px', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 14px', color: 'var(--io-label)' }}>
+          Datos de conexión
         </h2>
 
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <label className="t-label c-muted block mb-1">URL del endpoint</label>
-            <div className="flex items-center gap-2">
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--io-label-2)', marginBottom: 6 }}>
+              URL del endpoint
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 readOnly
                 value={endpointUrl}
-                className="field flex-1 text-ink font-mono text-xs px-3"
-                style={{ height: 'var(--tap-min)' }}
+                style={{
+                  flex: 1,
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  background: 'var(--io-cell-up)',
+                  color: 'var(--io-label)',
+                  border: '1px solid var(--io-sep)',
+                }}
               />
               <button
                 type="button"
                 onClick={handleCopyUrl}
-                className="btn btn--quiet"
-                aria-label="Copiar URL del endpoint"
+                className="io-chip io-press"
+                style={{
+                  height: 36,
+                  padding: '0 12px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: 'var(--io-cell-up)',
+                  color: 'var(--io-label)',
+                  border: '1px solid var(--io-sep)',
+                  flexShrink: 0,
+                }}
               >
-                {copiedUrl ? 'Copiada' : 'Copiar URL'}
+                {copiedUrl ? '✓ Copiada' : 'Copiar URL'}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="t-label c-muted block mb-1">Token de captura (Bearer)</label>
-            <div className="flex items-center gap-2">
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--io-label-2)', marginBottom: 6 }}>
+              Token de captura (Bearer)
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 readOnly
                 type="password"
                 value={token}
-                className="field flex-1 text-ink font-mono text-xs px-3"
-                style={{ height: 'var(--tap-min)' }}
+                style={{
+                  flex: 1,
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  background: 'var(--io-cell-up)',
+                  color: 'var(--io-label)',
+                  border: '1px solid var(--io-sep)',
+                }}
               />
               <button
                 type="button"
                 onClick={handleCopyToken}
-                className="btn btn--primary"
-                aria-label="Copiar token de captura"
+                className="io-chip io-press"
+                style={{
+                  height: 36,
+                  padding: '0 12px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: 'var(--io-tint-fill)',
+                  color: 'var(--io-on-tint)',
+                  border: '1px solid var(--io-tint)',
+                  flexShrink: 0,
+                }}
               >
-                {copiedToken ? 'Copiado' : 'Copiar token'}
+                {copiedToken ? '✓ Copiado' : 'Copiar token'}
               </button>
             </div>
           </div>
@@ -187,173 +221,156 @@ export function AtajoClient({ token }: { token: string }) {
       </section>
 
       {/* Pasos numerados */}
-      <section className="mb-6">
-        <h2 className="sectionhead" style={{ paddingInline: 0, marginBottom: 'var(--space-3)' }}>
+      <section className="io-card" style={{ padding: '16px 18px', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 16px', color: 'var(--io-label)' }}>
           Pasos para crearlo en iOS
         </h2>
 
-        <ol className="space-y-4 list-none m-0 p-0">
-          <li className="flex gap-3 items-start">
-            <span
-              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
-              style={{ width: 28, height: 28 }}
-            >
-              1
-            </span>
-            <div>
-              <p className="t-body font-medium">Abre la app Atajos</p>
-              <p className="t-meta c-muted mt-0.5">
-                En tu iPhone, abre la app <strong>Atajos</strong> y toca el boton <strong>+</strong> en la esquina superior derecha.
-              </p>
-            </div>
-          </li>
-
-          <li className="flex gap-3 items-start">
-            <span
-              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
-              style={{ width: 28, height: 28 }}
-            >
-              2
-            </span>
-            <div>
-              <p className="t-body font-medium">Accion: &ldquo;Pedir entrada&rdquo;</p>
-              <p className="t-meta c-muted mt-0.5">
-                Toca <em>Anadir accion</em>, busca <strong>&ldquo;Pedir entrada&rdquo;</strong> (Ask for Input) y pon como mensaje:{' '}
-                <code>¿Que anotas?</code>.
-              </p>
-            </div>
-          </li>
-
-          <li className="flex gap-3 items-start">
-            <span
-              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
-              style={{ width: 28, height: 28 }}
-            >
-              3
-            </span>
-            <div>
-              <p className="t-body font-medium">Accion: &ldquo;Obtener contenido de URL&rdquo;</p>
-              <p className="t-meta c-muted mt-0.5">
-                Anade la accion <strong>&ldquo;Obtener contenido de URL&rdquo;</strong> y configurala asi:
-              </p>
-              <ul className="t-meta c-muted mt-1 space-y-1 pl-4 list-disc">
-                <li>
-                  <strong>URL:</strong> Pega la URL del endpoint (boton Copiar arriba).
-                </li>
-                <li>
-                  <strong>Metodo:</strong> Cambia <code>GET</code> por <code>POST</code>.
-                </li>
-                <li>
-                  <strong>Cabeceras:</strong> Anade una cabecera con clave <code>Authorization</code> y valor{' '}
-                  <code>Bearer &lt;pega tu token&gt;</code>.
-                </li>
-                <li>
-                  <strong>Cuerpo de la peticion:</strong> Selecciona <code>JSON</code>. Anade un campo llamado{' '}
-                  <code>text</code> con tipo Texto y selecciona como valor <strong>Entrada proporcionada</strong>.
-                </li>
-              </ul>
-            </div>
-          </li>
-
-          <li className="flex gap-3 items-start">
-            <span
-              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
-              style={{ width: 28, height: 28 }}
-            >
-              4
-            </span>
-            <div>
-              <p className="t-body font-medium">Que Siri te confirme</p>
-              <p className="t-meta c-muted mt-0.5">
-                Anade <strong>&ldquo;Obtener valor del diccionario&rdquo;</strong> con clave <code>message</code>, y
-                despues <strong>&ldquo;Mostrar resultado&rdquo;</strong> con ese valor. Siri te leera lo que guardo:
-                <em> &ldquo;Tarea para el viernes 9 a las 15:00: Entregar informe.&rdquo;</em>
-              </p>
-            </div>
-          </li>
-
-          <li className="flex gap-3 items-start">
-            <span
-              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
-              style={{ width: 28, height: 28 }}
-            >
-              5
-            </span>
-            <div>
-              <p className="t-body font-medium">Nombra el atajo &ldquo;Anota&rdquo;</p>
-              <p className="t-meta c-muted mt-0.5">
-                Toca el titulo del atajo arriba y escribe <strong>Anota</strong>. Esto activa de inmediato el comando de voz:{' '}
-                <em>&ldquo;Oye Siri, anota&rdquo;</em>.
-              </p>
-            </div>
-          </li>
-
-          <li className="flex gap-3 items-start">
-            <span
-              className="grid place-items-center rounded-full bg-accent text-white font-semibold text-sm flex-shrink-0"
-              style={{ width: 28, height: 28 }}
-            >
-              6
-            </span>
-            <div>
-              <p className="t-body font-medium">Acceso rapido (opcional)</p>
-              <p className="t-meta c-muted mt-0.5">
-                Puedes anadir el atajo como boton en la pantalla de bloqueo de iOS o en el Centro de Control para capturar en un segundo sin hablar.
-              </p>
-            </div>
-          </li>
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {[
+            {
+              step: 1,
+              title: 'Abre la app Atajos',
+              desc: 'En tu iPhone, abre la app Atajos y toca el botón + en la esquina superior derecha.',
+            },
+            {
+              step: 2,
+              title: 'Acción: "Pedir entrada"',
+              desc: 'Toca Añadir acción, busca "Pedir entrada" (Ask for Input) y pon como mensaje: "¿Qué anotas?".',
+            },
+            {
+              step: 3,
+              title: 'Acción: "Obtener contenido de URL"',
+              desc: 'Añade "Obtener contenido de URL", método POST, cabecera Authorization: Bearer <tu token>, cuerpo JSON con clave "text" y valor "Entrada proporcionada".',
+            },
+            {
+              step: 4,
+              title: 'Que Siri te confirme',
+              desc: 'Añade "Obtener valor del diccionario" con clave "message" y luego "Mostrar resultado". Siri te leerá lo que guardó.',
+            },
+            {
+              step: 5,
+              title: 'Nombra el atajo "Anota"',
+              desc: 'Toca el título del atajo arriba y escribe "Anota". Esto activa de inmediato el comando de voz: "Oye Siri, anota".',
+            },
+            {
+              step: 6,
+              title: 'Acceso rápido (opcional)',
+              desc: 'Puedes añadir el atajo como botón en la pantalla de bloqueo de iOS o en el Centro de Control para capturar en un segundo.',
+            },
+          ].map((item) => (
+            <li key={item.step} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: '50%',
+                  background: 'var(--io-tint)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2,
+                }}
+              >
+                {item.step}
+              </span>
+              <div>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--io-label)' }}>
+                  {item.title}
+                </p>
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--io-label-2)', lineHeight: 1.4 }}>
+                  {item.desc}
+                </p>
+              </div>
+            </li>
+          ))}
         </ol>
       </section>
 
       {/* Probar el endpoint directamente */}
-      <section className="rounded bg-sunken p-4">
-        <h2 className="t-section mb-2" style={{ fontSize: 'var(--text-body)' }}>
-          Probar captura aqui mismo
+      <section className="io-card" style={{ padding: '16px 18px', marginBottom: 24 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 6px', color: 'var(--io-label)' }}>
+          Probar captura aquí mismo
         </h2>
-        <p className="t-meta c-muted mb-3">
-          Prueba enviar una tarea de prueba con el token actual para verificar que el endpoint responde:
+        <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--io-label-2)' }}>
+          Envía una tarea de prueba con el token actual para verificar la conexión:
         </p>
 
-        <form onSubmit={handleTestSend} className="space-y-3">
+        <form onSubmit={handleTestSend} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input
             type="text"
             value={testText}
             onChange={(e) => setTestText(e.target.value)}
-            placeholder="Escribe una tarea de prueba..."
-            className="field w-full px-3"
-            style={{ height: 'var(--tap-min)' }}
+            placeholder="Escribe una tarea de prueba…"
+            style={{
+              width: '100%',
+              minHeight: 44,
+              padding: '0 12px',
+              borderRadius: 12,
+              background: 'var(--io-cell-up)',
+              border: '1px solid var(--io-sep)',
+              color: 'var(--io-label)',
+              fontSize: 15,
+            }}
           />
 
           <button
             type="submit"
             disabled={testStatus === 'loading' || !testText.trim()}
-            className="btn btn--primary w-full"
-            style={{ minHeight: 'var(--tap-min)' }}
+            className="in-btn in-btn--pri io-press"
+            style={{ width: '100%', minHeight: 44, borderRadius: 12, fontWeight: 600, fontSize: 15 }}
           >
-            {testStatus === 'loading' ? 'Enviando...' : 'Enviar prueba'}
+            {testStatus === 'loading' ? 'Enviando…' : 'Enviar prueba'}
           </button>
         </form>
 
         {testMessage ? (
           <div
-            className={`mt-3 p-3 rounded text-sm ${
-              testStatus === 'success'
-                ? 'bg-task-soft text-task'
-                : 'bg-surface text-ink border border-line'
-            }`}
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 10,
+              fontSize: 13,
+              background: testStatus === 'success' ? 'var(--io-tint-soft)' : 'var(--io-cell-up)',
+              color: testStatus === 'success' ? 'var(--io-tint)' : 'var(--io-label)',
+              border: testStatus === 'success' ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+            }}
           >
-            <p>{testMessage}</p>
+            <p style={{ margin: 0 }}>{testMessage}</p>
             {testStatus === 'success' ? (
-              <Link href="/pendientes" className="taptext text-sm font-semibold mt-1">
-                Ver en Pendientes &rarr;
+              <Link
+                href="/pendientes"
+                style={{ display: 'inline-block', marginTop: 6, fontWeight: 600, color: 'var(--io-tint)', textDecoration: 'none' }}
+              >
+                Ver en Pendientes →
               </Link>
             ) : null}
           </div>
         ) : null}
       </section>
 
-      <div className="mt-8 text-center">
-        <Link href="/pendientes" className="btn btn--quiet w-full" style={{ minHeight: 'var(--tap-min)' }}>
+      <div style={{ textAlign: 'center' }}>
+        <Link
+          href="/pendientes"
+          className="io-btn io-press"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            minHeight: 44,
+            borderRadius: 12,
+            background: 'var(--io-cell)',
+            border: '1px solid var(--io-sep)',
+            color: 'var(--io-label-2)',
+            fontSize: 15,
+            fontWeight: 500,
+          }}
+        >
           Volver a Pendientes
         </Link>
       </div>

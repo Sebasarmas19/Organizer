@@ -13,6 +13,9 @@ import { useRouter } from 'next/navigation';
 import { Glyph } from '@/components/ios/Glyph';
 import { createReminder, updateReminder } from '@/lib/planner-actions';
 import type { ReminderRecurrence } from '@/lib/supabase/database.types';
+import type { ScheduleSubject } from '@/lib/planner-data';
+import { getUpcomingClasses } from '@/lib/planner-data';
+import { addDays, getDayOfWeek } from '@/lib/date-utils';
 
 const NOTICE_OPTIONS = [
   { value: '', label: '1 día antes (normal)' },
@@ -54,11 +57,15 @@ export function ReminderForm({
   mode,
   reminderId,
   initial,
+  todayStr: _todayStr,
+  subjects = [],
   onDone,
 }: {
   mode: 'create' | 'edit';
   reminderId?: string;
   initial: ReminderFormValues;
+  todayStr?: string;
+  subjects?: ScheduleSubject[];
   /** Solo en edición: cerrar el formulario. */
   onDone?: () => void;
 }) {
@@ -66,6 +73,13 @@ export function ReminderForm({
   const [values, setValues] = useState(initial);
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
+
+  const today = _todayStr || new Date().toISOString().slice(0, 10);
+  const tomorrow = addDays(today, 1);
+  const dow = getDayOfWeek(today);
+  const daysToNextMonday = ((1 - dow + 7) % 7) || 7;
+  const nextMonday = addDays(today, daysToNextMonday);
+  const upcomingClasses = getUpcomingClasses(subjects, today);
 
   const set = (k: keyof ReminderFormValues) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -132,7 +146,73 @@ export function ReminderForm({
       </div>
 
       {/* GRUPO 2: Fecha y Hora */}
-      <span className="io-form__label">Cuándo</span>
+      <div style={{ margin: '18px 20px 8px' }}>
+        <span className="io-form__label" style={{ margin: 0, display: 'block', marginBottom: 8 }}>Cuándo</span>
+
+        {/* Píldoras de fecha rápida */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          {[
+            { label: 'Hoy', date: today },
+            { label: 'Mañana', date: tomorrow },
+            { label: 'Próximo lunes', date: nextMonday },
+          ].map((chip) => {
+            const isSel = values.occursOn === chip.date;
+            return (
+              <button
+                key={chip.label}
+                type="button"
+                className="io-chip io-press"
+                onClick={() => setValues((v) => ({ ...v, occursOn: chip.date }))}
+                style={{
+                  height: 28,
+                  padding: '0 12px',
+                  fontSize: 13,
+                  fontWeight: isSel ? 600 : 500,
+                  background: isSel ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+                  color: isSel ? 'var(--io-on-tint)' : 'var(--io-label-2)',
+                  border: isSel ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+                }}
+              >
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Conexión inteligente con clases del horario */}
+        {upcomingClasses.length > 0 ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {upcomingClasses.map((cls) => {
+              const isSel = values.occursOn === cls.nextDate;
+              return (
+                <button
+                  key={cls.title}
+                  type="button"
+                  className="io-chip io-press"
+                  onClick={() => setValues((v) => ({ ...v, occursOn: cls.nextDate, occursAt: cls.time || v.occursAt }))}
+                  style={{
+                    height: 28,
+                    padding: '0 10px',
+                    fontSize: 12,
+                    fontWeight: isSel ? 600 : 500,
+                    background: isSel ? 'var(--io-tint-soft)' : 'var(--io-cell-up)',
+                    color: isSel ? 'var(--io-tint)' : 'var(--io-label-2)',
+                    border: isSel ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <span style={{ opacity: 0.7 }}>Próx. clase:</span>
+                  <strong>{cls.title}</strong>
+                  <span style={{ opacity: 0.8 }}>({cls.dayLabel})</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+
       <div className="io-group">
         <div className="io-field io-field--row">
           <label className="io-field__label" htmlFor="rem-date">Fecha</label>

@@ -5,7 +5,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getProfileTimezone } from '@/lib/profile';
-import { getTaskDetail } from '@/lib/planner-data';
+import { getTaskDetail, getScheduleSubjects } from '@/lib/planner-data';
 import { DeskSidebar } from '@/components/fd4/DeskSidebar';
 import { BackButton } from '@/components/planner/BackButton';
 import { TaskForm } from '@/components/planner/TaskForm';
@@ -21,7 +21,10 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   if (!user) redirect('/entrar');
 
   const timezone = await getProfileTimezone(supabase, user.id);
-  const task = await getTaskDetail(supabase, user.id, id, timezone);
+  const [task, subjects] = await Promise.all([
+    getTaskDetail(supabase, user.id, id, timezone),
+    getScheduleSubjects(supabase, user.id),
+  ]);
   if (!task) notFound();
 
   const statusLabel =
@@ -44,6 +47,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           status={task.status}
           todayStr={task.todayStr}
           reminders={task.reminders}
+          subjects={subjects}
           fallback="/pendientes"
           initial={{
             title: task.title,

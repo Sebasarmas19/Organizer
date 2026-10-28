@@ -73,25 +73,56 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  /* 2. Validar autorización con comparación en tiempo constante */
+  /* 2. Validar autorización con comparación en tiempo constante o hash de token */
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
   const providedToken = authHeader.slice(7).trim();
-  let expectedToken: string;
-  try {
-    expectedToken = captureToken();
-  } catch {
-    return NextResponse.json(
-      { error: 'CAPTURE_TOKEN no está configurado en el servidor' },
-      { status: 500 }
-    );
+  if (!providedToken) {
+    return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
   }
 
-  if (!timingSafeCompare(providedToken, expectedToken)) {
-    return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+  // Calcular SHA-256 del token provisto
+  const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(providedToken))
+    .then((buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join(''));
+
+  const admin = createAdminClient();
+
+  // Buscar si algún perfil tiene este capture_token_hash asignado
+  let profile: { id: string; timezone?: string | null } | null = null;
+  const { data: matchedProfile } = await admin
+    .from('profiles')
+    .select('id, timezone')
+    .eq('capture_token_hash', tokenHash)
+    .maybeSingle();
+
+  if (matchedProfile) {
+    profile = matchedProfile;
+  } else {
+    // Si no hay token individual registrado, validar contra CAPTURE_TOKEN del sistema
+    let expectedToken: string;
+    try {
+      expectedToken = captureToken();
+    } catch {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    if (!timingSafeCompare(providedToken, expectedToken)) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    const { data: ownerProfile, error: pErr } = await admin
+      .from('profiles')
+      .select('id, timezone')
+      .limit(1)
+      .maybeSingle();
+
+    if (pErr || !ownerProfile) {
+      return NextResponse.json({ error: 'No se encontró el usuario en profiles' }, { status: 500 });
+    }
+    profile = ownerProfile;
   }
 
   /* 3. Parsear y validar el cuerpo JSON */
@@ -123,21 +154,6 @@ export async function POST(request: NextRequest) {
   }
 
   /* 4. El dueño y su zona horaria: "mañana" depende de dónde estés. */
-  const admin = createAdminClient();
-
-  const { data: profile, error: profileError } = await admin
-    .from('profiles')
-    .select('id, timezone')
-    .limit(1)
-    .maybeSingle();
-
-  if (profileError || !profile) {
-    return NextResponse.json(
-      { error: 'No se encontró el usuario en profiles' },
-      { status: 500 }
-    );
-  }
-
   const timezone = profile.timezone || 'America/Caracas';
   const nowIso = new Date().toISOString();
   const today = localDateOf(nowIso, timezone);

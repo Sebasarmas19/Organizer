@@ -136,6 +136,7 @@ export interface DispatchEnvironment {
    * Next (usa supabase-js); sin ella, la mañana usa lo que ya haya.
    */
   materialize?: (userId: string, from: string, to: string, timezone: string) => Promise<void>;
+  advanceReminders?: (userId: string, todayStr: string) => Promise<void>;
 }
 
 export interface DispatchReport {
@@ -178,6 +179,14 @@ export async function dispatchDue(env: DispatchEnvironment): Promise<DispatchRep
         await env.materialize(profile.id, local.date, shiftDate(local.date, 14), profile.timezone);
       } catch (error) {
         report.skipped.push('materialize (' + (error instanceof Error ? error.message : 'error') + ')');
+      }
+    }
+
+    if (env.advanceReminders && isMorning) {
+      try {
+        await env.advanceReminders(profile.id, local.date);
+      } catch (error) {
+        report.skipped.push('advanceReminders (' + (error instanceof Error ? error.message : 'error') + ')');
       }
     }
 
@@ -239,6 +248,8 @@ export async function dispatchDue(env: DispatchEnvironment): Promise<DispatchRep
       await deliver(env, profile.id, 'before', notice.dedupeKey, notice.text, report, {
         url: notice.url,
         tag: notice.dedupeKey,
+        itemId: notice.itemId,
+        blockId: notice.blockId,
       });
     }
   }
@@ -346,7 +357,7 @@ async function deliver(
   dedupeKey: string,
   text: NotificationText,
   report: DispatchReport,
-  options: { url?: string; tag?: string } = {}
+  options: { url?: string; tag?: string; itemId?: string | null; blockId?: string | null } = {}
 ): Promise<void> {
   /* 1 · la clave primero. Si ya estaba, otra pasada del cron gano la carrera. */
   const claim = await insertUnique(env.db, 'notification_log', {
@@ -380,6 +391,8 @@ async function deliver(
        apilarse (decision 33). */
     tag: options.tag ?? kind,
     url: options.url ?? '/',
+    itemId: options.itemId ?? null,
+    blockId: options.blockId ?? null,
   };
 
   let delivered = 0;
@@ -814,13 +827,13 @@ async function buildBeforeBlocks(
   env: DispatchEnvironment,
   profile: NotifyProfile,
   now: Date
-): Promise<{ dedupeKey: string; text: NotificationText; url: string }[]> {
+): Promise<{ dedupeKey: string; text: NotificationText; url: string; itemId?: string | null; blockId?: string }[]> {
   const from = now.toISOString();
   const to = new Date(now.getTime() + 121 * 60000).toISOString();
   const blocks = await select<BeforeBlockRow>(
     env.db,
     'blocks?user_id=eq.' + profile.id +
-      '&status=eq.pending&reminder_min=not.is.null&source=neq.template' +
+      '&status=eq.pending&reminder_min=not.is.null' +
       '&starts_at=gt.' + encodeURIComponent(from) +
       '&starts_at=lte.' + encodeURIComponent(to) +
       '&order=starts_at.asc' +
@@ -828,7 +841,6 @@ async function buildBeforeBlocks(
   );
 
   const due = blocks
-    .filter((block) => block.source !== 'template')
     .map((block) => ({ block, left: minutesBeforeStart(now, block.starts_at, block.reminder_min) }))
     .filter((x): x is { block: BeforeBlockRow; left: number } => x.left !== null);
   if (due.length === 0) return [];
@@ -865,6 +877,8 @@ async function buildBeforeBlocks(
         : block.item_id
           ? '/tareas/' + block.item_id
           : '/calendario?v=dia&d=' + date,
+      itemId: block.item_id,
+      blockId: block.id,
     };
   });
 }

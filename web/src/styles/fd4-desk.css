@@ -388,9 +388,39 @@
     padding-top: 6px;
   }
 
-  /* Pendientes: el reparto a dos columnas de Tareas (clasificador a la
-     izquierda, grupos a la derecha) vive en focus.css. Recordatorios sigue
-     en dos columnas: los grupos son cortos e independientes entre si. */
+  /* Pendientes: Tareas se reparte a 2 columnas (grupos a la izquierda, triage y completadas a la derecha) */
+  .fd-pend__body--tareas {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-areas:
+      "addbar addbar"
+      "groups triage"
+      "groups completed";
+    column-gap: 32px;
+    row-gap: 20px;
+    align-items: start;
+    max-width: var(--desk-max);
+  }
+
+  .fd-pend__body--tareas .pl-addbar {
+    grid-area: addbar;
+  }
+
+  .fd-pend__body--tareas .fd-pend__groups {
+    grid-area: groups;
+  }
+
+  .fd-pend__body--tareas .fd-pend__triage {
+    grid-area: triage;
+    position: sticky;
+    top: 20px;
+  }
+
+  .fd-pend__body--tareas .fd-completed {
+    grid-area: completed;
+  }
+
+  /* Recordatorios sigue en dos columnas: los grupos son cortos e independientes entre si. */
   .fd-pend__body:not(.fd-pend__body--tareas) {
     max-width: var(--desk-max);
     columns: 2;
@@ -794,5 +824,20 @@
   .fd-placeholder {
     max-width: var(--content-max);
     margin-inline: auto;
+  }
+
+  /* Recursos en escritorio: 2 columnas limpias */
+  .fd-recursos__grid,
+  .fd-card--list .fd-card__body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .fd-card--list .fd-card__body > .fd-resitem {
+    border-bottom: 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
   }
 }

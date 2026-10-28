@@ -17,7 +17,30 @@ import { Icon } from '@/components/Icon';
 const VISIBLE = 5;
 
 export function TaskGroupCard({ label, items }: { label: string; items: TaskRowData[] }) {
-  const [open, setOpen] = useState(false);
+  const storageKey = `organizer:group:${label}`;
+  const [open, setOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return sessionStorage.getItem(storageKey) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleOpen = () => {
+    setOpen(true);
+    try {
+      sessionStorage.setItem(storageKey, 'true');
+    } catch {}
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    try {
+      sessionStorage.setItem(storageKey, 'false');
+    } catch {}
+  };
+
   const shown = open ? items : items.slice(0, VISIBLE);
   const hidden = items.length - shown.length;
 
@@ -33,9 +56,14 @@ export function TaskGroupCard({ label, items }: { label: string; items: TaskRowD
             <TaskRow key={t.id} task={t} roomy />
           ))}
           {hidden > 0 ? (
-            <button type="button" className="fd-more" onClick={() => setOpen(true)}>
+            <button type="button" className="fd-more" onClick={handleOpen}>
               <span>Ver el resto</span>
               <Icon name="chevron-right" size="sm" className="fd-more__chev" />
+            </button>
+          ) : open && items.length > VISIBLE ? (
+            <button type="button" className="fd-more" onClick={handleClose}>
+              <span>Ver menos</span>
+              <Icon name="chevron-left" size="sm" className="fd-more__chev" />
             </button>
           ) : null}
         </div>

@@ -38,6 +38,17 @@ export async function saveScheduleTemplatesAction(payload: {
   const timezone = await getProfileTimezone(supabase, user.id);
   const todayStr = getTodayString(timezone);
 
+  /* Guardamos los context_id asociados a cada materia para no destruirlos al guardar */
+  const { data: oldTemplates } = await supabase
+    .from('schedule_templates')
+    .select('title, context_id')
+    .eq('user_id', user.id);
+
+  const contextMap = new Map<string, string | null>();
+  (oldTemplates ?? []).forEach((ot) => {
+    if (ot.context_id) contextMap.set(ot.title.trim().toLowerCase(), ot.context_id);
+  });
+
   /* 1 · Las clases de hoy en adelante se regeneran desde cero. Sin esto, al
      borrar las plantillas viejas sus bloques quedaban huérfanos
      (`template_id = null`) y el calendario mostraba cada clase dos veces.
@@ -61,6 +72,7 @@ export async function saveScheduleTemplatesAction(payload: {
     end_time: t.endTime.length === 5 ? `${t.endTime}:00` : t.endTime,
     location: t.location?.trim() || null,
     reminder_min: t.reminderMin ?? null,
+    context_id: contextMap.get(t.title.trim().toLowerCase()) ?? null,
     active_from: payload.activeFrom,
     active_until: payload.activeUntil || null,
   }));

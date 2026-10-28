@@ -14,13 +14,22 @@
    ========================================================================= */
 
 // Dynamic import in syncOfflineActions keeps client bundle light and testable
-export type OfflineActionType = 'toggle_task' | 'delete_task' | 'move_task' | 'unschedule_task';
+export type OfflineActionType = 'toggle_task' | 'delete_task' | 'move_task' | 'unschedule_task' | 'create_task';
+
+export type CreateTaskPayload = {
+  title: string;
+  dueOn?: string | null;
+  reminderId?: string | null;
+  contextId?: string | null;
+  estimateMin?: number | null;
+};
 
 export type OfflineAction =
   | { id: string; type: 'toggle_task'; taskId: string; done: boolean; timestamp: number }
   | { id: string; type: 'delete_task'; taskId: string; timestamp: number }
   | { id: string; type: 'move_task'; taskId: string; dateStr: string | null; timestamp: number }
-  | { id: string; type: 'unschedule_task'; taskId: string; timestamp: number };
+  | { id: string; type: 'unschedule_task'; taskId: string; timestamp: number }
+  | { id: string; type: 'create_task'; input: CreateTaskPayload; timestamp: number };
 
 const QUEUE_STORAGE_KEY = 'organizer:offline-actions-v1';
 
@@ -29,6 +38,7 @@ export type SyncExecutor = {
   deleteTask: (id: string) => Promise<unknown>;
   moveTaskToDate: (id: string, dateStr: string | null) => Promise<unknown>;
   unscheduleTask?: (id: string) => Promise<unknown>;
+  createTask?: (input: CreateTaskPayload) => Promise<unknown>;
 };
 
 let customSyncExecutor: SyncExecutor | null = null;
@@ -110,16 +120,21 @@ function removeActionFromQueue(actionId: string): void {
 export function enqueueOfflineAction(action: OfflineAction): void {
   const current = getOfflineQueue();
 
+  if (action.type === 'create_task') {
+    saveOfflineQueue([...current, action]);
+    return;
+  }
+
   // Deduplicación inteligente:
   // 1. Si se va a borrar una tarea, elimina cualquier acción previa de esa tarea (toggles, movimientos, borrados) y encola el borrado.
   if (action.type === 'delete_task') {
-    const filtered = current.filter((a) => a.taskId !== action.taskId);
+    const filtered = current.filter((a) => !('taskId' in a) || a.taskId !== action.taskId);
     saveOfflineQueue([...filtered, action]);
     return;
   }
 
   // Si la tarea ya tiene un delete_task pendiente en la cola, no tiene sentido hacer toggle, move o unschedule
-  const isAlreadyDeleted = current.some((a) => a.taskId === action.taskId && a.type === 'delete_task');
+  const isAlreadyDeleted = current.some((a) => 'taskId' in a && a.taskId === action.taskId && a.type === 'delete_task');
   if (isAlreadyDeleted) {
     return;
   }
@@ -127,7 +142,7 @@ export function enqueueOfflineAction(action: OfflineAction): void {
   // 2. Si se cambia el estado de una tarea repetidamente (on/off), actualiza la última acción de toggle.
   if (action.type === 'toggle_task') {
     const existingIndex = current.findIndex(
-      (a) => a.taskId === action.taskId && a.type === 'toggle_task'
+      (a) => 'taskId' in a && a.taskId === action.taskId && a.type === 'toggle_task'
     );
     if (existingIndex >= 0) {
       const updated = [...current];
@@ -140,7 +155,7 @@ export function enqueueOfflineAction(action: OfflineAction): void {
   // 3. Si se mueve la misma tarea de fecha múltiples veces, reemplaza el movimiento previo.
   if (action.type === 'move_task') {
     const existingIndex = current.findIndex(
-      (a) => a.taskId === action.taskId && (a.type === 'move_task' || a.type === 'unschedule_task')
+      (a) => 'taskId' in a && a.taskId === action.taskId && (a.type === 'move_task' || a.type === 'unschedule_task')
     );
     if (existingIndex >= 0) {
       const updated = [...current];
@@ -153,7 +168,7 @@ export function enqueueOfflineAction(action: OfflineAction): void {
   // 4. Si se desplanifica una tarea, reemplaza movimiento o desplanificación previa.
   if (action.type === 'unschedule_task') {
     const existingIndex = current.findIndex(
-      (a) => a.taskId === action.taskId && (a.type === 'move_task' || a.type === 'unschedule_task')
+      (a) => 'taskId' in a && a.taskId === action.taskId && (a.type === 'move_task' || a.type === 'unschedule_task')
     );
     if (existingIndex >= 0) {
       const updated = [...current];
@@ -230,6 +245,13 @@ export async function syncOfflineActions(executor?: SyncExecutor): Promise<{ syn
             await actions.unscheduleTask(action.taskId);
           } else {
             await actions.moveTaskToDate(action.taskId, null);
+          }
+        } else if (action.type === 'create_task') {
+          if (actions && 'createTask' in actions && typeof (actions as { createTask?: unknown }).createTask === 'function') {
+            await (actions as { createTask: (input: CreateTaskPayload) => Promise<unknown> }).createTask(action.input);
+          } else {
+            const { createTask } = await import('@/lib/planner-actions');
+            await createTask(action.input);
           }
         }
 
@@ -399,6 +421,43 @@ export async function safeUnscheduleTask(id: string): Promise<boolean> {
         id: `act_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         type: 'unschedule_task',
         taskId: id,
+        timestamp: Date.now(),
+      });
+      return true;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Crea una tarea. Si está offline, la encola y retorna éxito
+ * para que la UI mantenga el estado optimista.
+ */
+export async function safeCreateTask(input: CreateTaskPayload): Promise<boolean> {
+  if (!isNetworkOnline()) {
+    enqueueOfflineAction({
+      id: `act_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      type: 'create_task',
+      input,
+      timestamp: Date.now(),
+    });
+    return true;
+  }
+
+  try {
+    if (customSyncExecutor?.createTask) {
+      await customSyncExecutor.createTask(input);
+    } else {
+      const { createTask } = await import('@/lib/planner-actions');
+      await createTask(input);
+    }
+    return true;
+  } catch (err) {
+    if (isNetworkFailure(err)) {
+      enqueueOfflineAction({
+        id: `act_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        type: 'create_task',
+        input,
         timestamp: Date.now(),
       });
       return true;

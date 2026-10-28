@@ -12,6 +12,7 @@ import { dispatchDue, type DispatchEnvironment } from '@/lib/push/server/dispatc
 import { timingSafeCompare } from '@/lib/security';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { materializeScheduleTemplates } from '@/lib/calendar';
+import { advancePastRecurringReminders } from '@/lib/planner-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,8 @@ async function handleCron(request: NextRequest) {
        para que la notificación las traiga aunque nadie abra el calendario. */
     materialize: (userId, from, to, timezone) =>
       materializeScheduleTemplates(admin, userId, from, to, timezone),
+    advanceReminders: (userId, todayStr) =>
+      advancePastRecurringReminders(admin, userId, todayStr),
   };
 
   try {

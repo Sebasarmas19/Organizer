@@ -174,7 +174,38 @@ export async function moveTaskToDate(id: string, dateStr: string | null) {
   if (error) throw new Error(error.message);
 
   /* Si tenia hora, esa hora era de OTRO dia. Se suelta en vez de arrastrarla:
-     la tarea queda "sin hora" en su nuevo dia y se le pone hora si hace falta. */
+     la tarea queda "sin hora" en su nuevo dia, pero preservamos su duración estimada (estimate_min). */
+  const { data: existingBlock } = await supabase
+    .from('blocks')
+    .select('starts_at, ends_at')
+    .eq('item_id', id)
+    .eq('user_id', user.id)
+    .eq('source', 'manual')
+    .eq('status', 'pending')
+    .maybeSingle();
+
+  if (existingBlock?.starts_at && existingBlock?.ends_at) {
+    const diffMin = Math.round(
+      (new Date(existingBlock.ends_at).getTime() - new Date(existingBlock.starts_at).getTime()) / 60000
+    );
+    if (diffMin > 0) {
+      const { data: currentItem } = await supabase
+        .from('items')
+        .select('estimate_min')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (currentItem && (!currentItem.estimate_min || currentItem.estimate_min <= 0)) {
+        await supabase
+          .from('items')
+          .update({ estimate_min: diffMin })
+          .eq('id', id)
+          .eq('user_id', user.id);
+      }
+    }
+  }
+
   await supabase
     .from('blocks')
     .delete()

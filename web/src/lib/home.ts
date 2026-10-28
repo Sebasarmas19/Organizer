@@ -17,7 +17,6 @@ import {
   getTodayString,
   parseDateString,
 } from './date-utils';
-import { advancePastRecurringReminders } from './planner-actions';
 
 export type HomeTask = {
   id: string;
@@ -243,8 +242,6 @@ export async function getHomeData(
   const dayStartUTC = range.start;
   const dayEndUTC = new Date(Date.parse(range.end) - 1).toISOString();
 
-  await advancePastRecurringReminders(supabase, userId, todayStr);
-
   const [blocksRes, itemsRes, remindersRes, contextsRes, doneRes, reviewRes] = await Promise.all([
     /* Bloques de hoy que son de una tarea manual */
     supabase
@@ -386,7 +383,6 @@ export async function getHomeData(
   /* ------------------------------------------------------------- ayer --- */
   const ayer: OverdueTask[] = items
     .filter((t) => t.due_on !== null && t.due_on < todayStr && t.status !== 'done')
-    .slice(0, 4)
     .map((t) => ({
       id: t.id,
       title: t.title,

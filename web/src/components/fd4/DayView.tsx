@@ -15,7 +15,8 @@ import type { Fd4DayData, DayBlockView, DayNoHourTask } from '@/lib/fd4-calendar
 import { DAY_HOURS, HOUR_PX } from '@/lib/fd4-calendar';
 import { Check, Flag } from './Marks';
 import { Icon } from '@/components/Icon';
-import { toggleBlockTask, toggleTask } from '@/lib/fd4-actions';
+import { toggleBlockTask } from '@/lib/fd4-actions';
+import { safeToggleTask } from '@/lib/offline-sync';
 import { CreateTaskSheet } from '@/components/planner/CreateTaskSheet';
 import { CreateReminderSheet } from '@/components/planner/CreateReminderSheet';
 import { TaskDetailSheet } from '@/components/planner/TaskDetailSheet';
@@ -49,7 +50,7 @@ export function DayView({ data }: { data: Fd4DayData }) {
     const next = !doneNoHourIds[t.id];
     startTransition(async () => {
       toggleDoneNoHour({ id: t.id, done: next });
-      await toggleTask(t.id, next);
+      await safeToggleTask(t.id, next);
     });
   };
 
@@ -238,7 +239,11 @@ export function DayView({ data }: { data: Fd4DayData }) {
                   style={{ top: rail(c.top), height: rail(c.height) }}
                   aria-hidden
                 >
-                  {c.height >= 24 ? <span>En clase</span> : null}
+                  {c.height >= 20 ? (
+                    <span className="truncate">
+                      {c.title ? `${c.title}${c.location ? ' · ' + c.location : ''}` : 'En clase'}
+                    </span>
+                  ) : null}
                 </div>
               ))}
 

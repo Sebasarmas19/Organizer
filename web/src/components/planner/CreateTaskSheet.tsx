@@ -13,7 +13,9 @@ import { useRouter } from 'next/navigation';
 import { Sheet } from '@/components/ios/Sheet';
 import { Glyph } from '@/components/ios/Glyph';
 import { createTask } from '@/lib/planner-actions';
-import type { ReminderOption } from '@/lib/planner-data';
+import type { ReminderOption, ScheduleSubject } from '@/lib/planner-data';
+import { getUpcomingClasses } from '@/lib/planner-data';
+import { addDays, getDayOfWeek } from '@/lib/date-utils';
 
 const DURATIONS = [
   { value: 30, label: '30 min' },
@@ -37,6 +39,7 @@ export function CreateTaskSheet({
   onClose,
   todayStr: _todayStr,
   reminders = [],
+  subjects = [],
   initialDate = '',
   initialTime = '',
   initialReminderId = '',
@@ -46,6 +49,7 @@ export function CreateTaskSheet({
   onClose: () => void;
   todayStr: string;
   reminders?: ReminderOption[];
+  subjects?: ScheduleSubject[];
   initialDate?: string;
   initialTime?: string;
   initialReminderId?: string;
@@ -61,6 +65,13 @@ export function CreateTaskSheet({
   const [reminderId, setReminderId] = useState(initialReminderId);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  const today = _todayStr || new Date().toISOString().slice(0, 10);
+  const tomorrow = addDays(today, 1);
+  const dow = getDayOfWeek(today);
+  const daysToNextMonday = ((1 - dow + 7) % 7) || 7;
+  const nextMonday = addDays(today, daysToNextMonday);
+  const upcomingClasses = getUpcomingClasses(subjects, today);
 
   const reset = () => {
     setTitle('');
@@ -138,27 +149,95 @@ export function CreateTaskSheet({
         </div>
 
         {/* GRUPO 2: Planificación y Fecha */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '18px 24px 8px' }}>
-          <span className="io-form__label" style={{ margin: 0 }}>Cuándo</span>
-          <button
-            type="button"
-            className="io-chip io-press"
-            aria-pressed={!dueOn}
-            onClick={() => {
-              setDueOn('');
-              setTime('');
-            }}
-            style={{
-              height: 28,
-              padding: '0 12px',
-              fontSize: 13,
-              fontWeight: 600,
-              background: !dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
-              color: !dueOn ? 'var(--io-on-tint)' : 'var(--io-label-2)',
-            }}
-          >
-            Sin fecha
-          </button>
+        <div style={{ margin: '18px 24px 8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span className="io-form__label" style={{ margin: 0 }}>Cuándo</span>
+            <button
+              type="button"
+              className="io-chip io-press"
+              aria-pressed={!dueOn}
+              onClick={() => {
+                setDueOn('');
+                setTime('');
+              }}
+              style={{
+                height: 28,
+                padding: '0 12px',
+                fontSize: 13,
+                fontWeight: 600,
+                background: !dueOn ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+                color: !dueOn ? 'var(--io-on-tint)' : 'var(--io-label-2)',
+              }}
+            >
+              Sin fecha
+            </button>
+          </div>
+
+          {/* Píldoras de fecha rápida */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            {[
+              { label: 'Hoy', date: today },
+              { label: 'Mañana', date: tomorrow },
+              { label: 'Próximo lunes', date: nextMonday },
+            ].map((chip) => {
+              const isSel = dueOn === chip.date;
+              return (
+                <button
+                  key={chip.label}
+                  type="button"
+                  className="io-chip io-press"
+                  onClick={() => setDueOn(chip.date)}
+                  style={{
+                    height: 28,
+                    padding: '0 12px',
+                    fontSize: 13,
+                    fontWeight: isSel ? 600 : 500,
+                    background: isSel ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+                    color: isSel ? 'var(--io-on-tint)' : 'var(--io-label-2)',
+                    border: isSel ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+                  }}
+                >
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Conexión inteligente con clases del horario */}
+          {upcomingClasses.length > 0 ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+              {upcomingClasses.map((cls) => {
+                const isSel = dueOn === cls.nextDate;
+                return (
+                  <button
+                    key={cls.title}
+                    type="button"
+                    className="io-chip io-press"
+                    onClick={() => {
+                      setDueOn(cls.nextDate);
+                      setTime(cls.time);
+                    }}
+                    style={{
+                      height: 28,
+                      padding: '0 10px',
+                      fontSize: 12,
+                      fontWeight: isSel ? 600 : 500,
+                      background: isSel ? 'var(--io-tint-soft)' : 'var(--io-cell-up)',
+                      color: isSel ? 'var(--io-tint)' : 'var(--io-label-2)',
+                      border: isSel ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span style={{ opacity: 0.7 }}>Próx. clase:</span>
+                    <strong>{cls.title}</strong>
+                    <span style={{ opacity: 0.8 }}>({cls.dayLabel})</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
 
         <div className="io-group">
@@ -255,17 +334,44 @@ export function CreateTaskSheet({
                     <label htmlFor="task-sheet-dur" className="io-field__label">
                       Duración
                     </label>
-                    <select
-                      id="task-sheet-dur"
-                      value={durationMin}
-                      onChange={(e) => setDurationMin(Number(e.target.value))}
-                    >
-                      {DURATIONS.map((d) => (
-                        <option key={d.value} value={d.value}>
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {[
+                          { value: 30, label: '30m' },
+                          { value: 60, label: '1h' },
+                          { value: 120, label: '2h' },
+                        ].map((chip) => (
+                          <button
+                            key={chip.value}
+                            type="button"
+                            className="io-chip io-press"
+                            onClick={() => setDurationMin(chip.value)}
+                            style={{
+                              height: 26,
+                              padding: '0 8px',
+                              fontSize: 12,
+                              fontWeight: durationMin === chip.value ? 600 : 500,
+                              background: durationMin === chip.value ? 'var(--io-tint-fill)' : 'var(--io-cell-up)',
+                              color: durationMin === chip.value ? 'var(--io-on-tint)' : 'var(--io-label-2)',
+                              border: durationMin === chip.value ? '1px solid var(--io-tint)' : '1px solid var(--io-sep)',
+                            }}
+                          >
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                      <select
+                        id="task-sheet-dur"
+                        value={durationMin}
+                        onChange={(e) => setDurationMin(Number(e.target.value))}
+                      >
+                        {DURATIONS.map((d) => (
+                          <option key={d.value} value={d.value}>
+                            {d.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="io-field io-field--row">
                     <label htmlFor="task-sheet-remind" className="io-field__label">

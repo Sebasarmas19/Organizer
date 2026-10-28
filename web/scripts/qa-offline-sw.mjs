@@ -478,10 +478,10 @@ await runTest('6. Navigation & RSC (Network-First + Offline Cache Fallback)', as
   assert(Boolean(navTareasOffline), 'Navigation handled while offline');
   assert((await navTareasOffline.text()).includes('Tareas en vivo'), 'Successfully served cached /tareas while completely offline');
 
-  // Scenario 4: OFFLINE - User navigates to /unknown-page (never visited offline fallback to root '/')
+  // Scenario 4: OFFLINE - User navigates to /unknown-page (never visited -> clean offline page without cross-route hydration mismatch)
   const navUnknownOffline = await makeNavRequest('https://organizer.local/ajustes');
   assert(Boolean(navUnknownOffline), 'Unvisited route falls back gracefully');
-  assert((await navUnknownOffline.text()).includes('Inicio en vivo'), 'Unvisited route falls back to cached root /');
+  assert((await navUnknownOffline.text()).includes('Modo sin conexión'), 'Unvisited route falls back to clean offline page');
 
   // Scenario 5: OFFLINE - Cold start with empty cache shows offline card
   const emptyEnv = createSwEnvironment();

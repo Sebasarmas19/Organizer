@@ -504,6 +504,28 @@ export function ReminderDetailSheet({
             Ver este día en el calendario
           </Link>
 
+          <button
+            type="button"
+            className="io-btn io-press"
+            disabled={isPending}
+            onClick={() => {
+              if (!reminderId) return;
+              startTransition(async () => {
+                const { markReminderCompletedAction } = await import('@/lib/planner-actions');
+                await markReminderCompletedAction(reminderId);
+                onClose();
+              });
+            }}
+            style={{
+              background: 'var(--io-tint-fill)',
+              color: 'var(--io-on-tint)',
+              fontWeight: 600,
+              minHeight: 44,
+            }}
+          >
+            ✓ Ya lo entregué / Listo
+          </button>
+
           {confirmDelete ? (
             <button
               type="button"

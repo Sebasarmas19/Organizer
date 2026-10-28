@@ -27,6 +27,7 @@ export type TaskRowData = {
   rem?: string;
   done: boolean;
   isOverdue?: boolean;
+  overdueLabel?: string;
 };
 
 export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: boolean }) {
@@ -87,7 +88,11 @@ export function TaskRow({ task, roomy = false }: { task: TaskRowData; roomy?: bo
             className="fd-task__title"
             style={done ? { color: 'var(--text-faint)', textDecoration: 'line-through' } : undefined}
           >
-            {task.isOverdue && !done ? <span className="fd-task__overdue-tag">Atrasada</span> : null}
+            {task.isOverdue && !done ? (
+              <span className="fd-task__overdue-tag">
+                {task.overdueLabel || 'Atrasada'}
+              </span>
+            ) : null}
             {task.title}
           </span>
           {task.meta ? <span className="fd-meta">{task.meta}</span> : null}

@@ -570,6 +570,16 @@ body {
   caret-color: var(--io-tint);
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+}
+
+button,
+.io-btn,
+.io-tab,
+.io-fab,
+.tapicon,
+.taptext,
+.hl-ringbtn,
+.io-chip {
   -webkit-user-select: none;
   user-select: none;
 }
@@ -593,15 +603,6 @@ textarea,
   -webkit-touch-callout: default;
   -webkit-user-select: text;
   user-select: text;
-}
-
-/* En Apple, SF Pro ya ajusta el espaciado por tamano (Text y Display). Un
-   letter-spacing a mano encima lo estropea: se anula en todo. */
-@supports (font: -apple-system-body) {
-  body,
-  body * {
-    letter-spacing: normal !important;
-  }
 }
 
 /* El selector de tema de Ajustes es un segmentado: capsula fuera y dentro. */
@@ -3219,14 +3220,31 @@ a.hl-dg::after,
 
 /* Reducción de movimiento */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
   ::view-transition-group(root),
   ::view-transition-old(root),
   ::view-transition-new(root),
   .ios-page-wrap {
-    animation-duration: 100ms !important;
-    animation-name: ios-tab-new !important;
+    animation-duration: 0.01ms !important;
+    animation-name: none !important;
     transform: none !important;
     filter: none !important;
+  }
+
+  .io-sheet {
+    transition: none !important;
+  }
+
+  .io-scrim {
+    transition: none !important;
   }
 }
 
