@@ -44,20 +44,17 @@ export type ExportSchedulePayload = {
 /* -------------------------------------------------- Constructores de datos */
 
 export function buildWeekExportPayload(data: Fd4WeekData): ExportSchedulePayload {
-  let totalClasses = 0;
   let totalReminders = 0;
   let totalTasks = 0;
 
   const days: ExportScheduleDay[] = data.days.map((d) => {
-    const classes = d.classes ?? [];
     const reminders = d.allReminders ?? (d.reminder ? [d.reminder] : []);
     const tasks = d.tasks ?? [];
 
-    totalClasses += classes.length;
     totalReminders += reminders.length;
     totalTasks += tasks.length;
 
-    const isFree = classes.length === 0 && reminders.length === 0 && tasks.length === 0;
+    const isFree = reminders.length === 0 && tasks.length === 0;
 
     return {
       dateStr: d.dateStr,
@@ -65,24 +62,30 @@ export function buildWeekExportPayload(data: Fd4WeekData): ExportSchedulePayload
       hint: d.hint,
       isToday: d.isToday,
       free: isFree,
-      classes,
+      classes: [], // Sin materias (solo mantener tareas y evaluaciones en la exportación de agenda)
       reminders,
       tasks,
     };
   });
 
+  const remindersLabel = `${totalReminders} ${totalReminders === 1 ? 'evaluación' : 'evaluaciones'}`;
+  const tasksLabel = `${totalTasks} ${totalTasks === 1 ? 'tarea' : 'tareas'}`;
+  const subtitle =
+    totalReminders === 0 && totalTasks === 0
+      ? 'Semana completamente despejada'
+      : `${remindersLabel} · ${tasksLabel}`;
+
   return {
     view: 'semana',
     title: `Semana: ${data.title}`,
-    subtitle: `${totalReminders} evaluaciones · ${totalClasses} clases · ${totalTasks} tareas`,
+    subtitle,
     period: data.title,
     days,
-    summary: { totalClasses, totalReminders, totalTasks },
+    summary: { totalClasses: 0, totalReminders, totalTasks },
   };
 }
 
 export function buildDayExportPayload(data: Fd4DayData): ExportSchedulePayload {
-  const classes = data.classes ?? [];
   const reminders = data.allReminders ?? (data.bands ? data.bands.map((b) => ({ title: b.title, hora: b.meta })) : []);
   const taskBlocks = data.blocks
     .filter((b) => b.kind === 'task')
@@ -90,15 +93,20 @@ export function buildDayExportPayload(data: Fd4DayData): ExportSchedulePayload {
   const looseTasks = data.noHour.map((t) => ({ title: t.title, hora: '' }));
   const tasks = [...taskBlocks, ...looseTasks];
 
-  const totalClasses = classes.length;
   const totalReminders = reminders.length;
   const totalTasks = tasks.length;
-  const isFree = totalClasses === 0 && totalReminders === 0 && totalTasks === 0;
+  const isFree = totalReminders === 0 && totalTasks === 0;
+
+  const remindersLabel = `${totalReminders} ${totalReminders === 1 ? 'evaluación' : 'evaluaciones'}`;
+  const tasksLabel = `${totalTasks} ${totalTasks === 1 ? 'tarea' : 'tareas'}`;
+  const subtitle = isFree
+    ? 'Día completamente despejado'
+    : `${remindersLabel} · ${tasksLabel}`;
 
   return {
     view: 'dia',
     title: `Agenda: ${data.title}`,
-    subtitle: data.sub || 'Día completo',
+    subtitle: data.sub ? `${data.sub} · ${subtitle}` : subtitle,
     period: data.title,
     days: [
       {
@@ -106,12 +114,12 @@ export function buildDayExportPayload(data: Fd4DayData): ExportSchedulePayload {
         label: data.title,
         isToday: data.isToday,
         free: isFree,
-        classes,
+        classes: [], // Sin materias (solo mantener tareas y evaluaciones en la exportación de agenda)
         reminders,
         tasks,
       },
     ],
-    summary: { totalClasses, totalReminders, totalTasks },
+    summary: { totalClasses: 0, totalReminders, totalTasks },
   };
 }
 
@@ -946,6 +954,13 @@ function renderSummaryChips(
       label: `✓ ${payload.summary.totalTasks} ${payload.summary.totalTasks === 1 ? 'Tarea' : 'Tareas'}`,
       bg: 'rgba(148, 163, 184, 0.16)',
       text: '#cbd5e1',
+    });
+  }
+  if (chips.length === 0) {
+    chips.push({
+      label: '✨ Totalmente despejado',
+      bg: 'rgba(16, 185, 129, 0.16)',
+      text: '#34d399',
     });
   }
 
